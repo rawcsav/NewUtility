@@ -164,3 +164,4 @@ pyvenv.cfg
 #Other
 .DS_Store
 app/main_user_directory/*
+!app/main_user_directory/
