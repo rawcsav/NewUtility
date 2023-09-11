@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transcription Results</title>
+    <style>
+      .navbar {
+        text-align: center;
+        position: relative;
+      }
+      .homepage-link {
+        position: absolute;
+        top: 1px;
+        left: 3px;
+        cursor: pointer;
+        z-index: 100;
+      }
+      .homepage-link img {
+        height: 80px; /* Adjust size as needed */
+        width: auto;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <h1>Transcription Results</h1>
+      <a href="https://rawcsav.com" class="homepage-link">
+        <img
+          src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1691358044/Screenshot_2023-08-03_at_12.28.52_AM_o9i44t-removebg-preview_r3lypt.png"
+          alt="Homepage"
+        />
+      </a>
+    </div>
+    <div class="container">
+      <ul>
+        {% for file in files %}
+        <li>
+          <a
+            href="{{ url_for('whisper_main.download', filename=file, output_dir=output_directory) }}"
+            >{{ file }}</a
+          >
+        </li>
+        {% endfor %}
+      </ul>
+      <p><a href="{{ url_for('whisper_main.whisper_index') }}">Go Back</a></p>
+    </div>
+  </body>
+</html>

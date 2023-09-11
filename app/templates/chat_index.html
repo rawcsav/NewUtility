@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Upload and Query Text Document</title>
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='favicon/site.webmanifest') }}"
+    />
+    <link
+      rel="mask-icon"
+      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
+      color="#5bbad5"
+    />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+    <link
+      href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.cdnfonts.com/css/helvetica-neue-9"
+      rel="stylesheet"
+    />
+    <!-- Link to the external CSS and JS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/chat_index.css') }}"
+    />
+    <script src="{{ url_for('static', filename='js/chat_index.js') }}"></script>
+  </head>
+  <body>
+    <h1>Chat with Docs</h1>
+    <a href="https://rawcsav.com" class="homepage-link">
+      <img
+        src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1691358044/Screenshot_2023-08-03_at_12.28.52_AM_o9i44t-removebg-preview_r3lypt.png"
+        alt="Homepage"
+      />
+    </a>
+    <div class="setup-container">
+      <div class="instructions-container">
+        <h3>Instructions</h3>
+        <div id="instruction_body">
+          <strong>1. Set OpenAI API Key: </strong>Enter your OpenAI API Key in
+          the provided field. <strong><br />2. Upload Documents: </strong> Click
+          to upload .txt, .pdf, or .docx files.
+          <strong><br />3. Select Documents: </strong> Use the 'Uploaded
+          Documents' section to select which documents to use for answering the
+          question. <strong><br />4. Ask a Question: </strong> Enter your
+          question in the 'Query Text Document' field.
+        </div>
+      </div>
+
+      <div class="form-container api-key-container">
+        <h3>Set OpenAI API Key</h3>
+        <form id="apiKeyForm" onsubmit="event.preventDefault(); setAPIKey();">
+          <input
+            type="text"
+            name="api_key"
+            placeholder="Enter OpenAI API Key"
+            required
+          />
+          <input type="submit" value="Set API Key" />
+        </form>
+      </div>
+
+      <!-- Upload New Text Document -->
+      <div class="form-container upload-container">
+        <h3>Upload New Text Document</h3>
+        <form
+          id="uploadForm"
+          onsubmit="event.preventDefault(); uploadDocuments();"
+        >
+          <input type="file" name="file" multiple />
+          <input type="submit" value="Upload" />
+        </form>
+      </div>
+    </div>
+
+    <hr class="custom-line" />
+
+    <div class="docs-query-container">
+      <!-- Query Input and Uploaded Documents -->
+      <div id="input-and-docs-section">
+        <!-- Query Input -->
+        <div id="query-input-section">
+          <h2>Query Text Document</h2>
+          <div>
+            <input type="text" id="query" name="query" />
+            <button onclick="queryDocument()">Submit</button>
+          </div>
+        </div>
+
+        <!-- Uploaded Documents -->
+        <div id="uploaded-docs-section">
+          <h2>Uploaded Documents:</h2>
+          <form id="docSelectionForm">
+            <ul id="uploaded_docs_list">
+              {% for file in uploaded_files %}
+              <li>
+                <input
+                  type="checkbox"
+                  name="selected_docs"
+                  value="{{ file }}"
+                  checked
+                />
+                {{ file }}
+              </li>
+              {% endfor %}
+            </ul>
+          </form>
+        </div>
+      </div>
+      <!-- Query Results -->
+      <div id="query-section">
+        <p style="display: none">
+          <strong>Query: </strong><span id="user_query"></span>
+        </p>
+        <div id="response_container" style="display: none">
+          <strong>Response: </strong>
+          <pre><span id="results"></span></pre>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <p>
+        For more details and explanation of the code, please visit the GitHub
+        repository:
+        <a href="https://github.com/rawcsav/ChatWithDocs">ChatWithDocs</a>
+      </p>
+    </div>
+  </body>
+</html>
