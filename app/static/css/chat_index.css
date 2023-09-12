@@ -225,5 +225,4 @@ button {
   bottom: 0; /* Aligns it to the bottom of the viewport */
   z-index: 1000;
   align-text: center; /* Ensures it stays on top of other content */
-  /* Your existing footer styles will remain unchanged */
 }

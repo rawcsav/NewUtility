@@ -237,13 +237,8 @@ def ask(query: str, df: pd.DataFrame, api_key, model: str = GPT_MODEL, specific_
 
     max_tokens = max_tokens - num_tokens(prompt + full_message, model=model)
     messages = [
-        {
-            "role": "system",
-            "content": f"Given a question, try to answer it using the content of the file extracts below, and if you cannot answer, or find " \
-                       f"a relevant file, just output \"I couldn't find the answer to that question in your docs.\".\n\n" \
-                       f"If the answer is not contained in the files or if there are no file extracts, respond with \"I couldn't find the answer " \
-                       f"to that question in your docs.\" In the cases where you can find the answer, give the answer in markdown format."
-        },
+        {"role": "system",
+         "content": "You are a knowledgeable assistant that uses information from provided textual excerpts to answer questions."},
         {"role": "user", "content": full_message},
     ]
 
