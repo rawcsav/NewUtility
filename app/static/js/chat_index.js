@@ -1,4 +1,19 @@
+let isUploading = false;
+
+// Initially hide the Submit button
+
 async function uploadDocuments() {
+  showAlert("Uploading...", "info", "upload");
+  updateQueryButtonStatus(true);
+
+  // Check if the API key is set
+  if (document.getElementById("uploadButton").disabled) {
+    showAlert("Please set your OpenAI API Key first.", "danger", "upload");
+    return;
+  }
+
+  isUploading = true;
+
   const formData = new FormData(document.querySelector("#uploadForm"));
 
   // Check for duplicates before uploading
@@ -10,6 +25,7 @@ async function uploadDocuments() {
       showAlert(
         `The file "${file.name}" is already uploaded. Skipping duplicate.`,
         "warning",
+        "upload",
       );
       formData.delete("file"); // Remove the file from formData to prevent upload
     }
@@ -39,23 +55,55 @@ async function uploadDocuments() {
       }
 
       if (uploadedCount > 0) {
-        showAlert(`${uploadedCount} files uploaded successfully.`, "success");
+        showAlert(
+          `${uploadedCount} files uploaded successfully.`,
+          "success",
+          "upload",
+        );
       } else {
-        showAlert("No files uploaded successfully.", "danger");
+        showAlert("No files uploaded successfully.", "danger", "upload");
       }
     } else {
       for (let msg of data.messages) {
-        showAlert(msg, "danger");
+        showAlert(msg, "danger", "upload");
       }
     }
   } catch (error) {
-    showAlert("There was an error processing your request.", "danger");
+    showAlert(
+      "There was an error processing your request.",
+      "danger",
+      "upload",
+    );
+  }
+
+  // Reset the isUploading flag and update the query button's status
+  isUploading = false;
+  showQueryButtonIfNeeded();
+}
+
+function updateQueryButtonStatus(isUploadingStatus = false) {
+  const queryButton = document.getElementById("queryButton");
+  const queryStatus = document.getElementById("queryStatus"); // Get the new status message element
+
+  if (isUploadingStatus || isUploading) {
+    queryButton.disabled = true;
+    queryStatus.textContent = "Uploading..."; // Update the status message
+  } else {
+    queryButton.disabled = false;
+    queryStatus.textContent = ""; // Clear the status message
   }
 }
 
-function showAlert(message, type) {
-  const alertsDiv = document.querySelector(".alerts");
-  alertsDiv.innerHTML += `<div class="alert alert-${type}">${message}</div>`;
+function showQueryButtonIfNeeded() {
+  const queryButton = document.getElementById("queryButton");
+  const queryStatus = document.getElementById("queryStatus"); // Get the new status message element
+  const hasAPIKey = !document.getElementById("uploadButton").disabled;
+  const hasUploadedFiles =
+    document.querySelectorAll("#uploaded_docs_list li").length > 0;
+  const shouldEnable = hasAPIKey && hasUploadedFiles && !isUploading;
+
+  queryButton.disabled = !shouldEnable;
+  queryStatus.textContent = shouldEnable ? "" : "Waiting for docs..."; // Update the status message
 }
 
 async function queryDocument() {
@@ -64,7 +112,11 @@ async function queryDocument() {
   );
 
   if (checkboxes.length === 0) {
-    showAlert("Please upload at least one document before querying.", "danger");
+    showAlert(
+      "Please upload at least one document before querying.",
+      "danger",
+      "query",
+    );
     return;
   }
 
@@ -109,12 +161,10 @@ async function queryDocument() {
         resultsSpan.textContent += decoder.decode(value);
       }
     } else {
-      resultsSpan.innerHTML =
-        '<span style="color:red;">Error querying the document.</span>';
+      showAlert("Error querying the document", "danger", "query");
     }
   } catch (error) {
-    resultsSpan.innerHTML =
-      '<span style="color:red;">There was an error processing your request.</span>';
+    showAlert("There was an error processing your request.", "danger", "query");
   }
 }
 
@@ -125,13 +175,46 @@ function setAPIKey() {
     method: "POST",
     body: formData,
   })
-    .then((response) => response.text())
-    .then((data) => {
-      if (data.includes("successfully")) {
-        document.getElementById("docs-query-section").style.display = "block";
+    .then((response) => {
+      console.log("Response received:", response);
+      if (response.ok) {
+        console.log("Response is OK.");
+        document.getElementById("uploadButton").disabled = false;
+
+        // Clear any previous alerts in .apiKeyAlerts
+        document.querySelector(".apiKeyAlerts").innerHTML = "";
+
+        // Show the API Key set successfully message
+        document.getElementById("apiKeyStatus").style.display = "block";
+
+        // Determine if the "Submit" button should be shown
+        showQueryButtonIfNeeded();
+      } else {
+        console.log("Response is not OK.");
+        document.getElementById("apiKeyStatus").style.display = "none"; // Hide the success message
+        showAlert("Error. Please check the key and try again.", "danger");
       }
     })
     .catch((error) => {
+      console.log("Error occurred:", error);
+      document.getElementById("apiKeyStatus").style.display = "none"; // Hide the success message
       showAlert("Error setting the API Key.", "danger");
     });
+}
+
+function showAlert(message, type, context = "apiKey") {
+  let alertsDiv;
+  switch (context) {
+    case "upload":
+      alertsDiv = document.querySelector(".uploadAlerts");
+      break;
+    case "query":
+      alertsDiv = document.querySelector(".queryAlerts");
+      break;
+    default:
+      alertsDiv = document.querySelector(".apiKeyAlerts");
+  }
+
+  // This line sets the alertsDiv's innerHTML to the new message instead of appending
+  alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
 }

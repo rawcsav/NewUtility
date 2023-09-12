@@ -47,7 +47,7 @@ h1 {
 }
 
 h2 {
-  font-size: 1.5em;
+  font-size: 1.4em;
   margin-bottom: 8px;
   border-bottom: 1px solid #ddd;
   padding-bottom: 8px;
@@ -93,13 +93,6 @@ button {
   word-wrap: break-word; /* This will break long words onto the next line */
 }
 
-/* Side-by-side layout for uploaded docs and query */
-#content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
 #docSelectionForm,
 #query-section {
   flex: 1;
@@ -138,7 +131,7 @@ button {
   flex-direction: row;
   align-items: flex-start;
   gap: 20px;
-  margin-top: 40px;
+  margin-top: 20px;
   margin-bottom: 18%;
 }
 
@@ -147,12 +140,51 @@ button {
   flex-direction: column;
   align-items: flex-start;
   gap: 20px;
-  flex-basis: 20%;
-  max-width: 20%;
+  flex-basis: 20%; /* increase this value for wider section */
+  max-width: 20%; /* increase this value for wider section */
+}
+
+#queryStatus {
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #888;
+}
+
+#query-input-section,
+#uploaded-docs-section {
+  flex: 1;
+  width: 90%;
+  max-width: 90%; /* Set this to the maximum width you want */
 }
 
 #uploaded-docs-section {
   flex: 1;
+}
+
+#uploaded_docs_list {
+  padding-left: 0;
+}
+
+#uploaded_docs_list li {
+  padding: 10px 0;
+  display: flex; /* Use flexbox for layout */
+  align-items: flex-start;
+  /* Align the checkbox and the title at the top */
+}
+
+#uploaded_docs_list li div {
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 90%; /* adjust as needed */
+}
+
+#uploaded_docs_list li:last-child {
+  border-bottom: none;
+}
+
+#uploaded_docs_list li input[type="checkbox"] {
+  margin-right: 10px;
 }
 
 #query-section {
@@ -166,6 +198,17 @@ button {
 
 .bold {
   font-weight: bold !important;
+}
+
+.alert-danger {
+  color: red;
+}
+.alert-success {
+  color: green;
+}
+
+.alert-info {
+  color: blue;
 }
 
 .footer {

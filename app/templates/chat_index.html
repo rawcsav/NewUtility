@@ -43,7 +43,6 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/chat_index.css') }}"
     />
-    <script src="{{ url_for('static', filename='js/chat_index.js') }}"></script>
   </head>
   <body>
     <h1>Chat with Docs</h1>
@@ -78,6 +77,10 @@
           />
           <input type="submit" value="Set API Key" />
         </form>
+        <div id="apiKeyStatus" style="display: none; color: green">
+          API Key Set Successfully!
+        </div>
+        <div class="alerts apiKeyAlerts"></div>
       </div>
 
       <!-- Upload New Text Document -->
@@ -88,26 +91,29 @@
           onsubmit="event.preventDefault(); uploadDocuments();"
         >
           <input type="file" name="file" multiple />
-          <input type="submit" value="Upload" />
+          <input type="submit" value="Upload" disabled id="uploadButton" />
         </form>
+        <div class="alerts uploadAlerts"></div>
       </div>
     </div>
 
     <hr class="custom-line" />
 
     <div class="docs-query-container">
-      <!-- Query Input and Uploaded Documents -->
       <div id="input-and-docs-section">
-        <!-- Query Input -->
         <div id="query-input-section">
           <h2>Query Text Document</h2>
           <div>
             <input type="text" id="query" name="query" />
-            <button onclick="queryDocument()">Submit</button>
+            <button id="queryButton" onclick="queryDocument()" disabled>
+              Submit
+            </button>
           </div>
+          <div id="queryStatus"></div>
+          <!-- New status message element -->
+          <div class="alerts queryAlerts"></div>
         </div>
 
-        <!-- Uploaded Documents -->
         <div id="uploaded-docs-section">
           <h2>Uploaded Documents:</h2>
           <form id="docSelectionForm">
@@ -120,7 +126,8 @@
                   value="{{ file }}"
                   checked
                 />
-                {{ file }}
+                <div>{{ file }}</div>
+                <!-- Wrap the text in a div -->
               </li>
               {% endfor %}
             </ul>
@@ -145,5 +152,6 @@
         <a href="https://github.com/rawcsav/ChatWithDocs">ChatWithDocs</a>
       </p>
     </div>
+    <script src="{{ url_for('static', filename='js/chat_index.js') }}"></script>
   </body>
 </html>

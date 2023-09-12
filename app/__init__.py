@@ -11,6 +11,7 @@ from app.util.docauth_util import remove_directory, scheduled_cleanup
 
 def create_app():
     app = Flask(__name__)
+
     app.secret_key = config.SECRET_KEY
     app.config['SESSION_TYPE'] = config.SESSION_TYPE
     app.config['SESSION_PERMANENT'] = config.SESSION_PERMANENT
