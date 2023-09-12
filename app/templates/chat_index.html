@@ -45,106 +45,110 @@
     />
   </head>
   <body>
-    <h1>Chat with Docs</h1>
-    <a href="https://rawcsav.com" class="homepage-link">
-      <img
-        src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1691358044/Screenshot_2023-08-03_at_12.28.52_AM_o9i44t-removebg-preview_r3lypt.png"
-        alt="Homepage"
-      />
-    </a>
-    <div class="setup-container">
-      <div class="instructions-container">
-        <h3>Instructions</h3>
-        <div id="instruction_body">
-          <strong>1. Set OpenAI API Key: </strong>Enter your OpenAI API Key in
-          the provided field. <strong><br />2. Upload Documents: </strong> Click
-          to upload .txt, .pdf, or .docx files.
-          <strong><br />3. Select Documents: </strong> Use the 'Uploaded
-          Documents' section to select which documents to use for answering the
-          question. <strong><br />4. Ask a Question: </strong> Enter your
-          question in the 'Query Text Document' field.
-        </div>
-      </div>
-
-      <div class="form-container api-key-container">
-        <h3>Set OpenAI API Key</h3>
-        <form id="apiKeyForm" onsubmit="event.preventDefault(); setAPIKey();">
-          <input
-            type="text"
-            name="api_key"
-            placeholder="Enter OpenAI API Key"
-            required
-          />
-          <input type="submit" value="Set API Key" />
-        </form>
-        <div id="apiKeyStatus" style="display: none; color: green">
-          API Key Set Successfully!
-        </div>
-        <div class="alerts apiKeyAlerts"></div>
-      </div>
-
-      <!-- Upload New Text Document -->
-      <div class="form-container upload-container">
-        <h3>Upload New Text Document</h3>
-        <form
-          id="uploadForm"
-          onsubmit="event.preventDefault(); uploadDocuments();"
-        >
-          <input type="file" name="file" multiple />
-          <input type="submit" value="Upload" disabled id="uploadButton" />
-        </form>
-        <div class="alerts uploadAlerts"></div>
-      </div>
-    </div>
-
-    <hr class="custom-line" />
-
-    <div class="docs-query-container">
-      <div id="input-and-docs-section">
-        <div id="query-input-section">
-          <h2>Query Text Document</h2>
-          <div>
-            <input type="text" id="query" name="query" />
-            <button id="queryButton" onclick="queryDocument()" disabled>
-              Submit
-            </button>
+    <div class="content-wrap">
+      <h1>Chat with Docs</h1>
+      <a href="https://rawcsav.com" class="homepage-link">
+        <img
+          src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1691358044/Screenshot_2023-08-03_at_12.28.52_AM_o9i44t-removebg-preview_r3lypt.png"
+          alt="Homepage"
+        />
+      </a>
+      <div class="setup-container">
+        <div class="instructions-container">
+          <h3>Instructions</h3>
+          <div id="instruction_body">
+            <strong>1. Set OpenAI API Key: </strong>Enter your OpenAI API Key in
+            the provided field.
+            <strong><br />2. Upload Documents: </strong> Click to upload .txt,
+            .pdf, or .docx files.
+            <strong><br />3. Select Documents: </strong> Use the 'Uploaded
+            Documents' section to select which documents to use for answering
+            the question. <strong><br />4. Ask a Question: </strong> Enter your
+            question in the 'Query Text Document' field.
           </div>
-          <div id="queryStatus"></div>
-          <!-- New status message element -->
-          <div class="alerts queryAlerts"></div>
         </div>
 
-        <div id="uploaded-docs-section">
-          <h2>Uploaded Documents:</h2>
-          <form id="docSelectionForm">
-            <ul id="uploaded_docs_list">
-              {% for file in uploaded_files %}
-              <li>
-                <input
-                  type="checkbox"
-                  name="selected_docs"
-                  value="{{ file }}"
-                  checked
-                />
-                <div>{{ file }}</div>
-                <!-- Wrap the text in a div -->
-              </li>
-              {% endfor %}
-            </ul>
+        <div class="form-container api-key-container">
+          <h3>Set OpenAI API Key</h3>
+          <form id="apiKeyForm" onsubmit="event.preventDefault(); setAPIKey();">
+            <input
+              type="text"
+              name="api_key"
+              placeholder="Enter OpenAI API Key"
+              required
+            />
+            <input type="submit" value="Set API Key" />
           </form>
+          <div id="apiKeyStatus" style="display: none; color: green">
+            API Key Set Successfully!
+          </div>
+          <div class="alerts apiKeyAlerts"></div>
+        </div>
+
+        <!-- Upload New Text Document -->
+        <div class="form-container upload-container">
+          <h3>Upload New Text Document</h3>
+          <form
+            id="uploadForm"
+            onsubmit="event.preventDefault(); uploadDocuments();"
+          >
+            <input type="file" name="file" multiple />
+            <input type="submit" value="Upload" disabled id="uploadButton" />
+          </form>
+          <div class="alerts uploadAlerts"></div>
         </div>
       </div>
-      <!-- Query Results -->
-      <div id="query-section">
-        <p style="display: none">
-          <strong>Query: </strong><span id="user_query"></span>
-        </p>
-        <div id="response_container" style="display: none">
-          <strong>Response: </strong>
-          <pre><span id="results"></span></pre>
+
+      <hr class="custom-line" />
+
+      <div class="docs-query-container">
+        <div id="input-and-docs-section">
+          <div id="query-input-section">
+            <h2>Query Text Document</h2>
+            <div>
+              <input type="text" id="query" name="query" />
+              <button id="queryButton" onclick="queryDocument()" disabled>
+                Submit
+              </button>
+            </div>
+            <div id="queryStatus"></div>
+            <!-- New status message element -->
+            <div class="alerts queryAlerts"></div>
+          </div>
+
+          <div id="uploaded-docs-section">
+            <h2>Uploaded Documents:</h2>
+            <form id="docSelectionForm">
+              <ul id="uploaded_docs_list">
+                {% for file in uploaded_files %}
+                <li>
+                  <input
+                    type="checkbox"
+                    name="selected_docs"
+                    value="{{ file }}"
+                    checked
+                  />
+                  <div>{{ file }}</div>
+                  <!-- Wrap the text in a div -->
+                </li>
+                {% endfor %}
+              </ul>
+            </form>
+          </div>
+        </div>
+        <!-- Query Results -->
+        <div id="query-section">
+          <p style="display: none">
+            <strong>Query: </strong><span id="user_query"></span>
+          </p>
+          <div id="response_container" style="display: none">
+            <strong>Response: </strong>
+            <pre><span id="results"></span></pre>
+          </div>
         </div>
       </div>
     </div>
+
     <div class="footer">
       <p>
         For more details and explanation of the code, please visit the GitHub

@@ -6,6 +6,14 @@ body {
   margin: 0;
   color: #333;
   line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+/* This will push the footer to the bottom if there's available space */
+.content-wrap {
+  flex: 1;
+  padding-bottom: 50px; /* Adjust this value based on your footer's height */
 }
 
 .homepage-link {
@@ -212,6 +220,10 @@ button {
 }
 
 .footer {
-  font-family: "Helvetica Neue", sans-serif;
-  text-align: center;
+  width: 100%; /* Ensure it spans the full width of the viewport */
+  position: fixed; /* Fixes the position of the footer */
+  bottom: 0; /* Aligns it to the bottom of the viewport */
+  z-index: 1000;
+  align-text: center; /* Ensures it stays on top of other content */
+  /* Your existing footer styles will remain unchanged */
 }
