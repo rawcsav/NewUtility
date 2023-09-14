@@ -1,12 +1,11 @@
 import os
 from datetime import datetime
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, session, current_app
 from flask_session import Session
 
 from app import config
-from app.util.docauth_util import remove_directory, scheduled_cleanup
+from app.util.docauth_util import remove_directory
 
 
 def create_app():
@@ -69,8 +68,8 @@ def create_app():
     app.register_blueprint(whisper_errors.bp)
     app.register_blueprint(landing.bp)
 
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_cleanup, 'interval', hours=1)  # Run every hour
-    scheduler.start()
+    # scheduler = BackgroundScheduler()
+    # scheduler.add_job(scheduled_cleanup, 'interval', hours=1)  # Run every hour
+    # scheduler.start()
 
     return app
