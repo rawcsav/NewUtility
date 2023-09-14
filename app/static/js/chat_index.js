@@ -82,28 +82,30 @@ async function uploadDocuments() {
 }
 
 function updateQueryButtonStatus(isUploadingStatus = false) {
+  const queryInput = document.getElementById("query");
   const queryButton = document.getElementById("queryButton");
-  const queryStatus = document.getElementById("queryStatus"); // Get the new status message element
 
   if (isUploadingStatus || isUploading) {
     queryButton.disabled = true;
-    queryStatus.textContent = "Uploading..."; // Update the status message
+    queryInput.placeholder = "Uploading..."; // Update the placeholder
   } else {
     queryButton.disabled = false;
-    queryStatus.textContent = ""; // Clear the status message
+    queryInput.placeholder = "Enter your query here..."; // Reset the placeholder
   }
 }
 
 function showQueryButtonIfNeeded() {
+  const queryInput = document.getElementById("query");
   const queryButton = document.getElementById("queryButton");
-  const queryStatus = document.getElementById("queryStatus"); // Get the new status message element
   const hasAPIKey = !document.getElementById("uploadButton").disabled;
   const hasUploadedFiles =
     document.querySelectorAll("#uploaded_docs_list li").length > 0;
   const shouldEnable = hasAPIKey && hasUploadedFiles && !isUploading;
 
   queryButton.disabled = !shouldEnable;
-  queryStatus.textContent = shouldEnable ? "" : "Waiting for docs..."; // Update the status message
+  queryInput.placeholder = shouldEnable
+    ? "Enter your query here..."
+    : "Waiting for docs..."; // Update the placeholder
 }
 
 async function queryDocument() {
@@ -209,12 +211,17 @@ function showAlert(message, type, context = "apiKey") {
       alertsDiv = document.querySelector(".uploadAlerts");
       break;
     case "query":
-      alertsDiv = document.querySelector(".queryAlerts");
+      alertsDiv = document.getElementById("queryAlertInsideInput");
       break;
     default:
       alertsDiv = document.querySelector(".apiKeyAlerts");
   }
 
-  // This line sets the alertsDiv's innerHTML to the new message instead of appending
-  alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  // For the alert inside the input box, we directly set the text content
+  if (context === "query") {
+    alertsDiv.textContent = message;
+  } else {
+    // For the other alerts, we append a new div with the message
+    alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  }
 }

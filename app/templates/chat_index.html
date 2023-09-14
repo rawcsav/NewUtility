@@ -55,7 +55,7 @@
       </a>
       <div class="setup-container">
         <div class="instructions-container">
-          <h3>Instructions</h3>
+          <h2>Instructions</h2>
           <div id="instruction_body">
             <strong>1. Set OpenAI API Key: </strong>Enter your OpenAI API Key in
             the provided field.
@@ -69,7 +69,7 @@
         </div>
 
         <div class="form-container api-key-container">
-          <h3>Set OpenAI API Key</h3>
+          <h2>Set OpenAI API Key</h2>
           <form id="apiKeyForm" onsubmit="event.preventDefault(); setAPIKey();">
             <input
               type="text"
@@ -87,7 +87,7 @@
 
         <!-- Upload New Text Document -->
         <div class="form-container upload-container">
-          <h3>Upload New Text Document</h3>
+          <h2>Upload New Text Document</h2>
           <form
             id="uploadForm"
             onsubmit="event.preventDefault(); uploadDocuments();"
@@ -102,22 +102,9 @@
       <hr class="custom-line" />
 
       <div class="docs-query-container">
-        <div id="input-and-docs-section">
-          <div id="query-input-section">
-            <h2>Query Text Document</h2>
-            <div>
-              <input type="text" id="query" name="query" />
-              <button id="queryButton" onclick="queryDocument()" disabled>
-                Submit
-              </button>
-            </div>
-            <div id="queryStatus"></div>
-            <!-- New status message element -->
-            <div class="alerts queryAlerts"></div>
-          </div>
-
+        <div class="docs-container">
+          <h3>Uploaded Documents</h3>
           <div id="uploaded-docs-section">
-            <h2>Uploaded Documents:</h2>
             <form id="docSelectionForm">
               <ul id="uploaded_docs_list">
                 {% for file in uploaded_files %}
@@ -137,18 +124,35 @@
           </div>
         </div>
         <!-- Query Results -->
-        <div id="query-section">
-          <p style="display: none">
-            <strong>Query: </strong><span id="user_query"></span>
-          </p>
-          <div id="response_container" style="display: none">
-            <strong>Response: </strong>
-            <pre><span id="results"></span></pre>
+        <div class="query-container">
+          <h3>Query Text Document</h3>
+          <div id="query-results-section">
+            <p style="display: none">
+              <strong>Query: </strong><span id="user_query"></span>
+            </p>
+            <div id="response_container" style="display: none">
+              <strong>Response: </strong>
+              <pre><span id="results"></span></pre>
+            </div>
           </div>
         </div>
       </div>
+      <div class="input-container">
+        <div id="query-input-section">
+          <input
+            type="text"
+            id="query"
+            name="query"
+            placeholder="Enter your query here..."
+          />
+          <button id="queryButton" onclick="queryDocument()" disabled>
+            Submit
+          </button>
+        </div>
+        <div class="alerts queryAlerts"></div>
+      </div>
     </div>
-
+    <hr class="custom-line" />
     <div class="footer">
       <p>
         For more details and explanation of the code, please visit the GitHub
