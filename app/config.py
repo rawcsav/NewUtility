@@ -1,9 +1,13 @@
 import os
 from datetime import timedelta
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import tiktoken
 
-SECRET_KEY = os.urandom(24)
+SECRET_KEY = os.getenv('SECRET_KEY')
 SESSION_TYPE = "filesystem"
 SESSION_PERMANENT = True
 PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
