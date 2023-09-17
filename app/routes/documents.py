@@ -55,6 +55,7 @@ def upload_file():
 
     for file in uploaded_files:
         secure_file_name = secure_filename(file.filename)
+        print(secure_file_name)
         if not file or file.content_length > MAX_FILE_SIZE or not allowed_file(secure_file_name):
             response["messages"].append(f"File {secure_file_name} is either too large or not of an allowed type.")
             continue
@@ -99,3 +100,39 @@ def upload_file():
     session['uploaded_files'] = list(set(uploaded_file_names + new_files))
 
     return jsonify(response)
+
+
+@bp.route('/remove_file', methods=['DELETE'])
+def remove_file():
+    file_name = request.args.get('fileName', default=None)
+    file_name_df = os.path.splitext(file_name)[0]
+    CHAT_UPLOAD_DIR = session.get('CHAT_UPLOAD_DIR')
+    EMBED_DATA_PATH = session.get('EMBED_DATA')
+
+    if not file_name:
+        return jsonify({"status": "error", "message": "No file name provided"}), 400
+
+    file_path = os.path.join(CHAT_UPLOAD_DIR, file_name)
+    if not os.path.exists(file_path):
+        return jsonify({"status": "error", "message": "File does not exist"}), 404
+
+    os.remove(file_path)
+
+    # If you need to update JSON data
+    with lock:
+        if os.path.exists(EMBED_DATA_PATH) and os.path.getsize(EMBED_DATA_PATH) > 0:
+            df_existing = pd.read_json(EMBED_DATA_PATH, orient='split')
+        else:
+            df_existing = pd.DataFrame()
+
+        # Assuming you have a column 'filename' in your DataFrame that holds the filename
+        df_existing = df_existing[df_existing['title'] != file_name_df]
+        df_existing.to_json(EMBED_DATA_PATH, orient='split')
+
+    uploaded_files = session.get('uploaded_files', [])
+    if file_name in uploaded_files:
+        uploaded_files.remove(file_name)
+
+    session['uploaded_files'] = uploaded_files
+
+    return jsonify({"status": "success", "message": f"File {file_name} deleted successfully"})

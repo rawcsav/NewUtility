@@ -1,20 +1,31 @@
 /* Base Styles */
 body {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  padding: 30px;
-  background-color: #b7b1b1ff;
+  background-color: #b7b1b1;
   margin: 0;
   color: #333;
   line-height: 1.6;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
   overflow-y: hidden;
 }
 /* This will push the footer to the bottom if there's available space */
 .content-wrap {
-  height: calc(100vh - 80px);
+  height: 86vh;
+  max-height: 86vh;
+  padding-right: 20px;
+  padding-left: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid #000000;
+}
+
+.left-column {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 20px;
 }
 
 .homepage-link {
@@ -22,6 +33,79 @@ body {
   top: 1px;
   left: 3px;
   cursor: pointer;
+}
+
+.instructions-container {
+  padding: 5px;
+  font-size: 14px;
+}
+
+.instructions {
+  display: block;
+  cursor: pointer; /* Add this line */
+}
+
+#showInstructions {
+  position: absolute;
+  top: 10px; /* Adjust as needed */
+  right: 10px; /* Adjust as needed */
+  font-size: 13px;
+  background-color: #859791;
+  color: black;
+  border: 1px solid black;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#showInstructions:hover {
+  background-color: #0056b3;
+}
+
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  overflow-y: hidden;
+  margin-top: 0;
+  /* In case the modal content is long */
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 70%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: black;
+}
+
+.query-response-pair {
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+}
+
+.query {
+  font-weight: bold;
 }
 
 .homepage-link img {
@@ -38,6 +122,7 @@ body {
   border: none;
   height: 2px;
   background-color: black;
+  color: black;
   margin-top: 5px;
   margin-bottom: 5px;
   width: 100%;
@@ -48,38 +133,76 @@ body {
 h1,
 h2,
 h3 {
-  margin-top: 0;
+  margin-top: 10px;
+  color: #000000;
 }
 
 /* Adjusted Base Styles */
 h1 {
-  font-size: 1.8em;
-  font-color: #000;
+  margin-bottom: 0;
+  height: 9vh;
+  font-size: 30px;
+  color: #000;
   text-align: center;
-  margin-bottom: 30px;
-  margin-top: -5px;
 }
 
 h2 {
   font-size: 1.2em;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 8px;
+  border-bottom: 1px solid #000;
 }
 
 h3 {
   font-size: 1.2em;
-  border-bottom: 1px solid #000;
   margin-bottom: 0;
-  padding-bottom: 0;
 }
 
 /* Smaller Buttons and Inputs */
-input[type="text"],
-#query {
+input[type="text"] {
   padding: 8px 8px;
   margin-bottom: 7px;
   font-size: 0.7em;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+#query {
+  border-radius: 12px;
+  box-shadow: 0px 4px 6px #aaa;
+  width: 100%;
+}
+
+.submit-arrow {
+  position: absolute;
+  margin-top: -10px;
+  right: 0%;
+  cursor: pointer;
+  width: 20px; /* Adjust as needed */
+  height: 20px; /* Adjust as needed */
+}
+
+#queryButton {
+  padding: 0;
+  font-size: 0;
+  position: absolute;
+  margin-top: 24px;
+  right: 20%;
+  cursor: pointer;
+  width: 20px; /* Adjust as needed */
+  height: 20px; /* Adjust as needed */
+  border: none;
+  background: none;
+}
+/* Hover State for Input */
+#query:hover {
+  box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Focus State for Input */
+#query:focus {
+  outline: none;
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.25);
 }
 
 input[type="submit"],
@@ -87,57 +210,41 @@ button {
   padding: 8px 8px;
   font-size: 0.7em;
 }
-
 .setup-container {
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
   gap: 20px;
+  height: 15vh;
 }
 
-.instructions-container {
-  align-content: flex-start;
-  flex: 1;
-  background-color: #b7b1b1ff;
-  order: -1; /* Makes this the first item in the flexbox */
-}
-
-.instructions-container #instruction_body {
-  font-size: 0.7em !important;
-}
-
-.form-container {
+.upload-container {
   flex: 1;
 }
 
-.docs-query-container {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: stretch;
-  margin-top: 10px;
-  min-height: 0;
+.upload-container,
+.api-key-container {
+  flex: 1;
 }
 
 .docs-container {
-  flex: 3;
-  width: calc(30% - 10px);
-  max-width: calc(30% - 10px);
+  flex: 1; /* Change this line */
+  display: flex;
+  flex-direction: column;
 }
 
 #uploaded_docs_list {
   padding: 0;
   margin: 0;
-  width: 90%;
-  max-width: 90%;
   overflow-y: auto;
-  height: calc(100vh - 360px);
-  max-height: calc(100vh - 360px);
+  flex-grow: 1;
 }
 
 input[type="checkbox"] {
   padding-left: 5px;
   margin-right: 10px;
+}
+.right-column {
+  flex: 2;
 }
 
 #uploaded_docs_list li {
@@ -152,14 +259,12 @@ input[type="checkbox"] {
   word-wrap: break-word;
   white-space: normal;
   overflow-wrap: break-word;
-  width: 90%;
-  max-width: 90%; /* adjust as needed */
 }
 
 #docSelectionForm {
-  border-right: #000000 1px solid;
-  border-left: #000000 1px solid;
-  border-bottom: #000000 1px solid;
+  border: 1px solid #000;
+  flex-grow: 1;
+  min-height: 60vh; /* Adjust this value as needed */
 }
 
 #uploaded_docs_list li input[type="checkbox"] {
@@ -167,9 +272,8 @@ input[type="checkbox"] {
 }
 
 .query-container {
-  flex: 7;
-  width: calc(70% - 10px);
-  max-width: calc(70% - 10px);
+  flex: 1;
+  position: relative;
 }
 
 #queryStatus {
@@ -186,29 +290,29 @@ input[type="checkbox"] {
   word-wrap: break-word;
 }
 #response_container {
-  font-size: 0.9em;
+  font-size: 0.8em;
   width: 90%;
   max-width: 90%;
 }
 #results pre {
+  margin: 0;
+  font-size: 0.8em;
+  display: inline;
   font-family: "Helvetica Neue", serif;
   white-space: pre-wrap; /* This will make the content wrap */
   word-wrap: break-word; /* This will break long words onto the next line */
 }
 
 .input-container {
-  bottom: 60px;
+  width: 50%;
   position: fixed;
-  width: calc(100% - 60px);
-  max-width: calc(100% - 60px);
 }
 
 #query-input-section {
-  background-color: #b7b1b1ff;
+  width: 100%;
+  background-color: #b7b1b1;
   z-index: 999;
   margin-left: auto;
-  width: calc(70% - 10px);
-  max-width: calc(70% - 10px);
 }
 
 #user_query {
@@ -216,44 +320,80 @@ input[type="checkbox"] {
   margin-bottom: 10px;
 }
 
+.history-delimiter {
+  border: 1px solid #ccc;
+  margin: 10px 0;
+}
+.history-entry pre {
+  margin: 0;
+  font-size: 0.8em;
+  display: inline;
+  font-family: "Helvetica Neue", serif;
+  white-space: pre-wrap; /* This will make the content wrap */
+  word-wrap: break-word;
+}
 #query-input-section input[type="text"] {
-  margin-top: 5px;
-  width: 85%;
+  width: 75%;
+  margin-left: 30px;
+  margin-top: 12px;
   padding-top: 12px;
   padding-bottom: 12px;
-  border: #333 1px solid;
-  margin-left: auto;
+  border: #0000 1px solid;
   margin-right: 5px;
   font-size: 0.8em;
 }
 
-#queryButton {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  font-size: 0.8em;
-  margin-left: 30px;
+.interrupt-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
+
+#interruptButton {
+  font-size: 0;
+  margin-top: 4px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
 #query-results-section {
-  height: calc(100vh - 420px);
-  max-height: calc(100vh - 420px);
   overflow-y: auto;
+  height: 70vh;
   padding-left: 5px;
-  border-right: #000000 1px solid;
-  border-left: #000000 1px solid;
-  border-bottom: #000000 1px solid;
+  border: 1px solid #000000;
 }
 
 #query-results-section p {
   margin-top: 5px;
-  font-size: 0.9em;
+  font-size: 0.8em;
 }
 
 #query-input-section button {
   flex-shrink: 0;
 }
 
+.delete-btn {
+  margin-left: 6px;
+  padding: 4px;
+  background: none;
+  color: red;
+  border: black 1px solid;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 .bold {
   font-weight: bold !important;
+}
+
+.alert-warning {
+  color: red;
 }
 
 .alert-danger {
@@ -267,20 +407,10 @@ input[type="checkbox"] {
   color: blue;
 }
 
-.footer {
-  width: calc(100% - 60px);
-  height: 50px;
-  position: fixed;
-  bottom: 0;
-  z-index: 1000;
+.query {
+  font-weight: bold;
 }
 
-.footer p {
+.response {
   margin-top: 5px;
-  margin-bottom: 5px;
-  padding: 10px;
-  padding-left: 0;
-  text-align: center;
-  font-size: 0.8em;
-  color: #000000;
 }

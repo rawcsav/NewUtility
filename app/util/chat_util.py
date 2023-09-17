@@ -10,7 +10,9 @@ import pandas as pd
 import tiktoken
 from PyPDF2 import PdfReader
 from nltk.tokenize import word_tokenize, sent_tokenize
+from openai.error import RateLimitError
 from scipy import spatial
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.config import EMBEDDING_MODEL, TOP_N, MAX_LENGTH, GPT_MODEL
 
@@ -226,6 +228,13 @@ def query_message(query: str, df: pd.DataFrame, api_key, model: str, token_budge
     return message, full_message, docs_used
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10),
+       retry=retry_if_exception_type(RateLimitError))
+def chat_completion_with_retry(messages, max_tokens, model):
+    return openai.ChatCompletion.create(model=model, messages=messages, max_tokens=max_tokens, temperature=.5,
+                                        stream=True)
+
+
 def ask(query: str, df: pd.DataFrame, api_key, model: str = GPT_MODEL, specific_documents=None):
     openai.api_key = api_key
     prompt = query
@@ -242,12 +251,15 @@ def ask(query: str, df: pd.DataFrame, api_key, model: str = GPT_MODEL, specific_
         {"role": "user", "content": full_message},
     ]
 
-    response_content = ""
-    for chunk in openai.ChatCompletion.create(model=model, messages=messages, max_tokens=max_tokens, temperature=.5,
-                                              stream=True):
-        content = chunk["choices"][0].get("delta", {}).get("content", "")
-        if content:
-            yield content
+    try:
+        for chunk in chat_completion_with_retry(messages, max_tokens, model):
+            content = chunk["choices"][0].get("delta", {}).get("content", "")
+            if content:
+                yield content
+    except RateLimitError as e:
+        print(f"Rate limit exceeded. All retry attempts failed.")
+    except openai.error.OpenAIError as e:
+        print(f"An OpenAI error occurred: {e}")
     yield "\n\nDocuments used:\n"
     for title, loc in docs_used:
         yield f'Title: {title}\n'

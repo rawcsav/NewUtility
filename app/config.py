@@ -11,6 +11,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 SESSION_TYPE = "filesystem"
 SESSION_PERMANENT = True
 PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+
 TOKENIZER = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-ada-002"
 GPT_MODEL = "gpt-4"
