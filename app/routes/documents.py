@@ -119,15 +119,15 @@ def remove_file():
     os.remove(file_path)
 
     # If you need to update JSON data
+    if os.path.exists(file_path):
+        return jsonify({"status": "error", "message": "Failed to delete file"}), 500
+
     with lock:
         if os.path.exists(EMBED_DATA_PATH) and os.path.getsize(EMBED_DATA_PATH) > 0:
             df_existing = pd.read_json(EMBED_DATA_PATH, orient='split')
-        else:
-            df_existing = pd.DataFrame()
-
-        # Assuming you have a column 'filename' in your DataFrame that holds the filename
-        df_existing = df_existing[df_existing['title'] != file_name_df]
-        df_existing.to_json(EMBED_DATA_PATH, orient='split')
+            df_existing = df_existing[df_existing['title'] != file_name_df]
+            if not df_existing.empty:  # Only write if DataFrame is not empty
+                df_existing.to_json(EMBED_DATA_PATH, orient='split')
 
     uploaded_files = session.get('uploaded_files', [])
     if file_name in uploaded_files:

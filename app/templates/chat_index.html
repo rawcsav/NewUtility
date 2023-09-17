@@ -120,7 +120,7 @@
                   />
                   <div>{{ file }}</div>
                   <!-- New Delete Button -->
-                  <button class="delete-btn" onclick="deleteFile('{{ file }}')">
+                  <button class="delete-btn" onclick="removeFile('{{ file }}')">
                     X
                   </button>
                 </li>
@@ -128,6 +128,7 @@
               </ul>
             </form>
           </div>
+          <div id="docs-alerts"></div>
         </div>
       </div>
       <div class="right-column">

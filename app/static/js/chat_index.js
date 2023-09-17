@@ -62,6 +62,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let isAPIKeySet = false;
 
+function removeFileExtension(filename) {
+  return filename.substring(0, filename.lastIndexOf("."));
+}
+
 async function uploadDocuments() {
   showAlert("Uploading...", "info", "upload");
   updateQueryButtonStatus(true);
@@ -106,9 +110,25 @@ async function uploadDocuments() {
         if (msg.includes("processed successfully")) {
           uploadedCount += 1;
           const docNameWithExtension = msg.split(" ")[1];
-          const docName = docNameWithExtension.split(".")[0];
+          const docName = docNameWithExtension.split(".")[0]; // Remove the extension
+
           const listItem = document.createElement("li");
-          listItem.innerHTML = `<input type="checkbox" name="selected_docs" value="${docName}" checked> ${docName}`;
+
+          // Create and configure the delete button
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "delete-btn";
+          deleteButton.textContent = "X";
+          deleteButton.onclick = function () {
+            removeFile(docNameWithExtension);
+          }; // Attach the removeFile function
+
+          // Add the checkbox and the document name (without extension)
+          listItem.innerHTML = `<input type="checkbox" name="selected_docs" value="${docNameWithExtension}" checked> ${docName}`;
+
+          // Append the delete button to the list item
+          listItem.appendChild(deleteButton);
+
+          // Finally, append the list item to the document list
           docList.appendChild(listItem);
         }
       }
@@ -335,21 +355,43 @@ function interruptQuery() {
 }
 
 async function removeFile(fileName) {
-  const response = await fetch(
-    `/remove_file?fileName=${encodeURIComponent(fileName)}`,
-    {
-      method: "DELETE",
-    },
-  );
+  try {
+    const response = await fetch(
+      `/remove_file?fileName=${encodeURIComponent(fileName)}`,
+      {
+        method: "DELETE",
+      },
+    );
 
-  if (response.ok) {
-    // Remove the list item from the DOM
-    const listItem = document.querySelector(`[data-file-name='${fileName}']`);
-    listItem.remove();
-  } else {
-    console.error("Failed to delete file");
+    if (response.ok) {
+      // Log the fileName for debugging
+      console.log("Attempting to remove file with name:", fileName);
+
+      // Remove the list item from the DOM
+      const listItem = document.querySelector(`[data-file-name='${fileName}']`);
+
+      // Check if listItem exists before trying to remove it
+      if (listItem) {
+        listItem.remove();
+      } else {
+        console.warn("No listItem found with the given fileName.");
+        $("#docs-alerts").html(
+          '<div class="alert alert-warning">Failed to locate the file in the UI.</div>',
+        );
+      }
+    } else {
+      $("#docs-alerts").html(
+        '<div class="alert alert-danger">Failed to delete the file. Please try again.</div>',
+      );
+    }
+  } catch (err) {
+    console.error("Failed to delete the file", err);
+    $("#docs-alerts").html(
+      '<div class="alert alert-danger">An error occurred while trying to delete the file.</div>',
+    );
   }
 }
+
 function showAlert(message, type, context = "apiKey") {
   let alertsDiv;
   switch (context) {
