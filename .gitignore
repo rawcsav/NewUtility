@@ -129,6 +129,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+node_modules/
 
 #Config
 config.ini
@@ -164,4 +165,11 @@ pyvenv.cfg
 #Other
 .DS_Store
 app/main_user_directory/*
-!app/main_user_directory/
+app/main_user_directory/!/.eslintrc.json
+.prettierrc
+.stylelintrc
+package.json
+package-lock.json
+pyproject.toml
+stylelint.config.js
+.eslintrc.json
