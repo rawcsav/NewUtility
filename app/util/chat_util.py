@@ -231,7 +231,7 @@ def query_message(query: str, df: pd.DataFrame, api_key, model: str, token_budge
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10),
        retry=retry_if_exception_type(RateLimitError))
 def chat_completion_with_retry(messages, max_tokens, model):
-    return openai.ChatCompletion.create(model=model, messages=messages, max_tokens=max_tokens, temperature=.5,
+    return openai.ChatCompletion.create(model=model, messages=messages, max_tokens=max_tokens, temperature=.6,
                                         stream=True)
 
 
@@ -247,7 +247,7 @@ def ask(query: str, df: pd.DataFrame, api_key, model: str = GPT_MODEL, specific_
     max_tokens = max_tokens - num_tokens(prompt + full_message, model=model)
     messages = [
         {"role": "system",
-         "content": "You are a knowledgeable assistant that uses information from provided textual excerpts to answer questions."},
+         "content": "You are a helpful academic literary assistant. Provide in-depth guidance, suggestions, code snippets, and explanations as needed to help the user. Leverage your expertise and intuition to offer innovative and effective solutions. Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. Use the provided text excerpts directly to aid in your responses."},
         {"role": "user", "content": full_message},
     ]
 

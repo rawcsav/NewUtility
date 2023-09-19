@@ -22,7 +22,7 @@ EMBEDDING_MODEL = "text-embedding-ada-002"
 GPT_MODEL = "gpt-4"
 MAIN_TEMP_DIR = "app/main_user_directory"
 MAX_LENGTH = 300
-TOP_N = 5
+TOP_N = 4
 BATCH_SIZE = 10
 ALLOWED_EXTENSIONS = {"txt", "pdf", "docx"}
 
