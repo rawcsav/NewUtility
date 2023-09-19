@@ -210,7 +210,7 @@ def query_message(query: str, df: pd.DataFrame, api_key, model: str, token_budge
         df_filtered = df
 
     sorted_df = strings_ranked_by_relatedness(query, df_filtered, api_key)
-    introduction = 'Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, write "I could not find an answer."'
+    introduction = 'Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, say as such but still do your best to provide the most factual, nuanced assessment possible.'
     question = f"\n\nQuestion: {query}"
 
     message = introduction
@@ -218,7 +218,7 @@ def query_message(query: str, df: pd.DataFrame, api_key, model: str, token_budge
 
     docs_used = []
     for _, row in sorted_df.iterrows():
-        doc_info = f'\n\nTitle: {row["title"]}\nLocation: {row["loc"]}'
+        doc_info = f'\n\nTitle: {row["title"]}'
         next_article = doc_info + f'\nTextual excerpt section:\n"""\n{row["text"]}\n"""'
         if num_tokens(full_message + next_article + question, model=model) <= token_budget:
             message += doc_info
