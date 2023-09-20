@@ -239,6 +239,7 @@ button {
 #uploaded_docs_list {
   padding: 0;
   margin: 0;
+  max-height: 60vh;
   overflow-y: auto;
   flex-grow: 1;
 }
