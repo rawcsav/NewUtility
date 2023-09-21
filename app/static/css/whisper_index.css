@@ -1,11 +1,11 @@
 .navbar {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
   text-align: center;
   position: relative;
 }
 
 .container {
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: 'Helvetica Neue', sans-serif;
   max-width: 600px;
   margin: 20px auto;
 }
@@ -17,7 +17,7 @@
 }
 
 .homepage-link img {
-  height: 80px;
+  height: 60px;
   transition: transform 0.3s;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .footer {
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: 'Helvetica Neue', sans-serif;
   text-align: center;
   margin: 20px auto;
 }
