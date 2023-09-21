@@ -35,186 +35,14 @@
       href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
       rel="stylesheet"
     />
-    <style>
-      body {
-        font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
-        text-align: center;
-        background: url('https://res.cloudinary.com/dn9bcrimg/image/upload/v1695046166/layered-peaks-haikei_3_obydlk.svg')
-          no-repeat center / cover fixed;
-        height: 100vh;
-        max-height: 100%;
-        overflow: hidden;
-        margin: 0;
-      }
-
-      .homepage-link {
-        position: absolute;
-        top: 1px;
-        left: 3px;
-      }
-
-      .homepage-link img {
-        height: 60px;
-        transition: transform 0.3s;
-      }
-
-      .homepage-link:hover img {
-        transform: scale(1.05);
-      }
-
-      h1 {
-        font-size: 50px;
-        text-align: center;
-        margin-top: 0;
-        margin-bottom: 0;
-        color: #666666;
-        font-weight: 1000;
-      }
-
-      .cloud-title-wrapper,
-      .cloud-btn-1-wrapper,
-      .cloud-btn-2-wrapper,
-      .cloud-btn-github-wrapper {
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      .cloud-title {
-        text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.5);
-        font-size: 60px;
-        z-index: -3;
-      }
-      .cloud-title-wrapper {
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        top: 6%;
-      }
-      .cloud-title-wrapper::before {
-        content: '';
-        position: absolute;
-        width: 900%; /* adjust as needed */
-        height: 900%; /* adjust as needed */
-        background: url('https://res.cloudinary.com/dn9bcrimg/image/upload/v1695059778/top1_l9hfwh.png')
-          no-repeat center / contain;
-        z-index: -4;
-      }
-
-      .cloud-btn {
-        text-decoration: none;
-        font-size: 30px;
-        font-weight: bolder;
-        cursor: pointer;
-        height: 30vh;
-        width: 30vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(
-          to right,
-          #0056ff,
-          #94a6dc
-        ); /* Change these colors as you see fit */
-        -webkit-background-clip: text;
-        color: transparent;
-      }
-
-      .cloud-title {
-        background: linear-gradient(
-          to right,
-          #0056ff,
-          #94a6dc
-        ); /* Change these colors as you see fit */
-        -webkit-background-clip: text;
-        color: transparent;
-        text-shadow: none;
-      }
-
-      .cloud-btn1:hover,
-      .cloud-btn2:hover,
-      .cloud-btn-github:hover {
-        transform: translateY(-5px);
-      }
-
-      .cloud-btn-1-wrapper:hover::before,
-      .cloud-btn-2-wrapper:hover::before,
-      .cloud-btn-github-wrapper:hover::before {
-        background-position: center -5px;
-      }
-
-      .cloud-btn1 {
-        padding-right: 5vw;
-        padding-bottom: 3vh;
-        z-index: 1;
-      }
-
-      .cloud-btn-github {
-        z-index: 1;
-        height: 28vh;
-        width: 28vw;
-      }
-
-      .cloud-btn-1-wrapper {
-        top: 2%;
-        right: 22%;
-      }
-
-      .cloud-btn-1-wrapper::before {
-        content: '';
-        position: absolute;
-        width: 160%; /* adjust as needed */
-        height: 160%; /* adjust as needed */
-        background: url('https://res.cloudinary.com/dn9bcrimg/image/upload/v1695076173/pngwing.com_2_c0z0gs.png')
-          no-repeat center / contain;
-        opacity: 0.6;
-        z-index: -2;
-      }
-      .cloud-btn2 {
-        z-index: 1;
-        margin-left: 12vw;
-        margin-bottom: -2vh;
-        padding-top: 3vh;
-      }
-      .cloud-btn-2-wrapper {
-        bottom: 30%;
-        left: 25%;
-      }
-      .cloud-btn-2-wrapper::before {
-        content: '';
-        position: absolute;
-        width: 160%; /* adjust as needed */
-        height: 160%;
-        background: url('https://res.cloudinary.com/dn9bcrimg/image/upload/v1695059778/bottom2_m4gw9l.png')
-          no-repeat center / contain;
-        z-index: -2;
-        opacity: 0.6;
-      }
-      .cloud-btn-github-wrapper::before {
-        content: '';
-        position: absolute;
-        width: 220%; /* adjust as needed */
-        height: 220%; /* adjust as needed */
-        background: url('https://res.cloudinary.com/dn9bcrimg/image/upload/v1695059779/bottom1_oew70i.png')
-          no-repeat center / contain;
-        z-index: -3;
-      }
-
-      .cloud-btn-github-wrapper {
-        top: -50%;
-      }
-
-      img,
-      div {
-        border: none;
-      }
-
-      a {
-        position: relative;
-        text-decoration: none;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/landing.css') }}"
+    />
   </head>
+  <div id="background" />
+  <div class="upper-overlay"></div>
+
   <body>
     <div class="cloud-title-wrapper">
       <h1 class="cloud-title">AI Tools</h1>
@@ -222,7 +50,7 @@
 
     <a href="https://rawcsav.com" class="homepage-link">
       <img
-        src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1695251723/RawcSavLogo_iiq03n.png"
+        src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1695275099/PhotopeaLogo_1_pvsqa0.png"
         alt="Homepage"
       />
     </a>
@@ -245,15 +73,7 @@
         ><span id="github-label">GITHUB REPO</span></a
       >
     </div>
+    <div class="lower-overlay"></div>
   </body>
-  <script>
-    document.querySelectorAll('.cloud-btn').forEach((button) => {
-      button.addEventListener('mouseover', function () {
-        this.parentElement.classList.add('hovered');
-      });
-      button.addEventListener('mouseout', function () {
-        this.parentElement.classList.remove('hovered');
-      });
-    });
-  </script>
+  <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 </html>
