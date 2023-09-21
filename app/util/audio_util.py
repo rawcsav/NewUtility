@@ -13,6 +13,9 @@ from app.config import INITIAL_PROMPT, SUPPORTED_FORMATS, MAX_AUDIO_FILE_SIZE
 class TranscriptionFailedException(Exception):
     pass
 
+def save_to_txt(content: str, filename: str):
+    with open(filename, "w") as txt_file:
+        txt_file.write(content)
 
 def convert_to_mp3(file_path: str) -> Optional[str]:
     dirname, filename = os.path.split(file_path)
@@ -79,6 +82,7 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
 
     file_path = Path(input_directory) / filename
     file_size = file_path.stat().st_size
+    intermediate_txt = os.path.join(input_directory, "backup_output.txt")
 
     openai.api_key = openai_api_key
 
@@ -92,6 +96,7 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
                 else:
                     transcript = transcribe_with_retry(audio_file, INITIAL_PROMPT, language=language,
                                                        use_timestamps=use_timestamps)
+                save_to_txt(transcript, intermediate_txt)
                 return transcript
 
         # If the file is larger than 25MB and is a compatible format but not an MP3
@@ -138,6 +143,9 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
                 # Delete the part after transcribing
                 Path(part_file).unlink()
 
+            transcripts = " ".join(transcripts_parts)
+            save_to_txt(transcripts, intermediate_txt)
+
             transcripts = ''
             timestamp_offset = 0
 
@@ -168,6 +176,7 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
                         last_end_timestamp = end_time
 
                     timestamp_offset += last_end_timestamp
+                    save_to_txt(transcripts, intermediate_txt)
             else:
                 transcripts = " ".join(transcripts_parts)
 
@@ -274,6 +283,7 @@ def transcribe_files(input_directory: str,
                      use_timestamps: bool = True,
                      language: str = 'en',
                      translate: bool = False) -> List[str]:
+    intermediate_txt = os.path.join(input_directory, "backup_output.txt")
     supported_formats = (".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".wav", ".webm")
     input_path = Path(input_directory)
 
@@ -295,7 +305,6 @@ def transcribe_files(input_directory: str,
         try:
             results = await asyncio.gather(*tasks)
         except Exception as e:
-            # raise TranscriptionFailedException if there's an error in the asynchronous transcription process
             raise TranscriptionFailedException(str(e))
 
         for transcripts, filename in zip(results, files):
@@ -309,4 +318,6 @@ def transcribe_files(input_directory: str,
             if use_timestamps:
                 process_transcripts(transcripts, txt_file_path)
 
+
+        Path(intermediate_txt).unlink()
     asyncio.run(transcribe_async())

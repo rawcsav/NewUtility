@@ -6,7 +6,7 @@ from flask_session import Session
 
 from app import config
 from app.util.docauth_util import remove_directory
-
+from flask import Flask
 
 def create_app():
     app = Flask(__name__)

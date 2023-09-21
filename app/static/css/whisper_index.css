@@ -74,3 +74,31 @@ h1 {
   bottom: 0;
   margin-left: 40%;
 }
+
+.custom-alert {
+  color: white;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+#status {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 20px;
+}
+
+.custom-warning {
+  color: red;
+}
+
+.custom-danger {
+  color: red;
+}
+
+.custom-success {
+  color: green;
+}
+
+.custom-info {
+  color: blue;
+}

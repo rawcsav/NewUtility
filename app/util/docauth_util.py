@@ -67,3 +67,4 @@ def cleanup_path(path, threshold_minutes=180):
 def scheduled_cleanup():
     cleanup_path('/tmp')
     cleanup_path(config.MAIN_TEMP_DIR)
+

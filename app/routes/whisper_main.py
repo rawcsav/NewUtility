@@ -1,6 +1,7 @@
 import glob
 import os
 import threading
+from asyncio import sleep
 
 from flask import (
     Blueprint,
@@ -11,6 +12,7 @@ from flask import (
     redirect,
     url_for,
     session,
+Response,
     send_from_directory,
 )
 from werkzeug.utils import secure_filename
@@ -23,6 +25,18 @@ bp = Blueprint("whisper_main", __name__)
 
 lock = threading.Lock()
 
+event_stream = []
+
+def update_status(message):
+    event_stream.append(f"data: {message}\n\n")
+
+@bp.route('/status')
+def status():
+    def event_stream_generator():
+        for event in event_stream:
+            yield event
+
+    return Response(event_stream_generator(), content_type='text/event-stream')
 
 @bp.route("/whisper_index", methods=["GET"])
 def whisper_index():
@@ -32,7 +46,8 @@ def whisper_index():
 
 @bp.route("/transcribe", methods=["POST"])
 def transcribe():
-    audio_files = request.files.getlist("audio_files")
+    update_status("Starting audio processing... This may take a while.")
+    audio_file = request.files.get("audio_file")  # Get a single file
     api_key = request.form.get("api_key")
     use_timestamps = request.form.get("use_timestamps") == "yes"
     language = request.form.get("language")
@@ -43,18 +58,13 @@ def transcribe():
         flash("Invalid API key! Please check your API key and try again.", "error")
         return redirect(url_for("whisper_main.whisper_index"))
 
-    if not audio_files or not api_key:
-        flash("Please upload audio files and provide an API key.", "error")
+    if not audio_file or not api_key:
+        flash("Please upload an audio file and provide an API key.", "error")
         return redirect(url_for("whisper_main.whisper_index"))
 
-    valid_files = [
-        file
-        for file in audio_files
-        if file.filename.endswith(SUPPORTED_FORMATS)
-        and file.content_length <= MAX_CONTENT_LENGTH
-    ]
-    if not valid_files:
-        flash("No supported audio files selected!", "error")
+    # Validate the file
+    if not (audio_file.filename.endswith(SUPPORTED_FORMATS) and audio_file.content_length <= MAX_CONTENT_LENGTH):
+        flash("Unsupported audio file selected!", "error")
         return redirect(url_for("whisper_main.whisper_index"))
 
     os.makedirs(session["WHISPER_UPLOAD_DIR"], exist_ok=True)
@@ -62,10 +72,9 @@ def transcribe():
     input_directory = session["WHISPER_UPLOAD_DIR"]
 
     with lock:
-        for uploaded_file in valid_files:
-            filename = secure_filename(uploaded_file.filename)
-            file_path = os.path.join(input_directory, filename)
-            uploaded_file.save(file_path)
+        filename = secure_filename(audio_file.filename)
+        file_path = os.path.join(input_directory, filename)
+        audio_file.save(file_path)
 
         try:
             transcribe_files(
@@ -78,10 +87,13 @@ def transcribe():
             )
         except TranscriptionFailedException as e:
             flash(str(e), "error")
-            return redirect(url_for("whisper_main.whisper_index"))
+            update_status("Audio processing error. Attempting to retrieve any results that may have been produced...")
+            sleep(10)
+            return redirect(
+                url_for("whisper_main.results", output_dir=output_directory))
 
+    update_status("Audio processing complete.")
     return redirect(url_for("whisper_main.results", output_dir=output_directory))
-
 
 @bp.route("/results", methods=["GET"])
 def results():
