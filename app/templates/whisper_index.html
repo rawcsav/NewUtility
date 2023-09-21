@@ -54,9 +54,19 @@
         alt="Homepage"
       />
     </a>
-    <h1>Transcription & Translation Service</h1>
     <div class="container">
+      <h1>Transcription & Translation Service</h1>
+
       <form action="/transcribe" method="post" enctype="multipart/form-data">
+        <div class="step">
+          <label for="api-key">Enter OpenAI API Key:</label>
+          <input
+            type="text"
+            id="api-key"
+            name="api_key"
+            placeholder="API Key"
+          />
+        </div>
         <div class="step">
           <label for="audio-files"
             >Upload Audio Files <br />
@@ -71,15 +81,6 @@
             name="audio_files"
             accept="{', '.join(allowed_formats)}"
             multiple
-          />
-        </div>
-        <div class="step">
-          <label for="api-key">Enter OpenAI API Key:</label>
-          <input
-            type="text"
-            id="api-key"
-            name="api_key"
-            placeholder="API Key"
           />
         </div>
         <div class="step">
@@ -183,15 +184,6 @@
         </div>
         <button onclick="processForm()">Submit</button>
       </form>
-    </div>
-    <div class="footer">
-      <p>
-        For more details and explanation of the code, please visit the GitHub
-        repository:
-        <a href="https://github.com/rawcsav/WhisperASR_Flask"
-          >WhisperASR_Flask</a
-        >
-      </p>
     </div>
   </body>
 </html>
