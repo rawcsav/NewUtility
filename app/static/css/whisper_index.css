@@ -1,3 +1,23 @@
+body {
+  font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
+  text-align: center;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  position: relative; /* Add this */
+}
+
+#background {
+  z-index: 1;
+  background-image: url('https://res.cloudinary.com/dn9bcrimg/image/upload/v1695277076/layered-waves-haikei_1_-svg_1_bkajqo.svg');
+  height: 100vh;
+  width: 100vw;
+  position: absolute; /* Changed from fixed to absolute */
+  background-size: cover;
+  background-position: center;
+}
+
 .navbar {
   font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
   text-align: center;
@@ -8,8 +28,22 @@
   font-family: 'Helvetica Neue', sans-serif;
   max-width: 600px;
   margin: 20px auto;
+  position: relative;
 }
 
+.step {
+  padding: 20px;
+  margin: 10px 0;
+  position: relative;
+  z-index: 1;
+  /* Apply both the gradient and a solid background color */
+  background: linear-gradient(45deg, #ff9a8c 0%, #ff6a88 100%),
+    rgba(255, 255, 255, 1); /* Opaque white background */
+  border-radius: 12px; /* Adjust as needed */
+
+  /* Optional: box-shadow for additional depth */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 .homepage-link {
   position: absolute;
   top: 1px;
@@ -24,13 +58,20 @@
 .homepage-link:hover img {
   transform: scale(1.05);
 }
-
-.step {
-  border: 1px solid #000000;
-  padding: 20px;
-  margin: 10px 0;
+h1 {
+  color: #6d2e46;
+  font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: normal;
+  text-align: center;
+  text-shadow:
+    0 -1px 4px #fff,
+    0 -2px 10px #ff0,
+    0 -10px 20px #ff7ea9,
+    0 -18px 40px #f00,
+    2px 2px 2px rgba(255, 126, 169, 0);
 }
-
 .info {
   font-size: 12px;
   color: #666;
