@@ -11,6 +11,8 @@ from app import config
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in config.ALLOWED_EXTENSIONS
 
+def allowed_audiofile(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in config.SUPPORTED_FORMATS
 
 def remove_directory(directory_path):
     if not os.path.exists(directory_path):

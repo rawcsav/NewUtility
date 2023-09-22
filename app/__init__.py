@@ -6,10 +6,10 @@ from flask_session import Session
 
 from app import config
 from app.util.docauth_util import remove_directory
-from flask import Flask
 
 def create_app():
     app = Flask(__name__)
+
 
     app.secret_key = config.SECRET_KEY
     app.config["SESSION_TYPE"] = config.SESSION_TYPE
@@ -74,7 +74,7 @@ def create_app():
         whisper_main,
         whisper_errors,
         landing,
-    )  # <- Add 'landing' here
+    )
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(documents.bp)

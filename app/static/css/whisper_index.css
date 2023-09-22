@@ -61,7 +61,7 @@ h1 {
   font-weight: bold;
   letter-spacing: normal;
   text-align: center;
-  margin-bottom: 100px;
+  margin-bottom: 20px;
 }
 .info {
   font-size: 12px;
@@ -87,18 +87,18 @@ h1 {
   margin-top: 20px;
 }
 
-.custom-warning {
+.alert-warning {
   color: red;
 }
 
-.custom-danger {
+.alert-danger {
   color: red;
 }
 
-.custom-success {
+.alert-success {
   color: green;
 }
 
-.custom-info {
+.alert-info {
   color: blue;
 }

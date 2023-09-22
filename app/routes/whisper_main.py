@@ -1,7 +1,7 @@
 import glob
 import os
 import threading
-from asyncio import sleep
+from time import sleep
 
 from flask import (
     Blueprint,
@@ -12,31 +12,21 @@ from flask import (
     redirect,
     url_for,
     session,
-Response,
+    Response,
     send_from_directory,
+    jsonify,
 )
 from werkzeug.utils import secure_filename
 
-from app.config import SUPPORTED_FORMATS, MAX_CONTENT_LENGTH
-from app.util.audio_util import transcribe_files, TranscriptionFailedException
+from app.config import SUPPORTED_FORMATS, MAX_CONTENT_LENGTH, MAX_AUDIO_FILE_SIZE
+from app.util.audio_util import transcribe_file, TranscriptionFailedException
 from app.util.docauth_util import check_api_key
+from pathlib import Path
 
 bp = Blueprint("whisper_main", __name__)
 
 lock = threading.Lock()
 
-event_stream = []
-
-def update_status(message):
-    event_stream.append(f"data: {message}\n\n")
-
-@bp.route('/status')
-def status():
-    def event_stream_generator():
-        for event in event_stream:
-            yield event
-
-    return Response(event_stream_generator(), content_type='text/event-stream')
 
 @bp.route("/whisper_index", methods=["GET"])
 def whisper_index():
@@ -44,42 +34,48 @@ def whisper_index():
     return render_template("whisper_index.html", messages=messages)
 
 
+@bp.route("/upload_audio", methods=["POST"])
+def upload_audio():
+    if "audio_file" not in request.files:
+        return jsonify({"error": "No file part"})
+
+    file = request.files["audio_file"]
+
+    if file.filename == "":
+        return jsonify({"error": "No selected file"})
+
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(session["WHISPER_UPLOAD_DIR"], filename)
+        file.save(file_path)
+        session["file_path"] = file_path  # Save file path in session
+        return jsonify({"success": True, "filename": filename})  # Return filename
+    else:
+        return jsonify({"error": "File type not supported"})
+
+
 @bp.route("/transcribe", methods=["POST"])
 def transcribe():
-    update_status("Starting audio processing... This may take a while.")
-    audio_file = request.files.get("audio_file")  # Get a single file
-    api_key = request.form.get("api_key")
-    use_timestamps = request.form.get("use_timestamps") == "yes"
+    api_key = session.get("api_key")
+    use_timestamps = request.form.get("use_timestamps")
     language = request.form.get("language")
     translate = request.form.get("translate") == "yes"
-
+    file_path = session.get("file_path")  # Get file path from session
     # Validate API key
     if not check_api_key(api_key):
         flash("Invalid API key! Please check your API key and try again.", "error")
-        return redirect(url_for("whisper_main.whisper_index"))
 
-    if not audio_file or not api_key:
-        flash("Please upload an audio file and provide an API key.", "error")
-        return redirect(url_for("whisper_main.whisper_index"))
-
-    # Validate the file
-    if not (audio_file.filename.endswith(SUPPORTED_FORMATS) and audio_file.content_length <= MAX_CONTENT_LENGTH):
-        flash("Unsupported audio file selected!", "error")
-        return redirect(url_for("whisper_main.whisper_index"))
+    if not file_path:
+        flash("Please upload an audio file.", "error")
 
     os.makedirs(session["WHISPER_UPLOAD_DIR"], exist_ok=True)
-    output_directory = session["WHISPER_UPLOAD_DIR"]
-    input_directory = session["WHISPER_UPLOAD_DIR"]
+    whisper_directory = session["WHISPER_UPLOAD_DIR"]
 
     with lock:
-        filename = secure_filename(audio_file.filename)
-        file_path = os.path.join(input_directory, filename)
-        audio_file.save(file_path)
-
         try:
-            transcribe_files(
-                input_directory,
-                output_directory,
+            txt_file_name = transcribe_file(
+                file_path,
+                whisper_directory,
                 api_key,
                 use_timestamps,
                 language,
@@ -87,47 +83,15 @@ def transcribe():
             )
         except TranscriptionFailedException as e:
             flash(str(e), "error")
-            update_status("Audio processing error. Attempting to retrieve any results that may have been produced...")
             sleep(10)
-            return redirect(
-                url_for("whisper_main.results", output_dir=output_directory))
+            return redirect(url_for("whisper_main.whisper_index"))
 
-    update_status("Audio processing complete.")
-    return redirect(url_for("whisper_main.results", output_dir=output_directory))
+        transcribed_file_name = os.path.join(whisper_directory, txt_file_name)
 
-@bp.route("/results", methods=["GET"])
-def results():
-    output_directory = session["WHISPER_UPLOAD_DIR"]
+        download_url = url_for("whisper_main.download", filename=transcribed_file_name)
 
-    if not output_directory:
-        flash("Missing output directory.", "error")
-        return redirect(url_for("whisper_main.whisper_index"))
-
-    try:
-        # Get a list of all .txt files in the directory
-        txt_files = glob.glob(os.path.join(output_directory, "*.txt"))
-
-        # Get the project's root directory
-        project_root_directory = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../..")
-        )
-
-        # Get the relative paths of the .txt files
-        txt_files_relative = [
-            os.path.relpath(txt_file, project_root_directory) for txt_file in txt_files
-        ]
-
-        # Print the list of .txt files
-        print(f"Text Files: {txt_files_relative}")
-    except FileNotFoundError:
-        flash("Output directory not found.", "error")
-        return redirect(url_for("whisper_main.whisper_index"))
-
-    return render_template(
-        "whisper_results.html",
-        files=txt_files_relative,
-        output_directory=output_directory,
-    )
+        # Return JSON response
+        return jsonify(success=True, download_url=download_url)
 
 
 @bp.route("/download/<path:filename>", methods=["GET"])

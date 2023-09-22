@@ -13,9 +13,11 @@ from app.config import INITIAL_PROMPT, SUPPORTED_FORMATS, MAX_AUDIO_FILE_SIZE
 class TranscriptionFailedException(Exception):
     pass
 
+
 def save_to_txt(content: str, filename: str):
     with open(filename, "w") as txt_file:
         txt_file.write(content)
+
 
 def convert_to_mp3(file_path: str) -> Optional[str]:
     dirname, filename = os.path.split(file_path)
@@ -24,26 +26,38 @@ def convert_to_mp3(file_path: str) -> Optional[str]:
     mp3_file_path = os.path.join(dirname, f"{basename}.mp3")
 
     if extension in SUPPORTED_FORMATS:
-        audio = AudioSegment.from_file(file_path, extension.lstrip('.'))
+        audio = AudioSegment.from_file(file_path, extension.lstrip("."))
         audio.export(mp3_file_path, format="mp3")
         return mp3_file_path
     else:
         return None
 
 
-def transcribe_with_retry(audio_file: str, prompt: str, max_retries: int = 3, use_timestamps: bool = True,
-                          language: str = 'en') -> Optional[str]:
+def transcribe_with_retry(
+    audio_file: str,
+    prompt: str,
+    max_retries: int = 3,
+    use_timestamps: bool = True,
+    language: str = "en",
+) -> Optional[str]:
     transcript = None
 
     for retry_count in range(max_retries):
         try:
             if use_timestamps:
-                response = openai.Audio.transcribe("whisper-1", audio_file, response_format="srt", language=language,
-                                                   prompt=prompt)
+                response = openai.Audio.transcribe(
+                    "whisper-1",
+                    audio_file,
+                    response_format="srt",
+                    language=language,
+                    prompt=prompt,
+                )
                 transcript = response
             else:
-                response = openai.Audio.transcribe("whisper-1", audio_file, language=language, prompt=prompt)
-                transcript = response['text']
+                response = openai.Audio.transcribe(
+                    "whisper-1", audio_file, language=language, prompt=prompt
+                )
+                transcript = response["text"]
             return transcript
         except Exception as e:
             print(f"Error: {e}. Retrying...")
@@ -51,18 +65,24 @@ def transcribe_with_retry(audio_file: str, prompt: str, max_retries: int = 3, us
     return None
 
 
-def translate_with_retry(audio_file: str, prompt: str, max_retries: int = 3, use_timestamps: bool = True) -> Optional[
-    str]:
+def translate_with_retry(
+    audio_file: str, prompt: str, max_retries: int = 3, use_timestamps: bool = True
+) -> Optional[str]:
     transcript = None
 
     for retry_count in range(max_retries):
         try:
             if use_timestamps:
-                response = openai.Audio.translate("whisper-1", audio_file, response_format="srt", prompt=prompt)
+                response = openai.Audio.translate(
+                    "whisper-1", audio_file, response_format="srt", prompt=prompt
+                )
                 translation = response
+
             else:
-                response = openai.Audio.translate("whisper-1", audio_file, prompt=prompt)
-                translation = response['text']
+                response = openai.Audio.translate(
+                    "whisper-1", audio_file, prompt=prompt
+                )
+                translation = response["text"]
             return translation
         except Exception as e:
             print(f"Error: {e}. Retrying...")
@@ -76,31 +96,48 @@ def parse_transcript_text(transcript_srt: str) -> str:
     return transcribed_text.strip()
 
 
-def process_audio_file(filename: str, input_directory: str, openai_api_key: str, use_timestamps: bool = True,
-                       language: str = 'en', translate: bool = False) -> Optional[str]:
+def process_audio_file(
+    file_path: str,
+    whisper_directory: str,
+    openai_api_key: str,
+    use_timestamps: bool = True,
+    language: str = "en",
+    translate: bool = False,
+) -> Optional[str]:
     temp_files = []  # List to keep track of temporary files created during processing
 
-    file_path = Path(input_directory) / filename
+    file_path = Path(file_path)
     file_size = file_path.stat().st_size
-    intermediate_txt = os.path.join(input_directory, "backup_output.txt")
+    intermediate_txt = os.path.join(whisper_directory, "backup_output.txt")
 
     openai.api_key = openai_api_key
-
     try:
         # If the file is a compatible format and is smaller than 25MB
-        if file_size <= MAX_AUDIO_FILE_SIZE and file_path.suffix.lower() in SUPPORTED_FORMATS:
+        if (
+            file_size <= MAX_AUDIO_FILE_SIZE
+            and file_path.suffix.lower() in SUPPORTED_FORMATS
+        ):
             temp_files.append(file_path)  # Add to the temp files list
             with open(file_path, "rb") as audio_file:
                 if translate:
-                    transcript = translate_with_retry(audio_file, INITIAL_PROMPT, use_timestamps=use_timestamps)
+                    transcript = translate_with_retry(
+                        audio_file, INITIAL_PROMPT, use_timestamps=use_timestamps
+                    )
                 else:
-                    transcript = transcribe_with_retry(audio_file, INITIAL_PROMPT, language=language,
-                                                       use_timestamps=use_timestamps)
-                save_to_txt(transcript, intermediate_txt)
+                    transcript = transcribe_with_retry(
+                        audio_file,
+                        INITIAL_PROMPT,
+                        language=language,
+                        use_timestamps=use_timestamps,
+                    )
                 return transcript
 
         # If the file is larger than 25MB and is a compatible format but not an MP3
-        elif file_size > MAX_AUDIO_FILE_SIZE and file_path.suffix.lower() in SUPPORTED_FORMATS and file_path.suffix.lower() != ".mp3":
+        elif (
+            file_size > MAX_AUDIO_FILE_SIZE
+            and file_path.suffix.lower() in SUPPORTED_FORMATS
+            and file_path.suffix.lower() != ".mp3"
+        ):
             mp3_file_path = convert_to_mp3(file_path)
             temp_files.append(mp3_file_path)  # Add to the temp files list
             file_path.unlink()
@@ -119,15 +156,21 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
             mp3_file_path.unlink()
 
             transcripts_parts = []
-            prompt = ''
+            prompt = ""
 
             for part_idx, part_file in enumerate(file_parts):
                 with open(part_file, "rb") as audio_file:
                     if translate:
-                        transcript_part = translate_with_retry(audio_file, prompt=prompt, use_timestamps=use_timestamps)
+                        transcript_part = translate_with_retry(
+                            audio_file, prompt=prompt, use_timestamps=use_timestamps
+                        )
                     else:
-                        transcript_part = transcribe_with_retry(audio_file, prompt=prompt, language=language,
-                                                                use_timestamps=use_timestamps)
+                        transcript_part = transcribe_with_retry(
+                            audio_file,
+                            prompt=prompt,
+                            language=language,
+                            use_timestamps=use_timestamps,
+                        )
                     transcripts_parts.append(transcript_part)
 
                 # Reset the prompt to an empty string for all parts except the first one
@@ -143,10 +186,7 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
                 # Delete the part after transcribing
                 Path(part_file).unlink()
 
-            transcripts = " ".join(transcripts_parts)
-            save_to_txt(transcripts, intermediate_txt)
-
-            transcripts = ''
+            transcripts = ""
             timestamp_offset = 0
 
             if use_timestamps:
@@ -155,7 +195,9 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
                     last_end_timestamp = 0
 
                     for timestamp, text in parsed_timestamps:
-                        match = re.search(r'(\d+:\d+:\d+,\d+)\s+-->\s+(\d+:\d+:\d+,\d+)', timestamp)
+                        match = re.search(
+                            r"(\d+:\d+:\d+,\d+)\s+-->\s+(\d+:\d+:\d+,\d+)", timestamp
+                        )
                         if match:
                             start_timestamp = match.group(1)
                             end_timestamp = match.group(2)
@@ -168,8 +210,12 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
                         new_start_time = ms_to_timestamp(start_time + timestamp_offset)
                         new_end_time = ms_to_timestamp(end_time + timestamp_offset)
 
-                        new_timestamp = timestamp.replace(start_timestamp, new_start_time)
-                        new_timestamp = new_timestamp.replace(end_timestamp, new_end_time)
+                        new_timestamp = timestamp.replace(
+                            start_timestamp, new_start_time
+                        )
+                        new_timestamp = new_timestamp.replace(
+                            end_timestamp, new_end_time
+                        )
 
                         transcripts += new_timestamp + "\n" + text + "\n\n"
 
@@ -192,59 +238,66 @@ def process_audio_file(filename: str, input_directory: str, openai_api_key: str,
 
 
 def parse_timestamps(content: str) -> List[Tuple[str, str]]:
-    parsed_timestamps = re.findall(r'(\d+\n\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+\n(.*?)(?:\n|\Z))', content, re.DOTALL)
+    parsed_timestamps = re.findall(
+        r"(\d+\n\d+:\d+:\d+,\d+ --> \d+:\d+:\d+,\d+\n(.*?)(?:\n|\Z))",
+        content,
+        re.DOTALL,
+    )
     if not parsed_timestamps:
         print(f"Error: Unable to parse timestamps from content: {content}")
     return parsed_timestamps
 
 
 def is_full_sentence(text):
-    return text.strip() and text[-1] in '.!?'
+    return text.strip() and text[-1] in ".!?"
 
 
 def format_timestamp(timestamp):
     timestamp = timestamp[:-4]
-    h, m, s = map(int, timestamp.split(':'))
+    h, m, s = map(int, timestamp.split(":"))
     if h > 0:
-        return f'{h:02d}:{m:02d}:{s:02d}'
+        return f"{h:02d}:{m:02d}:{s:02d}"
     else:
-        return f'{m:02d}:{s:02d}'
+        return f"{m:02d}:{s:02d}"
 
 
 def process_timestamps(timestamps):
     new_timestamps = []
-    timestamp_buffer = ''
-    start_time = ''
-    end_time = ''
+    timestamp_buffer = ""
+    start_time = ""
+    end_time = ""
 
     for timestamp, text in timestamps:
         if not start_time:
-            start_time = re.search(r'(\d+:\d+:\d+,\d+) -->', timestamp).group(1)
+            start_time = re.search(r"(\d+:\d+:\d+,\d+) -->", timestamp).group(1)
 
-        timestamp_buffer += ' ' + text.strip()
+        timestamp_buffer += " " + text.strip()
 
         if is_full_sentence(timestamp_buffer):
-            end_time = re.search(r'--> (\d+:\d+:\d+,\d+)', timestamp).group(1)
+            end_time = re.search(r"--> (\d+:\d+:\d+,\d+)", timestamp).group(1)
             new_timestamps.append((start_time, end_time, timestamp_buffer.strip()))
-            timestamp_buffer = ''
-            start_time = ''
-            end_time = ''
+            timestamp_buffer = ""
+            start_time = ""
+            end_time = ""
 
     return new_timestamps
 
 
 def export_timestamps(timestamps: List[Tuple[str, str, str]], filename: str) -> None:
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         for start, end, text in timestamps:
             start = format_timestamp(start)
             end = format_timestamp(end)
-            f.write(f'[{start} - {end}] {text}\n\n')
+            f.write(f"[{start} - {end}] {text}\n\n")
 
 
 def timestamp_to_ms(timestamp: str) -> int:
-    hours, minutes, remaining = timestamp.split(':')
-    seconds, milliseconds = remaining.split(',')
-    total_ms = int((int(hours) * 3600 + int(minutes) * 60 + float(seconds)) * 1000 + int(milliseconds))
+    hours, minutes, remaining = timestamp.split(":")
+    seconds, milliseconds = remaining.split(",")
+    total_ms = int(
+        (int(hours) * 3600 + int(minutes) * 60 + float(seconds)) * 1000
+        + int(milliseconds)
+    )
     return total_ms
 
 
@@ -263,8 +316,10 @@ def split_large_file(file_path: Path) -> List[str]:
     file_parts = []
 
     for i in range(0, len(audio), split_duration_ms):
-        part = audio[i:i + split_duration_ms]
-        part_filename = os.path.join(dirname, f"{file_basename}_part{i // split_duration_ms}.mp3")
+        part = audio[i : i + split_duration_ms]
+        part_filename = os.path.join(
+            dirname, f"{file_basename}_part{i // split_duration_ms}.mp3"
+        )
         part.export(part_filename, format="mp3")
         file_parts.append(part_filename)
 
@@ -277,47 +332,51 @@ def process_transcripts(content, output_file):
     export_timestamps(formatted_timestamps, output_file)
 
 
-def transcribe_files(input_directory: str,
-                     output_directory: str,
-                     openai_api_key: str,
-                     use_timestamps: bool = True,
-                     language: str = 'en',
-                     translate: bool = False) -> List[str]:
-    intermediate_txt = os.path.join(input_directory, "backup_output.txt")
+def transcribe_file(
+    file_path: str,
+    whisper_directory: str,
+    openai_api_key: str,
+    use_timestamps: bool = True,
+    language: str = "en",
+    translate: bool = False,
+) -> str:
+    # Validate the file format
     supported_formats = (".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".wav", ".webm")
-    input_path = Path(input_directory)
-
-    if input_path.is_dir():
-        files = [f for f in os.listdir(input_directory) if f.endswith(supported_formats)]
-    else:
-        files = [input_directory] if input_directory.endswith(supported_formats) else []
-
-    if not files:
-        raise ValueError("No supported audio files found.")
+    if not file_path.endswith(supported_formats):
+        raise ValueError("Unsupported audio file format.")
 
     openai.api_key = openai_api_key
 
     async def transcribe_async():
         loop = asyncio.get_running_loop()
-        tasks = [
-            loop.run_in_executor(None, process_audio_file, filename, input_directory, openai_api_key, use_timestamps,
-                                 language, translate) for filename in files]
+
+        # Only processing one file, so we only have one task
+        task = loop.run_in_executor(
+            None,
+            process_audio_file,
+            file_path,
+            whisper_directory,
+            openai_api_key,
+            use_timestamps,
+            language,
+            translate,
+        )
+
         try:
-            results = await asyncio.gather(*tasks)
+            transcript = await asyncio.gather(task)
         except Exception as e:
             raise TranscriptionFailedException(str(e))
 
-        for transcripts, filename in zip(results, files):
-            basename = os.path.splitext(filename)[0]
-            txt_filename = f"{basename}.txt"
-            txt_file_path = os.path.join(output_directory, txt_filename)
+        basename = os.path.splitext(Path(file_path).name)[0]
+        txt_filename = f"{basename}.txt"
+        txt_file_path = os.path.join(whisper_directory, txt_filename)
 
-            with open(txt_file_path, "w") as txt_file:
-                txt_file.write(transcripts)
+        with open(txt_file_path, "w") as txt_file:
+            txt_file.write(transcript[0])
 
-            if use_timestamps:
-                process_transcripts(transcripts, txt_file_path)
+        if use_timestamps:
+            process_transcripts(transcript[0], txt_file_path)
 
+        return txt_filename  # Add this line
 
-        Path(intermediate_txt).unlink()
-    asyncio.run(transcribe_async())
+    return asyncio.run(transcribe_async())
