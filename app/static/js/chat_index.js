@@ -47,6 +47,17 @@ $(document).ready(function () {
       hideModal(apiKeyModal);
     }
   });
+  $('#toggleRightColumn').click(function () {
+    var rightColumn = $('.right-column');
+    var leftColumn = $('.left-column');
+    if (rightColumn.is(':visible')) {
+      rightColumn.hide();
+      leftColumn.css('flex', '5');
+    } else {
+      rightColumn.show();
+      leftColumn.css('flex', '4');
+    }
+  });
 });
 
 // Get the input element
@@ -349,16 +360,15 @@ async function setAPIKey() {
 
     const data = await response.json(); // Parse the response body
 
-    if (response.ok && data.status !== 'error') {
+    if (response.ok && data.status === 'success') {
       // Check if status is not "error"
       document.getElementById('fileInput').disabled = false;
       document.querySelector('.apiKeyAlerts').innerHTML = ''; // Clear any existing alerts
+      document.getElementById('apiKeyStatus').innerHTML = ''; // Clear any existing status
       document.getElementById('apiKeyStatus').style.display = 'block';
-      document.getElementById('apiKeyStatus2').style.display = 'block';
 
       document.getElementById('apiKeyStatus').innerHTML =
-        document.getElementById('apiKeyStatus2').innerHTML =
-          'API Key Set Successfully!'; // Display success status
+        'API Key Set Successfully!'; // Display success status
       $('#apiKeyModal').fadeOut(); // Hide the modal
 
       isAPIKeySet = await checkAPIKeyStatus();
@@ -366,10 +376,8 @@ async function setAPIKey() {
     } else {
       // Show the error message from the server, or a generic error message
       document.getElementById('apiKeyStatus').style.display = 'none'; // Hide the success status
-      document.getElementById('apiKeyStatus2').style.display = 'none'; // Hide the success status
 
       document.getElementById('apiKeyStatus').innerHTML = ''; // Clear any existing status
-      document.getElementById('apiKeyStatus2').innerHTML = ''; // Clear any existing status
 
       showAlert(
         data.message || 'Error. Please check the key and try again.',
@@ -386,40 +394,30 @@ async function checkAPIKeyStatus() {
   const data = await response.json();
 
   const statusDiv = $('#apiKeyStatus');
-  const statusDiv2 = $('#apiKeyStatus2');
 
   const apiKeyModal = $('#apiKeyModal');
-  const queryInput = document.getElementById('query'); // get the query input field
 
-  if (data.status === 'set') {
+  if (data.status === 'success') {
     isAPIKeySet = true;
     document.getElementById('fileInput').disabled = false;
     statusDiv.text('API Key Set!');
-    statusDiv2.text('API Key Set!');
 
     statusDiv.css('color', 'green');
-    statusDiv2.css('color', 'green');
 
     statusDiv.show();
-    statusDiv2.show();
 
     apiKeyModal.fadeOut(); // Hide the modal
-    queryInput.disabled = false; // enable the query input field
   } else {
     document.getElementById('fileInput').disabled = true;
     statusDiv.text('No API Key.');
-    statusDiv2.text('No API Key.');
 
     statusDiv.css('color', 'red');
-    statusDiv2.css('color', 'red');
 
     statusDiv.show();
-    statusDiv2.show();
 
     apiKeyModal.fadeIn(); // Show the modal
-    queryInput.disabled = true; // disable the query input field
   }
-  return data.status === 'set';
+  return data.status === 'success';
 }
 
 // Call this function when the page loads
@@ -460,19 +458,24 @@ async function removeFile(fileName) {
         listItem.remove();
       } else {
         console.warn('No listItem found with the given fileName.');
-        $('#docs-alerts').html(
-          '<div class="alert alert-warning">Failed to locate the file in the UI.</div>',
-        );
+        showAlert('Failed to locate the file in the UI.', 'warning', 'upload');
       }
+
+      // Check if the query button should be disabled
+      showQueryButtonIfNeeded(isAPIKeySet);
     } else {
-      $('#docs-alerts').html(
-        '<div class="alert alert-danger">Failed to delete the file. Please try again.</div>',
+      showAlert(
+        'Failed to delete the file. Please try again.',
+        'danger',
+        'upload',
       );
     }
   } catch (err) {
     console.error('Failed to delete the file', err);
-    $('#docs-alerts').html(
-      '<div class="alert alert-danger">An error occurred while trying to delete the file.</div>',
+    showAlert(
+      'An error occurred while trying to delete the file.',
+      'danger',
+      'upload',
     );
   }
 }
@@ -507,21 +510,7 @@ function showAlertInChatbox(message, type) {
   resultsSpan.textContent = '';
 
   // Insert the alert message
-  resultsSpan.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  resultsSpan.innerHTML = `<div class='alert alert-${type}'>${message}</div>`;
 
   // Hide the 'Response:' label
 }
-
-$(document).ready(function () {
-  $('#toggleRightColumn').click(function () {
-    var rightColumn = $('.right-column');
-    var leftColumn = $('.left-column');
-    if (rightColumn.is(':visible')) {
-      rightColumn.hide();
-      leftColumn.css('flex', '5');
-    } else {
-      rightColumn.show();
-      leftColumn.css('flex', '4');
-    }
-  });
-});
