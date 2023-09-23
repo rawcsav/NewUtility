@@ -50,9 +50,9 @@ async function setAPIKey() {
 async function checkAPIKeyStatus() {
   const response = await fetch('/check_api_key');
   const data = await response.json();
-  const isSet = data.status === 'set';
+  const isSet = data.status === 'success';
 
-  if (data.status === 'set') {
+  if (data.status === 'success') {
     isAPIKeySet = true;
     document.getElementById('fileInput').disabled = false;
     document.getElementById('apiKeyStatus').style.display = 'block';
