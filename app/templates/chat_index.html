@@ -73,7 +73,6 @@
         <div class="alerts apiKeyAlerts"></div>
       </div>
     </div>
-    <div id="apiKeyStatus2"></div>
     <button id="showInstructions">Show Instructions</button>
     <div id="instructionsModal" class="modal">
       <div class="modal-content">
@@ -94,42 +93,9 @@
     </div>
     <div class="content-wrap">
       <div class="left-column">
-        <div class="setup-container">
-          <div class="upload-container">
-            <h2>Upload Docs</h2>
-            <form id="uploadForm">
-              <input type="file" name="file" multiple id="fileInput" disabled />
-            </form>
-            <div class="alerts uploadAlerts"></div>
-          </div>
-        </div>
-        <div class="docs-container">
-          <h3>Uploaded Documents</h3>
-          <div id="uploaded-docs-section">
-            <form id="docSelectionForm">
-              <ul id="uploaded_docs_list">
-                {% for file in uploaded_files %}
-                <li>
-                  <input
-                    type="checkbox"
-                    name="selected_docs"
-                    value="{{ file }}"
-                    checked
-                  />
-                  <div>{{ file }}</div>
-                  <!-- New Delete Button -->
-                  <button class="delete-btn" onclick="removeFile('{{ file }}')">
-                    X
-                  </button>
-                </li>
-                {% endfor %}
-              </ul>
-            </form>
-          </div>
-          <div id="docs-alerts"></div>
-        </div>
-      </div>
-      <div class="right-column">
+        <button id="toggleRightColumn" class="custom-button">
+          Toggle Doc Center
+        </button>
         <div class="query-container" style="position: relative">
           <h3>Query Text Document</h3>
           <div id="query-results-section">
@@ -170,6 +136,43 @@
             </button>
           </div>
           <div class="alerts queryAlerts"></div>
+        </div>
+      </div>
+      <div class="right-column">
+        <div class="setup-container">
+          <div class="upload-container">
+            <h2>Upload Documents</h2>
+
+            <form id="uploadForm">
+              <input type="file" name="file" multiple id="fileInput" disabled />
+            </form>
+            <div class="alerts uploadAlerts"></div>
+          </div>
+        </div>
+        <div class="docs-container">
+          <h4>Doc Selector</h4>
+          <div id="uploaded-docs-section">
+            <form id="docSelectionForm">
+              <ul id="uploaded_docs_list">
+                {% for file in uploaded_files %}
+                <li>
+                  <input
+                    type="checkbox"
+                    name="selected_docs"
+                    value="{{ file }}"
+                    checked
+                  />
+                  <div>{{ file }}</div>
+                  <!-- New Delete Button -->
+                  <button class="delete-btn" onclick="removeFile('{{ file }}')">
+                    X
+                  </button>
+                </li>
+                {% endfor %}
+              </ul>
+            </form>
+          </div>
+          <div id="docs-alerts"></div>
         </div>
       </div>
     </div>

@@ -86,25 +86,54 @@ async function uploadDocuments() {
   isUploading = true;
 
   const formData = new FormData(document.querySelector('#uploadForm'));
-
+  const allowedFileTypes = ['docx', 'pdf', 'txt'];
   const existingFiles = [
     ...document.querySelectorAll('#uploaded_docs_list li'),
   ].map((li) => li.textContent.trim());
-  for (let file of formData.getAll('file')) {
-    if (existingFiles.includes(file.name)) {
-      showAlert(
-        `The file "${file.name}" is already uploaded. Skipping duplicate.`,
-        'warning',
-        'upload',
-      );
-      formData.delete('file'); // Remove the file from formData to prevent upload
+
+  // Create a new FormData instance to hold valid files
+  const filteredFormData = new FormData();
+
+  for (let [key, value] of formData.entries()) {
+    if (key === 'file') {
+      const file = value;
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+
+      if (!allowedFileTypes.includes(fileExtension)) {
+        showAlert(
+          `The file "${file.name}" is not an allowed type. Only 'docx', 'pdf', or 'txt' files are allowed.`,
+          'warning',
+          'upload',
+        );
+        continue;
+      }
+
+      if (existingFiles.includes(file.name)) {
+        showAlert(
+          `The file "${file.name}" is already uploaded. Skipping duplicate.`,
+          'warning',
+          'upload',
+        );
+        continue;
+      }
+
+      // If the file passes all checks, add it to the filtered FormData
+      filteredFormData.append(key, file);
+    } else {
+      // For other form fields, directly append to filteredFormData
+      filteredFormData.append(key, value);
     }
+  }
+
+  if (filteredFormData.getAll('file').length === 0) {
+    showAlert('No valid files to upload.', 'danger', 'upload');
+    return;
   }
 
   try {
     const response = await fetch('/upload', {
       method: 'POST',
-      body: formData,
+      body: filteredFormData,
     });
 
     const data = await response.json();
@@ -204,27 +233,25 @@ function addToQueryHistory(query, response) {
   const queryResultsSection = document.getElementById('query-results-section');
   const currentQueryResponse = document.getElementById('current-query');
 
+  // Create a new history entry
+  const historyEntry = document.createElement('div');
+  historyEntry.className = 'history-entry';
+  historyEntry.innerHTML = `
+    <strong>Query:</strong> <pre>${query}</pre><br><br>
+    <strong>Response:</strong> <pre>${response}</pre>
+    <hr class="history-delimiter">  <!-- This is the delimiter -->
+  `;
+
+  // Insert the history entry before the current query-response
+  queryResultsSection.insertBefore(historyEntry, currentQueryResponse);
+
   // Update the current query-response
-  document.getElementById('user_query').textContent = query;
-  document.getElementById('results').textContent = response;
+  document.getElementById('user_query').textContent = '';
+  document.getElementById('results').textContent = '';
 
-  // If there's a previous query-response, move it to history
-  if (previousQuery !== null && previousResponse !== null) {
-    const historyEntry = document.createElement('div');
-    historyEntry.className = 'history-entry';
-    historyEntry.innerHTML = `
-  <strong>Query:</strong> <pre>${previousQuery}</pre><br><br>
-  <strong>Response:</strong> <pre>${previousResponse}</pre>
-  <hr class="history-delimiter">  <!-- This is the delimiter -->
-`;
-
-    // Insert the history entry before the current query-response
-    queryResultsSection.insertBefore(historyEntry, currentQueryResponse);
-  }
-
-  // Update previousQuery and previousResponse for the next iteration
-  previousQuery = query;
-  previousResponse = response;
+  // Set the display of the query and response elements to none
+  document.getElementById('user_query').parentNode.style.display = 'none';
+  document.getElementById('response_container').style.display = 'none';
 }
 
 async function queryDocument() {
@@ -234,16 +261,16 @@ async function queryDocument() {
   );
 
   if (checkboxes.length === 0) {
-    // Handle no checkboxes selected
     return;
   }
 
-  const query = document.getElementById('query').value.trim(); // Added .trim()
+  const query = document.getElementById('query').value.trim();
 
   if (query === '') {
     showAlertInChatbox('Query cannot be empty.', 'warning');
     return;
   }
+
   const userQueryElement = document.getElementById('user_query');
   userQueryElement.parentNode.style.display = 'block';
   userQueryElement.textContent = query;
@@ -256,6 +283,10 @@ async function queryDocument() {
   checkboxes.forEach((checkbox) => {
     selectedDocs.push(checkbox.value);
   });
+
+  // Update previousQuery for the next iteration
+  previousQuery = query;
+  previousResponse = '';
 
   try {
     const response = await fetch('/query', {
@@ -282,12 +313,18 @@ async function queryDocument() {
           break;
         }
         resultsSpan.textContent += decoder.decode(value);
+        previousResponse += decoder.decode(value);
       }
 
       // At this point, the whole response has been read
-      addToQueryHistory(query, resultsSpan.textContent); // Note the change here
+      document.getElementById('results').textContent = previousResponse;
+
+      // Add the query and response to the history as soon as they are completed
+      addToQueryHistory(previousQuery, previousResponse);
+
+      // Reset previousResponse for the next request
+      previousResponse = '';
     } else {
-      // Handle error
       showAlertInChatbox('Error occurred while querying.', 'danger');
     }
   } catch (error) {
@@ -474,3 +511,17 @@ function showAlertInChatbox(message, type) {
 
   // Hide the 'Response:' label
 }
+
+$(document).ready(function () {
+  $('#toggleRightColumn').click(function () {
+    var rightColumn = $('.right-column');
+    var leftColumn = $('.left-column');
+    if (rightColumn.is(':visible')) {
+      rightColumn.hide();
+      leftColumn.css('flex', '5');
+    } else {
+      rightColumn.show();
+      leftColumn.css('flex', '4');
+    }
+  });
+});
