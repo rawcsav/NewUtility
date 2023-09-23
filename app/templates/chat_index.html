@@ -54,8 +54,27 @@
         alt="Homepage"
       />
     </a>
+    <button id="showApiKey">Input API Key</button>
+    <div id="apiKeyModal" class="modal">
+      <div class="api-modal-content">
+        <span class="close">&times;</span>
+        <div class="api-key-container">
+          <form id="apiKeyForm" onsubmit="event.preventDefault(); setAPIKey();">
+            <input
+              type="text"
+              name="api_key"
+              placeholder="Enter OpenAI API Key"
+              required
+            />
+            <input type="submit" value="Set" />
+          </form>
+          <div id="apiKeyStatus"></div>
+        </div>
+        <div class="alerts apiKeyAlerts"></div>
+      </div>
+    </div>
+    <div id="apiKeyStatus2"></div>
     <button id="showInstructions">Show Instructions</button>
-
     <div id="instructionsModal" class="modal">
       <div class="modal-content">
         <span class="close">&times;</span>
@@ -76,27 +95,6 @@
     <div class="content-wrap">
       <div class="left-column">
         <div class="setup-container">
-          <div class="api-key-container">
-            <h2>Set API Key</h2>
-            <form
-              id="apiKeyForm"
-              onsubmit="event.preventDefault(); setAPIKey();"
-            >
-              <input
-                type="text"
-                name="api_key"
-                placeholder="Enter OpenAI API Key"
-                required
-              />
-              <input type="submit" value="Set" />
-            </form>
-            <div id="apiKeyStatus" style="display: none; color: green">
-              API Key Set Successfully!
-            </div>
-            <div class="alerts apiKeyAlerts"></div>
-          </div>
-
-          <!-- Upload New Text Document -->
           <div class="upload-container">
             <h2>Upload Docs</h2>
             <form id="uploadForm">
@@ -168,11 +166,7 @@
               </button>
             </div>
             <button id="interruptButton" onclick="interruptQuery()" disabled>
-              <img
-                src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1694934314/stop-button-svgrepo-com_uuiujf.svg"
-                alt="Interrupt"
-                class="interrupt-icon"
-              />
+              Interrupt
             </button>
           </div>
           <div class="alerts queryAlerts"></div>

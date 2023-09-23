@@ -3,40 +3,48 @@ let controller = new AbortController();
 let signal = controller.signal;
 
 $(document).ready(function () {
+  checkAPIKeyStatus();
+
   // Get the modal and close button
-  var modal = $('#instructionsModal');
+  var instructionsModal = $('#instructionsModal');
+  var apiKeyModal = $('#apiKeyModal'); // The new modal for the API Key
   var closeBtn = $('.close');
 
-  // Show the modal when the button is clicked
-  $('#showInstructions').click(function () {
+  // Function to show a modal and prevent background scrolling
+  function showModal(modal) {
     modal.css('display', 'block');
+    $('body').css('overflow', 'hidden');
+  }
+
+  // Function to hide a modal and allow background scrolling
+  function hideModal(modal) {
+    modal.css('display', 'none');
+    $('body').css('overflow', 'auto');
+  }
+
+  // Show the instructions modal when the button is clicked
+  $('#showInstructions').click(function () {
+    showModal(instructionsModal);
+  });
+
+  // Show the API Key modal when the button is clicked
+  $('#showApiKey').click(function () {
+    showModal(apiKeyModal);
   });
 
   // Hide the modal when the close button (×) is clicked
   closeBtn.click(function () {
-    modal.css('display', 'none');
+    hideModal(instructionsModal);
+    hideModal(apiKeyModal);
   });
 
+  // Hide the modal when the user clicks outside of it
   $(window).click(function (event) {
-    if ($(event.target).is(modal)) {
-      modal.css('display', 'none');
+    if ($(event.target).is(instructionsModal)) {
+      hideModal(instructionsModal);
     }
-  });
-
-  $('#showInstructions').on('click', function () {
-    $('#instructionsModal').fadeIn();
-    $('body').css('overflow', 'hidden'); // Prevent background scrolling
-  });
-
-  $('.close').on('click', function () {
-    $('#instructionsModal').fadeOut();
-    $('body').css('overflow', 'auto'); // Allow scrolling again
-  });
-
-  $(window).on('click', function (event) {
-    if ($(event.target).is('#instructionsModal')) {
-      $('#instructionsModal').fadeOut();
-      $('body').css('overflow', 'auto'); // Allow scrolling again
+    if ($(event.target).is(apiKeyModal)) {
+      hideModal(apiKeyModal);
     }
   });
 });
@@ -289,8 +297,6 @@ async function queryDocument() {
       showAlertInChatbox('Error occurred while querying.', 'danger');
     }
   }
-
-  // Clear the query input box
 }
 
 async function setAPIKey() {
@@ -304,15 +310,34 @@ async function setAPIKey() {
       body: formData,
     });
 
-    if (response.ok) {
+    const data = await response.json(); // Parse the response body
+
+    if (response.ok && data.status !== 'error') {
+      // Check if status is not "error"
       document.getElementById('fileInput').disabled = false;
-      document.querySelector('.apiKeyAlerts').innerHTML = '';
+      document.querySelector('.apiKeyAlerts').innerHTML = ''; // Clear any existing alerts
       document.getElementById('apiKeyStatus').style.display = 'block';
+      document.getElementById('apiKeyStatus2').style.display = 'block';
+
+      document.getElementById('apiKeyStatus').innerHTML =
+        document.getElementById('apiKeyStatus2').innerHTML =
+          'API Key Set Successfully!'; // Display success status
+      $('#apiKeyModal').fadeOut(); // Hide the modal
 
       isAPIKeySet = await checkAPIKeyStatus();
       showQueryButtonIfNeeded(isAPIKeySet);
     } else {
-      showAlert('Error. Please check the key and try again.', 'danger');
+      // Show the error message from the server, or a generic error message
+      document.getElementById('apiKeyStatus').style.display = 'none'; // Hide the success status
+      document.getElementById('apiKeyStatus2').style.display = 'none'; // Hide the success status
+
+      document.getElementById('apiKeyStatus').innerHTML = ''; // Clear any existing status
+      document.getElementById('apiKeyStatus2').innerHTML = ''; // Clear any existing status
+
+      showAlert(
+        data.message || 'Error. Please check the key and try again.',
+        'danger',
+      );
     }
   } catch (error) {
     showAlert('Error setting the API Key.', 'danger');
@@ -322,18 +347,42 @@ async function setAPIKey() {
 async function checkAPIKeyStatus() {
   const response = await fetch('/check_api_key');
   const data = await response.json();
-  const isSet = data.status === 'set';
+
+  const statusDiv = $('#apiKeyStatus');
+  const statusDiv2 = $('#apiKeyStatus2');
+
+  const apiKeyModal = $('#apiKeyModal');
+  const queryInput = document.getElementById('query'); // get the query input field
 
   if (data.status === 'set') {
     isAPIKeySet = true;
     document.getElementById('fileInput').disabled = false;
-    document.getElementById('apiKeyStatus').style.display = 'block';
-    showQueryButtonIfNeeded(true); // Pass a parameter to indicate API key is set
+    statusDiv.text('API Key Set!');
+    statusDiv2.text('API Key Set!');
+
+    statusDiv.css('color', 'green');
+    statusDiv2.css('color', 'green');
+
+    statusDiv.show();
+    statusDiv2.show();
+
+    apiKeyModal.fadeOut(); // Hide the modal
+    queryInput.disabled = false; // enable the query input field
   } else {
     document.getElementById('fileInput').disabled = true;
-    document.getElementById('apiKeyStatus').style.display = 'none';
+    statusDiv.text('No API Key.');
+    statusDiv2.text('No API Key.');
+
+    statusDiv.css('color', 'red');
+    statusDiv2.css('color', 'red');
+
+    statusDiv.show();
+    statusDiv2.show();
+
+    apiKeyModal.fadeIn(); // Show the modal
+    queryInput.disabled = true; // disable the query input field
   }
-  return isSet;
+  return data.status === 'set';
 }
 
 // Call this function when the page loads
