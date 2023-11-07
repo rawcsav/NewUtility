@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+include/site/python3.11/greenlet/greenlet.h
 
 # Distribution / packaging
 .Python
