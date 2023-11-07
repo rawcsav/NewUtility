@@ -1,90 +1,91 @@
-import os
-from datetime import datetime
-
-from flask import Flask, session, current_app
-from flask_session import Session
-
 from app import config
-from app.util.docauth_util import remove_directory
+import cloudinary
+import sshtunnel
+from flask import Flask
+from flask_migrate import Migrate
+from app.database import db
+from app.util.session_util import get_tunnel
+from flask_cors import CORS
+from flask_bcrypt import Bcrypt
+from flask_mail import Mail
+from flask_login import LoginManager
+
+bcrypt = Bcrypt()
+mail = Mail()
+login_manager = LoginManager()
+
 
 def create_app():
     app = Flask(__name__)
-
+    CORS(app)
 
     app.secret_key = config.SECRET_KEY
-    app.config["SESSION_TYPE"] = config.SESSION_TYPE
+
+    app.config[
+        'SQLALCHEMY_TRACK_MODIFICATIONS'] = config.SQL_ALCHEMY_TRACK_MODIFICATIONS
+    app.config['SQLALCHEMY_ECHO'] = config.SQLALCHEMY_ECHO
     app.config["SESSION_PERMANENT"] = config.SESSION_PERMANENT
-    app.config["PERMANENT_SESSION_LIFETIME"] = config.PERMANENT_SESSION_LIFETIME
-    app.config["SESSION_COOKIE_SECURE"] = config.SESSION_COOKIE_SECURE
-    app.config["SESSION_COOKIE_HTTPONLY"] = config.SESSION_COOKIE_HTTPONLY
+    app.config['PERMANENT_SESSION_LIFETIME'] = config.PERMANENT_SESSION_LIFETIME
+
     app.config["SESSION_COOKIE_SAMESITE"] = config.SESSION_COOKIE_SAMESITE
-    app.config["TEMPLATES_AUTO_RELOAD"] = config.TEMPLATES_AUTO_RELOAD
+    app.config["SESSION_COOKIE_HTTPONLY"] = config.SESSION_COOKIE_HTTPONLY
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_recycle': 280,
+        'pool_pre_ping': True,
+        'pool_timeout': 30,
+        'pool_reset_on_return': 'rollback'
+    }
 
-    Session(app)
+    app.config['MAIL_SERVER'] = config.MAIL_SERVER
+    app.config['MAIL_PORT'] = config.MAIL_PORT
+    app.config['MAIL_USERNAME'] = config.MAIL_USERNAME
+    app.config['MAIL_PASSWORD'] = config.MAIL_PASSWORD
+    app.config['MAIL_USE_TLS'] = config.MAIL_USE_TLS
+    app.config['MAIL_USE_SSL'] = config.MAIL_USE_SSL
 
-    app.app_context().push()
+    if config.FLASK_ENV == 'development':
+        sshtunnel.SSH_TIMEOUT = 5.0
+        sshtunnel.TUNNEL_TIMEOUT = 5.0
+        app.tunnel = get_tunnel()
+        app.config[
+            'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.SQL_USERNAME}:{config.SQL_PASSWORD}@127.0.0.1:{app.tunnel.local_bind_port}/{config.SQL_DB_NAME}'
+        app.config["SESSION_COOKIE_SECURE"] = False
 
-    @app.before_request
-    def before_request():
-        session.modified = True  # ensure every request resets the session lifetime
+        cloudinary.config(
+            cloud_name=config.CLOUD_NAME,
+            api_key=config.CLOUD_API_KEY,
+            api_secret=config.CLOUD_SECRET,
+        )
+    else:
+        app.tunnel = None
+        app.config[
+            'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.SQL_USERNAME}:{config.SQL_PASSWORD}@{config.SQL_HOSTNAME}/{config.SQL_DB_NAME}'
+        app.config["SESSION_COOKIE_SECURE"] = True
 
-        if "last_activity" in session:
-            elapsed = datetime.utcnow() - session["last_activity"]
-            session_lifetime = current_app.config.get("PERMANENT_SESSION_LIFETIME")
-            if elapsed > session_lifetime:
-                # This session is expired, clean up the resources
-                main_upload_dir = session.get("UPLOAD_DIR")
-                remove_directory(main_upload_dir)
-                session.clear()  # Clear session data
+        cloudinary.config(
+            cloud_name=config.CLOUD_NAME,
+            api_key=config.CLOUD_API_KEY,
+            api_secret=config.CLOUD_SECRET,
+            api_proxy="http://proxy.server:3128"
+        )
 
-        session["last_activity"] = datetime.utcnow()
-        # Ensure UPLOAD_DIR exists
-        if "UPLOAD_DIR" not in session:
-            session_id = str(id(session))
-            session_dir = os.path.join(config.MAIN_TEMP_DIR, session_id)
-            os.makedirs(session_dir, exist_ok=True)
-            session["UPLOAD_DIR"] = session_dir
+    db.init_app(app)
+    migrate = Migrate(app, db)
 
-        # Ensure CHAT_UPLOAD_DIR exists
-        if "CHAT_UPLOAD_DIR" not in session:
-            chat_dir = os.path.join(session["UPLOAD_DIR"], "chatwithdocs")
-            os.makedirs(chat_dir, exist_ok=True)
-            session["CHAT_UPLOAD_DIR"] = chat_dir
+    bcrypt.init_app(app)
+    mail.init_app(app)
+    login_manager.init_app(app)
 
-        # Ensure EMBED_DATA exists
-        if "EMBED_DATA" not in session:
-            EMBED_DATA_PATH = os.path.join(
-                session["CHAT_UPLOAD_DIR"], "embed_data.json"
-            )
-            session["EMBED_DATA"] = EMBED_DATA_PATH
-            if not os.path.exists(EMBED_DATA_PATH):
-                with open(EMBED_DATA_PATH, "w") as f:
-                    pass
+    with app.app_context():
+        from .routes import auth
+        app.register_blueprint(auth.bp)
 
-        # Ensure WHISPER_UPLOAD_DIR exists
-        if "WHISPER_UPLOAD_DIR" not in session:
-            whisper_dir = os.path.join(session["UPLOAD_DIR"], "whisper")
-            os.makedirs(whisper_dir, exist_ok=True)
-            session["WHISPER_UPLOAD_DIR"] = whisper_dir
+        @app.teardown_request
+        def session_teardown(exception=None):
+            if exception:
+                db.session.rollback()
+            db.session.remove()
 
-    from .routes import (
-        auth,
-        documents,
-        query,
-        whisper_main,
-        whisper_errors,
-        landing,
-    )
-
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(documents.bp)
-    app.register_blueprint(query.bp)
-    app.register_blueprint(whisper_main.bp)
-    app.register_blueprint(whisper_errors.bp)
-    app.register_blueprint(landing.bp)
-
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(scheduled_cleanup, 'interval', hours=1)  # Run every hour
-    # scheduler.start()
+        db.create_all()
 
     return app

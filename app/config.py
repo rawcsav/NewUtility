@@ -1,25 +1,51 @@
 import os
 from datetime import timedelta
 
+import tiktoken
 from dotenv import load_dotenv
 
 load_dotenv()
 
-import tiktoken
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-SESSION_TYPE = "filesystem"
+SEARCH_ID = os.getenv("SEARCH_ID")
+SEARCH_SECRET = os.getenv("SEARCH_SECRET")
+
+AUTH_URL = "https://accounts.spotify.com/authorize"
+TOKEN_URL = "https://accounts.spotify.com/api/token"
+ME_URL = "https://api.spotify.com/v1/me"
+
+SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+FLASK_ENV = os.getenv("FLASK_ENV")
+
+SESSION_TYPE = "sqlalchemy"
 SESSION_PERMANENT = True
-PERMANENT_SESSION_LIFETIME = timedelta(minutes=180)
+PERMANENT_SESSION_LIFETIME = timedelta(days=7)
 
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Strict"
-TEMPLATES_AUTO_RELOAD = True
+SESSION_COOKIE_SAMESITE = "Lax"
+
+SQL_ALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_ECHO = False
+SQLALCHEMY_POOL_RECYCLE = 299
+
+SSH_HOST = os.getenv("SSH_HOST")
+SSH_USER = os.getenv("SSH_USER")
+SSH_PASS = os.getenv("SSH_PASS")
+SQL_HOSTNAME = os.getenv("SQL_HOSTNAME")
+SQL_USERNAME = os.getenv("SQL_USERNAME")
+SQL_PASSWORD = os.getenv("SQL_PASSWORD")
+SQL_DB_NAME = os.getenv("SQL_DB_NAME")
+
+CLOUD_NAME = os.getenv("CLOUD_NAME")
+CLOUD_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUD_SECRET = os.getenv("CLOUDINARY_SECRET")
 
 TOKENIZER = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-ada-002"
-GPT_MODEL = "gpt-4"
 MAIN_TEMP_DIR = "app/main_user_directory"
 MAX_LENGTH = 250
 TOP_N = 6
