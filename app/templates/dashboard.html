@@ -30,34 +30,39 @@
     />
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
-    <title>Landing Page</title>
+    <title>Dashboard</title>
     <link
       href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
       rel="stylesheet"
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/landing.css') }}"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
     />
   </head>
-  <div class="upper-overlay"></div>
   <body>
     <header>
-      <h1>Welcome to Our Website</h1>
+      <h1>Welcome to Your Dashboard, {{ user.username }}</h1>
+      <nav>
+        <ul>
+          <li><a href="{{ url_for('landing.landing_page') }}">Home</a></li>
+          <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+        </ul>
+      </nav>
     </header>
-    <nav>
-      <!-- Navigation links (e.g., Home, Login, Signup) -->
-      <ul>
-        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-        <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
-      </ul>
-    </nav>
     <main>
-      <p>
-        This is the landing page of the website. Feel free to browse around and
-        learn more about our services.
-      </p>
+      <section>
+        <h2>Profile Information</h2>
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+      </section>
+      <section>
+        <h2>Dashboard Actions</h2>
+        <ul></ul>
+      </section>
     </main>
+    <footer>
+      <p>&copy; 2023 Your Website Name</p>
+    </footer>
   </body>
-  <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 </html>

@@ -1,11 +1,14 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify
-from flask_login import login_user, logout_user, login_required, \
-    current_user
-from app import config
+from flask import (
+    Blueprint, request, redirect, url_for, flash,
+    render_template, jsonify
+)
+from flask_login import (
+    login_user, logout_user, login_required, current_user
+)
 from app import bcrypt, mail, login_manager
 from app.database import db, UserAPIKey, User
+from app import config
 from app.util.session_util import encrypt_api_key, decrypt_api_key
-from flask import render_template, request, url_for, redirect, flash
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_mail import Message
 
@@ -20,17 +23,18 @@ def load_user(user_id):
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
+        username = request.json.get('username')
+        password = request.json.get('password')
         user = User.query.filter_by(username=username).first()
-        if user and bcrypt.check_password_hash(user.password_hash,
-                                               password):  # Use bcrypt
+        if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user)
-            return redirect(url_for('index'))
+            return jsonify({'status': 'success', 'redirect': url_for('user.dashboard')})
         else:
-            flash('Invalid username or password')
-    return render_template('login.html')
+            return jsonify(
+                {'status': 'error', 'message': 'Invalid username or password'}
+            )
+    else:
+        return render_template('login.html')
 
 
 @bp.route('/signup', methods=['GET', 'POST'])
@@ -39,21 +43,17 @@ def signup():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
-
         user = User.query.filter_by(username=username).first()
         if user:
             flash('Username already exists')
             return redirect(url_for('.signup'))
-
         new_user = User(
             username=username,
             email=email,
             password_hash=bcrypt.generate_password_hash(password).decode('utf-8')
-            # Use bcrypt
         )
         db.session.add(new_user)
         db.session.commit()
-
         return redirect(url_for('.login'))
     return render_template('signup.html')
 
@@ -68,11 +68,13 @@ def logout():
 @bp.route('/add_api_key', methods=['POST'])
 def add_api_key():
     api_key = request.form.get('api_key')
-    label = request.form.get('label')  # Optional
+    label = request.form.get('label')
     encrypted_api_key = encrypt_api_key(api_key)
-
-    user_api_key = UserAPIKey(user_id=current_user.id,
-                              encrypted_api_key=encrypted_api_key, label=label)
+    user_api_key = UserAPIKey(
+        user_id=current_user.id,
+        encrypted_api_key=encrypted_api_key,
+        label=label
+    )
     db.session.add(user_api_key)
     db.session.commit()
 
@@ -81,8 +83,12 @@ def add_api_key():
 def get_api_keys():
     user_api_keys = UserAPIKey.query.filter_by(user_id=current_user.id).all()
     decrypted_api_keys = [
-        {'id': key.id, 'api_key': decrypt_api_key(key.encrypted_api_key),
-         'label': key.label} for key in user_api_keys]
+        {
+            'id': key.id,
+            'api_key': decrypt_api_key(key.encrypted_api_key),
+            'label': key.label
+        } for key in user_api_keys
+    ]
     return jsonify(decrypted_api_keys)
 
 
@@ -96,14 +102,18 @@ def reset_password_request():
         user = User.query.filter_by(email=email).first()
         if user:
             token = s.dumps(email, salt='password-reset')
-            msg = Message('Password Reset Request',
-                          sender=config.MAIL_DEFAULT_SENDER,
-                          recipients=[email])
+            msg = Message(
+                'Password Reset Request',
+                sender=config.MAIL_DEFAULT_SENDER,
+                recipients=[email]
+            )
             link = url_for('auth.reset_password', token=token, _external=True)
-            msg.body = 'Your link to reset your password is {}'.format(link)
+            msg.body = f'Your link to reset your password is {link}'
             mail.send(msg)
-            flash('An email has been sent with instructions to reset your password.',
-                  'info')
+            flash(
+                'An email has been sent with instructions to reset your password.',
+                'info'
+            )
         else:
             flash('No account with that email.', 'warning')
     return render_template('reset_password_request.html')

@@ -5,6 +5,15 @@ from sqlalchemy.sql import func
 db = SQLAlchemy()
 
 
+class UserAPIKey(db.Model):
+    __tablename__ = 'user_api_keys'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    encrypted_api_key = db.Column(db.String(255), nullable=False)
+    label = db.Column(db.String(50))  # Optional label for the key
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -26,7 +35,8 @@ class User(UserMixin, db.Model):
     api_usage = db.relationship('APIUsage', backref='user', lazy='dynamic')
     user_models = db.relationship('UserModel', backref='user', lazy='dynamic')
     speeches = db.relationship('Speech', backref='user', lazy='dynamic')
-    api_keys = db.relationship('UserAPIKey', backref='user', lazy='dynamic')
+    api_keys = db.relationship('UserAPIKey', backref='user', lazy='dynamic',
+                               foreign_keys=[UserAPIKey.user_id])
     selected_api_key = db.relationship('UserAPIKey', foreign_keys=[selected_api_key_id])
 
 
@@ -111,12 +121,4 @@ class Speech(db.Model):
     voice = db.Column(db.String(50), nullable=False)
     audio_data = db.Column(db.Text,
                            nullable=False)  # Assuming audio data is stored as base64 string
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-
-
-class UserAPIKey(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    encrypted_api_key = db.Column(db.String(255), nullable=False)
-    label = db.Column(db.String(50))  # Optional label for the key
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())

@@ -1,7 +1,7 @@
 from app import config
 import cloudinary
 import sshtunnel
-from flask import Flask
+from flask import Flask, render_template
 from flask_migrate import Migrate
 from app.database import db
 from app.util.session_util import get_tunnel
@@ -41,7 +41,6 @@ def create_app():
     app.config['MAIL_USERNAME'] = config.MAIL_USERNAME
     app.config['MAIL_PASSWORD'] = config.MAIL_PASSWORD
     app.config['MAIL_USE_TLS'] = config.MAIL_USE_TLS
-    app.config['MAIL_USE_SSL'] = config.MAIL_USE_SSL
 
     if config.FLASK_ENV == 'development':
         sshtunnel.SSH_TIMEOUT = 5.0
@@ -77,8 +76,10 @@ def create_app():
     login_manager.init_app(app)
 
     with app.app_context():
-        from .routes import auth
+        from .routes import landing, auth, user
+        app.register_blueprint(landing.bp)
         app.register_blueprint(auth.bp)
+        app.register_blueprint(user.bp)
 
         @app.teardown_request
         def session_teardown(exception=None):
