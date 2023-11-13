@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta
+
 from app import config
 import cloudinary
 import sshtunnel
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_migrate import Migrate
-from app.database import db
+from app.database import db, User
 from app.util.session_util import get_tunnel
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
@@ -88,5 +90,24 @@ def create_app():
             db.session.remove()
 
         db.create_all()
+
+        @app.before_request
+        def delete_stale_unverified_users():
+            # This check will run before every request. Depending on your traffic, this might not be ideal, and you might want to run it less frequently.
+            if request.endpoint not in ['static',
+                                        'auth.confirm_email']:  # Avoid running this for static files and the email confirmation endpoint
+                current_time = datetime.utcnow()
+                stale_threshold = current_time - timedelta(hours=24)
+
+                # Get a list of users who have not verified within 24 hours
+                stale_users = User.query.filter(
+                    User.email_confirmed == False,
+                    User.created_at < stale_threshold
+                ).all()
+
+                # Delete stale users
+                for user in stale_users:
+                    db.session.delete(user)
+                db.session.commit()
 
     return app

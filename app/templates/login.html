@@ -39,16 +39,25 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/login.css') }}"
     />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% set header_title = 'Login' %} {% include 'menu.html' %}
   </head>
-  <div id="background" />
   <div class="upper-overlay"></div>
   <body>
     <div id="login-container">
-      <h1>Login</h1>
       <form id="login-form">
-        <input type="text" id="username" placeholder="Username" required />
+        <input
+          type="text"
+          id="login_credential"
+          name="login_credential"
+          placeholder="Username or Email"
+          required
+        />
         <input type="password" id="password" placeholder="Password" required />
         <button type="submit">Login</button>
+        <a href="{{ url_for('auth.reset_password_request') }}"
+          >Forgot Password?</a
+        >
       </form>
       <div id="message-container"></div>
     </div>

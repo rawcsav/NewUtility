@@ -39,19 +39,16 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/landing.css') }}"
     />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% set header_title = 'Landing' %} {% include 'menu.html' %}
   </head>
   <div class="upper-overlay"></div>
   <body>
-    <header>
-      <h1>Welcome to Our Website</h1>
-    </header>
-    <nav>
-      <!-- Navigation links (e.g., Home, Login, Signup) -->
-      <ul>
-        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-        <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
-      </ul>
-    </nav>
+    <!-- Navigation links (e.g., Home, Login, Signup) -->
+    <ul>
+      <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+      <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
+    </ul>
     <main>
       <p>
         This is the landing page of the website. Feel free to browse around and

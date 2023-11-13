@@ -22,7 +22,11 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     openai_api_key = db.Column(db.String(255),
                                nullable=True)  # Make nullable if storing API keys is optional
+    email_confirmed = db.Column(db.Boolean, default=False, nullable=False)
+    confirmation_code = db.Column(db.String(100))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    login_attempts = db.Column(db.Integer, default=0)
+    last_attempt_time = db.Column(db.DateTime)
     selected_api_key_id = db.Column(db.Integer, db.ForeignKey('user_api_keys.id'),
                                     nullable=True)  # Make nullable if not all users have API keys
 

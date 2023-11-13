@@ -5,6 +5,11 @@ import sshtunnel
 from cryptography.fernet import Fernet
 from app import config
 from flask_login import current_user
+import random
+
+
+def generate_confirmation_code():
+    return str(random.randint(100000, 999999))  # 6-digit code
 
 
 def load_encryption_key():

@@ -35,8 +35,9 @@ SQLALCHEMY_POOL_RECYCLE = 299
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USE_TLS = True
-MAIL_USERNAME = os.getenv("MAIL_USERNAME")
-MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+MAIL_USERNAME = "rawcsav@gmail.com"
+MAIL_PASSWORD = 'quyk fvge hexl vmym'
+MAIL_DEFAULT_SENDER = "rawcsav@gmail.com"
 
 SSH_HOST = os.getenv("SSH_HOST")
 SSH_USER = os.getenv("SSH_USER")
@@ -49,6 +50,9 @@ SQL_DB_NAME = os.getenv("SQL_DB_NAME")
 CLOUD_NAME = os.getenv("CLOUD_NAME")
 CLOUD_API_KEY = os.getenv("CLOUDINARY_API_KEY")
 CLOUD_SECRET = os.getenv("CLOUDINARY_SECRET")
+
+GOOGLE_SITE_KEY = os.getenv("GOOGLE_SITE_KEY")
+GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
 
 TOKENIZER = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-ada-002"
