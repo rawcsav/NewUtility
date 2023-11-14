@@ -10,13 +10,6 @@ CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 
-SEARCH_ID = os.getenv("SEARCH_ID")
-SEARCH_SECRET = os.getenv("SEARCH_SECRET")
-
-AUTH_URL = "https://accounts.spotify.com/authorize"
-TOKEN_URL = "https://accounts.spotify.com/api/token"
-ME_URL = "https://api.spotify.com/v1/me"
-
 SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 FLASK_ENV = os.getenv("FLASK_ENV")
 
@@ -35,8 +28,8 @@ SQLALCHEMY_POOL_RECYCLE = 299
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USE_TLS = True
-MAIL_USERNAME = "rawcsav@gmail.com"
-MAIL_PASSWORD = 'quyk fvge hexl vmym'
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_DEFAULT_SENDER = "rawcsav@gmail.com"
 
 SSH_HOST = os.getenv("SSH_HOST")
@@ -64,7 +57,16 @@ ALLOWED_EXTENSIONS = {"txt", "pdf", "docx"}
 
 CLEANUP_THRESHOLD_SECONDS = 3600
 SUPPORTED_FORMATS = (".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".wav", ".webm")
-MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
+MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 INITIAL_PROMPT = "Hello, welcome to my lecture."
 MAX_FILE_SIZE = 15 * 1024 * 1024
 MAX_AUDIO_FILE_SIZE = 25 * 1024 * 1024
+
+GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
+GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+GOOGLE_CALLBACK_URI = os.getenv("GOOGLE_CALLBACK_URI")
+DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
+
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+GITHUB_CALLBACK_URI = os.getenv("GITHUB_CALLBACK_URI")

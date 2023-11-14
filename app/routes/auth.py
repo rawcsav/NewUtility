@@ -6,12 +6,12 @@ from flask_login import (
 )
 from app.database import db, UserAPIKey, User
 from app.util.session_util import encrypt_api_key, decrypt_api_key, \
-    generate_confirmation_code
+    generate_confirmation_code, random_string
 from flask import jsonify, Blueprint, request, render_template, redirect, url_for, \
     flash, session
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Message
-from app import bcrypt, mail, config, login_manager
+from app import bcrypt, mail, config, login_manager, oauth
 from sqlalchemy import or_
 from datetime import datetime, timedelta
 
@@ -26,11 +26,26 @@ def load_user(user_id):
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Retrieve the login credential, which could be either username or email
-        login_credential = request.json.get('login_credential')
-        password = request.json.get('password')
+        login_credential = request.form.get('username')
+        password = request.form.get('password')
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        if not recaptcha_response:
+            return jsonify({'status': 'error',
+                            'message': 'reCAPTCHA verification failed. Please try again.'}), 400
 
-        # Filter the User model by either username or email
+        recaptcha_secret = config.GOOGLE_SECRET_KEY
+        recaptcha_request = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={
+                'secret': recaptcha_secret,
+                'response': recaptcha_response
+            }
+        )
+        recaptcha_result = recaptcha_request.json()
+        if not recaptcha_result.get('success'):
+            return jsonify({'status': 'error',
+                            'message': 'reCAPTCHA verification failed. Please try again.'}), 400
+
         user = User.query.filter(
             or_(User.username == login_credential, User.email == login_credential)
         ).first()
@@ -45,7 +60,7 @@ def login():
 
             if bcrypt.check_password_hash(user.password_hash, password):
                 if user.email_confirmed:
-                    user.login_attempts = 0  # Reset the counter on successful login
+                    user.login_attempts = 0
                     user.last_attempt_time = None
                     db.session.commit()
                     login_user(user)
@@ -59,7 +74,7 @@ def login():
                 user.last_attempt_time = datetime.utcnow()
                 db.session.commit()
                 if user.login_attempts >= 3:
-                    # Lock account for 5 minutes
+
                     return jsonify({'status': 'error',
                                     'message': 'Invalid login credential or password. Your account has been locked due to too many failed login attempts. Please try again in 5 minutes.'})
                 else:
@@ -75,22 +90,18 @@ def login():
 @bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        # Extract form data
+
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        # Verify the reCAPTCHA response
         recaptcha_response = request.form.get('g-recaptcha-response')
-        print(recaptcha_response)
         if not recaptcha_response:
             return jsonify({'status': 'error',
                             'message': 'reCAPTCHA verification failed. Please try again.'}), 400
 
-        # Verify the reCAPTCHA response with Google
         recaptcha_secret = config.GOOGLE_SECRET_KEY
-        print(recaptcha_secret)
         recaptcha_request = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
@@ -99,12 +110,10 @@ def signup():
             }
         )
         recaptcha_result = recaptcha_request.json()
-        print(recaptcha_result)
         if not recaptcha_result.get('success'):
             return jsonify({'status': 'error',
                             'message': 'reCAPTCHA verification failed. Please try again.'}), 400
 
-        # Server-side validation
         if not username or not email or not password:
             return jsonify(
                 {'status': 'error', 'message': 'All fields are required.'}), 400
@@ -127,7 +136,6 @@ def signup():
             return jsonify(
                 {'status': 'error', 'message': 'Email already registered.'}), 400
 
-        # Create new user
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         confirmation_code = generate_confirmation_code()
         new_user = User(username=username, email=email, password_hash=hashed_password,
@@ -135,20 +143,17 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
 
-        # Send confirmation email
         msg = Message('Confirm Your Email', sender=config.MAIL_DEFAULT_SENDER,
                       recipients=[email])
         msg.body = f'Your confirmation code is: {confirmation_code}'
         mail.send(msg)
 
-        # Return success message
         return jsonify({
             'status': 'success',
             'message': 'A confirmation email with a code has been sent to your email address.',
             'redirect': url_for('auth.confirm_email')
         }), 200
 
-    # If it's a GET request, just render the signup page
     return render_template('signup.html')
 
 
@@ -237,7 +242,7 @@ def reset_password(token):
     except SignatureExpired:
         flash('The password reset link is expired.', 'warning')
         return redirect(url_for('auth.reset_password_request'))
-    except:  # catch other exceptions such as BadSignature
+    except:
         flash('Invalid or expired token.', 'warning')
         return redirect(url_for('auth.reset_password_request'))
 
@@ -250,7 +255,6 @@ def reset_password(token):
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        # Validate password (example: minimum 8 characters, at least one number, one lowercase, and one uppercase letter)
         if len(password) < 8 or not re.search("[a-z]", password) or not re.search(
                 "[A-Z]", password) or not re.search("[0-9]", password):
             flash(
@@ -268,3 +272,101 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
 
     return render_template('reset_password.html', token=token)
+
+
+@bp.route('/login/google')
+def google_login():
+    redirect_uri = config.GOOGLE_CALLBACK_URI
+    print(redirect_uri)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@bp.route('/login/github')
+def github_login():
+    redirect_uri = config.GITHUB_CALLBACK_URI
+    return oauth.github.authorize_redirect(redirect_uri)
+
+
+@bp.route('/login/google/authorized')
+def google_authorized():
+    try:
+        token = oauth.google.authorize_access_token()
+    except Exception as e:
+        flash('Access denied or login canceled by the user.', 'error')
+        return redirect(url_for('.login'))
+
+    resp = oauth.google.get('userinfo')
+    if resp.status_code != 200:
+        flash('Failed to fetch user information from Google.', 'error')
+        return redirect(url_for('.login'))
+
+    user_info = resp.json()
+    email = user_info['email']
+    original_username = user_info.get('name', email.split('@')[0])
+    username = original_username
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        while User.query.filter_by(username=username).first():
+            username = f"{original_username}_{random_string(5)}"
+
+        user = User(
+            email=email,
+            username=username,
+            email_confirmed=True,
+            password_hash=bcrypt.generate_password_hash(
+                config.DEFAULT_USER_PASSWORD).decode('utf-8'),
+            login_method='Google'
+        )
+        db.session.add(user)
+        db.session.commit()
+    else:
+        user.login_method = 'Google'
+        db.session.commit()
+
+    login_user(user, remember=True)
+    flash('You have been successfully logged in via Google.', 'success')
+    return redirect(url_for('user.dashboard'))
+
+
+@bp.route('/login/github/authorized')
+def github_authorized():
+    try:
+        token = oauth.github.authorize_access_token()
+    except Exception as e:
+        flash('Failed to authenticate with GitHub.', 'error')
+        return redirect(url_for('.login'))
+
+    resp = oauth.github.get('user')
+    if resp.status_code != 200:
+        flash('Failed to fetch user data from GitHub.', 'error')
+        return redirect(url_for('.login'))
+
+    user_data = resp.json()
+    email = user_data.get('email')  # Some GitHub users may have private emails
+    original_username = user_data['login']
+    username = original_username
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        while User.query.filter_by(username=username).first():
+            username = f"{original_username}_{random_string(5)}"
+
+        user = User(
+            username=username,
+            email=email,
+            email_confirmed=True,
+            password_hash=bcrypt.generate_password_hash(
+                config.DEFAULT_USER_PASSWORD).decode('utf-8'),
+            login_method='GitHub'
+        )
+        db.session.add(user)
+        db.session.commit()
+    else:
+        # Update the login method if the user is not new
+        user.login_method = 'GitHub'
+        db.session.commit()
+
+    login_user(user, remember=True)
+    flash('You have been successfully logged in via GitHub.', 'success')
+    return redirect(url_for('user.dashboard'))

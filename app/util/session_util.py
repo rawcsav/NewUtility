@@ -1,11 +1,15 @@
 import os
+import string
 from datetime import timezone, timedelta, datetime
 import openai
+import requests
 import sshtunnel
 from cryptography.fernet import Fernet
 from app import config
 from flask_login import current_user
 import random
+
+from app.database import UserAPIKey, db
 
 
 def generate_confirmation_code():
@@ -74,3 +78,78 @@ def get_tunnel():
     )
     tunnel.start()
     return tunnel
+
+
+def check_available_models(api_key):
+    headers = {"Authorization": f"Bearer {api_key}"}
+    url = "https://api.openai.com/v1/models"
+
+    response = requests.get(url, headers=headers)
+    response_data = response.json()
+    models = response_data.get("data", [])
+    model_names = [model["id"] for model in models]
+    return model_names
+
+
+def test_gpt4(key):
+    openai.api_key = key
+    try:
+        test = openai.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Hello!"}
+            ],
+            max_tokens=10,
+            temperature=0,
+        )
+        if test.choices[0].message.content:
+            print(f"Key is valid for GPT-4: {key}")
+        else:
+            print(f"Key failed with status code: {key}")
+    except openai.OpenAIError as e:
+        print(f"OpenAI error: {e}")
+
+
+def test_gpt3(key):
+    openai.api_key = key
+    try:
+        test = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Hello!"}
+            ],
+            max_tokens=10,
+            temperature=0,
+        )
+        if test.choices[0].message.content:
+            print(f"Key is valid for GPT-3.5: {key}")
+        else:
+            print(f"Key failed with status code: {key}")
+    except openai.OpenAIError as e:
+        print(f"OpenAI error: {e}")
+
+
+def test_dalle3_key(key):
+    openai.api_key = key
+    try:
+        response_dalle3 = openai.images.generate(
+            model="dall-e-3",  # Replace with the actual model identifier for DALL-E 3
+            prompt="a white siamese cat",
+            size="1024x1024",
+            n=1,
+        )
+        image_url = response_dalle3.data[0].url
+        if image_url:
+            print(f"Working DALL-E 3 Key: {key}")
+        else:
+            print(f"Key failed with status code: {key}")
+    except openai.OpenAIError as e:
+        print(f"OpenAI error: {e}")
+
+
+def random_string(length=5):
+    """Generate a random string of fixed length."""
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))

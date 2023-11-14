@@ -43,6 +43,32 @@
     {% set header_title = 'Dashboard' %} {% include 'menu.html' %}
   </head>
   <body>
+    <!-- Display flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <ul class="flashed-messages">
+      {% for category, message in messages %}
+      <li class="{{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+
+    <!-- Check if the user needs to set a username -->
+    {% if not current_user.username %}
+    <!-- The section to set the username -->
+    <div id="username-section">
+      <h2>Choose Your Username</h2>
+      <form action="{{ url_for('set_username') }}" method="POST">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div class="form-group">
+          <button type="submit">Set Username</button>
+        </div>
+      </form>
+    </div>
+    {% else %}
     <h2>Welcome, {{ user.username }}</h2>
     <main>
       <section>
@@ -52,11 +78,51 @@
       </section>
       <section>
         <h2>Dashboard Actions</h2>
-        <ul></ul>
+        <form id="api-keys-form" method="POST" enctype="multipart/form-data">
+          <div>
+            <label for="api_keys_file">Upload file with API keys:</label>
+            <input type="file" name="api_keys_file" accept=".txt" />
+          </div>
+          <div>
+            <label for="api_keys_text">Or enter API keys as text:</label>
+            <textarea name="api_keys_text" rows="10"></textarea>
+          </div>
+          <button type="submit">Upload API Keys</button>
+        </form>
+        <div id="upload-status"></div>
+        <h2>API Key Models Update</h2>
+        <button id="start-update-button" type="button">Start Update</button>
+        <div id="progress-container">
+          <div
+            id="progress-bar"
+            style="width: 0%; height: 20px; background-color: #4caf50"
+          ></div>
+          <div id="progress-text">Click 'Start Update' to begin.</div>
+        </div>
+        <button id="test-api-keys-button" type="button">Test API Keys</button>
+        <div id="test-api-keys-result"></div>
       </section>
+      <section>
+        <h2>Change Username</h2>
+        <form id="username-change-form">
+          <input
+            type="text"
+            name="new_username"
+            placeholder="New Username"
+            required
+          />
+          <button type="submit">Change Username</button>
+        </form>
+        <div id="username-change-message"></div>
+      </section>
+
+      <section>
+        <a href="{{ url_for('auth.reset_password_request') }}"
+          >Reset Password</a
+        >
+      </section>
+      {% endif %}
     </main>
-    <footer>
-      <p>&copy; 2023 Your Website Name</p>
-    </footer>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
   </body>
 </html>

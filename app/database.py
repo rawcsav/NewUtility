@@ -11,6 +11,7 @@ class UserAPIKey(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     encrypted_api_key = db.Column(db.String(255), nullable=False)
     label = db.Column(db.String(50))  # Optional label for the key
+    models = db.Column(db.String(255))  # New field to store accessible models
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
 
@@ -27,6 +28,9 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     login_attempts = db.Column(db.Integer, default=0)
     last_attempt_time = db.Column(db.DateTime)
+    last_username_change = db.Column(db.DateTime)
+    login_method = db.Column(db.String(10), nullable=False, default='None')
+
     selected_api_key_id = db.Column(db.Integer, db.ForeignKey('user_api_keys.id'),
                                     nullable=True)  # Make nullable if not all users have API keys
 

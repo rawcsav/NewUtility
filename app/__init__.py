@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 
+from authlib.integrations.flask_client import OAuth
+
 from app import config
 import cloudinary
 import sshtunnel
-from flask import Flask, render_template, request
 from flask_migrate import Migrate
 from app.database import db, User
 from app.util.session_util import get_tunnel
@@ -11,10 +12,13 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_login import LoginManager
+from flask import Flask, request
 
 bcrypt = Bcrypt()
 mail = Mail()
 login_manager = LoginManager()
+
+oauth = OAuth()
 
 
 def create_app():
@@ -72,10 +76,36 @@ def create_app():
 
     db.init_app(app)
     migrate = Migrate(app, db)
-
+    oauth.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+
+    # Configure Google OAuth using Authlib
+    oauth.register(
+        name='google',
+        client_id=config.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret=config.GOOGLE_OAUTH_CLIENT_SECRET,
+        access_token_url='https://oauth2.googleapis.com/token',
+        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        api_base_url='https://www.googleapis.com/oauth2/v1/',
+        client_kwargs={
+            'scope': 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+            'prompt': 'consent',
+            'access_type': 'offline'
+        }
+    )
+
+    # Configure GitHub OAuth using Authlib
+    oauth.register(
+        name='github',
+        client_id=config.GITHUB_CLIENT_ID,
+        client_secret=config.GITHUB_CLIENT_SECRET,
+        access_token_url='https://github.com/login/oauth/access_token',
+        authorize_url='https://github.com/login/oauth/authorize',
+        api_base_url='https://api.github.com/',
+        client_kwargs={'scope': 'user:email'},
+    )
 
     with app.app_context():
         from .routes import landing, auth, user
@@ -93,7 +123,6 @@ def create_app():
 
         @app.before_request
         def delete_stale_unverified_users():
-            # This check will run before every request. Depending on your traffic, this might not be ideal, and you might want to run it less frequently.
             if request.endpoint not in ['static',
                                         'auth.confirm_email']:  # Avoid running this for static files and the email confirmation endpoint
                 current_time = datetime.utcnow()
