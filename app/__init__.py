@@ -1,10 +1,7 @@
-from datetime import datetime, timedelta
-
-from authlib.integrations.flask_client import OAuth
-
 from app import config
+from datetime import datetime, timedelta
+from authlib.integrations.flask_client import OAuth
 import cloudinary
-import sshtunnel
 from flask_migrate import Migrate
 from app.database import db, User
 from app.util.database_util import get_tunnel
@@ -36,7 +33,7 @@ def create_app():
     app.config["SESSION_COOKIE_SAMESITE"] = config.SESSION_COOKIE_SAMESITE
     app.config["SESSION_COOKIE_HTTPONLY"] = config.SESSION_COOKIE_HTTPONLY
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_recycle': 280,
+        'pool_recycle': config.SQLALCHEMY_POOL_RECYCLE,
         'pool_pre_ping': True,
         'pool_timeout': 30,
         'pool_reset_on_return': 'rollback'
@@ -49,8 +46,6 @@ def create_app():
     app.config['MAIL_USE_TLS'] = config.MAIL_USE_TLS
 
     if config.FLASK_ENV == 'development':
-        sshtunnel.SSH_TIMEOUT = 5.0
-        sshtunnel.TUNNEL_TIMEOUT = 5.0
         app.tunnel = get_tunnel()
         app.config[
             'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.SQL_USERNAME}:{config.SQL_PASSWORD}@127.0.0.1:{app.tunnel.local_bind_port}/{config.SQL_DB_NAME}'

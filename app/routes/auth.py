@@ -182,11 +182,9 @@ def get_api_keys():
     return jsonify(decrypted_api_keys)
 
 
-s = URLSafeTimedSerializer(config.SECRET_KEY)
-
-
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
+    s = URLSafeTimedSerializer(config.SECRET_KEY)
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
@@ -212,6 +210,7 @@ def reset_password_request():
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
+    s = URLSafeTimedSerializer(config.SECRET_KEY)
     try:
         email = s.loads(token, salt='password-reset', max_age=3600)
     except SignatureExpired:
