@@ -6,7 +6,7 @@ from flask_login import (
 )
 from app.database import db, UserAPIKey, User
 from app.util.session_util import encrypt_api_key, decrypt_api_key, \
-    generate_confirmation_code, random_string
+    generate_confirmation_code, random_string, verify_recaptcha, get_or_create_user
 from flask import jsonify, Blueprint, request, render_template, redirect, url_for, \
     flash, session
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -29,22 +29,9 @@ def login():
         login_credential = request.form.get('username')
         password = request.form.get('password')
         recaptcha_response = request.form.get('g-recaptcha-response')
-        if not recaptcha_response:
-            return jsonify({'status': 'error',
-                            'message': 'reCAPTCHA verification failed. Please try again.'}), 400
-
-        recaptcha_secret = config.GOOGLE_SECRET_KEY
-        recaptcha_request = requests.post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': recaptcha_secret,
-                'response': recaptcha_response
-            }
-        )
-        recaptcha_result = recaptcha_request.json()
-        if not recaptcha_result.get('success'):
-            return jsonify({'status': 'error',
-                            'message': 'reCAPTCHA verification failed. Please try again.'}), 400
+        recaptcha_error = verify_recaptcha(recaptcha_response)
+        if recaptcha_error:
+            return jsonify(*recaptcha_error)
 
         user = User.query.filter(
             or_(User.username == login_credential, User.email == login_credential)
@@ -97,22 +84,9 @@ def signup():
         confirm_password = request.form.get('confirm_password')
 
         recaptcha_response = request.form.get('g-recaptcha-response')
-        if not recaptcha_response:
-            return jsonify({'status': 'error',
-                            'message': 'reCAPTCHA verification failed. Please try again.'}), 400
-
-        recaptcha_secret = config.GOOGLE_SECRET_KEY
-        recaptcha_request = requests.post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': recaptcha_secret,
-                'response': recaptcha_response
-            }
-        )
-        recaptcha_result = recaptcha_request.json()
-        if not recaptcha_result.get('success'):
-            return jsonify({'status': 'error',
-                            'message': 'reCAPTCHA verification failed. Please try again.'}), 400
+        recaptcha_error = verify_recaptcha(recaptcha_response)
+        if recaptcha_error:
+            return jsonify(*recaptcha_error)
 
         if not username or not email or not password:
             return jsonify(
@@ -232,7 +206,8 @@ def reset_password_request():
             )
         else:
             flash('No account with that email.', 'warning')
-    return render_template('reset_password_request.html')
+    # Pass an empty token to use the same template for requesting a reset
+    return render_template('reset_password.html', token=None)
 
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -242,7 +217,7 @@ def reset_password(token):
     except SignatureExpired:
         flash('The password reset link is expired.', 'warning')
         return redirect(url_for('auth.reset_password_request'))
-    except:
+    except BadSignature:
         flash('Invalid or expired token.', 'warning')
         return redirect(url_for('auth.reset_password_request'))
 
@@ -255,21 +230,23 @@ def reset_password(token):
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        if len(password) < 8 or not re.search("[a-z]", password) or not re.search(
-                "[A-Z]", password) or not re.search("[0-9]", password):
-            flash(
-                'Password must be at least 8 characters long and include one number, one lowercase, and one uppercase letter.',
-                'danger')
-            return redirect(url_for('auth.reset_password', token=token))
-
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
+            return redirect(url_for('auth.reset_password', token=token))
+
+        if len(password) < 8 or not re.search("[a-z]", password) or \
+                not re.search("[A-Z]", password) or not re.search("[0-9]", password):
+            flash(
+                'Password must be at least 8 characters long and include one number, one lowercase, and one uppercase letter.',
+                'danger'
+            )
             return redirect(url_for('auth.reset_password', token=token))
 
         user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         db.session.commit()
         flash('Your password has been updated!', 'success')
-        return redirect(url_for('auth.login'))
+        login_user(user, remember=True)
+        return redirect(url_for('user.dashboard'))
 
     return render_template('reset_password.html', token=token)
 
@@ -303,26 +280,7 @@ def google_authorized():
     user_info = resp.json()
     email = user_info['email']
     original_username = user_info.get('name', email.split('@')[0])
-    username = original_username
-
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        while User.query.filter_by(username=username).first():
-            username = f"{original_username}_{random_string(5)}"
-
-        user = User(
-            email=email,
-            username=username,
-            email_confirmed=True,
-            password_hash=bcrypt.generate_password_hash(
-                config.DEFAULT_USER_PASSWORD).decode('utf-8'),
-            login_method='Google'
-        )
-        db.session.add(user)
-        db.session.commit()
-    else:
-        user.login_method = 'Google'
-        db.session.commit()
+    user = get_or_create_user(email, original_username, 'Google')
 
     login_user(user, remember=True)
     flash('You have been successfully logged in via Google.', 'success')
@@ -345,27 +303,7 @@ def github_authorized():
     user_data = resp.json()
     email = user_data.get('email')  # Some GitHub users may have private emails
     original_username = user_data['login']
-    username = original_username
-
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        while User.query.filter_by(username=username).first():
-            username = f"{original_username}_{random_string(5)}"
-
-        user = User(
-            username=username,
-            email=email,
-            email_confirmed=True,
-            password_hash=bcrypt.generate_password_hash(
-                config.DEFAULT_USER_PASSWORD).decode('utf-8'),
-            login_method='GitHub'
-        )
-        db.session.add(user)
-        db.session.commit()
-    else:
-        # Update the login method if the user is not new
-        user.login_method = 'GitHub'
-        db.session.commit()
+    user = get_or_create_user(email, original_username, 'GitHub')
 
     login_user(user, remember=True)
     flash('You have been successfully logged in via GitHub.', 'success')

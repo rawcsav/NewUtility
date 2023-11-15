@@ -5,11 +5,11 @@ import openai
 import requests
 import sshtunnel
 from cryptography.fernet import Fernet
-from app import config
+from app import config, bcrypt
 from flask_login import current_user
 import random
 
-from app.database import UserAPIKey, db
+from app.database import UserAPIKey, db, User
 
 
 def generate_confirmation_code():
@@ -61,23 +61,10 @@ def get_openai_client():
         decrypted_api_key = decrypt_api_key(
             encrypted_api_key)  # Implement this decryption function
 
-        # Initialize the OpenAI client with the decrypted API key
         client = openai.OpenAI(api_key=decrypted_api_key)
         return client
     else:
         raise Exception("No authenticated user")
-
-
-def get_tunnel():
-    tunnel = sshtunnel.SSHTunnelForwarder(
-        (config.SSH_HOST),
-        ssh_username=config.SSH_USER,
-        ssh_password=config.SSH_PASS,
-        remote_bind_address=(
-            config.SQL_HOSTNAME, 3306)
-    )
-    tunnel.start()
-    return tunnel
 
 
 def check_available_models(api_key):
@@ -153,3 +140,44 @@ def random_string(length=5):
     """Generate a random string of fixed length."""
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(length))
+
+
+# Helper function for reCAPTCHA verification
+def verify_recaptcha(recaptcha_response):
+    if not recaptcha_response:
+        return {'status': 'error',
+                'message': 'reCAPTCHA verification failed. Please try again.'}, 400
+
+    recaptcha_secret = config.GOOGLE_SECRET_KEY
+    recaptcha_data = {'secret': recaptcha_secret, 'response': recaptcha_response}
+    recaptcha_request = requests.post('https://www.google.com/recaptcha/api/siteverify',
+                                      data=recaptcha_data)
+    recaptcha_result = recaptcha_request.json()
+
+    if not recaptcha_result.get('success'):
+        return {'status': 'error',
+                'message': 'reCAPTCHA verification failed. Please try again.'}, 400
+
+    return None  # No error
+
+
+# Helper function to create or update a user from OAuth information
+def get_or_create_user(email, username, login_method):
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        while User.query.filter_by(username=username).first():
+            username = f"{username}_{random_string(5)}"
+        user = User(
+            email=email,
+            username=username,
+            email_confirmed=True,
+            password_hash=bcrypt.generate_password_hash(
+                config.DEFAULT_USER_PASSWORD).decode('utf-8'),
+            login_method=login_method
+        )
+        db.session.add(user)
+        db.session.commit()
+    else:
+        user.login_method = login_method
+        db.session.commit()
+    return user

@@ -7,7 +7,7 @@ import cloudinary
 import sshtunnel
 from flask_migrate import Migrate
 from app.database import db, User
-from app.util.session_util import get_tunnel
+from app.util.database_util import get_tunnel
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail

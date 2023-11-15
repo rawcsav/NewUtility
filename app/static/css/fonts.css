@@ -1,0 +1,305 @@
+@font-face {
+  font-family: "Window-Book";
+  src:
+    url("../fonts/Window-Book.woff2") format("woff2"),
+    url("../fonts/Window-Book.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-BoldItalic";
+  src:
+    url("../fonts/Helvagoth-BoldItalic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-BoldItalic.woff") format("woff");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Window-Bold";
+  src:
+    url("../fonts/Window-Bold.woff2") format("woff2"),
+    url("../fonts/Window-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Window-Medium";
+  src:
+    url("../fonts/Window-Medium.woff2") format("woff2"),
+    url("../fonts/Window-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-ThinItalic";
+  src:
+    url("../fonts/Helvagoth-ThinItalic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-ThinItalic.woff") format("woff");
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Helvagoth-UltraItalic";
+  src:
+    url("../fonts/Helvagoth-UltraItalic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-UltraItalic.woff") format("woff");
+  font-weight: 800;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Window-Thin";
+  src:
+    url("../fonts/Window-Thin.woff2") format("woff2"),
+    url("../fonts/Window-Thin.woff") format("woff");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Kodak-TextRegular";
+  src:
+    url("../fonts/Kodak-TextRegular.woff2") format("woff2"),
+    url("../fonts/Kodak-TextRegular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Kodak-TextRegularItalic";
+  src:
+    url("../fonts/Kodak-TextRegularItalic.woff2") format("woff2"),
+    url("../fonts/Kodak-TextRegularItalic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "EST-Italic";
+  src:
+    url("../fonts/EST-Italic.woff2") format("woff2"),
+    url("../fonts/EST-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Helvagoth-Medium";
+  src:
+    url("../fonts/Helvagoth-Medium.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "EST-MonoRegular";
+  src:
+    url("../fonts/EST-MonoRegular.woff2") format("woff2"),
+    url("../fonts/EST-MonoRegular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Turbo-Light";
+  src:
+    url("../fonts/Turbo-Light(00).woff2") format("woff2"),
+    url("../fonts/Turbo-Light(00).woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Window-Light";
+  src:
+    url("../fonts/Window-Light.woff2") format("woff2"),
+    url("../fonts/Window-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Vinegar-Full";
+  src:
+    url("../fonts/Vinegar-Full.woff2") format("woff2"),
+    url("../fonts/Vinegar-Full.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Window-Regular";
+  src:
+    url("../fonts/Window-Regular.woff2") format("woff2"),
+    url("../fonts/Window-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Turbo-Bold";
+  src:
+    url("../fonts/Turbo-Bold(11).woff2") format("woff2"),
+    url("../fonts/Turbo-Bold(11).woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-Light";
+  src:
+    url("../fonts/Helvagoth-Light.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-Italic";
+  src:
+    url("../fonts/Helvagoth-Italic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Turbo-Semi-Bold";
+  src:
+    url("../fonts/Turbo-Semi-Bold(10).woff2") format("woff2"),
+    url("../fonts/Turbo-Semi-Bold(10).woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-MediumItalic";
+  src:
+    url("../fonts/Helvagoth-MediumItalic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-MediumItalic.woff") format("woff");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Helvagoth-Ultra";
+  src:
+    url("../fonts/Helvagoth-Ultra.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Ultra.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "EST-Regular";
+  src:
+    url("../fonts/EST-Regular.woff2") format("woff2"),
+    url("../fonts/EST-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-HeavyItalic";
+  src:
+    url("../fonts/Helvagoth-HeavyItalic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-HeavyItalic.woff") format("woff");
+  font-weight: 800;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Helvagoth-LightItalic";
+  src:
+    url("../fonts/Helvagoth-LightItalic.woff2") format("woff2"),
+    url("../fonts/Helvagoth-LightItalic.woff") format("woff");
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Helvagoth-Regular";
+  src:
+    url("../fonts/Helvagoth-Regular.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-Thin";
+  src:
+    url("../fonts/Helvagoth-Thin.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Thin.woff") format("woff");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Turbo-Semi-Light";
+  src:
+    url("../fonts/Turbo-Semi-Light(01).woff2") format("woff2"),
+    url("../fonts/Turbo-Semi-Light(01).woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Grotto-Book";
+  src:
+    url("../fonts/Grotto-Book.woff2") format("woff2"),
+    url("../fonts/Grotto-Book.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-Bold";
+  src:
+    url("../fonts/Helvagoth-Bold.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Grotto-BookItalic";
+  src:
+    url("../fonts/Grotto-BookItalic.woff2") format("woff2"),
+    url("../fonts/Grotto-BookItalic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Kodak-DisplayRegular";
+  src:
+    url("../fonts/Kodak-DisplayRegular.woff2") format("woff2"),
+    url("../fonts/Kodak-DisplayRegular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvagoth-Heavy";
+  src:
+    url("../fonts/Helvagoth-Heavy.woff2") format("woff2"),
+    url("../fonts/Helvagoth-Heavy.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Vinegar-Empty";
+  src:
+    url("../fonts/Vinegar-Empty.woff2") format("woff2"),
+    url("../fonts/Vinegar-Empty.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}

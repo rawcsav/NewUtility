@@ -8,12 +8,42 @@
     width: 100%;
   }
 
+  .outlined-text {
+    -webkit-text-stroke: 1px #c2dfe3; /* Keep the original stroke */
+    color: #1b1b1b; /* Maintain the text color as transparent */
+
+    animation: pathMotion 5s infinite alternate;
+  }
+
+  @keyframes pathMotion {
+    0% {
+      text-shadow:
+        -3px -3px 0 rgb(113, 215, 229, 0.7),
+        -5px -5px 0 rgba(11, 245, 66, 0.6),
+        -7px -7px 0 rgba(255, 205, 60, 0.5),
+        -9px -9px 0 rgba(245, 164, 66, 0.4),
+        -11px -11px 0 rgba(245, 88, 123, 0.3),
+        -13px -13px 0 rgba(117, 88, 245, 0.2),
+        -15px -15px 0 rgba(4, 69, 236, 0.1);
+    }
+    100% {
+      text-shadow:
+        3px 3px 0 rgb(113, 215, 229, 0.7),
+        5px 5px 0 rgba(11, 245, 66, 0.6),
+        7px 7px 0 rgba(255, 205, 60, 0.5),
+        9px 9px 0 rgba(245, 164, 66, 0.4),
+        11px 11px 0 rgba(245, 88, 123, 0.3),
+        13px 13px 0 rgba(117, 88, 245, 0.2),
+        15px 15px 0 rgba(4, 69, 236, 0.1);
+    }
+  }
+
   body {
-    font-family: Futura, sans-serif;
+    font-family: "EST-Regular", sans-serif;
     margin: 0;
-    background-color: #253237;
+    background-color: #1b1b1b;
     display: flex;
-    justify-content: space-around; /* Add this line */
+    justify-content: space-between; /* Add this line */
     flex-direction: column;
     align-items: center;
     opacity: 0;
@@ -21,9 +51,8 @@
   }
 
   h1 {
-    font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-    font-size: 80px;
-    font-weight: 1000;
+    font-family: Window-Bold, sans-serif;
+    font-size: 120px;
     text-align: center;
     color: #c2dfe3;
     margin: 0;
@@ -227,12 +256,6 @@
       font-size: 70px;
     }
   }
-
-  @media (min-width: 1250px) {
-    h1 {
-      font-size: 75px;
-    }
-  }
 </style>
 <link
   rel="stylesheet"
@@ -242,8 +265,11 @@
   <a class="homepage-link" href="https://rawcsav.com">
     <img alt="Homepage" src="../static/logo/bluelogo.svg" />
   </a>
-  <h1>{{ header_title }}</h1>
+  {% if header_title %}
+  <h1 class="outlined-text">{{ header_title }}</h1>
   <!-- Dynamically set the title -->
+  <div class="custom-line"></div>
+  {% endif %}
   <nav>
     <i class="fas fa-bars hamburger-menu"></i>
     <div class="dropdown-menu">
@@ -252,7 +278,6 @@
       <a class="drop-item" href="{{ url_for('auth.logout') }}">Logout</a>
     </div>
   </nav>
-  <div class="custom-line"></div>
 </header>
 <!-- Dropdown Structure -->
 <script>

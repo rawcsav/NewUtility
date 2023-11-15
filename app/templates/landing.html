@@ -32,6 +32,10 @@
     <meta name="theme-color" content="#ffffff" />
     <title>Landing Page</title>
     <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
+    />
+    <link
       href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
       rel="stylesheet"
     />
@@ -40,14 +44,13 @@
       href="{{ url_for('static', filename='css/landing.css') }}"
     />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% set header_title = 'Landing' %} {% include 'menu.html' %}
+    {% set header_title = "SWISS AI" %} {% include 'menu.html' %}
   </head>
   <div class="upper-overlay"></div>
   <body>
-    <!-- Navigation links (e.g., Home, Login, Signup) -->
     <ul>
       <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-      <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
+      <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
     </ul>
     <main>
       <p>

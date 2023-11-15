@@ -37,11 +37,11 @@
     />
     <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% set header_title = 'Login' %} {% include 'menu.html' %}
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/login.css') }}"
     />
+    {% include 'menu.html' %}
   </head>
   <body>
     <div class="form-container" id="login-container">
