@@ -38,13 +38,17 @@
     <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% include 'menu.html' %}
+
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/signup.css') }}"
     />
-    {% set header_title = "SWISS AI" %} {% include 'menu.html' %}
   </head>
   <body>
+    <h1 class="outlined-text">
+      Swiss <img src="/static/logo/swissimg.png" alt="Company Logo" /> AI
+    </h1>
     <div class="form-container">
       <p class="title">Sign Up</p>
 
@@ -56,38 +60,44 @@
       >
         {{ form.hidden_tag() }}
         <div class="input-group">
-          <label for="username">Username</label>
           <input
             type="text"
             name="username"
             id="username"
             class="input"
+            placeholder="Username"
             required
           />
         </div>
         <div class="input-group">
-          <label for="email">Email</label>
-          <input type="email" name="email" id="email" class="input" required />
+          <input
+            type="email"
+            name="email"
+            id="email"
+            class="input"
+            placeholder="Email"
+            required
+          />
         </div>
         <div class="input-group">
-          <label for="password">Password</label>
           <input
             type="password"
             name="password"
             id="password"
             class="input"
+            placeholder="Password"
             required
             pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
             title="Password must be at least 8 characters long and include one uppercase letter, one lowercase letter, one number, and one special character."
           />
         </div>
         <div class="input-group">
-          <label for="confirm_password">Confirm Password</label>
           <input
             type="password"
             name="confirm_password"
             id="confirm_password"
             class="input"
+            placeholder="Confirm Password"
             required
           />
         </div>
@@ -133,6 +143,12 @@
       </div>
     </div>
     {% include 'footer.html' %}
+    <div class="banner">
+      <img
+        src="../static/logo/test4.png"
+        alt="Renaissance oil painting of a multifunctional Swiss AI"
+      />
+    </div>
   </body>
   <script>
     $(document).ready(function () {

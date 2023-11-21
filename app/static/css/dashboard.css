@@ -1,3 +1,6 @@
+body {
+  overflow: hidden;
+}
 .container {
   display: flex;
   flex-direction: column;
@@ -45,16 +48,28 @@ label {
   margin-top: 10px;
 }
 
+h1 img {
+  height: 100px; /* or the size that fits well with your layout */
+  vertical-align: middle; /* to align with the text */
+}
+
 .key-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  z-index: 11;
+  background-color: rgba(242, 242, 242, 0.7);
+  border-radius: 5px;
+  padding: 10px;
 }
 
 .change-info {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+  background-color: rgba(242, 242, 242, 0.7);
+  border-radius: 5px;
+  padding: 10px;
 }
 
 #api-key-messages {
@@ -183,4 +198,20 @@ a {
   height: 1px;
   width: 100%;
   margin-top: 10px;
+}
+
+.banner {
+  width: 100%; /* maintain aspect ratio */
+  max-height: 300px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 10; /* make sure it's above other content */
+  pointer-events: none; /* Allows clicks to pass through */
+}
+
+.banner img {
+  width: 100%;
+  height: auto;
+  pointer-events: none; /* Allows clicks to pass through */
 }

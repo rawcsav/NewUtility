@@ -4,8 +4,9 @@ body {
   width: 100%;
   margin: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  overflow: hidden;
 }
 
 .form .form-container {
@@ -36,7 +37,6 @@ body {
 }
 
 .form-container {
-  margin-top: 30px;
   width: 350px;
   background-color: #f2f2f2;
   padding: 10px;
@@ -46,13 +46,14 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  margin-top: -30px;
 }
 
 .title {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
 
   text-align: center;
-  font-size: 1rem;
+  font-size: 1.5rem;
   line-height: 1rem;
   letter-spacing: 1px;
   color: #da291c;
@@ -140,6 +141,7 @@ body {
 .social-icons {
   display: flex;
   justify-content: center;
+  z-index: 11;
 }
 
 .social-icons .icon {
@@ -148,12 +150,14 @@ body {
   border: none;
   background-color: transparent;
   margin-left: 8px;
+  z-index: 11;
 }
 
 .social-icons .icon svg {
   height: 1.25rem;
   width: 1.25rem;
   fill: #da291c;
+  z-index: 11;
 }
 
 .signup {
@@ -162,6 +166,11 @@ body {
   line-height: 1.25rem;
   color: #d4af37;
   margin-top: 20px; /* Adjust the margin as needed */
+}
+
+h1 img {
+  height: 100px; /* or the size that fits well with your layout */
+  vertical-align: middle; /* to align with the text */
 }
 
 .signup a {
@@ -177,4 +186,20 @@ body {
   height: 1px;
   flex: 1 1 0%;
   background-color: #d4af37;
+}
+
+.banner {
+  width: 100%; /* maintain aspect ratio */
+  max-height: 300px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 10; /* make sure it's above other content */
+  pointer-events: none; /* Allows clicks to pass through */
+}
+
+.banner img {
+  width: 100%;
+  height: auto;
+  pointer-events: none; /* Allows clicks to pass through */
 }

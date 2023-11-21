@@ -41,13 +41,17 @@
     />
     <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% include 'menu.html' %}
+
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/login.css') }}"
     />
-    {% set header_title = "SWISS AI" %} {% include 'menu.html' %}
   </head>
   <body>
+    <h1 class="outlined-text">
+      Swiss <img src="/static/logo/swissimg.png" alt="Company Logo" /> AI
+    </h1>
     <div class="form-container" id="login-container">
       <p class="title">LOGIN</p>
       <!-- Start of the form with CSRF token -->
@@ -55,22 +59,20 @@
         {{ form.hidden_tag() }}
         <!-- CSRF token field -->
         <div class="input-group">
-          <label for="username">Username</label>
           <input
             type="text"
             name="username"
             id="username"
-            placeholder=""
+            placeholder="Username"
             required
           />
         </div>
         <div class="input-group">
-          <label for="password">Password</label>
           <input
             type="password"
             name="password"
             id="password"
-            placeholder=""
+            placeholder="Password"
             required
           />
           <div class="forgot">
@@ -125,17 +127,14 @@
           </svg>
         </button>
       </div>
-      <p class="signup">
-        Don't have an account?
-        <a
-          rel="noopener noreferrer"
-          href="{{ url_for('auth.signup') }}"
-          class=""
-          >Sign up!</a
-        >
-      </p>
+      {% include 'footer.html' %}
+      <div class="banner">
+        <img
+          src="../static/logo/test3.png"
+          alt="Renaissance oil painting of a multifunctional Swiss AI"
+        />
+      </div>
     </div>
-    {% include 'footer.html' %}
   </body>
   <script>
     $(document).ready(function () {

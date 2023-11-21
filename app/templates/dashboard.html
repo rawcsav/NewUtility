@@ -45,13 +45,16 @@
     />
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% set header_title = 'Dashboard' %} {% include 'menu.html' %}
+    {% include 'menu.html' %}
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/dashboard.css') }}"
     />
   </head>
   <body>
+    <h1 class="outlined-text">
+      User <img src="/static/logo/swissimg.png" alt="Company Logo" /> Dashboard
+    </h1>
     <main class="container">
       <h2 id="welcome">Welcome, {{ current_user.username }}</h2>
       <div class="user-functions">
@@ -162,6 +165,12 @@
         </div>
       </div>
     </main>
+    <div class="banner">
+      <img
+        src="../static/logo/test.png"
+        alt="Renaissance oil painting of a multifunctional Swiss AI"
+      />
+    </div>
     {% include 'footer.html' %}
   </body>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>

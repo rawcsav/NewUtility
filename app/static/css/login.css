@@ -6,6 +6,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  overflow: hidden;
+}
+
+body {
+  font-family: "EST-Regular", sans-serif;
+  margin: 0;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
 }
 
 .form-container {
@@ -33,7 +46,7 @@ header {
 .title {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.5rem;
   line-height: 1rem;
   letter-spacing: 1px;
   color: #da291c;
@@ -60,14 +73,18 @@ header {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .input-group label {
   display: block;
   color: #5b92e5;
   margin-bottom: 4px;
+  font-size: 14px;
 }
-
+.checkbox label {
+  font-size: 14px;
+}
 .input-group input {
   width: 90%;
   border-radius: 0.375rem;
@@ -147,6 +164,11 @@ header {
   justify-content: center;
 }
 
+h1 img {
+  height: 100px; /* or the size that fits well with your layout */
+  vertical-align: middle; /* to align with the text */
+}
+
 .social-icons .icon {
   border-radius: 0.125rem;
   padding: 0.75rem;
@@ -166,4 +188,22 @@ header {
   font-size: 0.75rem;
   line-height: 1rem;
   color: #d4af37;
+}
+
+.banner {
+  width: 100%; /* maintain aspect ratio */
+  max-height: 300px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  pointer-events: none; /* Allows clicks to pass through */
+
+  z-index: 10; /* make sure it's above other content */
+}
+
+.banner img {
+  pointer-events: none; /* Allows clicks to pass through */
+
+  width: 100%;
+  height: auto;
 }
