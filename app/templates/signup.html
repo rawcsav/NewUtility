@@ -42,17 +42,19 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/signup.css') }}"
     />
-    {% include 'menu.html' %}
+    {% set header_title = "SWISS AI" %} {% include 'menu.html' %}
   </head>
   <body>
     <div class="form-container">
+      <p class="title">Sign Up</p>
+
       <form
         id="signup-form"
         class="form"
         action="{{ url_for('auth.signup') }}"
         method="post"
       >
-        <p class="title">REGISTER</p>
+        {{ form.hidden_tag() }}
         <div class="input-group">
           <label for="username">Username</label>
           <input
@@ -129,11 +131,8 @@
           </svg>
         </button>
       </div>
-      <p class="signup">
-        Already have an account?
-        <a href="{{ url_for('auth.login') }}">Log in!</a>.
-      </p>
     </div>
+    {% include 'footer.html' %}
   </body>
   <script>
     $(document).ready(function () {

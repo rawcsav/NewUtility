@@ -1,0 +1,186 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 96%;
+  gap: 50px;
+}
+
+h2 {
+  display: inline-block; /* This will shrink the element to the width of its content */
+  border-bottom: 1px solid #d4af37; /* Your desired border color */
+  font-size: 25px;
+  margin-bottom: 10px; /* Adjust as needed */
+  margin-top: 0;
+  padding-bottom: 0;
+}
+
+h3 {
+  color: #5b92e5;
+}
+
+label {
+  color: #5b92e5;
+}
+
+.profile-information {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 50px;
+}
+.user-functions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 60px;
+}
+#welcome {
+  color: #da291c;
+  border-bottom: none;
+  font-size: 40px;
+  margin: 0;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.key-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.change-info {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+#api-key-messages {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1rem;
+  text-align: center;
+  color: #fff;
+}
+
+#api-key-messages.success {
+  background-color: #4caf50; /* Green for success */
+}
+
+#api-key-messages.error {
+  background-color: #f44336; /* Red for error */
+}
+
+.retest-key-button,
+.delete-key-button {
+  background: transparent;
+  color: #333333;
+  border: none;
+  cursor: pointer;
+}
+
+.key-list {
+  display: flex;
+  margin: 0;
+}
+
+.dropdown-button {
+  background-color: #5b92e5; /* Choose a background color */
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  border: none;
+  align-items: center;
+  justify-content: space-between;
+  font-family: Window-Book, sans-serif;
+}
+.dropdown-button:hover {
+  background-color: #71a2ef; /* Darken the button on hover */
+}
+
+.dropdown-button i {
+  margin-left: 10px; /* Space between text and arrow */
+}
+
+/* Rotate the arrow icon when the form is visible */
+.dropdown-button.active i {
+  transform: rotate(180deg);
+}
+
+.save-api-key-button {
+  background-color: #4caf50; /* Green background for a save button */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-api-key-button:hover {
+  background-color: #43a047; /* Darken the button on hover */
+}
+ul {
+  margin: 0;
+}
+.save-api-key-button i {
+  margin-right: 5px; /* Space between icon and text */
+}
+
+.change-info input {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #333333;
+  color: #333333;
+}
+
+a {
+  text-decoration: none;
+  color: unset;
+  font-size: 0.8em;
+}
+.btn {
+  background-color: #da291c;
+  margin-top: 30px;
+  max-width: 120px;
+}
+.submit-user {
+  background-color: #4caf50; /* Green background for a save button */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.change-info button {
+  max-width: 100px;
+}
+
+.submit-user:hover {
+  background-color: #43a047; /* Darken the button on hover */
+}
+
+.username-change-form {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+#api-key-form {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.custom-line {
+  height: 1px;
+  width: 100%;
+  margin-top: 10px;
+}

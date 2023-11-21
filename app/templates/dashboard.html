@@ -41,92 +41,128 @@
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/dashboard.css') }}"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% set header_title = 'Dashboard' %} {% include 'menu.html' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
   </head>
   <body>
-    <!-- Display flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
-    <ul class="flashed-messages">
-      {% for category, message in messages %}
-      <li class="{{ category }}">{{ message }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %} {% endwith %}
+    <main class="container">
+      <h2 id="welcome">Welcome, {{ current_user.username }}</h2>
+      <div class="user-functions">
+        <div class="key-container">
+          <h2>Key Management</h2>
+          <button id="toggleFormButton" class="button dropdown-button">
+            Upload <i class="fas fa-chevron-down"></i>
+          </button>
+          <form
+            id="api-key-form"
+            method="POST"
+            action="{{ url_for('user.upload_api_key') }}"
+            style="display: none"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="form-group">
+              <input
+                type="text"
+                id="api_key"
+                name="api_key"
+                placeholder="Enter Key:"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                id="nickname"
+                placeholder="Nickname:"
+                name="nickname"
+                maxlength="25"
+                required
+              />
+            </div>
+            <!-- Button with Font Awesome save icon -->
+            <button type="submit" class="button save-api-key-button">
+              <i class="fas fa-save"></i> Save
+            </button>
+          </form>
+          <h3>Your Keys:</h3>
+          <ul>
+            {% for key in user_api_keys %}
+            <li class="key-list">
+              <strong>{{ key.nickname }}</strong> - {{ key.identifier }} - {{
+              key.label }}
+              <form
+                class="retest-api-key-form"
+                action="{{ url_for('user.retest_api_key') }}"
+                method="post"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <input type="hidden" name="key_id" value="{{ key.id }}" />
+                <button type="submit" class="button retest-key-button">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </form>
 
-    <!-- Check if the user needs to set a username -->
-    {% if not current_user.username %}
-    <!-- The section to set the username -->
-    <div id="username-section">
-      <h2>Choose Your Username</h2>
-      <form action="{{ url_for('set_username') }}" method="POST">
-        <div class="form-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" name="username" required />
+              <!-- Delete API key form -->
+              <form
+                class="delete-api-key-form"
+                action="{{ url_for('user.delete_api_key') }}"
+                method="post"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <input type="hidden" name="key_id" value="{{ key.id }}" />
+                <button type="submit" class="button delete-key-button">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+            </li>
+            {% endfor %}
+          </ul>
+          <div id="api-key-messages"></div>
         </div>
-        <div class="form-group">
-          <button type="submit">Set Username</button>
+        <div class="change-info">
+          <h2>Change Info</h2>
+          <button id="toggleUserButton" class="button dropdown-button">
+            Upload <i class="fas fa-chevron-down"></i>
+          </button>
+          <form id="username-change-form" style="display: none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input
+              type="text"
+              name="new_username"
+              placeholder="New Username"
+              required
+            />
+            <button class="submit-user" type="submit">
+              Submit <i class="fa fa-arrow-right"></i>
+            </button>
+          </form>
+          <div id="username-change-message"></div>
+          <div class="custom-line"></div>
+          <a
+            href="{{ url_for('auth.reset_password_request') }}"
+            class="btn dropdown-button"
+          >
+            Reset Password <i class="fa fa-arrow-right"></i>
+          </a>
         </div>
-      </form>
-    </div>
-    {% else %}
-    <h2>Welcome, {{ user.username }}</h2>
-    <main>
-      <section>
-        <h2>Profile Information</h2>
-        <p>Username: {{ user.username }}</p>
-        <p>Email: {{ user.email }}</p>
-      </section>
-      <section>
-        <h2>Dashboard Actions</h2>
-        <form id="api-keys-form" method="POST" enctype="multipart/form-data">
-          <div>
-            <label for="api_keys_file">Upload file with API keys:</label>
-            <input type="file" name="api_keys_file" accept=".txt" />
-          </div>
-          <div>
-            <label for="api_keys_text">Or enter API keys as text:</label>
-            <textarea name="api_keys_text" rows="10"></textarea>
-          </div>
-          <button type="submit">Upload API Keys</button>
-        </form>
-        <div id="upload-status"></div>
-        <h2>API Key Models Update</h2>
-        <button id="start-update-button" type="button">Start Update</button>
-        <div id="progress-container">
-          <div
-            id="progress-bar"
-            style="width: 0%; height: 20px; background-color: #4caf50"
-          ></div>
-          <div id="progress-text">Click 'Start Update' to begin.</div>
-        </div>
-        <button id="test-api-keys-button" type="button">Test API Keys</button>
-        <div id="test-api-keys-result"></div>
-      </section>
-      <section>
-        <h2>Change Username</h2>
-        <form id="username-change-form">
-          <input
-            type="text"
-            name="new_username"
-            placeholder="New Username"
-            required
-          />
-          <button type="submit">Change Username</button>
-        </form>
-        <div id="username-change-message"></div>
-      </section>
-
-      <section>
-        <a href="{{ url_for('auth.reset_password_request') }}"
-          >Reset Password</a
-        >
-      </section>
-      {% endif %}
+      </div>
     </main>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    {% include 'footer.html' %}
   </body>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </html>

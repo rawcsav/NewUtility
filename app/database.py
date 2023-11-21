@@ -1,5 +1,8 @@
+import uuid
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from sqlalchemy import BLOB
 from sqlalchemy.sql import func
 
 db = SQLAlchemy()
@@ -9,27 +12,30 @@ class UserAPIKey(db.Model):
     __tablename__ = 'user_api_keys'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    encrypted_api_key = db.Column(db.String(255), nullable=False)
+    nickname = db.Column(db.String(25), nullable=False)
+    identifier = db.Column(db.String(6), nullable=False)
+    encrypted_api_key = db.Column(BLOB, nullable=False)  # Changed to binary type
     label = db.Column(db.String(50))  # Optional label for the key
-    models = db.Column(db.String(255))  # New field to store accessible models
+    api_key_token = db.Column(db.String(64), unique=True, nullable=False,
+                              default=lambda: str(uuid.uuid4()))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    username = db.Column(db.String(20), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    openai_api_key = db.Column(db.String(255),
-                               nullable=True)  # Make nullable if storing API keys is optional
     email_confirmed = db.Column(db.Boolean, default=False, nullable=False)
-    confirmation_code = db.Column(db.String(100))
+    confirmation_code = db.Column(db.String(6))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     login_attempts = db.Column(db.Integer, default=0)
     last_attempt_time = db.Column(db.DateTime)
     last_username_change = db.Column(db.DateTime)
     login_method = db.Column(db.String(10), nullable=False, default='None')
+    reset_token_hash = db.Column(db.String(255), nullable=True)
+    color_mode = db.Column(db.String(10), nullable=False, default='dark')
 
     selected_api_key_id = db.Column(db.Integer, db.ForeignKey('user_api_keys.id'),
                                     nullable=True)  # Make nullable if not all users have API keys

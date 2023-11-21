@@ -1,0 +1,51 @@
+main {
+  max-width: 85%;
+}
+
+p {
+  font-size: 16px;
+  margin: 25px;
+  padding: 25px;
+}
+
+.button {
+  margin: 25px;
+
+  --bg-color: #f2f2f2;
+  --main-color: #333333;
+  width: 120px;
+  height: 40px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.button:hover {
+  cursor: pointer;
+  box-shadow: 0px 0px #ffff;
+  transform: translate(3px, 3px);
+}
+
+.button-link:hover {
+  cursor: pointer;
+  color: #fff;
+}
+
+.button-list {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  gap: 50px;
+}
+
+h1 {
+  font-size: 100px;
+}

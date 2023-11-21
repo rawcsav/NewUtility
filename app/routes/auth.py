@@ -5,6 +5,8 @@ from flask_login import (
     login_user, logout_user, login_required, current_user
 )
 from app.database import db, UserAPIKey, User
+from app.util.forms_util import LoginForm, SignupForm, ConfirmEmailForm, \
+    ResetPasswordRequestForm, ResetPasswordForm
 from app.util.session_util import encrypt_api_key, decrypt_api_key, \
     generate_confirmation_code, random_string, verify_recaptcha, get_or_create_user
 from flask import jsonify, Blueprint, request, render_template, redirect, url_for, \
@@ -25,11 +27,14 @@ def load_user(user_id):
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
+    form = LoginForm()
+    if form.validate_on_submit():
         login_credential = request.form.get('username')
         password = request.form.get('password')
         recaptcha_response = request.form.get('g-recaptcha-response')
         recaptcha_error = verify_recaptcha(recaptcha_response)
+        remember = request.form.get('remember') == 'true'  # Convert to boolean
+
         if recaptcha_error:
             return jsonify(*recaptcha_error)
 
@@ -38,19 +43,31 @@ def login():
         ).first()
 
         if user is not None:
+            if user.login_method in ['Github', 'Google']:
+                message = f"Please use {user.login_method.title()} to sign in."
+                return jsonify({'status': 'oauth_login_required', 'message': message})
+
             if user.login_attempts is None:
                 user.login_attempts = 0
-            if user.last_attempt_time and datetime.utcnow() - user.last_attempt_time < timedelta(
-                    minutes=5) and user.login_attempts >= 3:
+
+            time_since_last_attempt = datetime.utcnow() - (
+                    user.last_attempt_time or datetime(1970, 1, 1))
+
+            # Check if 5 minutes have passed since the last attempt
+            if time_since_last_attempt > timedelta(minutes=5):
+                user.login_attempts = 0  # Reset the login attempts
+                user.last_attempt_time = None  # Reset the last attempt time
+
+            if user.login_attempts >= 3:
                 return jsonify({'status': 'error',
                                 'message': 'Account locked. Please try again later.'})
 
             if bcrypt.check_password_hash(user.password_hash, password):
                 if user.email_confirmed:
-                    user.login_attempts = 0
-                    user.last_attempt_time = None
+                    user.login_attempts = 0  # Reset the login attempts
+                    user.last_attempt_time = None  # Reset the last attempt time
                     db.session.commit()
-                    login_user(user)
+                    login_user(user, remember=remember)  # Pass the "Remember Me" value
                     return jsonify(
                         {'status': 'success', 'redirect': url_for('user.dashboard')})
                 else:
@@ -60,24 +77,24 @@ def login():
                 user.login_attempts += 1
                 user.last_attempt_time = datetime.utcnow()
                 db.session.commit()
-                if user.login_attempts >= 3:
-
+                remaining_attempts = 5 - user.login_attempts
+                if user.login_attempts >= 5:
                     return jsonify({'status': 'error',
                                     'message': 'Invalid login credential or password. Your account has been locked due to too many failed login attempts. Please try again in 5 minutes.'})
                 else:
                     return jsonify({'status': 'error',
-                                    'message': 'Invalid login credential or password.'})
+                                    'message': f'Invalid login credential or password. You have {remaining_attempts} more attempt(s) before timeout.'})
 
         return jsonify(
             {'status': 'error', 'message': 'Invalid login credential or password.'})
 
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 
 @bp.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
-
+    form = SignupForm()
+    if form.validate_on_submit():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
@@ -113,7 +130,8 @@ def signup():
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         confirmation_code = generate_confirmation_code()
         new_user = User(username=username, email=email, password_hash=hashed_password,
-                        email_confirmed=False, confirmation_code=confirmation_code)
+                        email_confirmed=False, confirmation_code=confirmation_code,
+                        login_method='email')
         db.session.add(new_user)
         db.session.commit()
 
@@ -128,12 +146,13 @@ def signup():
             'redirect': url_for('auth.confirm_email')
         }), 200
 
-    return render_template('signup.html')
+    return render_template('signup.html', form=form)
 
 
 @bp.route('/confirm_email', methods=['GET', 'POST'])
 def confirm_email():
-    if request.method == 'POST':
+    form = ConfirmEmailForm()
+    if form.validate_on_submit():
         code = request.form.get('code')
 
         user = User.query.filter_by(confirmation_code=code).first()
@@ -145,7 +164,7 @@ def confirm_email():
         else:
             flash('Invalid confirmation code.', 'danger')
 
-    return render_template('confirm_email.html')
+    return render_template('confirm_email.html', form=form)
 
 
 @bp.route('/logout')
@@ -153,20 +172,6 @@ def confirm_email():
 def logout():
     logout_user()
     return redirect(url_for('.login'))
-
-
-@bp.route('/add_api_key', methods=['POST'])
-def add_api_key():
-    api_key = request.form.get('api_key')
-    label = request.form.get('label')
-    encrypted_api_key = encrypt_api_key(api_key)
-    user_api_key = UserAPIKey(
-        user_id=current_user.id,
-        encrypted_api_key=encrypted_api_key,
-        label=label
-    )
-    db.session.add(user_api_key)
-    db.session.commit()
 
 
 @bp.route('/get_api_keys', methods=['GET'])
@@ -185,69 +190,86 @@ def get_api_keys():
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
     s = URLSafeTimedSerializer(config.SECRET_KEY)
-    if request.method == 'POST':
-        email = request.form.get('email')
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        email = form.email.data
         user = User.query.filter_by(email=email).first()
-        if user:
-            token = s.dumps(email, salt='password-reset')
-            msg = Message(
-                'Password Reset Request',
-                sender=config.MAIL_DEFAULT_SENDER,
-                recipients=[email]
-            )
-            link = url_for('auth.reset_password', token=token, _external=True)
-            msg.body = f'Your link to reset your password is {link}'
-            mail.send(msg)
-            flash(
-                'An email has been sent with instructions to reset your password.',
-                'info'
-            )
+
+        if not user:
+            return jsonify({'status': 'error',
+                            'message': 'No account with that email address.'}), 404
         else:
-            flash('No account with that email.', 'warning')
-    # Pass an empty token to use the same template for requesting a reset
-    return render_template('reset_password.html', token=None)
+            if user.login_method in ['Github', 'Google']:
+                message = f"Please use {user.login_method.title()} to sign in."
+                return jsonify({'status': 'oauth_login_required', 'message': message})
+
+        token = s.dumps({'user_id': user.id}, salt='password-reset')
+        user.reset_token_hash = bcrypt.generate_password_hash(token).decode('utf-8')
+        db.session.commit()
+
+        # Send the password reset email
+        msg = Message(
+            'Password Reset Request',
+            sender=config.MAIL_DEFAULT_SENDER,
+            recipients=[email]
+        )
+        reset_link = url_for('auth.reset_password', token=token, _external=True)
+        msg.body = f'Please click on the link to reset your password: {reset_link}. It resets in 5 minutes.'
+        mail.send(msg)
+
+        return jsonify({'status': 'success',
+                        'message': 'An email has been sent with instructions to reset your password.'}), 200
+
+    # If it's a GET request or the form didn't validate, render the template
+    return render_template('reset_password.html', form=form)
 
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     s = URLSafeTimedSerializer(config.SECRET_KEY)
+    form = ResetPasswordForm()
     try:
-        email = s.loads(token, salt='password-reset', max_age=3600)
-    except SignatureExpired:
-        flash('The password reset link is expired.', 'warning')
-        return redirect(url_for('auth.reset_password_request'))
-    except BadSignature:
-        flash('Invalid or expired token.', 'warning')
+        # Load the token data and validate it
+        token_data = s.loads(token, salt='password-reset', max_age=300)
+        user_id = token_data['user_id']
+        user = User.query.get(user_id)
+
+        # Check if the token's hash matches the stored hash
+        if not bcrypt.check_password_hash(user.reset_token_hash, token):
+            flash('Invalid or stale token. Please request another', 'token')
+            return redirect(url_for('auth.reset_password_request'))
+
+    except (ValueError, BadSignature):
+        flash('Invalid or stale token. Please request another', 'token')
         return redirect(url_for('auth.reset_password_request'))
 
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        flash('Invalid user.', 'warning')
-        return redirect(url_for('auth.reset_password_request'))
-
-    if request.method == 'POST':
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
+    if form.validate_on_submit():
+        password = form.password.data
+        confirm_password = form.confirm_password.data
 
         if password != confirm_password:
-            flash('Passwords do not match.', 'danger')
-            return redirect(url_for('auth.reset_password', token=token))
+            return jsonify(
+                {'status': 'error', 'message': 'Passwords do not match.'}), 400
 
         if len(password) < 8 or not re.search("[a-z]", password) or \
                 not re.search("[A-Z]", password) or not re.search("[0-9]", password):
-            flash(
-                'Password must be at least 8 characters long and include one number, one lowercase, and one uppercase letter.',
-                'danger'
-            )
-            return redirect(url_for('auth.reset_password', token=token))
+            return jsonify({
+                'status': 'error',
+                'message': 'Password must be at least 8 characters long and include one number, one lowercase, and one uppercase letter.'
+            }), 400
 
         user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        user.reset_token_hash = 0
         db.session.commit()
-        flash('Your password has been updated!', 'success')
-        login_user(user, remember=True)
-        return redirect(url_for('user.dashboard'))
+        return jsonify(
+            {'status': 'success', 'message': 'Your password has been updated!',
+             'redirect': url_for('auth.login')}), 200
 
-    return render_template('reset_password.html', token=token)
+    if form.errors:
+        return jsonify({'status': 'error', 'errors': form.errors}), 400
+
+    # Initial page load (GET request)
+    return render_template('reset_password.html', form=form, token=token)
 
 
 @bp.route('/login/google')

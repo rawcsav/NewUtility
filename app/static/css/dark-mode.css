@@ -1,0 +1,91 @@
+.outlined-text {
+  -webkit-text-stroke: 1px #c2dfe3; /* Keep the original stroke */
+  color: #1b1b1b; /* Maintain the text color as transparent */
+  animation: pathMotion 5s infinite alternate;
+}
+@keyframes pathMotion {
+  0% {
+    text-shadow:
+      -3px -3px 0 rgb(113, 215, 229, 0.7),
+      -5px -5px 0 rgba(11, 245, 66, 0.6),
+      -7px -7px 0 rgba(255, 205, 60, 0.5),
+      -9px -9px 0 rgba(245, 164, 66, 0.4),
+      -11px -11px 0 rgba(245, 88, 123, 0.3),
+      -13px -13px 0 rgba(117, 88, 245, 0.2),
+      -15px -15px 0 rgba(4, 69, 236, 0.1);
+  }
+  100% {
+    text-shadow:
+      3px 3px 0 rgb(113, 215, 229, 0.7),
+      5px 5px 0 rgba(11, 245, 66, 0.6),
+      7px 7px 0 rgba(255, 205, 60, 0.5),
+      9px 9px 0 rgba(245, 164, 66, 0.4),
+      11px 11px 0 rgba(245, 88, 123, 0.3),
+      13px 13px 0 rgba(117, 88, 245, 0.2),
+      15px 15px 0 rgba(4, 69, 236, 0.1);
+  }
+}
+
+body {
+  background-color: #1b1b1b;
+}
+
+h1 {
+  color: #c2dfe3;
+}
+h2 {
+  border-bottom: 3px solid #e0fbfc; /* Thicker border */
+}
+
+p {
+  color: #9db4c0;
+}
+ul {
+  color: #9db4c0;
+}
+ul li {
+  color: #9db4c0;
+  margin-bottom: 1em;
+}
+ul li a {
+  color: #9db4c0;
+}
+ul li a:hover {
+  color: #555555;
+}
+.custom-line {
+  background-color: #5c6b73; /* Using the color property value as the background color */
+}
+
+.hamburger-menu {
+  color: #e0fbfc;
+}
+
+.dropdown-menu {
+  background-color: #e8eaf3;
+  border: 1px solid #ccc;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+.dropdown-menu a {
+  color: #333;
+  border-bottom: 1px solid #c4bfbf;
+}
+.dropdown-menu a:hover {
+  background-color: #f6f6f6;
+}
+
+.button {
+  --bg-color: #323232;
+  --main-color: #eee;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+}
+
+.button:hover {
+  box-shadow: 0px 0px #ffff;
+}
+
+.button-link:hover {
+  color: #fff;
+}

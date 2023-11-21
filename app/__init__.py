@@ -10,6 +10,7 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_login import LoginManager
 from flask import Flask, request
+from flask_wtf.csrf import CSRFProtect
 
 bcrypt = Bcrypt()
 mail = Mail()
@@ -21,6 +22,7 @@ oauth = OAuth()
 def create_app():
     app = Flask(__name__)
     CORS(app)
+    csrf = CSRFProtect(app)
 
     app.secret_key = config.SECRET_KEY
 
@@ -39,6 +41,9 @@ def create_app():
         'pool_reset_on_return': 'rollback'
     }
 
+    app.config["REMEMBER_COOKIE_HTTPONLY"] = config.REMEMBER_COOKIE_HTTPONLY
+    app.config["REMEMBER_COOKIE_DURATION"] = config.REMEMBER_COOKIE_DURATION
+
     app.config['MAIL_SERVER'] = config.MAIL_SERVER
     app.config['MAIL_PORT'] = config.MAIL_PORT
     app.config['MAIL_USERNAME'] = config.MAIL_USERNAME
@@ -50,6 +55,7 @@ def create_app():
         app.config[
             'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.SQL_USERNAME}:{config.SQL_PASSWORD}@127.0.0.1:{app.tunnel.local_bind_port}/{config.SQL_DB_NAME}'
         app.config["SESSION_COOKIE_SECURE"] = False
+        app.config["REMEMBER_COOKIE_SECURE"] = False
 
         cloudinary.config(
             cloud_name=config.CLOUD_NAME,
@@ -61,6 +67,7 @@ def create_app():
         app.config[
             'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.SQL_USERNAME}:{config.SQL_PASSWORD}@{config.SQL_HOSTNAME}/{config.SQL_DB_NAME}'
         app.config["SESSION_COOKIE_SECURE"] = True
+        app.config["REMEMBER_COOKIE_SECURE"] = True
 
         cloudinary.config(
             cloud_name=config.CLOUD_NAME,
@@ -75,6 +82,8 @@ def create_app():
     bcrypt.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+
+    login_manager.login_view = 'auth.login'  # 'auth.login' is the endpoint name for the login route
 
     # Configure Google OAuth using Authlib
     oauth.register(

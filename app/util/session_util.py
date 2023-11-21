@@ -1,3 +1,4 @@
+import hashlib
 import os
 import string
 from datetime import timezone, timedelta, datetime
@@ -23,13 +24,18 @@ def load_encryption_key():
 def encrypt_api_key(api_key):
     cipher_suite = Fernet(load_encryption_key())
     encrypted_api_key = cipher_suite.encrypt(api_key.encode())
-    return encrypted_api_key.decode()
+    return encrypted_api_key  # Return as bytes, no need to decode
 
 
 def decrypt_api_key(encrypted_api_key):
     cipher_suite = Fernet(load_encryption_key())
-    decrypted_api_key = cipher_suite.decrypt(encrypted_api_key.encode())
-    return decrypted_api_key.decode()
+    decrypted_api_key = cipher_suite.decrypt(
+        encrypted_api_key)  # encrypted_api_key is bytes
+    return decrypted_api_key.decode()  # Decode decrypted bytes to string
+
+
+def hash_api_key(api_key):
+    return hashlib.sha256(api_key.encode('utf-8')).hexdigest()
 
 
 def is_api_key_valid(api_key):
@@ -91,11 +97,9 @@ def test_gpt4(key):
             temperature=0,
         )
         if test.choices[0].message.content:
-            print(f"Key is valid for GPT-4: {key}")
-        else:
-            print(f"Key failed with status code: {key}")
+            return True
     except openai.OpenAIError as e:
-        print(f"OpenAI error: {e}")
+        return False
 
 
 def test_gpt3(key):
@@ -111,11 +115,9 @@ def test_gpt3(key):
             temperature=0,
         )
         if test.choices[0].message.content:
-            print(f"Key is valid for GPT-3.5: {key}")
-        else:
-            print(f"Key failed with status code: {key}")
+            return True
     except openai.OpenAIError as e:
-        print(f"OpenAI error: {e}")
+        return False
 
 
 def test_dalle3_key(key):
@@ -129,15 +131,12 @@ def test_dalle3_key(key):
         )
         image_url = response_dalle3.data[0].url
         if image_url:
-            print(f"Working DALL-E 3 Key: {key}")
-        else:
-            print(f"Key failed with status code: {key}")
+            return True
     except openai.OpenAIError as e:
-        print(f"OpenAI error: {e}")
+        return False
 
 
 def random_string(length=5):
-    """Generate a random string of fixed length."""
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(length))
 

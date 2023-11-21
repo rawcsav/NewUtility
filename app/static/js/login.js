@@ -5,6 +5,9 @@ document
 
     // Create FormData object from the form
     var formData = new FormData(this);
+    var remember = document.getElementById("remember").checked;
+    formData.set("remember", remember ? "true" : "false");
+    console.log("Remember Me value:", remember.toString()); // Should log "true" or "false"
 
     grecaptcha.ready(function () {
       grecaptcha

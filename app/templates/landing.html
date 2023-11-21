@@ -30,7 +30,7 @@
     />
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
-    <title>Landing Page</title>
+    <title>Swiss AI</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/fonts.css') }}"
@@ -41,23 +41,62 @@
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/landing.css') }}"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
     />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% set header_title = "SWISS AI" %} {% include 'menu.html' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/landing.css') }}"
+    />
   </head>
   <div class="upper-overlay"></div>
   <body>
-    <ul>
-      <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-      <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
-    </ul>
     <main>
       <p>
-        This is the landing page of the website. Feel free to browse around and
-        learn more about our services.
+        Swiss AI is envisioned to be a personal AI-centric multitool, drawing
+        inspiration from the versatility of Swiss Army Knives. My goal is to
+        offer users (and myself) a straightforward, web-based dashboard that
+        grants access to a suite of developer tools powered by OpenAI—and
+        potentially other providers in the future—without the need for
+        programming expertise. By prioritizing user-friendliness, I aim to
+        ensure that all users, regardless of their technical background, can
+        enjoy the full spectrum of benefits, including customization and
+        advanced features typically reserved for non-web applications.
+        <br /><br />
+        Currently, I'm working to integrate an array of functionalities, such as
+        GPT Conversations, GPT-Vision, Text-to-Speech (TTS),
+        Embeddings/Knowledge Retrieval, and Transcription/Translation powered by
+        Whisper. The platform is designed with a simple profile system to
+        preserve user preferences and manage authorizations efficiently. The
+        Sign-Up and Login pages are readily accessible below.
       </p>
     </main>
+    <ul class="button-list">
+      <li>
+        <button class="button">
+          <a href="{{ url_for('auth.signup') }}" class="button-link">Sign Up</a>
+        </button>
+      </li>
+      <li>
+        <button class="button">
+          <a href="{{ url_for('user.dashboard') }}" class="button-link"
+            >Login →</a
+          >
+        </button>
+      </li>
+    </ul>
+    <p>
+      To follow the development progress and access the source code, visit the
+      project's GitHub page
+      <a
+        href="https://github.com/rawcsav/AIUtilsFlask"
+        target="_blank"
+        style="color: inherit"
+        >here</a
+      >.
+    </p>
+    {% include 'footer.html' %}
   </body>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 </html>

@@ -32,21 +32,31 @@
     <meta name="theme-color" content="#ffffff" />
     <title>Confirm Email</title>
     <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
+    />
+    <link
       href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
       rel="stylesheet"
     />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% set header_title = 'Confirm Email' %} {% include 'menu.html' %}
-
-    <!-- Add any additional head elements here -->
+    {% set header_title = "SWISS AI" %} {% include 'menu.html' %}
   </head>
   <body>
     <h2>Confirm Your Email</h2>
     <p>Please enter the confirmation code sent to your email.</p>
-    <form action="{{ url_for('auth.confirm_email') }}" method="post">
+    <form
+      action="{{ url_for('auth.confirm_email') }}"
+      id="confirm-email-form"
+      class="form"
+      method="post"
+    >
+      {{ form.hidden_tag() }}
+      <!-- This includes the CSRF token field -->
       <label for="code">Confirmation Code:</label>
       <input type="text" id="code" name="code" required />
       <button type="submit">Confirm</button>
     </form>
+    {% include 'footer.html' %}
   </body>
 </html>
