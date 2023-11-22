@@ -2,17 +2,19 @@ body {
   overflow: hidden;
 }
 .container {
+  margin-top: 30px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 96%;
   gap: 50px;
+  max-width: 100%;
+  justify-content: center;
 }
 
 h2 {
   display: inline-block; /* This will shrink the element to the width of its content */
   border-bottom: 1px solid #d4af37; /* Your desired border color */
   font-size: 25px;
-  margin-bottom: 10px; /* Adjust as needed */
   margin-top: 0;
   padding-bottom: 0;
 }
@@ -40,12 +42,11 @@ label {
   gap: 60px;
 }
 #welcome {
-  color: #da291c;
+  color: #d4af37;
   border-bottom: none;
   font-size: 40px;
-  margin: 0;
+  margin-bottom: 10px;
   padding: 0;
-  margin-top: 10px;
 }
 
 h1 img {
@@ -61,6 +62,10 @@ h1 img {
   background-color: rgba(242, 242, 242, 0.7);
   border-radius: 5px;
   padding: 10px;
+  min-width: 250px;
+  max-width: 250px;
+  max-height: 300px;
+  overflow: auto;
 }
 
 .change-info {
@@ -70,6 +75,8 @@ h1 img {
   background-color: rgba(242, 242, 242, 0.7);
   border-radius: 5px;
   padding: 10px;
+  min-width: 200px;
+  max-width: 200px;
 }
 
 #api-key-messages {
@@ -90,7 +97,8 @@ h1 img {
 }
 
 .retest-key-button,
-.delete-key-button {
+.delete-key-button,
+.select-key-button {
   background: transparent;
   color: #333333;
   border: none;
@@ -113,6 +121,7 @@ h1 img {
   align-items: center;
   justify-content: space-between;
   font-family: Window-Book, sans-serif;
+  max-width: 100%;
 }
 .dropdown-button:hover {
   background-color: #71a2ef; /* Darken the button on hover */
@@ -176,7 +185,7 @@ a {
 }
 
 .change-info button {
-  max-width: 100px;
+  max-width: 120px;
 }
 
 .submit-user:hover {
@@ -187,6 +196,8 @@ a {
   display: flex;
   flex-direction: row;
   gap: 10px;
+  width: 300px;
+  max-width: 300px;
 }
 #api-key-form {
   margin-top: 10px;
@@ -214,4 +225,47 @@ a {
   width: 100%;
   height: auto;
   pointer-events: none; /* Allows clicks to pass through */
+}
+
+.redirect-links {
+  background-color: rgba(
+    242,
+    242,
+    242,
+    0.7
+  ); /* Your chosen color for the section */
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px; /* Add space before the banner */
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.redirect-links h2 {
+  margin-bottom: 15px;
+}
+
+.redirect-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.redirect-links ul li {
+  margin-bottom: 10px;
+}
+
+.redirect-links ul li a {
+  color: #007bff; /* Bootstrap primary blue, for example */
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.redirect-links ul li a:hover {
+  color: #0056b3; /* Darker blue on hover */
+}
+
+.selected-key {
+  color: green; /* Color for selected key */
 }

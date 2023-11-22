@@ -71,7 +71,9 @@ $("#toggleUserButton").on("click", function () {
   $(this).toggleClass("active"); // Toggle the active class on the button
 });
 document
-  .querySelectorAll(".retest-api-key-form, .delete-api-key-form")
+  .querySelectorAll(
+    ".retest-api-key-form, .delete-api-key-form, .select-api-key-form"
+  )
   .forEach((form) => {
     form.addEventListener("submit", function (event) {
       event.preventDefault();

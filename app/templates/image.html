@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='favicon/site.webmanifest') }}"
+    />
+    <link
+      rel="mask-icon"
+      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
+    />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>DALL-E</title>
+    <link
+      href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% include 'menu.html' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/image.css') }}"
+    />
+  </head>
+  <body>
+    <h1 class="outlined-text">
+      Image
+      <img src="/static/logo/swissimg.png" alt="Company Logo" /> Generation
+    </h1>
+    <div class="img_with_form">
+      <div class="artist">
+        <img src="../static/logo/artist.png" />
+      </div>
+      <form id="image-generation-form" class="flex-form">
+        {{ form.hidden_tag() }}
+        <div class="input-row">
+          <!-- This div will contain the inputs that should be in a row -->
+
+          <div class="input-group">
+            <label for="model">Model:</label>
+            <select id="model" name="model">
+              <option value="dall-e-3">DALL-E 3</option>
+              <option value="dall-e-2">DALL-E 2</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="n"># of Images:</label>
+            <input type="number" id="n" name="n" value="1" min="1" max="10" />
+          </div>
+          <div class="input-group">
+            <label for="size">Size:</label>
+            <select id="size" name="size"></select>
+          </div>
+        </div>
+
+        <div id="dall-e-3-options" style="display: none">
+          <div class="input-group">
+            <label for="quality">Quality:</label>
+            <select id="quality" name="quality">
+              <option value="standard">Standard</option>
+              <option value="hd">HD</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="style">Style:</label>
+            <select id="style" name="style">
+              <option value="vivid">Vivid</option>
+              <option value="natural">Natural</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="prompt-submit-container">
+          <input
+            type="text"
+            id="prompt"
+            name="prompt"
+            placeholder="Enter your prompt here"
+          />
+          <button type="submit">Generate Image</button>
+        </div>
+      </form>
+    </div>
+    <div class="custom-line"></div>
+    <div id="image-generation-messages"></div>
+    <div id="generated-images"></div>
+
+    {% include 'footer.html' %}
+  </body>
+  <script src="{{ url_for('static', filename='js/image.js') }}"></script>
+</html>

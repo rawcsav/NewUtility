@@ -1,6 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField
-from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, \
+    IntegerField
+from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo, \
+    NumberRange, Optional
 
 
 class LoginForm(FlaskForm):
@@ -74,3 +76,40 @@ class DeleteAPIKeyForm(FlaskForm):
 class RetestAPIKeyForm(FlaskForm):
     key_id = HiddenField('Key ID', validators=[DataRequired()])
     submit = SubmitField('Retest API Key')
+
+
+class SelectAPIKeyForm(FlaskForm):
+    key_id = HiddenField('Key ID', validators=[DataRequired()])
+
+
+class GenerateImageForm(FlaskForm):
+    prompt = StringField('Prompt', validators=[
+        DataRequired(),
+        Length(max=1000)  # Default max length
+    ])
+    model = StringField('Model', validators=[DataRequired()])
+    n = IntegerField('N', validators=[
+        DataRequired(),
+        NumberRange(min=1, max=10)  # Default max number
+    ])
+    size = StringField('Size', validators=[DataRequired()])
+    quality = StringField('Quality', validators=[Optional()])
+    response_format = StringField('Response Format', validators=[Optional()])
+    style = StringField('Style', validators=[Optional()])
+
+    def validate(self, extra_validators=None):
+        # Run the default validation first
+        if not super(GenerateImageForm, self).validate(
+                extra_validators=extra_validators):
+            return False
+
+        # Additional validation based on the model selected
+        if self.model.data == 'dall-e-3':
+            # Update maximum prompt length for DALL-E 3
+            self.prompt.validators.append(Length(max=4000))
+            # Update maximum number of images for DALL-E 3
+            self.n.validators.append(NumberRange(min=1, max=1))
+            # Re-run validation for updated validators
+            return super(GenerateImageForm, self).validate(
+                extra_validators=extra_validators)
+        return True

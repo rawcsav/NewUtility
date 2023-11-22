@@ -47,19 +47,12 @@ class User(UserMixin, db.Model):
                                           lazy='dynamic')
     translations = db.relationship('Translation', backref='user', lazy='dynamic')
     api_usage = db.relationship('APIUsage', backref='user', lazy='dynamic')
-    user_models = db.relationship('UserModel', backref='user', lazy='dynamic')
     speeches = db.relationship('Speech', backref='user', lazy='dynamic')
     api_keys = db.relationship('UserAPIKey', backref='user', lazy='dynamic',
                                foreign_keys=[UserAPIKey.user_id])
     selected_api_key = db.relationship('UserAPIKey', foreign_keys=[selected_api_key_id])
-
-
-class UserModel(db.Model):
-    __tablename__ = 'user_models'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    model_name = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    generated_images = db.relationship('GeneratedImage', back_populates='user',
+                                       lazy='dynamic')
 
 
 class Conversation(db.Model):
@@ -136,3 +129,16 @@ class Speech(db.Model):
     audio_data = db.Column(db.Text,
                            nullable=False)  # Assuming audio data is stored as base64 string
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+
+class GeneratedImage(db.Model):
+    __tablename__ = 'generated_images'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    prompt = db.Column(db.Text, nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    image_url = db.Column(db.String(500))  # Assuming the response is a URL to the image
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    # Relationship to the User model
+    user = db.relationship('User', back_populates='generated_images')

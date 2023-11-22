@@ -35,9 +35,9 @@ def create_app():
     app.config["SESSION_COOKIE_SAMESITE"] = config.SESSION_COOKIE_SAMESITE
     app.config["SESSION_COOKIE_HTTPONLY"] = config.SESSION_COOKIE_HTTPONLY
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_recycle': config.SQLALCHEMY_POOL_RECYCLE,
+        'pool_recycle': 299,
         'pool_pre_ping': True,
-        'pool_timeout': 30,
+        'pool_timeout': 20,
         'pool_reset_on_return': 'rollback'
     }
 
@@ -49,7 +49,9 @@ def create_app():
     app.config['MAIL_USERNAME'] = config.MAIL_USERNAME
     app.config['MAIL_PASSWORD'] = config.MAIL_PASSWORD
     app.config['MAIL_USE_TLS'] = config.MAIL_USE_TLS
-
+    app.config['SQLALCHEMY_POOL_RECYCLE'] = 299
+    app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
+    
     if config.FLASK_ENV == 'development':
         app.tunnel = get_tunnel()
         app.config[
@@ -112,10 +114,11 @@ def create_app():
     )
 
     with app.app_context():
-        from .routes import landing, auth, user
+        from .routes import landing, auth, user, image
         app.register_blueprint(landing.bp)
         app.register_blueprint(auth.bp)
         app.register_blueprint(user.bp)
+        app.register_blueprint(image.bp)
 
         @app.teardown_request
         def session_teardown(exception=None):

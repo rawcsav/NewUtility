@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 
 from app.database import UserAPIKey
 from app.util.forms_util import ChangeUsernameForm, UploadAPIKeyForm, DeleteAPIKeyForm, \
-    RetestAPIKeyForm
+    RetestAPIKeyForm, SelectAPIKeyForm
 from app.util.session_util import check_available_models, test_gpt4, test_dalle3_key, \
     test_gpt3, encrypt_api_key, decrypt_api_key, hash_api_key
 
@@ -15,12 +15,13 @@ bp = Blueprint('user', __name__, url_prefix='/user')
 
 
 @bp.route('/dashboard')
-@login_required  # Ensure that only logged-in users can access this route
+@login_required
 def dashboard():
     user_api_keys = UserAPIKey.query.filter_by(user_id=current_user.id) \
         .filter(UserAPIKey.label != 'Error').all()
-
-    return render_template('dashboard.html', user_api_keys=user_api_keys)
+    selected_api_key_id = current_user.selected_api_key_id
+    return render_template('dashboard.html', user_api_keys=user_api_keys,
+                           selected_api_key_id=selected_api_key_id)
 
 
 @bp.route('/change_username', methods=['POST'])
@@ -159,3 +160,37 @@ def delete_api_key():
         return jsonify({'success': False, 'status': 'error',
                         'message': 'Failed to delete API key'}), 400
     return redirect(url_for('user.dashboard'))
+
+
+@bp.route('/select_api_key', methods=['POST'])
+@login_required
+def select_api_key():
+    form = SelectAPIKeyForm()  # Replace with your actual form validation
+    if form.validate_on_submit():
+        key_id = request.form.get('key_id')
+        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id,
+                                                  id=key_id).first()
+
+        if not user_api_key:
+            return jsonify({'success': False, 'message': 'API key not found'}), 404
+
+        api_key = decrypt_api_key(user_api_key.encrypted_api_key)
+        try:
+            available_models = check_available_models(api_key)
+            is_valid_key = 'gpt-3.5-turbo' in available_models or 'gpt-4' in available_models
+
+            if not is_valid_key:
+                return jsonify({'success': False, 'status': 'error',
+                                'message': 'API key is not valid.'}), 400
+
+            current_user.selected_api_key_id = user_api_key.id
+            db.session.commit()
+            return jsonify({'success': True, 'status': 'success',
+                            'message': 'API key selected successfully.'}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'status': 'error',
+                            'message': 'Failed to verify API key'}), 400
+    else:
+        return jsonify({'success': False, 'message': 'Invalid form submission.'}), 400
