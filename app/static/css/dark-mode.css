@@ -1,6 +1,6 @@
 .outlined-text {
-  -webkit-text-stroke: 1px #c2dfe3; /* Keep the original stroke */
-  color: #1b1b1b; /* Maintain the text color as transparent */
+  -webkit-text-stroke: 1px #c2dfe3;
+  color: #1b1b1b;
   animation: pathMotion 5s infinite alternate;
 }
 @keyframes pathMotion {
@@ -34,7 +34,7 @@ h1 {
   color: #c2dfe3;
 }
 h2 {
-  border-bottom: 3px solid #e0fbfc; /* Thicker border */
+  border-bottom: 3px solid #e0fbfc;
 }
 
 p {
@@ -54,7 +54,7 @@ ul li a:hover {
   color: #555555;
 }
 .custom-line {
-  background-color: #5c6b73; /* Using the color property value as the background color */
+  background-color: #5c6b73;
 }
 
 .hamburger-menu {

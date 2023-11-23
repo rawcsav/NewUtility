@@ -14,7 +14,7 @@ from app.database import UserAPIKey, db, User
 
 
 def generate_confirmation_code():
-    return str(random.randint(100000, 999999))  # 6-digit code
+    return str(random.randint(100000, 999999))
 
 
 def load_encryption_key():
@@ -24,14 +24,14 @@ def load_encryption_key():
 def encrypt_api_key(api_key):
     cipher_suite = Fernet(load_encryption_key())
     encrypted_api_key = cipher_suite.encrypt(api_key.encode())
-    return encrypted_api_key  # Return as bytes, no need to decode
+    return encrypted_api_key
 
 
 def decrypt_api_key(encrypted_api_key):
     cipher_suite = Fernet(load_encryption_key())
     decrypted_api_key = cipher_suite.decrypt(
-        encrypted_api_key)  # encrypted_api_key is bytes
-    return decrypted_api_key.decode()  # Decode decrypted bytes to string
+        encrypted_api_key)
+    return decrypted_api_key.decode()
 
 
 def hash_api_key(api_key):
@@ -65,7 +65,7 @@ def get_openai_client():
     if current_user.is_authenticated:
         encrypted_api_key = current_user.selected_api_key.encrypted_api_key
         decrypted_api_key = decrypt_api_key(
-            encrypted_api_key)  # Implement this decryption function
+            encrypted_api_key)
 
         client = openai.OpenAI(api_key=decrypted_api_key)
         return client
@@ -124,7 +124,7 @@ def test_dalle3_key(key):
     openai.api_key = key
     try:
         response_dalle3 = openai.images.generate(
-            model="dall-e-3",  # Replace with the actual model identifier for DALL-E 3
+            model="dall-e-3",
             prompt="a white siamese cat",
             size="1024x1024",
             n=1,
@@ -141,7 +141,6 @@ def random_string(length=5):
     return ''.join(random.choice(letters) for i in range(length))
 
 
-# Helper function for reCAPTCHA verification
 def verify_recaptcha(recaptcha_response):
     if not recaptcha_response:
         return {'status': 'error',
@@ -157,10 +156,9 @@ def verify_recaptcha(recaptcha_response):
         return {'status': 'error',
                 'message': 'reCAPTCHA verification failed. Please try again.'}, 400
 
-    return None  # No error
+    return None
 
 
-# Helper function to create or update a user from OAuth information
 def get_or_create_user(email, username, login_method):
     user = User.query.filter_by(email=email).first()
     if not user:

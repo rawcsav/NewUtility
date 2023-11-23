@@ -54,7 +54,7 @@ class ResetPasswordForm(FlaskForm):
 class ChangeUsernameForm(FlaskForm):
     new_username = StringField('New Username', validators=[
         DataRequired(),
-        Length(min=3, max=20)  # Adjust length limits as needed
+        Length(min=3, max=20)
     ])
     submit = SubmitField('Change Username')
 
@@ -85,12 +85,12 @@ class SelectAPIKeyForm(FlaskForm):
 class GenerateImageForm(FlaskForm):
     prompt = StringField('Prompt', validators=[
         DataRequired(),
-        Length(max=1000)  # Default max length
+        Length(max=1000)
     ])
     model = StringField('Model', validators=[DataRequired()])
     n = IntegerField('N', validators=[
         DataRequired(),
-        NumberRange(min=1, max=10)  # Default max number
+        NumberRange(min=1, max=10)
     ])
     size = StringField('Size', validators=[DataRequired()])
     quality = StringField('Quality', validators=[Optional()])
@@ -98,18 +98,16 @@ class GenerateImageForm(FlaskForm):
     style = StringField('Style', validators=[Optional()])
 
     def validate(self, extra_validators=None):
-        # Run the default validation first
+
         if not super(GenerateImageForm, self).validate(
                 extra_validators=extra_validators):
             return False
 
-        # Additional validation based on the model selected
         if self.model.data == 'dall-e-3':
-            # Update maximum prompt length for DALL-E 3
             self.prompt.validators.append(Length(max=4000))
-            # Update maximum number of images for DALL-E 3
+
             self.n.validators.append(NumberRange(min=1, max=1))
-            # Re-run validation for updated validators
+
             return super(GenerateImageForm, self).validate(
                 extra_validators=extra_validators)
         return True

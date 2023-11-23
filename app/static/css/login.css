@@ -165,8 +165,8 @@ header {
 }
 
 h1 img {
-  height: 100px; /* or the size that fits well with your layout */
-  vertical-align: middle; /* to align with the text */
+  height: 100px;
+  vertical-align: middle;
 }
 
 .social-icons .icon {
@@ -191,18 +191,18 @@ h1 img {
 }
 
 .banner {
-  width: 100%; /* maintain aspect ratio */
+  width: 100%;
   max-height: 300px;
   position: absolute;
   bottom: 0;
   left: 0;
-  pointer-events: none; /* Allows clicks to pass through */
+  pointer-events: none;
 
-  z-index: 10; /* make sure it's above other content */
+  z-index: 10;
 }
 
 .banner img {
-  pointer-events: none; /* Allows clicks to pass through */
+  pointer-events: none;
 
   width: 100%;
   height: auto;

@@ -51,7 +51,7 @@ def create_app():
     app.config['MAIL_USE_TLS'] = config.MAIL_USE_TLS
     app.config['SQLALCHEMY_POOL_RECYCLE'] = 299
     app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
-    
+
     if config.FLASK_ENV == 'development':
         app.tunnel = get_tunnel()
         app.config[
@@ -85,9 +85,8 @@ def create_app():
     mail.init_app(app)
     login_manager.init_app(app)
 
-    login_manager.login_view = 'auth.login'  # 'auth.login' is the endpoint name for the login route
+    login_manager.login_view = 'auth.login'
 
-    # Configure Google OAuth using Authlib
     oauth.register(
         name='google',
         client_id=config.GOOGLE_OAUTH_CLIENT_ID,
@@ -102,7 +101,6 @@ def create_app():
         }
     )
 
-    # Configure GitHub OAuth using Authlib
     oauth.register(
         name='github',
         client_id=config.GITHUB_CLIENT_ID,
@@ -131,17 +129,15 @@ def create_app():
         @app.before_request
         def delete_stale_unverified_users():
             if request.endpoint not in ['static',
-                                        'auth.confirm_email']:  # Avoid running this for static files and the email confirmation endpoint
+                                        'auth.confirm_email']:
                 current_time = datetime.utcnow()
                 stale_threshold = current_time - timedelta(hours=24)
 
-                # Get a list of users who have not verified within 24 hours
                 stale_users = User.query.filter(
                     User.email_confirmed == False,
                     User.created_at < stale_threshold
                 ).all()
 
-                # Delete stale users
                 for user in stale_users:
                     db.session.delete(user)
                 db.session.commit()

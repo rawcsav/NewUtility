@@ -1,7 +1,6 @@
 $(document).ready(function () {
-  // Password Reset Request Form Submission
   $("#password-reset-request-form").on("submit", function (event) {
-    event.preventDefault(); // Prevent the default form submission
+    event.preventDefault();
     var form = $(this);
     $.ajax({
       url: form.attr("action"),
@@ -13,7 +12,6 @@ $(document).ready(function () {
         messageContainer.text(response.message);
         if (response.status === "success") {
           messageContainer.removeClass("error").addClass("success");
-          // Optionally, handle additional success actions
         } else {
           messageContainer.removeClass("success").addClass("error");
         }
@@ -27,7 +25,7 @@ $(document).ready(function () {
   });
 
   $("#password-reset-form").on("submit", function (event) {
-    event.preventDefault(); // Prevent the default form submission
+    event.preventDefault();
     var form = $(this);
     $.ajax({
       url: form.attr("action"),
@@ -39,15 +37,15 @@ $(document).ready(function () {
         messageContainer.text(response.message);
         if (response.status === "success") {
           messageContainer.removeClass("error").addClass("success");
-          // Redirect if a URL is provided
+
           window.location.href = response.redirect;
         } else {
           messageContainer.removeClass("success").addClass("error");
-          // Check for redirect in case of an error
+
           if (response.redirect) {
             setTimeout(function () {
               window.location.href = response.redirect;
-            }, 3000); // Redirect after 3 seconds
+            }, 3000);
           }
         }
       },

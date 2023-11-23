@@ -10,7 +10,6 @@ from app.util.forms_util import ChangeUsernameForm, UploadAPIKeyForm, DeleteAPIK
 from app.util.session_util import check_available_models, test_gpt4, test_dalle3_key, \
     test_gpt3, encrypt_api_key, decrypt_api_key, hash_api_key
 
-# Define the Blueprint
 bp = Blueprint('user', __name__, url_prefix='/user')
 
 
@@ -30,16 +29,16 @@ def change_username():
     form = ChangeUsernameForm()
     if form.validate_on_submit():
         new_username = request.form.get('new_username').strip()
-    # Check if the cooldown period has passed
+
     if current_user.last_username_change and \
             datetime.utcnow() - current_user.last_username_change < timedelta(days=7):
         return jsonify({'status': 'error',
                         'message': 'You can only change your username once every 7 days.'}), 429
-    # Check if the new username is already taken
+
     if User.query.filter_by(username=new_username).first():
         return jsonify(
             {'status': 'error', 'message': 'This username is already taken.'}), 400
-    # Update the username
+
     current_user.username = new_username
     current_user.last_username_change = datetime.utcnow()
     db.session.commit()
@@ -107,7 +106,7 @@ def upload_api_key():
 @bp.route('/retest_api_key', methods=['POST'])
 @login_required
 def retest_api_key():
-    form = RetestAPIKeyForm()  # Instantiate your form
+    form = RetestAPIKeyForm()
     if form.validate_on_submit():
         key_id = form.key_id.data
         user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id,
@@ -165,7 +164,7 @@ def delete_api_key():
 @bp.route('/select_api_key', methods=['POST'])
 @login_required
 def select_api_key():
-    form = SelectAPIKeyForm()  # Replace with your actual form validation
+    form = SelectAPIKeyForm()
     if form.validate_on_submit():
         key_id = request.form.get('key_id')
         user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id,

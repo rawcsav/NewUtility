@@ -1,8 +1,7 @@
-// Function to handle the display of API key related messages
 function updateApiKeyMessages(message, status) {
   var messageDiv = document.getElementById("api-key-messages");
-  messageDiv.textContent = message; // Set the message text
-  messageDiv.className = status; // Set the class for styling based on status
+  messageDiv.textContent = message;
+  messageDiv.className = status;
 }
 
 document
@@ -11,11 +10,10 @@ document
     event.preventDefault();
     var formData = new FormData(this);
 
-    // Add the CSRF token to your request headers
     fetch("/user/change_username", {
       method: "POST",
       headers: {
-        "X-CSRFToken": formData.get("csrf_token") // Assuming you're using the default header name for CSRF
+        "X-CSRFToken": formData.get("csrf_token")
       },
       body: formData
     })
@@ -34,25 +32,21 @@ document
   .addEventListener("submit", function (e) {
     e.preventDefault();
     var formData = new FormData(this);
-    var form = this; // Save reference to the form
+    var form = this;
 
     fetch("/user/upload_api_key", {
       method: "POST",
       headers: {
-        "X-CSRFToken": formData.get("csrf_token") // Include the CSRF token in the request headers
-        // If you're sending JSON instead, you'll need to set 'Content-Type': 'application/json'
-        // and convert formData to JSON.
+        "X-CSRFToken": formData.get("csrf_token")
       },
       body: formData
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {
-          // Display success message and clear the form
           updateApiKeyMessages(data.message, "success");
           form.reset();
         } else {
-          // Display error message
           updateApiKeyMessages(data.message, "error");
         }
       })
@@ -62,13 +56,13 @@ document
   });
 
 $("#toggleFormButton").on("click", function () {
-  $("#api-key-form").slideToggle(); // Toggle the visibility of the form
-  $(this).toggleClass("active"); // Toggle the active class on the button
+  $("#api-key-form").slideToggle();
+  $(this).toggleClass("active");
 });
 
 $("#toggleUserButton").on("click", function () {
-  $("#username-change-form").slideToggle(); // Toggle the visibility of the form
-  $(this).toggleClass("active"); // Toggle the active class on the button
+  $("#username-change-form").slideToggle();
+  $(this).toggleClass("active");
 });
 document
   .querySelectorAll(
@@ -78,16 +72,15 @@ document
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       var formData = new FormData(this);
-      var actionUrl = form.action; // URL from the form's action attribute
+      var actionUrl = form.action;
 
       fetch(actionUrl, {
         method: "POST",
-        body: formData // CSRF token and key_id are included automatically
+        body: formData
       })
         .then((response) => response.json())
         .then((data) => {
           if (data.status === "success") {
-            // Display success message
             updateApiKeyMessages(data.message, "success");
           } else {
             updateApiKeyMessages(data.message, "error");

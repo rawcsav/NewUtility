@@ -33,7 +33,7 @@ def login():
         password = request.form.get('password')
         recaptcha_response = request.form.get('g-recaptcha-response')
         recaptcha_error = verify_recaptcha(recaptcha_response)
-        remember = request.form.get('remember') == 'true'  # Convert to boolean
+        remember = request.form.get('remember') == 'true'
 
         if recaptcha_error:
             return jsonify(*recaptcha_error)
@@ -53,10 +53,9 @@ def login():
             time_since_last_attempt = datetime.utcnow() - (
                     user.last_attempt_time or datetime(1970, 1, 1))
 
-            # Check if 5 minutes have passed since the last attempt
             if time_since_last_attempt > timedelta(minutes=5):
-                user.login_attempts = 0  # Reset the login attempts
-                user.last_attempt_time = None  # Reset the last attempt time
+                user.login_attempts = 0
+                user.last_attempt_time = None
 
             if user.login_attempts >= 3:
                 return jsonify({'status': 'error',
@@ -64,10 +63,10 @@ def login():
 
             if bcrypt.check_password_hash(user.password_hash, password):
                 if user.email_confirmed:
-                    user.login_attempts = 0  # Reset the login attempts
-                    user.last_attempt_time = None  # Reset the last attempt time
+                    user.login_attempts = 0
+                    user.last_attempt_time = None
                     db.session.commit()
-                    login_user(user, remember=remember)  # Pass the "Remember Me" value
+                    login_user(user, remember=remember)
                     return jsonify(
                         {'status': 'success', 'redirect': url_for('user.dashboard')})
                 else:
@@ -207,7 +206,6 @@ def reset_password_request():
         user.reset_token_hash = bcrypt.generate_password_hash(token).decode('utf-8')
         db.session.commit()
 
-        # Send the password reset email
         msg = Message(
             'Password Reset Request',
             sender=config.MAIL_DEFAULT_SENDER,
@@ -220,7 +218,6 @@ def reset_password_request():
         return jsonify({'status': 'success',
                         'message': 'An email has been sent with instructions to reset your password.'}), 200
 
-    # If it's a GET request or the form didn't validate, render the template
     return render_template('reset_password.html', form=form)
 
 
@@ -229,12 +226,11 @@ def reset_password(token):
     s = URLSafeTimedSerializer(config.SECRET_KEY)
     form = ResetPasswordForm()
     try:
-        # Load the token data and validate it
+
         token_data = s.loads(token, salt='password-reset', max_age=300)
         user_id = token_data['user_id']
         user = User.query.get(user_id)
 
-        # Check if the token's hash matches the stored hash
         if not bcrypt.check_password_hash(user.reset_token_hash, token):
             flash('Invalid or stale token. Please request another', 'token')
             return redirect(url_for('auth.reset_password_request'))
@@ -268,7 +264,6 @@ def reset_password(token):
     if form.errors:
         return jsonify({'status': 'error', 'errors': form.errors}), 400
 
-    # Initial page load (GET request)
     return render_template('reset_password.html', form=form, token=token)
 
 
@@ -322,7 +317,7 @@ def github_authorized():
         return redirect(url_for('.login'))
 
     user_data = resp.json()
-    email = user_data.get('email')  # Some GitHub users may have private emails
+    email = user_data.get('email')
     original_username = user_data['login']
     user = get_or_create_user(email, original_username, 'GitHub')
 

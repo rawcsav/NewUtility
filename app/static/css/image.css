@@ -1,65 +1,78 @@
+body,
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  justify-content: flex-start;
+}
+
 h1 img {
-  height: 100px; /* or the size that fits well with your layout */
-  vertical-align: middle; /* to align with the text */
+  height: 100px;
+  vertical-align: middle;
 }
 
 .flex-form {
   display: flex;
   flex-direction: column;
-  height: 150px;
   justify-content: space-between;
 }
 
 .input-row {
-  display: flex; /* This will align the child divs in a row */
-  justify-content: space-between; /* This will distribute space around the items */
-  margin-bottom: 10px; /* Space below this row */
+  display: flex;
+  justify-content: space-evenly;
+  margin-bottom: 10px;
   gap: 20px;
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  margin-right: 10px; /* Space between the input groups, remove for the last item if needed */
 }
 
 .input-group.prompt-group {
-  flex-grow: 1; /* This will allow the prompt input to fill the remaining space */
-  margin-right: 0; /* No margin to the right for the prompt input */
+  flex-grow: 1;
+  margin-right: 0;
 }
 
 .submit-group {
-  align-self: center; /* Centering the submit button */
+  align-self: center;
 }
 
 .prompt-submit-container {
-  display: flex; /* Align children in a row */
+  display: flex;
 }
 
 .input-group label {
   color: #5b92e5;
   white-space: nowrap;
+  font-size: 14px;
 }
 
 .prompt-submit-container input[type="text"] {
-  flex-grow: 1; /* Input will take up remaining space */
+  flex-grow: 1;
   padding: 10px;
+  font-family: Window-Book, sans-serif;
   border: 1px solid #cccccc;
-  border-radius: 4px 0 0 4px; /* Rounded corners on the left side only */
+  border-radius: 4px 0 0 4px;
+  color: #333333;
 }
 
 .prompt-submit-container button {
-  padding: 10px 20px;
+  padding: 5px 10px;
   border: 1px solid #cccccc;
-  border-radius: 0 4px 4px 0; /* Rounded corners on the right side only */
+  font-family: Window-Book, sans-serif;
+  border-radius: 0 4px 4px 0;
   background-color: #f2f2f2;
   cursor: pointer;
+  color: #333333;
 }
 
 .prompt-submit-container button:hover {
   background-color: #e2e2e2;
 }
-
 .artist {
   height: auto;
   position: relative;
@@ -68,7 +81,7 @@ h1 img {
 }
 
 .artist img {
-  width: 150px;
+  width: auto;
   height: 150px;
   border-radius: 5%;
   box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
@@ -78,16 +91,105 @@ h1 img {
 
 .img_with_form {
   display: flex;
-  flex-direction: row;
-  width: 96%;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 60px;
-  margin-bottom: 10px;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: #f2f2f2;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 20px;
+  gap: 20px;
+  flex-direction: column;
+  height: 310px;
 }
 
 #dall-e-3-options {
   gap: 20px;
-  margin-bottom: 10px; /* Space below this row */
+  margin-bottom: 15px;
   justify-content: center;
+}
+
+#number-of-images-container {
+  margin-bottom: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+.main-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
+#generated-images {
+  height: 70%;
+  max-height: 70%;
+  max-width: 70%;
+  width: 70%;
+  left: 25%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 10px;
+}
+
+.image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-height: 100%;
+  height: 100%;
+  max-width: 100%;
+  width: 100%;
+}
+
+#generated-images img {
+  max-height: 100%;
+  max-width: 100%;
+  margin-top: auto;
+  margin-bottom: auto;
+  width: auto;
+  height: auto;
+  border: 1px solid #cccccc;
+}
+
+input#n {
+  font-size: 14px;
+  padding: 0;
+  color: #333333;
+}
+
+select {
+  font-size: 14px;
+  color: #333333;
+  font-family: Window-Book, sans-serif;
+}
+
+.message-inc {
+  display: flex;
+  flex-direction: column;
+}
+#image-generation-messages {
+  margin: 10px;
+  font-size: 12px;
+  font-family: Window-Bold, sans-serif;
+}
+
+.success {
+  color: green;
+}
+
+.error {
+  color: red;
+}
+
+#icons-container {
+  text-align: center; /* Center the icons within the container */
+  margin-top: -20px; /* Add space between the form and the icons */
+}
+
+/* General styles for all icons within the icons-container */
+#icons-container .image-icon {
+  margin: 5px 10px; /* Add some space around the icons */
+  text-decoration: none; /* Remove underline from anchor elements */
+  color: #d4af37; /* Set a default color for the icons (change as needed) */
+  font-size: 18px; /* Set the size of the icons (adjust as needed) */
 }

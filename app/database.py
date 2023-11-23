@@ -14,8 +14,8 @@ class UserAPIKey(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     nickname = db.Column(db.String(25), nullable=False)
     identifier = db.Column(db.String(6), nullable=False)
-    encrypted_api_key = db.Column(BLOB, nullable=False)  # Changed to binary type
-    label = db.Column(db.String(50))  # Optional label for the key
+    encrypted_api_key = db.Column(BLOB, nullable=False)
+    label = db.Column(db.String(50))
     api_key_token = db.Column(db.String(64), unique=True, nullable=False,
                               default=lambda: str(uuid.uuid4()))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -38,9 +38,8 @@ class User(UserMixin, db.Model):
     color_mode = db.Column(db.String(10), nullable=False, default='dark')
 
     selected_api_key_id = db.Column(db.Integer, db.ForeignKey('user_api_keys.id'),
-                                    nullable=True)  # Make nullable if not all users have API keys
+                                    nullable=True)
 
-    # Relationships
     conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
     audio_files = db.relationship('AudioFile', backref='user', lazy='dynamic')
     document_embeddings = db.relationship('DocumentEmbedding', backref='user',
@@ -61,7 +60,6 @@ class Conversation(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     messages = db.relationship('Message', backref='conversation', lazy='dynamic')
 
 
@@ -92,9 +90,9 @@ class DocumentEmbedding(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     document = db.Column(db.Text, nullable=False)
     embedding = db.Column(db.Text,
-                          nullable=False)  # Changed to Text type for JSON storage
+                          nullable=False)
     chunk_index = db.Column(db.Integer, nullable=False,
-                            default=0)  # To support chunked embeddings
+                            default=0)
     model = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
@@ -127,7 +125,7 @@ class Speech(db.Model):
     text = db.Column(db.Text, nullable=False)
     voice = db.Column(db.String(50), nullable=False)
     audio_data = db.Column(db.Text,
-                           nullable=False)  # Assuming audio data is stored as base64 string
+                           nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
 
@@ -137,8 +135,7 @@ class GeneratedImage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
-    image_url = db.Column(db.String(500))  # Assuming the response is a URL to the image
+    image_url = db.Column(db.String(500))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Relationship to the User model
     user = db.relationship('User', back_populates='generated_images')

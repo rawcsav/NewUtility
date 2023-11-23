@@ -56,66 +56,71 @@
       Image
       <img src="/static/logo/swissimg.png" alt="Company Logo" /> Generation
     </h1>
-    <div class="img_with_form">
-      <div class="artist">
-        <img src="../static/logo/artist.png" />
+    <div class="main-row">
+      <div class="messages-inc">
+        <div class="img_with_form">
+          <div class="artist">
+            <img src="../static/logo/swissartist.png" />
+          </div>
+          <form id="image-generation-form" class="flex-form">
+            {{ form.hidden_tag() }}
+            <div class="input-row">
+              <div class="input-group">
+                <label for="model">Model:</label>
+                <select id="model" name="model">
+                  <option value="dall-e-3">DALL-E 3</option>
+                  <option value="dall-e-2">DALL-E 2</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="size">Size:</label>
+                <select id="size" name="size"></select>
+              </div>
+            </div>
+            <div
+              class="input-group"
+              id="number-of-images-container"
+              style="display: none"
+            >
+              <label for="n"># (WIP):</label>
+              <input type="number" id="n" name="n" value="1" min="1" max="1" />
+            </div>
+            <div id="dall-e-3-options" style="display: none">
+              <div class="input-group">
+                <label for="quality">Quality:</label>
+                <select id="quality" name="quality">
+                  <option value="standard">Standard</option>
+                  <option value="hd">HD</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label for="style">Style:</label>
+                <select id="style" name="style">
+                  <option value="vivid">Vivid</option>
+                  <option value="natural">Natural</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="prompt-submit-container">
+              <input
+                type="text"
+                id="prompt"
+                name="prompt"
+                placeholder="Enter your prompt here"
+              />
+              <button type="submit">Generate</button>
+            </div>
+          </form>
+          <div id="image-generation-messages"></div>
+          <div id="icons-container"></div>
+        </div>
       </div>
-      <form id="image-generation-form" class="flex-form">
-        {{ form.hidden_tag() }}
-        <div class="input-row">
-          <!-- This div will contain the inputs that should be in a row -->
+      <script src="{{ url_for('static', filename='js/image.js') }}"></script>
 
-          <div class="input-group">
-            <label for="model">Model:</label>
-            <select id="model" name="model">
-              <option value="dall-e-3">DALL-E 3</option>
-              <option value="dall-e-2">DALL-E 2</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label for="n"># of Images:</label>
-            <input type="number" id="n" name="n" value="1" min="1" max="10" />
-          </div>
-          <div class="input-group">
-            <label for="size">Size:</label>
-            <select id="size" name="size"></select>
-          </div>
-        </div>
-
-        <div id="dall-e-3-options" style="display: none">
-          <div class="input-group">
-            <label for="quality">Quality:</label>
-            <select id="quality" name="quality">
-              <option value="standard">Standard</option>
-              <option value="hd">HD</option>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label for="style">Style:</label>
-            <select id="style" name="style">
-              <option value="vivid">Vivid</option>
-              <option value="natural">Natural</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="prompt-submit-container">
-          <input
-            type="text"
-            id="prompt"
-            name="prompt"
-            placeholder="Enter your prompt here"
-          />
-          <button type="submit">Generate Image</button>
-        </div>
-      </form>
+      <div id="generated-images"></div>
     </div>
-    <div class="custom-line"></div>
-    <div id="image-generation-messages"></div>
-    <div id="generated-images"></div>
-
     {% include 'footer.html' %}
   </body>
-  <script src="{{ url_for('static', filename='js/image.js') }}"></script>
 </html>

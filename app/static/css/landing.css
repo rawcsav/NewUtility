@@ -15,7 +15,7 @@ main p {
   height: auto;
   position: relative;
   z-index: 1000;
-  /* overflow: hidden; */
+
   border-radius: 5%;
 }
 
@@ -74,26 +74,26 @@ main {
 }
 
 .outlined-text {
-  -webkit-text-stroke: 1px #ff0000; /* Keep the original stroke */
-  color: #ffffff; /* Maintain the text color as transparent */
+  -webkit-text-stroke: 1px #ff0000;
+  color: #ffffff;
   animation: pathMotion 5s infinite alternate;
 }
 @keyframes pathMotion {
   0% {
     text-shadow:
       -3px -3px 0 rgba(255, 0, 0, 0.7),
-      /* Swiss Red, more opaque */ -6px -6px 0 rgba(255, 255, 255, 0.6),
-      /* White, slightly transparent */ -9px -9px 0 rgba(255, 0, 0, 0.5),
-      /* Swiss Red, less opaque */ -12px -12px 0 rgba(255, 255, 255, 0.4),
-      /* White, more transparent */ -15px -15px 0 rgba(255, 0, 0, 0.3); /* Swiss Red, even less opaque */
+      -6px -6px 0 rgba(255, 255, 255, 0.6),
+      -9px -9px 0 rgba(255, 0, 0, 0.5),
+      -12px -12px 0 rgba(255, 255, 255, 0.4),
+      -15px -15px 0 rgba(255, 0, 0, 0.3);
   }
   100% {
     text-shadow:
       3px 3px 0 rgba(255, 0, 0, 0.7),
-      /* Swiss Red, more opaque */ 6px 6px 0 rgba(255, 255, 255, 0.6),
-      /* White, slightly transparent */ 9px 9px 0 rgba(255, 0, 0, 0.5),
-      /* Swiss Red, less opaque */ 12px 12px 0 rgba(255, 255, 255, 0.4),
-      /* White, more transparent */ 15px 15px 0 rgba(255, 0, 0, 0.3); /* Swiss Red, even less opaque */
+      6px 6px 0 rgba(255, 255, 255, 0.6),
+      9px 9px 0 rgba(255, 0, 0, 0.5),
+      12px 12px 0 rgba(255, 255, 255, 0.4),
+      15px 15px 0 rgba(255, 0, 0, 0.3);
   }
 }
 
@@ -112,6 +112,6 @@ h1 {
 }
 
 h1 img {
-  height: 100px; /* or the size that fits well with your layout */
-  vertical-align: middle; /* to align with the text */
+  height: 100px;
+  vertical-align: middle;
 }

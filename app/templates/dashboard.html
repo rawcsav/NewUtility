@@ -61,6 +61,7 @@
       <div class="user-functions">
         <div class="key-container">
           <h2>Key Management</h2>
+          <div id="api-key-messages"></div>
           <button id="toggleFormButton" class="button dropdown-button">
             Upload <i class="fas fa-chevron-down"></i>
           </button>
@@ -90,13 +91,14 @@
                 required
               />
             </div>
-            <!-- Button with Font Awesome save icon -->
+
             <button type="submit" class="button save-api-key-button">
               <i class="fas fa-save"></i> Save
             </button>
           </form>
-          <h3>Your Keys:</h3>
           <ul>
+            <div class="custom-line"></div>
+
             {% for key in user_api_keys %}
             <li
               class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
@@ -119,7 +121,6 @@
                 </button>
               </form>
 
-              <!-- Delete API key form -->
               <form
                 class="delete-api-key-form"
                 action="{{ url_for('user.delete_api_key') }}"
@@ -153,7 +154,6 @@
             </li>
             {% endfor %}
           </ul>
-          <div id="api-key-messages"></div>
         </div>
         <div class="change-info">
           <h2>Change Info</h2>

@@ -12,11 +12,12 @@ body {
 }
 
 h2 {
-  display: inline-block; /* This will shrink the element to the width of its content */
-  border-bottom: 1px solid #d4af37; /* Your desired border color */
+  display: inline-block;
+  border-bottom: 1px solid #5b92e5;
   font-size: 25px;
   margin-top: 0;
   padding-bottom: 0;
+  margin-bottom: 5px;
 }
 
 h3 {
@@ -50,22 +51,20 @@ label {
 }
 
 h1 img {
-  height: 100px; /* or the size that fits well with your layout */
-  vertical-align: middle; /* to align with the text */
+  height: 100px;
+  vertical-align: middle;
 }
 
 .key-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  z-index: 11;
   background-color: rgba(242, 242, 242, 0.7);
   border-radius: 5px;
   padding: 10px;
   min-width: 250px;
   max-width: 250px;
   max-height: 300px;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 .change-info {
@@ -80,20 +79,17 @@ h1 img {
 }
 
 #api-key-messages {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 1rem;
+  font-size: 12px;
   text-align: center;
   color: #fff;
 }
 
 #api-key-messages.success {
-  background-color: #4caf50; /* Green for success */
+  color: #4caf50;
 }
 
 #api-key-messages.error {
-  background-color: #f44336; /* Red for error */
+  color: #f44336;
 }
 
 .retest-key-button,
@@ -111,7 +107,7 @@ h1 img {
 }
 
 .dropdown-button {
-  background-color: #5b92e5; /* Choose a background color */
+  background-color: #5b92e5;
   color: white;
   padding: 10px 15px;
   border-radius: 5px;
@@ -121,43 +117,46 @@ h1 img {
   align-items: center;
   justify-content: space-between;
   font-family: Window-Book, sans-serif;
-  max-width: 100%;
+  margin-top: 5px;
+  max-width: 120px;
 }
 .dropdown-button:hover {
-  background-color: #71a2ef; /* Darken the button on hover */
+  background-color: #71a2ef;
 }
 
 .dropdown-button i {
-  margin-left: 10px; /* Space between text and arrow */
+  margin-left: 10px;
 }
 
-/* Rotate the arrow icon when the form is visible */
 .dropdown-button.active i {
   transform: rotate(180deg);
 }
 
 .save-api-key-button {
-  background-color: #4caf50; /* Green background for a save button */
+  background-color: #4caf50;
   color: white;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  max-width: 100px;
+  white-space: nowrap;
 }
 
 .save-api-key-button:hover {
-  background-color: #43a047; /* Darken the button on hover */
+  background-color: #43a047;
 }
 ul {
   margin: 0;
 }
 .save-api-key-button i {
-  margin-right: 5px; /* Space between icon and text */
+  margin-right: 5px;
 }
 
 .change-info input {
   margin-top: 10px;
+  margin-bottom: 5px;
   padding: 10px 20px;
   border-radius: 5px;
   border: 1px solid #333333;
@@ -171,11 +170,10 @@ a {
 }
 .btn {
   background-color: #da291c;
-  margin-top: 30px;
   max-width: 120px;
 }
 .submit-user {
-  background-color: #4caf50; /* Green background for a save button */
+  background-color: #4caf50;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -189,7 +187,7 @@ a {
 }
 
 .submit-user:hover {
-  background-color: #43a047; /* Darken the button on hover */
+  background-color: #43a047;
 }
 
 .username-change-form {
@@ -209,34 +207,30 @@ a {
   height: 1px;
   width: 100%;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .banner {
-  width: 100%; /* maintain aspect ratio */
+  width: 100%;
   max-height: 300px;
   position: absolute;
   bottom: 0;
   left: 0;
-  z-index: 10; /* make sure it's above other content */
-  pointer-events: none; /* Allows clicks to pass through */
+  z-index: 10;
+  pointer-events: none;
 }
 
 .banner img {
   width: 100%;
   height: auto;
-  pointer-events: none; /* Allows clicks to pass through */
+  pointer-events: none;
 }
 
 .redirect-links {
-  background-color: rgba(
-    242,
-    242,
-    242,
-    0.7
-  ); /* Your chosen color for the section */
+  background-color: rgba(242, 242, 242, 0.7);
   padding: 10px;
   border-radius: 5px;
-  margin-bottom: 20px; /* Add space before the banner */
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   min-width: 200px;
@@ -257,15 +251,15 @@ a {
 }
 
 .redirect-links ul li a {
-  color: #007bff; /* Bootstrap primary blue, for example */
+  color: #007bff;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .redirect-links ul li a:hover {
-  color: #0056b3; /* Darker blue on hover */
+  color: #0056b3;
 }
 
 .selected-key {
-  color: green; /* Color for selected key */
+  color: green;
 }

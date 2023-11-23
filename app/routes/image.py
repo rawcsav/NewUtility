@@ -1,7 +1,12 @@
-from flask import Flask, request, jsonify, Blueprint, render_template
+import uuid
+
+import requests
+from flask import Flask, request, jsonify, Blueprint, render_template, \
+    after_this_request, send_file, current_app
 import openai
 import os
 from flask_login import login_required, current_user
+from werkzeug.exceptions import NotFound
 
 from app.database import GeneratedImage, db, UserAPIKey, User
 from app.util.forms_util import GenerateImageForm
@@ -20,10 +25,9 @@ def generate_image():
     if form.validate_on_submit():
         try:
             prompt = form.prompt.data
-            model = form.model.data or 'dall-e-2'
+            model = form.model.data or 'dall-e-3'
             n = form.n.data or 1
             size = form.size.data or '1024x1024'
-
             key_id = current_user.selected_api_key_id
             user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id,
                                                       id=key_id).first()
@@ -49,9 +53,7 @@ def generate_image():
 
             response = openai.images.generate(**request_params)
 
-            # Directly access the 'data' attribute of the response
             for image_response in response.data:
-                # Access the 'url' attribute of each image object
                 image_url = image_response.url
                 image_urls.append(image_url)
                 new_image = GeneratedImage(
@@ -66,19 +68,17 @@ def generate_image():
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({
                     'image_urls': image_urls,
-                    'error_message': error_message,
-                    'status': 'success'  # or 'error' based on your logic
+                    'status': 'success'
                 })
         except Exception as e:
             error_message = str(e)
-            print(f"Error generating image: {error_message}")  # Log the error
+            print(f"Error generating image: {error_message}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                # The request is an AJAX request, return a JSON response for the error
                 return jsonify({
                     'error_message': error_message,
                     'status': 'error'
                 })
-            # For a regular request, you might want to render the page with the error message
+
             return render_template(
                 'image.html',
                 form=form,
@@ -92,3 +92,45 @@ def generate_image():
         image_urls=image_urls,
         error_message=error_message
     )
+
+
+@bp.route('/download_image/<path:image_url>')
+@login_required
+def download_image(image_url):
+    image_record = GeneratedImage.query.filter_by(user_id=current_user.id,
+                                                  image_url=image_url).first()
+
+    # If the image URL does not exist in the database, return an error
+    if not image_record:
+        raise NotFound("Image URL not found or does not belong to the current user")
+    download_dir = os.path.join(current_app.root_path, 'static', 'temp_img')
+    temp_file_name = str(uuid.uuid4())
+    file_extension = '.png'  # Assuming the image is a PNG
+    temp_file_path = os.path.join(download_dir, f"{temp_file_name}{file_extension}")
+
+    try:
+        # Send a request to the image URL to retrieve the image
+        response = requests.get(image_url, stream=True)
+        response.raise_for_status()  # Raise an exception for HTTP error codes
+
+        # Write the image content to a temporary file
+        with open(temp_file_path, 'wb') as temp_file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:  # filter out keep-alive new chunks
+                    temp_file.write(chunk)
+
+    except requests.RequestException as e:
+        print(f"Failed to download image: {e}")
+        return "Error retrieving the image", 500
+
+    # Define a function to remove the temporary file after serving it
+    @after_this_request
+    def remove_file(response):
+        try:
+            os.remove(temp_file_path)
+        except Exception as error:
+            print(f"Error removing temporary file: {error}")
+        return response
+
+    print(temp_file_path)
+    return send_file(temp_file_path, as_attachment=True)
