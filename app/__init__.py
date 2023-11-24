@@ -11,7 +11,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_login import LoginManager
-from flask import Flask, request
+from flask import Flask, request, current_app
 from flask_wtf.csrf import CSRFProtect
 
 bcrypt = Bcrypt()
@@ -145,11 +145,15 @@ def create_app():
                     for user in stale_users:
                         db.session.delete(user)
                     for image in old_images:
-                        # Attempt to delete the file associated with the image entry
+
                         try:
-                            if image.temp_file_path and os.path.exists(
-                                    image.temp_file_path):
-                                os.remove(image.temp_file_path)
+                            if image.uuid:
+                                download_dir = os.path.join(current_app.root_path,
+                                                            'static',
+                                                            'temp_img')
+                                temp_file_path = os.path.join(download_dir,
+                                                              f"{str(image.uuid)}.webp")
+                                os.remove(temp_file_path)
                         except Exception as e:
                             print(f"Error deleting image file: {e}")
 

@@ -99,7 +99,6 @@ h1 img {
   padding: 20px;
   gap: 20px;
   flex-direction: column;
-  height: 310px;
 }
 
 #dall-e-3-options {
@@ -168,7 +167,6 @@ select {
   flex-direction: column;
 }
 #image-generation-messages {
-  margin: 10px;
   font-size: 12px;
   font-family: Window-Bold, sans-serif;
 }
@@ -183,7 +181,6 @@ select {
 
 #icons-container {
   text-align: center; /* Center the icons within the container */
-  margin-top: -20px; /* Add space between the form and the icons */
 }
 
 /* General styles for all icons within the icons-container */
@@ -192,4 +189,24 @@ select {
   text-decoration: none; /* Remove underline from anchor elements */
   color: #d4af37; /* Set a default color for the icons (change as needed) */
   font-size: 18px; /* Set the size of the icons (adjust as needed) */
+}
+
+.carousel {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  max-width: 300px;
+  overflow-x: scroll;
+}
+
+.carousel-inner {
+  display: flex;
+  width: 300px; /* Adjust as needed */
+}
+
+.thumbnail {
+  width: 100px; /* Adjust as needed */
+  height: 100px;
+  margin: 5px;
+  cursor: pointer;
 }

@@ -135,8 +135,7 @@ class GeneratedImage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
-    image_url = db.Column(db.String(500))
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
-    temp_file_path = db.Column(db.String(255), nullable=True)
+    uuid = db.Column(db.String(255), nullable=False, unique=True)
 
     user = db.relationship('User', back_populates='generated_images')

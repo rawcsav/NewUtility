@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import requests
 from flask import Flask, request, jsonify, Blueprint, render_template, \
-    after_this_request, send_file, current_app
+    after_this_request, send_file, current_app, url_for
 import openai
 import os
 from flask_login import login_required, current_user
@@ -11,6 +11,7 @@ from werkzeug.exceptions import NotFound
 
 from app.database import GeneratedImage, db, UserAPIKey, User
 from app.util.forms_util import GenerateImageForm
+from app.util.image_util import download_and_convert_image
 from app.util.session_util import decrypt_api_key
 
 bp = Blueprint('image', __name__, url_prefix='/image')
@@ -20,8 +21,9 @@ bp = Blueprint('image', __name__, url_prefix='/image')
 @login_required
 def generate_image():
     form = GenerateImageForm()
-    image_urls = []
+    uuids = []
     error_message = None
+    image_urls = []
 
     if form.validate_on_submit():
         try:
@@ -56,37 +58,38 @@ def generate_image():
 
             for image_response in response.data:
                 image_url = image_response.url
-                image_urls.append(image_url)
+                temp_uuid = str(uuid.uuid4())
+                uuids.append(temp_uuid)
+
                 new_image = GeneratedImage(
                     user_id=current_user.id,
                     prompt=prompt,
                     model=model,
-                    image_url=image_url,
-                    created_at=datetime.utcnow(),
+                    uuid=temp_uuid,
+                    created_at=datetime.utcnow()
                 )
                 db.session.add(new_image)
-            db.session.commit()
+                db.session.commit()
+
+                # Download the image and convert to WebP, then get the local image URL
+                local_image_url = download_and_convert_image(image_url, temp_uuid)
+                image_urls.append(local_image_url)
 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({
                     'image_urls': image_urls,
                     'status': 'success'
                 })
+
         except Exception as e:
             error_message = str(e)
+            db.session.rollback()
             print(f"Error generating image: {error_message}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({
                     'error_message': error_message,
                     'status': 'error'
                 })
-
-            return render_template(
-                'image.html',
-                form=form,
-                image_urls=image_urls,
-                error_message=error_message
-            )
 
     return render_template(
         'image.html',
@@ -96,36 +99,38 @@ def generate_image():
     )
 
 
-@bp.route('/download_image/<path:image_url>')
+@bp.route('/download_image/<uuid:image_uuid>')
 @login_required
-def download_image(image_url):
+def download_image(image_uuid):
     image_record = GeneratedImage.query.filter_by(user_id=current_user.id,
-                                                  image_url=image_url).first()
+                                                  uuid=str(image_uuid)).first()
 
-    # If the image URL does not exist in the database, return an error
     if not image_record:
-        raise NotFound("Image URL not found or does not belong to the current user")
-    if image_record.temp_file_path:
-        print('found')
-        return send_file(image_record.temp_file_path, as_attachment=True)
+        raise NotFound("Image not found or does not belong to the current user")
 
     download_dir = os.path.join(current_app.root_path, 'static', 'temp_img')
-    temp_file_name = str(uuid.uuid4())
-    file_extension = '.png'  # Assuming the image is a PNG
-    temp_file_path = os.path.join(download_dir, f"{temp_file_name}{file_extension}")
-    try:
-        response = requests.get(image_url, stream=True)
-        response.raise_for_status()  # Raise an exception for HTTP error codes
+    webp_file_name = f"{image_uuid}.webp"
+    webp_file_path = os.path.join(download_dir, webp_file_name)
 
-        with open(temp_file_path, 'wb') as temp_file:
-            for chunk in response.iter_content(chunk_size=1024):
-                if chunk:  # filter out keep-alive new chunks
-                    temp_file.write(chunk)
-        image_record.temp_file_path = temp_file_path
-        db.session.commit()
-    except requests.RequestException as e:
-        db.session.rollback()
-        print(f"Failed to download image: {e}")
-        return "Error retrieving the image", 500
+    if not os.path.exists(webp_file_path):
+        raise NotFound("The requested image file does not exist.")
 
-    return send_file(temp_file_path, as_attachment=True)
+    return send_file(webp_file_path, as_attachment=True)
+
+
+@bp.route('/history')
+@login_required
+def image_history():
+    # Retrieve the user's images from the database ordered by 'id' descending
+    user_images = GeneratedImage.query.filter_by(user_id=current_user.id).order_by(
+        GeneratedImage.id.desc()) \
+        .limit(15) \
+        .all()
+
+    # Create a list of image URLs and UUIDs
+    image_data = [{
+        'url': url_for('static', filename=f"temp_img/{img.uuid}.webp", _external=True),
+        'uuid': img.uuid
+    } for img in user_images]
+
+    return jsonify(image_data)
