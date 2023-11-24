@@ -23,10 +23,10 @@ def create_app():
 
     if flask_env == 'development':
         app.config.from_object(DevelopmentConfig)
-        DevelopmentConfig.init_app(app)
+        DevelopmentConfig.init_app(oauth, app)
     else:
         app.config.from_object(ProductionConfig)
-        ProductionConfig.init_app(app)
+        ProductionConfig.init_app(oauth, app)
 
     CSRFProtect(app)
     CORS(app)
@@ -38,7 +38,6 @@ def create_app():
 
     mail.init_app(app)
 
-    oauth.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 

@@ -63,8 +63,8 @@ class Config(object):
     USER_IMAGE_DIRECTORY = os.path.join(basedir, 'static', 'temp_img')
 
     @classmethod
-    def init_app(cls, app):
-        oauth = OAuth(app)
+    def init_app(cls, oauth, app):
+        oauth.init_app(app)
         oauth.register(
             name='google',
             client_id=cls.GOOGLE_OAUTH_CLIENT_ID,
@@ -96,8 +96,8 @@ class DevelopmentConfig(Config):
     REMEMBER_COOKIE_SECURE = False
 
     @classmethod
-    def init_app(cls, app):
-        super().init_app(app)  # Call the parent init_app
+    def init_app(cls, oauth, app):
+        super().init_app(oauth, app)  # Call the parent init_app
 
         app.tunnel = get_tunnel(
             SSH_HOST=cls.SSH_HOST,
@@ -123,8 +123,8 @@ class ProductionConfig(Config):
     REMEMBER_COOKIE_SECURE = True
 
     @classmethod
-    def init_app(cls, app):
-        super().init_app(app)  # Call the parent init_app
+    def init_app(cls, oauth, app):
+        super().init_app(oauth, app)  # Call the parent init_app
         app.tunnel = None
         app.config[
             'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{cls.SQL_USERNAME}:{cls.SQL_PASSWORD}@{cls.SQL_HOSTNAME}/{cls.SQL_DB_NAME}'
