@@ -177,3 +177,4 @@ stylelint.config.js
 .eslintrc.json
 /app/static/fonts/
 /include/
+/app/static/temp_img/*

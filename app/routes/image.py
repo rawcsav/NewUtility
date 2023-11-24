@@ -1,15 +1,13 @@
 import uuid
-from datetime import datetime, timedelta
-
-import requests
-from flask import Flask, request, jsonify, Blueprint, render_template, \
-    after_this_request, send_file, current_app, url_for
+from datetime import datetime
+from flask import request, jsonify, Blueprint, render_template, \
+    send_file, url_for, current_app
 import openai
 import os
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound
-
-from app.database import GeneratedImage, db, UserAPIKey, User
+from app import db
+from app.database import GeneratedImage, UserAPIKey
 from app.util.forms_util import GenerateImageForm
 from app.util.image_util import download_and_convert_image
 from app.util.session_util import decrypt_api_key
@@ -70,9 +68,9 @@ def generate_image():
                 )
                 db.session.add(new_image)
                 db.session.commit()
-
-                # Download the image and convert to WebP, then get the local image URL
-                local_image_url = download_and_convert_image(image_url, temp_uuid)
+                download_dir = current_app.config['USER_IMAGE_DIRECTORY']
+                local_image_url = download_and_convert_image(download_dir
+                                                             , image_url, temp_uuid)
                 image_urls.append(local_image_url)
 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -108,7 +106,7 @@ def download_image(image_uuid):
     if not image_record:
         raise NotFound("Image not found or does not belong to the current user")
 
-    download_dir = os.path.join(current_app.root_path, 'static', 'temp_img')
+    download_dir = current_app.config['USER_IMAGE_DIRECTORY']
     webp_file_name = f"{image_uuid}.webp"
     webp_file_path = os.path.join(download_dir, webp_file_name)
 

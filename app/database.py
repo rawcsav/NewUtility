@@ -1,11 +1,8 @@
 import uuid
-
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from sqlalchemy import BLOB
 from sqlalchemy.sql import func
-
-db = SQLAlchemy()
+from app import db
 
 
 class UserAPIKey(db.Model):

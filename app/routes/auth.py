@@ -1,19 +1,17 @@
 import re
-
-import requests
 from flask_login import (
     login_user, logout_user, login_required, current_user
 )
-from app.database import db, UserAPIKey, User
+from app.database import UserAPIKey, User
 from app.util.forms_util import LoginForm, SignupForm, ConfirmEmailForm, \
     ResetPasswordRequestForm, ResetPasswordForm
-from app.util.session_util import encrypt_api_key, decrypt_api_key, \
-    generate_confirmation_code, random_string, verify_recaptcha, get_or_create_user
-from flask import jsonify, Blueprint, request, render_template, redirect, url_for, \
-    flash, session
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from app.util.session_util import decrypt_api_key, \
+    generate_confirmation_code, verify_recaptcha, get_or_create_user
+from flask import jsonify, Blueprint, request, render_template, redirect, \
+    url_for, flash, current_app
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask_mail import Message
-from app import bcrypt, mail, config, login_manager, oauth
+from app import bcrypt, mail, login_manager, oauth, db
 from sqlalchemy import or_
 from datetime import datetime, timedelta
 
@@ -32,7 +30,8 @@ def login():
         login_credential = request.form.get('username')
         password = request.form.get('password')
         recaptcha_response = request.form.get('g-recaptcha-response')
-        recaptcha_error = verify_recaptcha(recaptcha_response)
+        recaptcha_error = verify_recaptcha(current_app.config['GOOGLE_SECRET_KEY'],
+                                           recaptcha_response)
         remember = request.form.get('remember') == 'true'
 
         if recaptcha_error:
@@ -100,7 +99,8 @@ def signup():
         confirm_password = request.form.get('confirm_password')
 
         recaptcha_response = request.form.get('g-recaptcha-response')
-        recaptcha_error = verify_recaptcha(recaptcha_response)
+        recaptcha_error = verify_recaptcha(current_app.config['GOOGLE_SECRET_KEY'],
+                                           recaptcha_response)
         if recaptcha_error:
             return jsonify(*recaptcha_error)
 
@@ -134,7 +134,8 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
 
-        msg = Message('Confirm Your Email', sender=config.MAIL_DEFAULT_SENDER,
+        msg = Message('Confirm Your Email',
+                      sender=current_app.config['MAIL_DEFAULT_SENDER'],
                       recipients=[email])
         msg.body = f'Your confirmation code is: {confirmation_code}'
         mail.send(msg)
@@ -188,7 +189,7 @@ def get_api_keys():
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
-    s = URLSafeTimedSerializer(config.SECRET_KEY)
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
         email = form.email.data
@@ -208,7 +209,7 @@ def reset_password_request():
 
         msg = Message(
             'Password Reset Request',
-            sender=config.MAIL_DEFAULT_SENDER,
+            sender=current_app.config['MAIL_DEFAULT_SENDER'],
             recipients=[email]
         )
         reset_link = url_for('auth.reset_password', token=token, _external=True)
@@ -223,7 +224,7 @@ def reset_password_request():
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    s = URLSafeTimedSerializer(config.SECRET_KEY)
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     form = ResetPasswordForm()
     try:
 
@@ -269,14 +270,14 @@ def reset_password(token):
 
 @bp.route('/login/google')
 def google_login():
-    redirect_uri = config.GOOGLE_CALLBACK_URI
+    redirect_uri = current_app.config['GOOGLE_CALLBACK_URI']
     print(redirect_uri)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @bp.route('/login/github')
 def github_login():
-    redirect_uri = config.GITHUB_CALLBACK_URI
+    redirect_uri = current_app.config['GITHUB_CALLBACK_URI']
     return oauth.github.authorize_redirect(redirect_uri)
 
 
@@ -296,7 +297,8 @@ def google_authorized():
     user_info = resp.json()
     email = user_info['email']
     original_username = user_info.get('name', email.split('@')[0])
-    user = get_or_create_user(email, original_username, 'Google')
+    user = get_or_create_user(email, original_username, 'Google',
+                              current_app.config['DEFAULT_USER_PASSWORD'])
 
     login_user(user, remember=True)
     flash('You have been successfully logged in via Google.', 'success')
@@ -319,7 +321,8 @@ def github_authorized():
     user_data = resp.json()
     email = user_data.get('email')
     original_username = user_data['login']
-    user = get_or_create_user(email, original_username, 'GitHub')
+    user = get_or_create_user(email, original_username, 'GitHub',
+                              current_app.config['DEFAULT_USER_PASSWORD'])
 
     login_user(user, remember=True)
     flash('You have been successfully logged in via GitHub.', 'success')

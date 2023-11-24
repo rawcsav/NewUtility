@@ -1,12 +1,10 @@
 import os
 from PIL import Image
-from flask import current_app, url_for
+from flask import url_for
 import requests
-from app import db
 
 
-def download_and_convert_image(image_url, image_uuid):
-    download_dir = os.path.join(current_app.root_path, 'static', 'temp_img')
+def download_and_convert_image(download_dir, image_url, image_uuid):
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 

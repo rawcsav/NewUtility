@@ -1,9 +1,9 @@
 import re
 from datetime import timedelta, datetime
-from app import db, User
+from app import db
+from app.database import User
 from flask import Blueprint, render_template, redirect, url_for, request, jsonify, flash
 from flask_login import login_required, current_user
-
 from app.database import UserAPIKey
 from app.util.forms_util import ChangeUsernameForm, UploadAPIKeyForm, DeleteAPIKeyForm, \
     RetestAPIKeyForm, SelectAPIKeyForm

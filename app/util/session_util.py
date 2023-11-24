@@ -1,16 +1,13 @@
 import hashlib
 import os
 import string
-from datetime import timezone, timedelta, datetime
 import openai
 import requests
-import sshtunnel
 from cryptography.fernet import Fernet
-from app import config, bcrypt
+from app import bcrypt, db
 from flask_login import current_user
 import random
-
-from app.database import UserAPIKey, db, User
+from app.database import User
 
 
 def generate_confirmation_code():
@@ -46,7 +43,9 @@ def is_api_key_valid(api_key):
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": "Hello!"}
-            ]
+            ],
+            max_tokens=5,
+            temperature=0,
         )
     except openai.APIConnectionError as e:
         print(f"Invalid request: {e}")
@@ -98,7 +97,7 @@ def test_gpt4(key):
         )
         if test.choices[0].message.content:
             return True
-    except openai.OpenAIError as e:
+    except openai.OpenAIError:
         return False
 
 
@@ -116,7 +115,7 @@ def test_gpt3(key):
         )
         if test.choices[0].message.content:
             return True
-    except openai.OpenAIError as e:
+    except openai.OpenAIError:
         return False
 
 
@@ -132,7 +131,7 @@ def test_dalle3_key(key):
         image_url = response_dalle3.data[0].url
         if image_url:
             return True
-    except openai.OpenAIError as e:
+    except openai.OpenAIError:
         return False
 
 
@@ -141,12 +140,11 @@ def random_string(length=5):
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def verify_recaptcha(recaptcha_response):
+def verify_recaptcha(recaptcha_secret, recaptcha_response):
     if not recaptcha_response:
         return {'status': 'error',
                 'message': 'reCAPTCHA verification failed. Please try again.'}, 400
 
-    recaptcha_secret = config.GOOGLE_SECRET_KEY
     recaptcha_data = {'secret': recaptcha_secret, 'response': recaptcha_response}
     recaptcha_request = requests.post('https://www.google.com/recaptcha/api/siteverify',
                                       data=recaptcha_data)
@@ -159,7 +157,7 @@ def verify_recaptcha(recaptcha_response):
     return None
 
 
-def get_or_create_user(email, username, login_method):
+def get_or_create_user(email, username, login_method, default_user_password):
     user = User.query.filter_by(email=email).first()
     if not user:
         while User.query.filter_by(username=username).first():
@@ -168,8 +166,8 @@ def get_or_create_user(email, username, login_method):
             email=email,
             username=username,
             email_confirmed=True,
-            password_hash=bcrypt.generate_password_hash(
-                config.DEFAULT_USER_PASSWORD).decode('utf-8'),
+            password_hash=bcrypt.generate_password_hash(default_user_password).decode(
+                'utf-8'),
             login_method=login_method
         )
         db.session.add(user)
