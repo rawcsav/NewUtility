@@ -176,3 +176,4 @@ pyproject.toml
 stylelint.config.js
 .eslintrc.json
 /app/static/fonts/
+/include/
