@@ -229,8 +229,13 @@
     <i class="fas fa-bars hamburger-menu"></i>
     <div class="dropdown-menu">
       <a class="drop-item" href="{{ url_for('landing.landing_page') }}">Home</a>
+      {% if current_user.is_authenticated %}
       <a class="drop-item" href="{{ url_for('user.dashboard') }}">Dashboard</a>
       <a class="drop-item" href="{{ url_for('auth.logout') }}">Logout</a>
+      {% else %}
+      <a class="drop-item" href="{{ url_for('auth.login') }}">Login</a>
+      <a class="drop-item" href="{{ url_for('auth.signup') }}">Signup</a>
+      {% endif %}
     </div>
   </nav>
 </header>

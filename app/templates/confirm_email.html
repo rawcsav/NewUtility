@@ -41,12 +41,16 @@
     />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% include 'menu.html' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/confirm_email.css') }}"
+    />
   </head>
   <body>
     <h1 class="outlined-text">
       Swiss <img src="/static/logo/swissimg.png" alt="Company Logo" /> AI
     </h1>
-    <h2>Confirm Your Email</h2>
+    <h2 class="title">Confirm Email</h2>
     <p>Please enter the confirmation code sent to your email.</p>
     <form
       action="{{ url_for('auth.confirm_email') }}"
@@ -61,5 +65,8 @@
       <button type="submit">Confirm</button>
     </form>
     {% include 'footer.html' %}
+    <div class="banner">
+      <img src="../static/logo/test2.png" />
+    </div>
   </body>
 </html>

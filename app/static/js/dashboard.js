@@ -64,10 +64,66 @@ $("#toggleUserButton").on("click", function () {
   $("#username-change-form").slideToggle();
   $(this).toggleClass("active");
 });
+
+// Define a function to start spinning the refresh icon
+function startSpinningIcon(form) {
+  const submitButton = form.querySelector(".retest-key-button i");
+  if (submitButton) {
+    submitButton.classList.add("spinning");
+  }
+}
+
+// Define a function to stop spinning the refresh icon
+function stopSpinningIcon(form) {
+  const submitButton = form.querySelector(".retest-key-button i");
+  if (submitButton) {
+    submitButton.classList.remove("spinning");
+  }
+}
+
+document.querySelectorAll(".retest-api-key-form").forEach((form) => {
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    // Start the spinning effect on the refresh button
+    var refreshButton = form.querySelector(".retest-key-button i.fa-sync-alt");
+    if (refreshButton) {
+      refreshButton.classList.add("spinning");
+    }
+
+    var formData = new FormData(form);
+    var actionUrl = form.action;
+
+    fetch(actionUrl, {
+      method: "POST",
+      body: formData
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          updateApiKeyMessages(data.message, "success");
+        } else {
+          updateApiKeyMessages(data.message, "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        updateApiKeyMessages(
+          "An error occurred while processing your request.",
+          "error"
+        );
+      })
+      .finally(() => {
+        // Stop the spinning effect on the refresh button
+        if (refreshButton) {
+          refreshButton.classList.remove("spinning");
+        }
+      });
+  });
+});
+
 document
-  .querySelectorAll(
-    ".retest-api-key-form, .delete-api-key-form, .select-api-key-form"
-  )
+  .querySelectorAll(".delete-api-key-form, .select-api-key-form")
   .forEach((form) => {
     form.addEventListener("submit", function (event) {
       event.preventDefault();

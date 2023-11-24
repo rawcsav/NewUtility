@@ -7,7 +7,6 @@ function resizeImage(image) {
     image.style.height = "512px";
   }
 }
-
 document.addEventListener("DOMContentLoaded", function () {
   function updateImageGenerationMessages(message, status) {
     var messageDiv = document.getElementById("image-generation-messages");
@@ -73,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("image-generation-form")
     .addEventListener("submit", function (event) {
       event.preventDefault();
+      showLoader(); // Call this to show the loader
 
       var formData = new FormData(this);
 
@@ -92,9 +92,11 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then((data) => {
           if (data.error_message) {
+            hideLoader(); // Call this to hide the loader once images are loaded
             console.error("Server error:", data.error_message);
             updateImageGenerationMessages(data.error_message, "error");
           } else {
+            hideLoader(); // Call this to hide the loader once images are loaded
             var imageContainer = document.getElementById("generated-images");
             imageContainer.innerHTML = "";
             var iconsContainer = document.getElementById("icons-container");
@@ -132,6 +134,8 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         })
         .catch((error) => {
+          hideLoader(); // Call this to hide the loader once images are loaded
+
           console.error("Error:", error);
           updateImageGenerationMessages("Error: " + error.message, "error");
         });

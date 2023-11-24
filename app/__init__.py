@@ -1,9 +1,11 @@
+import os
+
 from app import config
 from datetime import datetime, timedelta
 from authlib.integrations.flask_client import OAuth
 import cloudinary
 from flask_migrate import Migrate
-from app.database import db, User
+from app.database import db, User, GeneratedImage
 from app.util.database_util import get_tunnel
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
@@ -132,14 +134,31 @@ def create_app():
                                         'auth.confirm_email']:
                 current_time = datetime.utcnow()
                 stale_threshold = current_time - timedelta(hours=24)
+                try:
+                    stale_users = User.query.filter(
+                        User.email_confirmed == False,
+                        User.created_at < stale_threshold
+                    ).all()
+                    old_images = GeneratedImage.query.filter(
+                        GeneratedImage.created_at < stale_threshold
+                    ).all()
+                    for user in stale_users:
+                        db.session.delete(user)
+                    for image in old_images:
+                        # Attempt to delete the file associated with the image entry
+                        try:
+                            if image.temp_file_path and os.path.exists(
+                                    image.temp_file_path):
+                                os.remove(image.temp_file_path)
+                        except Exception as e:
+                            print(f"Error deleting image file: {e}")
 
-                stale_users = User.query.filter(
-                    User.email_confirmed == False,
-                    User.created_at < stale_threshold
-                ).all()
+                        # Delete the image entry from the database
+                        db.session.delete(image)
 
-                for user in stale_users:
-                    db.session.delete(user)
-                db.session.commit()
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    print(f"Error deleting old images: {e}")
 
     return app

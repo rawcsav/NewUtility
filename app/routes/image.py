@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta
 
 import requests
 from flask import Flask, request, jsonify, Blueprint, render_template, \
@@ -61,6 +62,7 @@ def generate_image():
                     prompt=prompt,
                     model=model,
                     image_url=image_url,
+                    created_at=datetime.utcnow(),
                 )
                 db.session.add(new_image)
             db.session.commit()
@@ -103,34 +105,27 @@ def download_image(image_url):
     # If the image URL does not exist in the database, return an error
     if not image_record:
         raise NotFound("Image URL not found or does not belong to the current user")
+    if image_record.temp_file_path:
+        print('found')
+        return send_file(image_record.temp_file_path, as_attachment=True)
+
     download_dir = os.path.join(current_app.root_path, 'static', 'temp_img')
     temp_file_name = str(uuid.uuid4())
     file_extension = '.png'  # Assuming the image is a PNG
     temp_file_path = os.path.join(download_dir, f"{temp_file_name}{file_extension}")
-
     try:
-        # Send a request to the image URL to retrieve the image
         response = requests.get(image_url, stream=True)
         response.raise_for_status()  # Raise an exception for HTTP error codes
 
-        # Write the image content to a temporary file
         with open(temp_file_path, 'wb') as temp_file:
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     temp_file.write(chunk)
-
+        image_record.temp_file_path = temp_file_path
+        db.session.commit()
     except requests.RequestException as e:
+        db.session.rollback()
         print(f"Failed to download image: {e}")
         return "Error retrieving the image", 500
 
-    # Define a function to remove the temporary file after serving it
-    @after_this_request
-    def remove_file(response):
-        try:
-            os.remove(temp_file_path)
-        except Exception as error:
-            print(f"Error removing temporary file: {error}")
-        return response
-
-    print(temp_file_path)
     return send_file(temp_file_path, as_attachment=True)

@@ -18,7 +18,7 @@ class UserAPIKey(db.Model):
     label = db.Column(db.String(50))
     api_key_token = db.Column(db.String(64), unique=True, nullable=False,
                               default=lambda: str(uuid.uuid4()))
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class User(UserMixin, db.Model):
@@ -29,7 +29,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     email_confirmed = db.Column(db.Boolean, default=False, nullable=False)
     confirmation_code = db.Column(db.String(6))
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     login_attempts = db.Column(db.Integer, default=0)
     last_attempt_time = db.Column(db.DateTime)
     last_username_change = db.Column(db.DateTime)
@@ -58,7 +58,7 @@ class Conversation(db.Model):
     __tablename__ = 'conversations'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
     messages = db.relationship('Message', backref='conversation', lazy='dynamic')
 
@@ -71,7 +71,7 @@ class Message(db.Model):
     direction = db.Column(db.Enum('incoming', 'outgoing'), nullable=False)
     model = db.Column(db.String(50), nullable=False)
     is_knowledge_query = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class AudioFile(db.Model):
@@ -81,7 +81,7 @@ class AudioFile(db.Model):
     file_path = db.Column(db.String(255), nullable=False)
     transcription = db.Column(db.Text)
     language = db.Column(db.String(10), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class DocumentEmbedding(db.Model):
@@ -94,7 +94,7 @@ class DocumentEmbedding(db.Model):
     chunk_index = db.Column(db.Integer, nullable=False,
                             default=0)
     model = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class Translation(db.Model):
@@ -105,7 +105,7 @@ class Translation(db.Model):
     translated_text = db.Column(db.Text, nullable=False)
     source_language = db.Column(db.String(10), nullable=False)
     target_language = db.Column(db.String(10), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class APIUsage(db.Model):
@@ -115,7 +115,7 @@ class APIUsage(db.Model):
     endpoint = db.Column(db.String(50), nullable=False)
     request_payload = db.Column(db.Text)
     response_payload = db.Column(db.Text)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class Speech(db.Model):
@@ -126,7 +126,7 @@ class Speech(db.Model):
     voice = db.Column(db.String(50), nullable=False)
     audio_data = db.Column(db.Text,
                            nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class GeneratedImage(db.Model):
@@ -136,6 +136,7 @@ class GeneratedImage(db.Model):
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
     image_url = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    temp_file_path = db.Column(db.String(255), nullable=True)
 
     user = db.relationship('User', back_populates='generated_images')

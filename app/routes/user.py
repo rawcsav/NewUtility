@@ -132,7 +132,7 @@ def retest_api_key():
                                 'message': 'API key test failed, label set to Error'}), 400
             else:
                 return jsonify({'success': True, 'status': 'success',
-                                'message': f'API key "{nickname}" retested successfully with access to: ' + label}), 200
+                                'message': f'API key "{nickname}" retested successfully'}), 200
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'status': 'error',

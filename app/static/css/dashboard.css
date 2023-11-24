@@ -101,6 +101,13 @@ h1 img {
   cursor: pointer;
 }
 
+.retest-key-button:hover,
+.delete-key-button:hover,
+.select-key-button:hover {
+  color: #d4af37;
+  transform: scale(1.1); /* Example for scaling up */
+}
+
 .key-list {
   display: flex;
   margin: 0;
@@ -262,4 +269,18 @@ a {
 
 .selected-key {
   color: green;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s infinite linear;
+  color: #d4af37;
 }

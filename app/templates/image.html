@@ -117,10 +117,9 @@
           <div id="icons-container"></div>
         </div>
       </div>
-      <script src="{{ url_for('static', filename='js/image.js') }}"></script>
-
-      <div id="generated-images"></div>
+      <div id="generated-images">{% include 'image_loading.html' %}</div>
     </div>
     {% include 'footer.html' %}
+    <script src="{{ url_for('static', filename='js/image.js') }}"></script>
   </body>
 </html>
