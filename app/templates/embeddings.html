@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='favicon/site.webmanifest') }}"
+    />
+    <link
+      rel="mask-icon"
+      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
+    />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Embeddings</title>
+    <link
+      href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% include 'menu.html' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/embeddings.css') }}"
+    />
+  </head>
+  <body>
+    <h1 class="outlined-text">
+      Docs <img src="/static/logo/swissimg.png" alt="Company Logo" /> Center
+    </h1>
+    <div class="upload-container">
+      <form
+        action="{{ url_for('embeddings.upload_document') }}"
+        method="post"
+        enctype="multipart/form-data"
+        id="uploadForm"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="form-group">
+          <label for="file">Choose a document to upload:</label>
+          <input type="file" id="file" name="file" required />
+        </div>
+        <div class="form-group">
+          <label for="title">Document Title (optional):</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            placeholder="Enter document title"
+          />
+        </div>
+        <div class="form-group">
+          <label for="author">Author Name (optional):</label>
+          <input
+            type="text"
+            id="author"
+            name="author"
+            placeholder="Enter author's name"
+          />
+        </div>
+        <div class="form-group">
+          <label for="chunk_size">Max Tokens per Chunk (default is 512):</label>
+          <input
+            type="number"
+            id="chunk_size"
+            name="chunk_size"
+            min="1"
+            value="512"
+          />
+        </div>
+        <button type="submit">Upload Document</button>
+        <div id="uploadStatus"></div>
+      </form>
+      <ul class="docs_list">
+        {% for document in documents %}
+        <li id="list">
+          <h3>{{ document.title }}</h3>
+          <p>Author: {{ document.author }}</p>
+          <p>Total Tokens: {{ document.total_tokens }}</p>
+          <p>Chunk Count: {{ document.chunk_count }}</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% include 'footer.html' %}
+    <script src="{{ url_for('static', filename='js/embeddings.js') }}"></script>
+  </body>
+</html>

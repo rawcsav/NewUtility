@@ -1,0 +1,74 @@
+body,
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  justify-content: flex-start;
+}
+
+label {
+  color: #5b92e5;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+h1 img {
+  height: 100px;
+  vertical-align: middle;
+}
+
+#uploadStatus {
+  font-size: 12px;
+  font-family: Window-Bold, sans-serif;
+}
+
+.success {
+  color: green;
+}
+
+.error {
+  color: red;
+}
+
+#uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  width: 100%;
+}
+
+h3 {
+  margin: 0;
+  padding: 0;
+  font-size: 18px;
+  color: #d4af37; /* Set a default color for the icons (change as needed) */
+}
+
+p {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: #333333;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}

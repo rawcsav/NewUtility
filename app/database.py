@@ -41,6 +41,7 @@ class User(UserMixin, db.Model):
     audio_files = db.relationship('AudioFile', backref='user', lazy='dynamic')
     document_embeddings = db.relationship('DocumentEmbedding', backref='user',
                                           lazy='dynamic')
+    documents = db.relationship('Document', backref='user', lazy='dynamic')
     translations = db.relationship('Translation', backref='user', lazy='dynamic')
     api_usage = db.relationship('APIUsage', backref='user', lazy='dynamic')
     speeches = db.relationship('Speech', backref='user', lazy='dynamic')
@@ -81,17 +82,54 @@ class AudioFile(db.Model):
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
+class Document(db.Model):
+    __tablename__ = 'documents'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    title = db.Column(db.String(255),
+                      nullable=False)
+    author = db.Column(db.String(255),
+                       nullable=True)
+    total_tokens = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    chunks = db.relationship('DocumentChunk', back_populates='document',
+                             order_by='DocumentChunk.chunk_index',
+                             cascade='all, delete, delete-orphan')  # Include "delete"
+
+
+class DocumentChunk(db.Model):
+    __tablename__ = 'document_chunks'
+    id = db.Column(db.Integer, primary_key=True)
+    document_id = db.Column(db.Integer,
+                            db.ForeignKey('documents.id', ondelete='CASCADE'),
+                            nullable=False)
+    chunk_index = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    tokens = db.Column(db.Integer, nullable=False)
+    document = db.relationship('Document', back_populates='chunks')
+    embeddings = db.relationship('DocumentEmbedding', back_populates='chunk',
+                                 cascade='all, delete, delete-orphan')  # Add cascade option here
+    __table_args__ = (
+        db.Index('ix_document_chunks_document_id_chunk_index', 'document_id',
+                 'chunk_index'),
+    )
+
+
 class DocumentEmbedding(db.Model):
     __tablename__ = 'document_embeddings'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    document = db.Column(db.Text, nullable=False)
-    embedding = db.Column(db.Text,
-                          nullable=False)
-    chunk_index = db.Column(db.Integer, nullable=False,
-                            default=0)
-    model = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    user_id = db.Column(db.Integer,
+                        db.ForeignKey('users.id'))  # Add user_id for direct reference
+    chunk_id = db.Column(db.Integer,
+                         db.ForeignKey('document_chunks.id', ondelete='CASCADE'),
+                         nullable=False)
+    embedding = db.Column(db.LargeBinary,
+                          nullable=False)  # The binary representation of the embedding
+    model = db.Column(db.String(50),
+                      nullable=False)  # The name of the model used to generate the embedding
+    created_at = db.Column(db.DateTime(timezone=False),
+                           server_default=func.now())  # Timestamp of when the embedding was created
+    chunk = db.relationship('DocumentChunk', back_populates='embeddings')
 
 
 class Translation(db.Model):

@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileRequired, FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, \
     IntegerField
 from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo, \
@@ -111,3 +112,26 @@ class GenerateImageForm(FlaskForm):
             return super(GenerateImageForm, self).validate(
                 extra_validators=extra_validators)
         return True
+
+
+class DocumentUploadForm(FlaskForm):
+    file = FileField('Document', validators=[
+        FileRequired(),
+        FileAllowed(['pdf', 'doc', 'docx', 'txt'], 'Text files only!')
+    ])
+    title = StringField('Document Title', validators=[Optional()])
+    author = StringField('Author Name', validators=[Optional()])
+    chunk_size = IntegerField('Max Tokens per Chunk', validators=[
+        Optional(), NumberRange(min=1, max=8000)
+    ])
+
+
+class DeleteDocumentForm(FlaskForm):
+    submit = SubmitField('Delete')
+
+
+class EditDocumentForm(FlaskForm):
+    title = StringField('Title', validators=[Optional()])
+    author = StringField('Author', validators=[Optional()])
+    chunk_size = IntegerField('Max Tokens per Chunk', validators=[Optional()])
+    submit = SubmitField('Update')
