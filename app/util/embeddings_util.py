@@ -2,6 +2,7 @@ import pickle
 import re
 import zlib
 from typing import List
+import unicodedata
 
 from flask_login import current_user
 from tenacity import retry, stop_after_attempt, wait_random_exponential
@@ -68,9 +69,6 @@ def extract_text_from_file(filepath):
     except Exception as e:
         print(f"Error processing the file {filepath}. Details: {e}")
         return None  # You may choose to return None or raise the exception
-
-
-import unicodedata
 
 
 def preprocess_text(text):

@@ -56,59 +56,136 @@
       Docs <img src="/static/logo/swissimg.png" alt="Company Logo" /> Center
     </h1>
     <div class="upload-container">
-      <form
-        action="{{ url_for('embeddings.upload_document') }}"
-        method="post"
-        enctype="multipart/form-data"
-        id="uploadForm"
-      >
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <div class="form-group">
-          <label for="file">Choose a document to upload:</label>
-          <input type="file" id="file" name="file" required />
-        </div>
-        <div class="form-group">
-          <label for="title">Document Title (optional):</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            placeholder="Enter document title"
-          />
-        </div>
-        <div class="form-group">
-          <label for="author">Author Name (optional):</label>
-          <input
-            type="text"
-            id="author"
-            name="author"
-            placeholder="Enter author's name"
-          />
-        </div>
-        <div class="form-group">
-          <label for="chunk_size">Max Tokens per Chunk (default is 512):</label>
-          <input
-            type="number"
-            id="chunk_size"
-            name="chunk_size"
-            min="1"
-            value="512"
-          />
-        </div>
-        <button type="submit">Upload Document</button>
-        <div id="uploadStatus"></div>
-      </form>
-      <ul class="docs_list">
-        {% for document in documents %}
-        <li id="list">
-          <h3>{{ document.title }}</h3>
-          <p>Author: {{ document.author }}</p>
-          <p>Total Tokens: {{ document.total_tokens }}</p>
-          <p>Chunk Count: {{ document.chunk_count }}</p>
-        </li>
-        {% endfor %}
-      </ul>
+      <div class="doc-upload">
+        <form
+          id="uploadForm"
+          action="{{ url_for('embeddings.upload_document') }}"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="form-group">
+            <label for="file">Choose a document to upload:</label>
+            <input type="file" id="file" name="file" required />
+          </div>
+          <div class="form-group">
+            <label for="title">Document Title (optional):</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              placeholder="Enter document title"
+            />
+          </div>
+          <div class="form-group">
+            <label for="author">Author Name (optional):</label>
+            <input
+              type="text"
+              id="author"
+              name="author"
+              placeholder="Enter author's name"
+            />
+          </div>
+          <div class="form-group">
+            <label for="chunk_size"
+              >Max Tokens per Chunk (default is 512):</label
+            >
+            <input
+              type="number"
+              id="chunk_size"
+              name="chunk_size"
+              min="1"
+              value="512"
+            />
+          </div>
+          <button type="submit">Upload Document</button>
+          <div id="uploadStatus"></div>
+        </form>
+      </div>
+      <div class="docs-container">
+        <ul class="docs_list">
+          {% for document in documents %}
+          <li id="document-{{ document.id }}">
+            <form
+              class="edit-document-form"
+              action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
+              method="post"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <input
+                type="hidden"
+                name="document_id"
+                value="{{ document.id }}"
+              />
+              <div class="editable-container">
+                <input
+                  class="editable"
+                  type="text"
+                  id="title-edit"
+                  name="title"
+                  value="{{ document.title }}"
+                  readonly
+                />
+                <input
+                  class="editable"
+                  type="text"
+                  id="author-edit"
+                  name="author"
+                  value="Author: {{ document.author }}"
+                  readonly
+                />
+                <p>Total Tokens: {{ document.total_tokens }}</p>
+                <p>Chunk Count: {{ document.chunk_count }}</p>
+              </div>
+            </form>
+            <form
+              action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
+              method="post"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+            </form>
+            <div class="button-container">
+              <button
+                type="button"
+                class="btn-icon edit-btn"
+                onclick="enableEditing(this)"
+                title="Edit Document"
+              >
+                <i class="fa fa-pencil"></i>
+              </button>
+              <!-- Save button (initially hidden) -->
+              <button
+                type="button"
+                class="btn-icon save-btn"
+                title="Save Changes"
+                style="display: none"
+              >
+                <i class="fa fa-save"></i>
+              </button>
+              <button
+                type="button"
+                class="btn-icon delete-btn"
+                data-doc-id="{{ document.id }}"
+                data-csrf-token="{{ csrf_token() }}"
+                title="Delete Document"
+              >
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
+
     {% include 'footer.html' %}
     <script src="{{ url_for('static', filename='js/embeddings.js') }}"></script>
   </body>

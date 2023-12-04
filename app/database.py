@@ -50,6 +50,8 @@ class User(UserMixin, db.Model):
     selected_api_key = db.relationship('UserAPIKey', foreign_keys=[selected_api_key_id])
     generated_images = db.relationship('GeneratedImage', back_populates='user',
                                        lazy='dynamic')
+    chat_preferences = db.relationship('ChatPreferences', backref='user', uselist=False,
+                                       lazy='dynamic')
 
 
 class Conversation(db.Model):
@@ -57,19 +59,40 @@ class Conversation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    system_prompt = db.Column(db.String(2048),
+                              nullable=True)  # New field for system prompts
 
-    messages = db.relationship('Message', backref='conversation', lazy='dynamic')
+    messages = db.relationship('Message', backref='conversation', lazy='dynamic',
+                               cascade='all, delete-orphan')
 
 
 class Message(db.Model):
     __tablename__ = 'messages'
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'))
+    conversation_id = db.Column(db.Integer,
+                                db.ForeignKey('conversations.id', ondelete='CASCADE'))
     content = db.Column(db.Text, nullable=False)
     direction = db.Column(db.Enum('incoming', 'outgoing'), nullable=False)
     model = db.Column(db.String(50), nullable=False)
     is_knowledge_query = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+
+
+class ChatPreferences(db.Model):
+    __tablename__ = 'chat_preferences'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
+    show_timestamps = db.Column(db.Boolean, default=True)
+    model = db.Column(db.String(50), default='gpt-3.5-turbo')
+    temperature = db.Column(db.Float, default=0.7)
+    max_tokens = db.Column(db.Integer, default=2000)
+    frequency_penalty = db.Column(db.Float, default=0.0)
+    presence_penalty = db.Column(db.Float, default=0.0)
+    top_p = db.Column(db.Float, default=1.0)
+    stream = db.Column(db.Boolean, default=True)
+    user = db.relationship('User',
+                           backref=db.backref('chat_preferences', uselist=False))
 
 
 class AudioFile(db.Model):

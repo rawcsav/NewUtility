@@ -42,12 +42,13 @@ def create_app():
     login_manager.login_view = 'auth.login'
 
     with app.app_context():
-        from .routes import landing, auth, user, image, embed
+        from .routes import landing, auth, user, image, embed, chat
         app.register_blueprint(landing.bp)
         app.register_blueprint(auth.bp)
         app.register_blueprint(user.bp)
         app.register_blueprint(image.bp)
         app.register_blueprint(embed.bp)
+        app.register_blueprint(chat.bp)
 
         @app.teardown_request
         def session_teardown(exception=None):

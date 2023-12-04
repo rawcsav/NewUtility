@@ -1,20 +1,14 @@
-import tempfile
 from datetime import datetime
-
-from flask import Blueprint, request, jsonify, current_app, render_template
+from flask import Blueprint, jsonify, render_template
 from flask_login import login_required, current_user
-from sqlalchemy.sql import func
-from tenacity import RetryError
 from werkzeug.utils import secure_filename
 from openai import OpenAI
 from app import db
-from app.database import DocumentEmbedding, Document, DocumentChunk, UserAPIKey
-import openai
-import os
+from app.database import Document, DocumentChunk, UserAPIKey
 
 from app.util.embeddings_util import split_text, extract_text_from_file, \
     remove_temp_file, get_embedding_batch, store_embeddings, save_temp_file
-from app.util.forms_util import DocumentUploadForm
+from app.util.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm
 from app.util.session_util import decrypt_api_key
 
 # Initialize the blueprint
@@ -92,10 +86,7 @@ def upload_document():
         db.session.commit()
         return jsonify({
             'status': 'success',
-            'message': 'File uploaded and embedded successfully',
-            'document_id': new_document.id,
-            'chunk_count': len(chunks),
-            'total_tokens': total_tokens
+            'message': 'File uploaded and embedded successfully. Please refresh to see changes'
         }), 200
     except Exception as e:
         # If anything goes wrong, roll back the session
@@ -108,61 +99,46 @@ def upload_document():
 @bp.route('/delete/<int:document_id>', methods=['POST'])
 @login_required
 def delete_document(document_id):
-    # Find the document by ID
+    form = DeleteDocumentForm()
     document = Document.query.get_or_404(document_id)
+    if document.user_id != current_user.id or not form.validate_on_submit():
+        return jsonify({'error': 'Unauthorized or invalid form submission'}), 403
 
-    # Verify if the current user owns the document
-    if document.user_id != current_user.id:
-        return jsonify({'error': 'Permission denied'}), 403
+    try:
+        db.session.delete(document)
+        db.session.commit()
+        return jsonify(
+            {'status': 'success',
+             'message': 'Document deleted successfully.\nPlease refresh to see changes'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
-    # Delete the document
-    db.session.delete(document)
-    db.session.commit()
 
-    return jsonify(
-        {'status': 'success', 'message': 'Document deleted successfully'}), 200
-
-
-@bp.route('/update/<int:document_id>', methods=['POST'])
+@bp.route('/update', methods=['POST'])
 @login_required
-def update_document(document_id):
+def update_document():
+    form = EditDocumentForm()
+    if not form.validate_on_submit():
+        return jsonify({'error': 'Invalid form submission'}), 400
+
+    document_id = form.document_id.data
+    title = form.title.data
+    author = form.author.data
+
     document = Document.query.get_or_404(document_id)
-
     if document.user_id != current_user.id:
-        return jsonify({'error': 'Permission denied'}), 403
+        return jsonify({'error': 'Unauthorized'}), 403
 
-    title = request.form.get('title')
-    author = request.form.get('author')
-    chunk_size = request.form.get('chunk_size', type=int)
-
-    if title is not None:
-        document.title = title
-    if author is not None:
-        document.author = author
-
-    chunks_query = DocumentChunk.query.filter_by(document_id=document.id).order_by(
-        DocumentChunk.chunk_index)
-    content = ''.join(chunk.content for chunk in chunks_query)
-
-    if chunk_size:
-        # Recalculate chunks
-        new_chunks, total_tokens, chunk_token_counts = split_text(content, chunk_size)
-
-        # Delete old chunks
-        chunks_query.delete()
-
-        # Add new chunks
-        for i, (chunk_content, token_count) in enumerate(
-                zip(new_chunks, chunk_token_counts)):
-            new_chunk = DocumentChunk(
-                document_id=document.id,
-                chunk_index=i,
-                content=chunk_content,
-                tokens=token_count
-            )
-            db.session.add(new_chunk)
-
-    db.session.commit()
-
-    return jsonify({'status': 'success', 'message': 'Document updated successfully',
-                    'document_id': document.id}), 200
+    try:
+        if title:
+            document.title = title
+        if author:
+            document.author = author
+        db.session.commit()
+        return jsonify(
+            {'status': 'success',
+             'message': 'Document updated successfully.\nPlease refresh to see changes'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500

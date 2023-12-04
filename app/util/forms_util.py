@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileRequired, FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, \
-    IntegerField
+    IntegerField, TextAreaField, FloatField
 from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo, \
     NumberRange, Optional
 
@@ -117,7 +117,7 @@ class GenerateImageForm(FlaskForm):
 class DocumentUploadForm(FlaskForm):
     file = FileField('Document', validators=[
         FileRequired(),
-        FileAllowed(['pdf', 'doc', 'docx', 'txt'], 'Text files only!')
+        FileAllowed(['pdf', 'doc', 'docx', 'txt'], 'Text, pdf, or doc files only!')
     ])
     title = StringField('Document Title', validators=[Optional()])
     author = StringField('Author Name', validators=[Optional()])
@@ -131,7 +131,39 @@ class DeleteDocumentForm(FlaskForm):
 
 
 class EditDocumentForm(FlaskForm):
+    document_id = HiddenField('document_id', validators=[DataRequired()])
     title = StringField('Title', validators=[Optional()])
     author = StringField('Author', validators=[Optional()])
-    chunk_size = IntegerField('Max Tokens per Chunk', validators=[Optional()])
     submit = SubmitField('Update')
+
+
+class ChatCompletionForm(FlaskForm):
+    prompt = TextAreaField('Prompt', validators=[DataRequired()])
+    conversation_id = HiddenField('Conversation ID', validators=[Optional()])
+    submit = SubmitField('Get Completion')
+
+
+class UserPreferencesForm(FlaskForm):
+    show_timestamps = BooleanField('Show Timestamps')
+    model = StringField('Model', validators=[DataRequired()])
+    max_tokens = IntegerField('Max Tokens',
+                              validators=[NumberRange(min=1, max=128000), Optional()],
+                              default=2000)
+    temperature = FloatField('Temperature',
+                             validators=[NumberRange(min=0, max=2), Optional()],
+                             default=0.7)
+    top_p = FloatField('Top P', validators=[NumberRange(min=0, max=1), Optional()],
+                       default=1)
+    frequency_penalty = FloatField('Frequency Penalty',
+                                   validators=[NumberRange(min=0, max=2), Optional()],
+                                   default=0)
+    presence_penalty = FloatField('Presence Penalty',
+                                  validators=[NumberRange(min=0, max=2), Optional()],
+                                  default=0)
+    stream = BooleanField('Stream')
+    submit = SubmitField('Get Completion')
+
+
+class NewConversationForm(FlaskForm):
+    system_prompt = TextAreaField('System Prompt', validators=[DataRequired()])
+    ssubmit = SubmitField('Start Conversation')
