@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Landing page of Swiss AI. Offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
+    />
+    <meta name="keywords" content="Swiss AI, OpenAI, Developer Tools, AI" />
+
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -22,7 +28,7 @@
     />
     <link
       rel="manifest"
-      href="{{ url_for('static', filename='favicon/site.webmanifest') }}"
+      href="{{ url_for('static', filename='favicon/manifest.json') }}"
     />
     <link
       rel="mask-icon"
@@ -50,53 +56,59 @@
       href="{{ url_for('static', filename='css/landing.css') }}"
     />
   </head>
-  <div class="upper-overlay"></div>
   <body>
-    <h1 class="outlined-text">
-      Swiss <img src="/static/logo/swissimg.png" alt="Company Logo" /> AI
-    </h1>
-
-    <main>
-      <p>
-        Swiss AI offers users (and myself) a straightforward interface that
-        grants access to a suite of developer tools powered by OpenAI.
-        <br /><br />
-        The platform is designed with a simple profile system to preserve user
-        preferences and manage authorizations efficiently. The Sign-Up and Login
-        pages are readily accessible below.
-        <br /><br />
-        To follow the development progress and access the source code, visit the
-        project's GitHub page
-        <a
-          href="https://github.com/rawcsav/AIUtilsFlask"
-          target="_blank"
-          style="color: inherit"
-          >here</a
-        >.
-      </p>
-      <div class="banner">
-        <img
-          src="../static/logo/singleban.png"
-          alt="Renaissance oil painting of a multifunctional Swiss AI"
-        />
+    <a class="homepage-link" href="https://rawcsav.com">
+      <img alt="Homepage" src="/static/logo/swisslogo.svg" />
+    </a>
+    <div class="grid-container">
+      <div class="grid-item red" id="info-container">
+        <h1>Swiss AI</h1>
+        <img src="../static/logo/Flag_of_Switzerland.svg" id="swiss-flag" />
+        <ul class="button-list">
+          <li>
+            <button class="button">
+              <a href="{{ url_for('auth.signup') }}" class="button-link"
+                >Sign Up</a
+              >
+            </button>
+          </li>
+          <li>
+            <button class="button">
+              <a href="{{ url_for('user.dashboard') }}" class="button-link"
+                >Login →</a
+              >
+            </button>
+          </li>
+        </ul>
       </div>
-    </main>
-    <ul class="button-list">
-      <li>
-        <button class="button">
-          <a href="{{ url_for('auth.signup') }}" class="button-link">Sign Up</a>
-        </button>
-      </li>
-      <li>
-        <button class="button">
-          <a href="{{ url_for('user.dashboard') }}" class="button-link"
-            >Login →</a
-          >
-        </button>
-      </li>
-    </ul>
-    <p></p>
+      <div class="grid-item white" id="picture-container">
+        <img src="../static/logo/workshop copy.svg" id="workshop" />
+      </div>
+      <div class="grid-item white" id="hands-container">
+        <img src="../static/logo/magic.svg" id="magic" />
+      </div>
+      <div class="grid-item red" id="text-container">
+        <p>
+          Swiss AI offers users (and myself) a straightforward interface that
+          grants access to a suite of developer tools powered by OpenAI.
+          <br /><br />
+          The platform is designed with a simple profile system to preserve user
+          preferences and manage authorizations efficiently. The Sign-Up and
+          Login pages are readily accessible below.
+          <br /><br />
+          To follow the development progress and access the source code, visit
+          the project's GitHub page
+          <a
+            href="https://github.com/rawcsav/AIUtilsFlask"
+            target="_blank"
+            style="color: inherit"
+            >here</a
+          >.
+        </p>
+      </div>
+    </div>
 
+    <p></p>
     {% include 'footer.html' %}
   </body>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

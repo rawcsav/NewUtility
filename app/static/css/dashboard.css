@@ -171,6 +171,18 @@ ul {
   color: #333333;
 }
 
+#svg-container {
+  position: absolute;
+  width: 80%;
+  height: 100px; /* Adjust as needed */
+  left: 10%; /* Center the container */
+  bottom: 30%; /* Position from the bottom */
+  z-index: -1; /* Ensure it's above other elements */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 a {
   text-decoration: none;
   color: unset;

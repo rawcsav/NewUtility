@@ -51,7 +51,7 @@ class User(UserMixin, db.Model):
     generated_images = db.relationship('GeneratedImage', back_populates='user',
                                        lazy='dynamic')
     chat_preferences = db.relationship('ChatPreferences', backref='user', uselist=False,
-                                       lazy='dynamic')
+                                       cascade='all, delete-orphan')
 
 
 class Conversation(db.Model):
@@ -91,8 +91,6 @@ class ChatPreferences(db.Model):
     presence_penalty = db.Column(db.Float, default=0.0)
     top_p = db.Column(db.Float, default=1.0)
     stream = db.Column(db.Boolean, default=True)
-    user = db.relationship('User',
-                           backref=db.backref('chat_preferences', uselist=False))
 
 
 class AudioFile(db.Model):

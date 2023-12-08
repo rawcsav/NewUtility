@@ -1,5 +1,5 @@
 import openai
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify
 from flask import render_template, flash, redirect, url_for
 from flask_login import login_required, current_user
 from openai import OpenAI
@@ -11,42 +11,55 @@ from app.util.chat_utils import chat_stream, chat_nonstream, save_message, \
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
 from app.util.session_util import decrypt_api_key
+from flask import Blueprint, request, render_template, flash, redirect, url_for
+from flask_login import login_required, current_user
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
 
-@bp.route('/new-conversation', methods=['GET', 'POST'])
+@bp.route('/', methods=['GET'])
+@login_required
+def chat_index():
+    # This route will just render the chat_page.html template
+    # and provide the necessary form instances for the template to use.
+    new_conversation_form = NewConversationForm()
+    user_preferences_form = UserPreferencesForm()
+    chat_completion_form = ChatCompletionForm()
+
+    return render_template('chat_page.html',
+                           new_conversation_form=new_conversation_form,
+                           user_preferences_form=user_preferences_form,
+                           chat_completion_form=chat_completion_form)
+
+
+@bp.route('/new-conversation', methods=['POST'])
 @login_required
 def new_conversation():
     form = NewConversationForm()
     if form.validate_on_submit():
         user_id = current_user.id
         system_prompt = form.system_prompt.data
-
-        # Create a new conversation entry
         new_conversation = Conversation(user_id=user_id, system_prompt=system_prompt)
         db.session.add(new_conversation)
         try:
             db.session.commit()
-            flash('New conversation started.', 'success')
-            return redirect(
-                url_for('chat.chat_completion', conversation_id=new_conversation.id))
+            return jsonify(
+                {'status': 'success', 'conversation_id': new_conversation.id})
         except Exception as e:
             db.session.rollback()
-            flash(f'An error occurred while starting a new conversation: {e}', 'danger')
+            return jsonify({'status': 'error', 'message': str(e)})
+    else:
+        return jsonify({'status': 'error', 'errors': form.errors})
 
-    return render_template('chat/new_conversation.html', form=form)
 
-
-@bp.route('/update-preferences', methods=['GET', 'POST'])
+@bp.route('/update-preferences', methods=['POST'])
 @login_required
 def update_preferences():
-    user_id = current_user.id
-    preferences = ChatPreferences.query.filter_by(user_id=user_id).first_or_404()
-
-    form = UserPreferencesForm(obj=preferences)
-
+    form = UserPreferencesForm()
     if form.validate_on_submit():
+        user_id = current_user.id
+        preferences = ChatPreferences.query.filter_by(user_id=user_id).first_or_404()
+
         preferences.show_timestamps = form.show_timestamps.data
         preferences.model = form.model.data
         preferences.temperature = form.temperature.data
@@ -58,44 +71,37 @@ def update_preferences():
 
         try:
             db.session.commit()
-            flash('Your preferences have been updated.', 'success')
+            return jsonify({'status': 'success', 'message': 'Preferences updated.'})
         except Exception as e:
             db.session.rollback()
-            flash(f'An error occurred: {e}', 'danger')
-
-        return redirect(url_for('chat.update_preferences'))
-
-    return render_template('chat/update_preferences.html', form=form)
+            return jsonify({'status': 'error', 'message': str(e)})
+    else:
+        return jsonify({'status': 'error', 'errors': form.errors})
 
 
-@bp.route('/completion', methods=['GET', 'POST'])
+@bp.route('/completion', methods=['POST'])
 @login_required
 def chat_completion():
     form = ChatCompletionForm()
     if form.validate_on_submit():
         user_id = current_user.id
         conversation_id = form.conversation_id.data
-
         key_id = current_user.selected_api_key_id
         user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
+
         if not user_api_key:
-            flash('API Key not found.', 'danger')
-            return redirect(
-                url_for('your_redirect_endpoint'))
+            return jsonify({'status': 'error', 'message': 'API Key not found.'})
 
         api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-        client = openai.OpenAI(api_key=api_key)
+        client = OpenAI(api_key=api_key)
 
         preferences = get_user_preferences(user_id)
-        stream_preference = preferences.get('stream',
-                                            True)
+        stream_preference = preferences.get('stream', True)
 
         prompt = form.prompt.data
-
         save_message(conversation_id, prompt, 'incoming', preferences['model'])
 
         try:
-            full_response = ""
             if stream_preference:
                 full_response = chat_stream(prompt, client, user_id, conversation_id)
             else:
@@ -104,12 +110,12 @@ def chat_completion():
             if full_response:
                 save_message(conversation_id, full_response, 'outgoing',
                              preferences['model'])
-                flash('Chat completed successfully.', 'success')
+                return jsonify(
+                    {'status': 'success', 'message': 'Chat completed successfully.'})
             else:
-                flash('No response from the AI.', 'warning')
+                return jsonify(
+                    {'status': 'warning', 'message': 'No response from the AI.'})
         except Exception as e:
-            flash(f'An error occurred: {e}', 'danger')
-
-        return redirect(url_for('your_redirect_endpoint'))
-
-    return redirect(url_for('your_redirect_endpoint'))
+            return jsonify({'status': 'error', 'message': str(e)})
+    else:
+        return jsonify({'status': 'error', 'errors': form.errors})

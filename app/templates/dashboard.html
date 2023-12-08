@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Dashboard of Swiss AI. Allows users to manage their profiles and access various features."
+    />
+    <meta
+      name="keywords"
+      content="Dashboard, Swiss AI, User Profile, Features"
+    />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -22,7 +30,7 @@
     />
     <link
       rel="manifest"
-      href="{{ url_for('static', filename='favicon/site.webmanifest') }}"
+      href="{{ url_for('static', filename='favicon/manifest.json') }}"
     />
     <link
       rel="mask-icon"
@@ -32,18 +40,13 @@
     <meta name="theme-color" content="#ffffff" />
     <title>Dashboard</title>
     <link
-      href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
-      rel="stylesheet"
-    />
-    <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/fonts.css') }}"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-
+    <script
+      src="https://kit.fontawesome.com/5c8c7a1eba.js"
+      crossorigin="anonymous"
+    ></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% include 'menu.html' %}
     <link
@@ -52,160 +55,171 @@
     />
   </head>
   <body>
-    <h1 class="outlined-text">
-      User <img src="/static/logo/swissimg.png" alt="Company Logo" /> Dashboard
-    </h1>
-    <h2 id="welcome">Welcome, {{ current_user.username }}</h2>
-
-    <main class="container">
-      <div class="user-functions">
-        <div class="key-container">
-          <h2>Key Management</h2>
-          <div id="api-key-messages"></div>
-          <button id="toggleFormButton" class="button dropdown-button">
-            Upload <i class="fas fa-chevron-down"></i>
-          </button>
-          <form
-            id="api-key-form"
-            method="POST"
-            action="{{ url_for('user.upload_api_key') }}"
-            style="display: none"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <div class="form-group">
-              <input
-                type="text"
-                id="api_key"
-                name="api_key"
-                placeholder="Enter Key:"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <input
-                type="text"
-                id="nickname"
-                placeholder="Nickname:"
-                name="nickname"
-                maxlength="25"
-                required
-              />
-            </div>
-
-            <button type="submit" class="button save-api-key-button">
-              <i class="fas fa-save"></i> Save
+    <div id="svg-container">
+      <img src="../static/logo/dashhand.svg" id="workshop" />
+    </div>
+    <div class="grid-container">
+      <h1 class="outlined-text">Dashboard</h1>
+      <main class="container">
+        <div class="user-functions">
+          <div class="key-container">
+            <h2>Key Management</h2>
+            <div id="api-key-messages"></div>
+            <button id="toggleFormButton" class="button dropdown-button">
+              Upload <i class="fas fa-chevron-down"></i>
             </button>
-          </form>
-          <ul>
-            <div class="custom-line"></div>
-
-            {% for key in user_api_keys %}
-            <li
-              class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
+            <form
+              id="api-key-form"
+              method="POST"
+              action="{{ url_for('user.upload_api_key') }}"
+              style="display: none"
             >
-              <strong>{{ key.nickname }}</strong> - {{ key.identifier }} - {{
-              key.label }}
-              <form
-                class="retest-api-key-form"
-                action="{{ url_for('user.retest_api_key') }}"
-                method="post"
-              >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <div class="form-group">
                 <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
+                  type="text"
+                  id="api_key"
+                  name="api_key"
+                  placeholder="Enter Key:"
+                  required
                 />
-                <input type="hidden" name="key_id" value="{{ key.id }}" />
-                <button type="submit" class="button retest-key-button">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-              </form>
+              </div>
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="nickname"
+                  placeholder="Nickname:"
+                  name="nickname"
+                  maxlength="25"
+                  required
+                />
+              </div>
 
-              <form
-                class="delete-api-key-form"
-                action="{{ url_for('user.delete_api_key') }}"
-                method="post"
+              <button type="submit" class="button save-api-key-button">
+                <i class="fas fa-save"></i> Save
+              </button>
+            </form>
+            <ul>
+              <div class="custom-line"></div>
+
+              {% for key in user_api_keys %}
+              <li
+                class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
               >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <input type="hidden" name="key_id" value="{{ key.id }}" />
-                <button type="submit" class="button delete-key-button">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </form>
-              <form
-                class="select-api-key-form"
-                action="{{ url_for('user.select_api_key') }}"
-                method="post"
+                <strong>{{ key.nickname }}</strong> - {{ key.identifier }} - {{
+                key.label }}
+                <form
+                  class="retest-api-key-form"
+                  action="{{ url_for('user.retest_api_key') }}"
+                  method="post"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <input type="hidden" name="key_id" value="{{ key.id }}" />
+                  <button type="submit" class="button retest-key-button">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </form>
+
+                <form
+                  class="delete-api-key-form"
+                  action="{{ url_for('user.delete_api_key') }}"
+                  method="post"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <input type="hidden" name="key_id" value="{{ key.id }}" />
+                  <button type="submit" class="button delete-key-button">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </form>
+                <form
+                  class="select-api-key-form"
+                  action="{{ url_for('user.select_api_key') }}"
+                  method="post"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <input type="hidden" name="key_id" value="{{ key.id }}" />
+                  <button type="submit" class="button select-key-button">
+                    <i class="fas fa-hand-pointer"></i>
+                  </button>
+                </form>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="change-info">
+            <h2>Change Info</h2>
+            <button id="toggleUserButton" class="button dropdown-button">
+              Username <i class="fas fa-chevron-down"></i>
+            </button>
+            <form id="username-change-form" style="display: none">
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <input
+                type="text"
+                name="new_username"
+                placeholder="New Username"
+                required
+              />
+              <button class="submit-user" type="submit">
+                Submit <i class="fa fa-arrow-right"></i>
+              </button>
+            </form>
+            <div id="username-change-message"></div>
+            <div class="custom-line"></div>
+            <a
+              href="{{ url_for('auth.reset_password_request') }}"
+              class="btn dropdown-button"
+            >
+              Reset Password <i class="fa fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+        <div class="redirect-links">
+          <h2>Utilities</h2>
+          <ul>
+            <li>
+              <a href="{{ url_for('image.generate_image') }}"
+                >Image Generation</a
               >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <input type="hidden" name="key_id" value="{{ key.id }}" />
-                <button type="submit" class="button select-key-button">
-                  <i class="fas fa-hand-pointer"></i>
-                </button>
-              </form>
             </li>
-            {% endfor %}
+            <li>
+              <a href="{{ url_for('embeddings.embeddings_center') }}"
+                >Document Embeddings</a
+              >
+            </li>
+            <li>
+              <a href="{{ url_for('chat.chat_index') }}">GPT</a>
+            </li>
           </ul>
         </div>
-        <div class="change-info">
-          <h2>Change Info</h2>
-          <button id="toggleUserButton" class="button dropdown-button">
-            Username <i class="fas fa-chevron-down"></i>
-          </button>
-          <form id="username-change-form" style="display: none">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input
-              type="text"
-              name="new_username"
-              placeholder="New Username"
-              required
-            />
-            <button class="submit-user" type="submit">
-              Submit <i class="fa fa-arrow-right"></i>
-            </button>
-          </form>
-          <div id="username-change-message"></div>
-          <div class="custom-line"></div>
-          <a
-            href="{{ url_for('auth.reset_password_request') }}"
-            class="btn dropdown-button"
-          >
-            Reset Password <i class="fa fa-arrow-right"></i>
-          </a>
-        </div>
+      </main>
+      <div class="banner">
+        <img
+          src="../static/logo/test.png"
+          alt="Renaissance oil painting of a multifunctional Swiss AI"
+        />
       </div>
-      <div class="redirect-links">
-        <h2>Utilities</h2>
-        <ul>
-          <li>
-            <a href="{{ url_for('image.generate_image') }}">Image Generation</a>
-          </li>
-          <li>
-            <a href="{{ url_for('embeddings.embeddings_center') }}"
-              >Document Embeddings</a
-            >
-          </li>
-          <li>
-            <a href="{{ url_for('chat.chat_center') }}">GPT</a>
-          </li>
-        </ul>
-      </div>
-    </main>
-    <div class="banner">
-      <img
-        src="../static/logo/test.png"
-        alt="Renaissance oil painting of a multifunctional Swiss AI"
-      />
+      {% include 'footer.html' %}
     </div>
-    {% include 'footer.html' %}
   </body>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Chat page of Swiss AI. Allows users to interact with each other or with AI."
+    />
+    <meta name="keywords" content="Chat, Swiss AI, Interaction, AI" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='favicon/manifest.json') }}"
+    />
+    <link
+      rel="mask-icon"
+      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
+    />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
+    />
+    <script
+      src="https://kit.fontawesome.com/5c8c7a1eba.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% include 'menu.html' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+  </head>
+  <body>
+    <h1 class="outlined-text">
+      Chat <img src="/static/logo/swissimg.png" alt="Company Logo" /> Tools
+    </h1>
+    <div class="container">
+      <h2>Start a New Conversation</h2>
+      <form
+        id="new-conversation-form"
+        action="{{ url_for('chat.new_conversation') }}"
+        method="post"
+      >
+        {{ new_conversation_form.hidden_tag() }} {{
+        new_conversation_form.system_prompt.label }}: {{
+        new_conversation_form.system_prompt() }}
+        <input type="submit" value="Start Conversation" />
+      </form>
+      <h2>Update Preferences</h2>
+      <form
+        id="update-preferences-form"
+        action="{{ url_for('chat.update_preferences') }}"
+        method="post"
+      >
+        {{ user_preferences_form.hidden_tag() }} {{
+        user_preferences_form.show_timestamps.label }}: {{
+        user_preferences_form.show_timestamps() }} {{
+        user_preferences_form.model.label }}: {{ user_preferences_form.model()
+        }}
+        <input type="submit" value="Update Preferences" />
+      </form>
+      <h2>Send a Message</h2>
+      <form
+        id="chat-completion-form"
+        action="{{ url_for('chat.chat_completion') }}"
+        method="post"
+      >
+        {{ chat_completion_form.hidden_tag() }} {{
+        chat_completion_form.conversation_id.label }}: {{
+        chat_completion_form.conversation_id() }} {{
+        chat_completion_form.prompt.label }}: {{ chat_completion_form.prompt()
+        }}
+        <input type="submit" value="Send Message" />
+      </form>
+    </div>
+    {% include 'footer.html' %}
+  </body>
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</html>

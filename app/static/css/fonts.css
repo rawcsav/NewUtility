@@ -62,56 +62,11 @@
 }
 
 @font-face {
-  font-family: "Kodak-TextRegular";
-  src:
-    url("../fonts/Kodak-TextRegular.woff2") format("woff2"),
-    url("../fonts/Kodak-TextRegular.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Kodak-TextRegularItalic";
-  src:
-    url("../fonts/Kodak-TextRegularItalic.woff2") format("woff2"),
-    url("../fonts/Kodak-TextRegularItalic.woff") format("woff");
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "EST-Italic";
-  src:
-    url("../fonts/EST-Italic.woff2") format("woff2"),
-    url("../fonts/EST-Italic.woff") format("woff");
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
   font-family: "Helvagoth-Medium";
   src:
     url("../fonts/Helvagoth-Medium.woff2") format("woff2"),
     url("../fonts/Helvagoth-Medium.woff") format("woff");
   font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "EST-MonoRegular";
-  src:
-    url("../fonts/EST-MonoRegular.woff2") format("woff2"),
-    url("../fonts/EST-MonoRegular.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Turbo-Light";
-  src:
-    url("../fonts/Turbo-Light(00).woff2") format("woff2"),
-    url("../fonts/Turbo-Light(00).woff") format("woff");
-  font-weight: 300;
   font-style: normal;
 }
 
@@ -125,29 +80,11 @@
 }
 
 @font-face {
-  font-family: "Vinegar-Full";
-  src:
-    url("../fonts/Vinegar-Full.woff2") format("woff2"),
-    url("../fonts/Vinegar-Full.woff") format("woff");
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
   font-family: "Window-Regular";
   src:
     url("../fonts/Window-Regular.woff2") format("woff2"),
     url("../fonts/Window-Regular.woff") format("woff");
   font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Turbo-Bold";
-  src:
-    url("../fonts/Turbo-Bold(11).woff2") format("woff2"),
-    url("../fonts/Turbo-Bold(11).woff") format("woff");
-  font-weight: bold;
   font-style: normal;
 }
 
@@ -170,15 +107,6 @@
 }
 
 @font-face {
-  font-family: "Turbo-Semi-Bold";
-  src:
-    url("../fonts/Turbo-Semi-Bold(10).woff2") format("woff2"),
-    url("../fonts/Turbo-Semi-Bold(10).woff") format("woff");
-  font-weight: 600;
-  font-style: normal;
-}
-
-@font-face {
   font-family: "Helvagoth-MediumItalic";
   src:
     url("../fonts/Helvagoth-MediumItalic.woff2") format("woff2"),
@@ -193,15 +121,6 @@
     url("../fonts/Helvagoth-Ultra.woff2") format("woff2"),
     url("../fonts/Helvagoth-Ultra.woff") format("woff");
   font-weight: 800;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "EST-Regular";
-  src:
-    url("../fonts/EST-Regular.woff2") format("woff2"),
-    url("../fonts/EST-Regular.woff") format("woff");
-  font-weight: normal;
   font-style: normal;
 }
 
@@ -242,47 +161,11 @@
 }
 
 @font-face {
-  font-family: "Turbo-Semi-Light";
-  src:
-    url("../fonts/Turbo-Semi-Light(01).woff2") format("woff2"),
-    url("../fonts/Turbo-Semi-Light(01).woff") format("woff");
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Grotto-Book";
-  src:
-    url("../fonts/Grotto-Book.woff2") format("woff2"),
-    url("../fonts/Grotto-Book.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
   font-family: "Helvagoth-Bold";
   src:
     url("../fonts/Helvagoth-Bold.woff2") format("woff2"),
     url("../fonts/Helvagoth-Bold.woff") format("woff");
   font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Grotto-BookItalic";
-  src:
-    url("../fonts/Grotto-BookItalic.woff2") format("woff2"),
-    url("../fonts/Grotto-BookItalic.woff") format("woff");
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Kodak-DisplayRegular";
-  src:
-    url("../fonts/Kodak-DisplayRegular.woff2") format("woff2"),
-    url("../fonts/Kodak-DisplayRegular.woff") format("woff");
-  font-weight: normal;
   font-style: normal;
 }
 
@@ -296,10 +179,64 @@
 }
 
 @font-face {
-  font-family: "Vinegar-Empty";
+  font-family: "Univers-CondensedBold";
   src:
-    url("../fonts/Vinegar-Empty.woff2") format("woff2"),
-    url("../fonts/Vinegar-Empty.woff") format("woff");
+    url("../fonts/univers-condensedbold.woff2") format("woff2"),
+    url("../fonts/univers-condensedbold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Univers-CondensedBoldOblique";
+  src:
+    url("../fonts/univers-condensedboldoblique.woff2") format("woff2"),
+    url("../fonts/univers-condensedboldoblique.woff") format("woff");
+  font-weight: bold;
+  font-style: oblique;
+}
+
+@font-face {
+  font-family: "Univers-CondensedLightOblique";
+  src:
+    url("../fonts/univers-condensedlightoblique.woff2") format("woff2"),
+    url("../fonts/univers-condensedlightoblique.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: oblique;
+}
+
+@font-face {
+  font-family: "Univers-Light";
+  src:
+    url("../fonts/univers-light.woff2") format("woff2"),
+    url("../fonts/univers-light.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Univers-LightOblique";
+  src:
+    url("../fonts/univers-lightoblique.woff2") format("woff2"),
+    url("../fonts/univers-lightoblique.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: oblique;
+}
+
+@font-face {
+  font-family: "Univers-LightUltraCondensed";
+  src:
+    url("../fonts/univers-lightultracondensed.woff2") format("woff2"),
+    url("../fonts/univers-lightultracondensed.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Univers";
+  src:
+    url("../fonts/univers.woff2") format("woff2"),
+    url("../fonts/univers.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
