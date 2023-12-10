@@ -56,85 +56,185 @@
   </head>
   <body>
     <div class="shape info-square" id="orange">
+      <h2>Profile</h2>
+      <div class="user-info">
+        <p>Username: {{ current_user.username }}</p>
+        <p>Email: {{ current_user.email }}</p>
+        <p>
+          Email Confirmed: {{ 'Yes' if current_user.email_confirmed else 'No' }}
+        </p>
+        <p>
+          Account Created: {{ current_user.created_at.strftime('%Y-%m-%d') }}
+        </p>
+      </div>
       <h2>Change Info</h2>
+
       <div class="change-info">
-        <a
-          href="{{ url_for('auth.reset_password_request') }}"
-          class="btn dropdown-button"
-        >
-          Reset Password <i class="fa fa-arrow-right"></i>
-        </a>
-        <button id="toggleUserButton" class="button dropdown-button">
-          Username <i class="fas fa-chevron-down"></i>
-        </button>
-        <form id="username-change-form" style="display: none">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <input
-            type="text"
-            name="new_username"
-            placeholder="New Username"
-            required
-          />
-          <button class="submit-user" type="submit">
-            Submit <i class="fa fa-arrow-right"></i>
+        <div class="user-change">
+          <button id="toggleUserButton" class="button dropdown-button">
+            Username <i class="fas fa-chevron-down"></i>
           </button>
-        </form>
-        <div id="username-change-message"></div>
+          <form id="username-change-form" style="display: none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input
+              type="text"
+              name="new_username"
+              placeholder="New Username"
+              required
+            />
+            <button class="submit-user" type="submit">
+              Submit <i class="fa fa-arrow-right"></i>
+            </button>
+          </form>
+          <div id="username-change-message"></div>
+        </div>
+        <div class="reset-pass">
+          <a
+            href="{{ url_for('auth.reset_password_request') }}"
+            class="btn dropdown-button"
+          >
+            Password <i class="fa fa-arrow-right"></i>
+          </a>
+        </div>
       </div>
     </div>
-    <div class="shape circle" id="green"></div>
-    <div class="shape key-rectangle" id="yellow">
-      <div class="user-functions">
-        <div class="key-container">
-          <div class="key-edits">
-            <h2>Keys</h2>
-            <div id="api-key-messages"></div>
-            <button id="toggleFormButton" class="button dropdown-button">
-              Upload <i class="fas fa-chevron-down"></i>
-            </button>
+    <div class="shape circle" id="yellow">
+      <h2>Documents</h2>
+      <div id="docsStatus"></div>
+      <div class="docs-container">
+        <ul class="docs_list">
+          {% for document in documents %}
+          <li id="document-{{ document.id }}">
             <form
-              id="api-key-form"
-              method="POST"
-              action="{{ url_for('user.upload_api_key') }}"
-              style="display: none"
+              class="edit-document-form"
+              action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
+              method="post"
             >
               <input
                 type="hidden"
                 name="csrf_token"
                 value="{{ csrf_token() }}"
               />
-              <div class="form-group">
+              <input
+                type="hidden"
+                name="document_id"
+                value="{{ document.id }}"
+              />
+              <div class="editable-container">
                 <input
+                  class="editable"
                   type="text"
-                  id="api_key"
-                  name="api_key"
-                  placeholder="Enter Key:"
-                  required
+                  id="title-edit"
+                  name="title"
+                  value="{{ document.title }}"
+                  readonly
                 />
-              </div>
-              <div class="form-group">
                 <input
+                  class="editable"
                   type="text"
-                  id="nickname"
-                  placeholder="Nickname:"
-                  name="nickname"
-                  maxlength="25"
-                  required
+                  id="author-edit"
+                  name="author"
+                  value="Author: {{ document.author }}"
+                  readonly
                 />
+                <p>Total Tokens: {{ document.total_tokens }}</p>
+                <p>Chunk Count: {{ document.chunk_count }}</p>
               </div>
-
-              <button type="submit" class="button save-api-key-button">
-                <i class="fas fa-save"></i> Save
-              </button>
             </form>
-          </div>
-          <ul>
-            {% for key in user_api_keys %}
-            <li
-              class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
+            <form
+              action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
+              method="post"
             >
-              <strong>{{ key.nickname }}</strong> - {{ key.identifier }} - {{
-              key.label }}
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+            </form>
+            <div class="button-container">
+              <button
+                type="button"
+                class="btn-icon edit-btn"
+                onclick="enableEditing(this)"
+                title="Edit Document"
+              >
+                <i class="fa fa-edit"></i>
+              </button>
+              <!-- Save button (initially hidden) -->
+              <button
+                type="button"
+                class="btn-icon save-btn"
+                title="Save Changes"
+                style="display: none"
+              >
+                <i class="fa fa-save"></i>
+              </button>
+              <button
+                type="button"
+                class="btn-icon delete-btn"
+                data-doc-id="{{ document.id }}"
+                data-csrf-token="{{ csrf_token() }}"
+                title="Delete Document"
+              >
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="shape key-rectangle" id="green">
+      <div class="key-container">
+        <div class="key-edits">
+          <h2>Keys</h2>
+          <div id="api-key-messages"></div>
+          <button id="toggleFormButton" class="button dropdown-button">
+            Upload <i class="fas fa-chevron-down"></i>
+          </button>
+          <form
+            id="api-key-form"
+            method="POST"
+            action="{{ url_for('user.upload_api_key') }}"
+            style="display: none"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="form-group">
+              <input
+                type="text"
+                id="api_key"
+                name="api_key"
+                placeholder="Enter Key:"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                id="nickname"
+                placeholder="Nickname:"
+                name="nickname"
+                maxlength="25"
+                required
+              />
+            </div>
+
+            <button type="submit" class="button save-api-key-button">
+              <i class="fas fa-save"></i> Save
+            </button>
+          </form>
+        </div>
+        <ul>
+          {% for key in user_api_keys %}
+          <li
+            class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
+          >
+            <div class="key-info">
+              <p id="key-name">{{ key.nickname }}</p>
+              <p id="key-tag">{{ key.identifier }}</p>
+              <p id="key-model">{{ key.label }}</p>
+            </div>
+            <div class="key-forms">
               <form
                 class="retest-api-key-form"
                 action="{{ url_for('user.retest_api_key') }}"
@@ -181,10 +281,10 @@
                   <i class="fas fa-hand-pointer"></i>
                 </button>
               </form>
-            </li>
-            {% endfor %}
-          </ul>
-        </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
     <div class="shape oval" id="blue">
@@ -205,7 +305,33 @@
         </ul>
       </div>
     </div>
-    <div class="shape tall-rectangle" id="red"></div>
+    <div class="shape tall-rectangle" id="red">
+      <div class="dashboard-image-history">
+        <h2 id="img-title">Img History</h2>
+        <div class="image-history-carousel">
+          {% for image in user_images %}
+          <div class="image-history-item">
+            {% if loop.index <= 2 %}
+            <img
+              src="{{ url_for('static', filename='temp_img/' ~ image.uuid ~ '.webp') }}"
+              alt="Generated Image"
+            />
+            {% else %}
+            <!-- Lazy-load the rest of the images -->
+            <img
+              src="{{ url_for('static', filename='temp_img/' ~ image.uuid ~ '.webp') }}"
+              alt="Generated Image"
+              loading="lazy"
+            />
+            {% endif %}
+            <div class="icons-container"></div>
+          </div>
+          {% else %}
+          <p>No images found.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
     <div class="shape rectangle" id="pink">
       <h1>JACK</h1>
       <h2>Dashboard</h2>

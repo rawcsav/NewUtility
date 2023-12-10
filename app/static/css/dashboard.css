@@ -40,14 +40,12 @@ h1 {
 
 h2 {
   font-family: "Neue Haas Grotesk Display Pro", serif;
-  font-weight: 700;
-  font-size: 3em;
+  font-weight: 500;
+  font-size: 2em;
   margin: 0;
   top: 0;
   text-align: center;
   color: #faf5e6;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #141414;
 }
 .rectangle h1 {
   font-size: 10em;
@@ -72,8 +70,8 @@ h2 {
 }
 
 .key-rectangle {
-  width: 30vw;
-  height: 35vh;
+  width: 25vw;
+  height: 30vh;
 }
 
 .circle {
@@ -83,24 +81,25 @@ h2 {
 }
 
 .info-square {
-  height: 25vw; /* Same value as width for a square */
-  width: 25vw;
+  height: 22vw; /* Same value as width for a square */
+  width: 22vw;
 }
 
 .small-square {
-  width: 23vw;
-  height: 23vw;
+  width: 18vw;
+  height: 18vw;
 }
 
 .oval {
-  width: 37vw;
-  height: 47vh;
+  width: 30vw;
+  height: 35vh;
   border-radius: 50%;
 }
 
 .tall-rectangle {
   width: 25vw;
-  height: 60vh;
+  height: 50vh;
+  position: relative; /* Ensure that absolute positioning is relative to this container */
 }
 
 /* Specific shapes with placement and color */
@@ -109,37 +108,45 @@ h2 {
   top: 3vh;
   left: -5vw;
   transform: rotate(-20deg);
-  z-index: -1;
-  /* Apply a shape class */
-}
-
-#green {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #009b00; /* Yellow */
-  top: 34vh;
-  left: 25vw;
-  transform: rotate(-10deg);
-  z-index: -3;
+  z-index: 1;
   /* Apply a shape class */
 }
 
 #yellow {
-  padding: 15px;
-  background-color: #ffdd00; /* Cream */
-  top: 54vh;
-  left: 42vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  justify-content: flex-start;
+  background-color: #ffdd00; /* Yellow */
+  top: 44vh;
+  left: 48vw;
+  transform: rotate(5deg);
+  z-index: 3;
+
+  /* Apply a shape class */
+}
+
+#yellow h2 {
+  margin-top: 20px;
+}
+
+#green {
+  padding: 10px;
+  background-color: #009b00; /* Cream */
+  top: 48vh;
+  left: 22vw;
   transform: rotate(2deg);
+  z-index: 3;
   /* Apply a shape class */
 }
 
 #orange {
   background-color: #ed872d; /* Orange */
-  top: 10vh;
+  top: 6vh;
   left: 40vw;
   transform: rotate(-5deg);
+  z-index: 2;
   /* Apply a shape class */
 }
 
@@ -148,28 +155,30 @@ h2 {
   flex-direction: column;
   align-items: center;
   background-color: #0069be; /* Blue */
-  bottom: 40vh;
-  right: 0;
-  transform: rotate(18deg);
+  bottom: 60vh;
+  right: 10vw;
+  transform: rotate(8deg);
+  z-index: 1;
   /* Apply a shape class */
 }
 
 #red {
   background-color: #cd2000; /* Red */
-  top: 16vh;
-  left: 68vw;
-  transform: rotate(-24deg);
-  z-index: -1;
-  /* Apply a shape class */
+  top: 34vh;
+  left: 72vw;
+  padding: 10px;
+  z-index: 1;
+}
+
+#img-title {
+  margin-bottom: 20px;
 }
 
 #purple {
   background-color: #9b5de5; /* Purple */
-  top: 38vh;
-  left: 10vw;
+  top: 44vh;
+  left: 6vw;
   transform: rotate(-40deg);
-  z-index: -2;
-  /* Apply a shape class */
 }
 
 .homepage-dash {
@@ -177,6 +186,14 @@ h2 {
   height: 90%;
   display: flex;
   justify-content: center;
+  cursor: pointer;
+}
+
+.homepage-dash a {
+  text-decoration: none;
+  color: #faf5e6;
+  pointer-events: visible;
+  z-index: 10;
 }
 .user-functions {
   display: flex;
@@ -187,10 +204,10 @@ h2 {
 
 .key-container {
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: row;
   border-radius: 5px;
-  padding: 10px;
   overflow-y: auto;
   justify-content: space-between;
 }
@@ -201,20 +218,25 @@ h2 {
   flex-direction: column;
 }
 .change-info {
-  margin-top: 20px;
+  margin-top: 10px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-around;
 }
 
+.reset-pass {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 #username-change-form {
-  max-width: 50%;
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
+  justify-content: center;
 }
 
 #api-key-messages {
@@ -224,7 +246,7 @@ h2 {
 }
 
 #api-key-messages.success {
-  color: #4caf50;
+  color: #fff;
 }
 
 #api-key-messages.error {
@@ -235,7 +257,7 @@ h2 {
 .delete-key-button,
 .select-key-button {
   background: transparent;
-  color: #0069be;
+  color: #e6d200;
   border: none;
   cursor: pointer;
 }
@@ -248,16 +270,25 @@ h2 {
 }
 
 .key-list {
-  color: #654321;
+  color: #faf5e6;
   display: flex;
+  flex-direction: column;
   margin: 0;
+  border-bottom: 2px solid #faf5e6;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+.key-forms {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 
 .dropdown-button {
-  max-width: 80%;
   color: #faf5e6;
   background-color: #0069be;
-  padding: 10px 15px;
+  padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
   display: flex;
@@ -291,8 +322,13 @@ h2 {
   background-color: #43a047;
 }
 
-ul {
+.key-container ul {
+  max-height: 80%;
+  overflow-y: auto;
   margin: 0;
+}
+.key-edits .dropdown-button {
+  max-width: 100%;
 }
 
 .save-api-key-button i {
@@ -300,13 +336,29 @@ ul {
 }
 
 .change-info input {
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 5px;
-  padding: 10px 20px;
+  max-width: 75%;
+  padding: 5px 10px;
   border-radius: 5px;
   border: 1px solid #333333;
   color: #333333;
+}
+
+.user-change {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  gap: 10px;
+}
+.user-info {
+  margin-bottom: 20px;
+}
+.user-info p {
+  margin: 5px;
+  font-size: 0.9em;
+  color: #faf5e6;
+  font-family: "Univers", sans-serif;
 }
 
 a {
@@ -321,7 +373,7 @@ a {
 .submit-user {
   background-color: #4caf50;
   color: white;
-  padding: 10px 20px;
+  padding: 5px 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -385,4 +437,144 @@ a {
 .spinning {
   animation: spin 1s infinite linear;
   color: #d4af37;
+}
+
+.dashboard-image-history {
+  max-height: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  overflow-y: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.image-history-carousel {
+  /* Make the container scrollable */
+  display: flex;
+  flex-direction: column; /* Stack images vertically */
+  max-height: 70%; /* Adjust height as needed */
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden; /* Disable horizontal scrolling */
+  padding: 5px;
+}
+
+.image-history-item {
+  margin-bottom: 20px; /* Space between items */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.icons-container {
+  display: flex;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.icons-container .image-icon {
+  margin: 5px 10px; /* Add some space around the icons */
+  text-decoration: none; /* Remove underline from anchor elements */
+  color: #e6d200; /* Set a default color for the icons (change as needed) */
+  font-size: 14px; /* Set the size of the icons (adjust as needed) */
+}
+
+.image-history-item img {
+  /* Style images within items */
+  width: 65%; /* Full width of the item */
+  height: auto; /* Keep aspect ratio */
+  border: 4px solid #141414;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.image-history-item img:hover {
+  transform: scale(1.05); /* Example for scaling up */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Example for shadow */
+}
+.key-info p {
+  margin: 0;
+  font-size: 0.8em;
+  color: #faf5e6;
+  font-family: "Univers", sans-serif;
+}
+
+.selected-key p {
+  color: #ffffff;
+  font-family: "Univers", sans-serif;
+}
+
+.selected-key-icon,
+.selected-key .select-key-button i {
+  color: #ed872d;
+}
+
+#title-edit {
+  font-family: "Univers-CondensedBoldOblique", sans-serif;
+  font-size: 18px;
+  background-color: transparent;
+  color: #654321;
+}
+
+#author-edit,
+.editable-container p {
+  font-size: 14px;
+  background-color: transparent;
+  color: #654321;
+  margin: 0;
+  padding: 0;
+}
+
+.is-editing {
+  outline: 1px solid blue;
+  background-color: #f0f0f0;
+}
+
+.edit-btn,
+.btn-icon {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 5px;
+  margin-left: 5px;
+}
+
+.edit-btn i,
+.btn-icon i {
+  color: #555;
+}
+
+.editable-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center; /* Adjust as needed */
+  align-items: center;
+}
+
+.update-form-button-container,
+.delete-form-button-container {
+  margin-right: 10px; /* Adjust spacing between button containers if needed */
+}
+
+.doc-upload,
+.docs-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.docs-container {
+  overflow-y: auto;
+  max-height: 100%;
+  height: 60%;
+}
+
+#author-edit,
+#title-edit {
+  border: none;
+  min-width: 200px;
 }

@@ -1,7 +1,7 @@
 import re
 from datetime import timedelta, datetime
 from app import db
-from app.database import User
+from app.database import User, GeneratedImage, Document
 from flask import Blueprint, render_template, redirect, url_for, request, jsonify, flash
 from flask_login import login_required, current_user
 from app.database import UserAPIKey
@@ -19,8 +19,27 @@ def dashboard():
     user_api_keys = UserAPIKey.query.filter_by(user_id=current_user.id) \
         .filter(UserAPIKey.label != 'Error').all()
     selected_api_key_id = current_user.selected_api_key_id
+    # Retrieve the user's images from the database ordered by 'id' descending
+    user_images = GeneratedImage.query.filter_by(user_id=current_user.id).order_by(
+        GeneratedImage.id.desc()
+    ).limit(15).all()  # Adjust the number as needed
+    user_documents = Document.query.filter_by(user_id=current_user.id).all()
+    # Prepare document data for the template
+    documents_data = [
+        {
+            'id': doc.id,
+            'title': doc.title,
+            'author': doc.author,
+            'total_tokens': doc.total_tokens,
+            'chunk_count': len(doc.chunks),
+        }
+        for doc in user_documents
+    ]
+    # Pass the user_images to the template
     return render_template('dashboard.html', user_api_keys=user_api_keys,
-                           selected_api_key_id=selected_api_key_id)
+                           selected_api_key_id=selected_api_key_id,
+                           user_images=user_images, current_user=current_user,
+                           documents=documents_data)
 
 
 @bp.route('/change_username', methods=['POST'])
