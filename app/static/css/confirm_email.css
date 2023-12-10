@@ -293,3 +293,27 @@ h3 {
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #654321;
 }
+
+.hand1 {
+  position: absolute;
+  left: 48%;
+  bottom: 0;
+  transform: rotate(280deg);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.hand1 img,
+.hand2 img {
+  width: 300px;
+  height: auto;
+  pointer-events: none;
+}
+
+.hand2 {
+  position: absolute;
+  right: -2vw;
+  top: 20%;
+  z-index: 4;
+  pointer-events: none;
+}

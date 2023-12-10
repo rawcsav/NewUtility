@@ -22,6 +22,43 @@ body {
   background-size: 20px 20px;
 }
 
+h1 {
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-size: 5em;
+  font-weight: 900;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #faf5e6;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-text-stroke-width: 5px;
+  -webkit-text-stroke-color: #654321;
+}
+
+h2 {
+  font-family: "Neue Haas Grotesk Display Pro", serif;
+  font-weight: 700;
+  font-size: 3em;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #faf5e6;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #141414;
+}
+.rectangle h1 {
+  font-size: 10em;
+}
+.rectangle h2 {
+  font-family: "ITCGaramondStd-UltNarrowIta", serif;
+  -webkit-text-stroke-width: 3px;
+  -webkit-text-stroke-color: #654321;
+  font-size: 5em;
+}
+
 /* Base shape styles */
 .shape {
   position: absolute;
@@ -34,116 +71,112 @@ body {
   height: 40vh;
 }
 
-.circle {
+.key-rectangle {
   width: 30vw;
-  height: 30vw; /* Same value as width for a perfect circle */
+  height: 35vh;
+}
+
+.circle {
+  width: 25vw;
+  height: 25vw; /* Same value as width for a perfect circle */
   border-radius: 50%;
 }
 
-.square {
-  width: 25vw;
+.info-square {
   height: 25vw; /* Same value as width for a square */
+  width: 25vw;
+}
+
+.small-square {
+  width: 23vw;
+  height: 23vw;
 }
 
 .oval {
-  width: 20vw;
-  height: 40vh;
+  width: 37vw;
+  height: 47vh;
   border-radius: 50%;
 }
 
 .tall-rectangle {
-  width: 15vw;
-  height: 50vh;
-}
-
-.wide-rectangle {
-  width: 60vw;
-  height: 15vh;
+  width: 25vw;
+  height: 60vh;
 }
 
 /* Specific shapes with placement and color */
 #pink {
   background-color: #ec9ca0; /* Brown */
-  top: 15vh;
-  left: 10vw;
-  transform: rotate(5deg);
+  top: 3vh;
+  left: -5vw;
+  transform: rotate(-20deg);
+  z-index: -1;
+  /* Apply a shape class */
+}
+
+#green {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #009b00; /* Yellow */
+  top: 34vh;
+  left: 25vw;
+  transform: rotate(-10deg);
+  z-index: -3;
   /* Apply a shape class */
 }
 
 #yellow {
-  background-color: #ffdd00; /* Yellow */
-  top: 70vh;
-  right: 15vw;
-  transform: rotate(-10deg);
+  padding: 15px;
+  background-color: #ffdd00; /* Cream */
+  top: 54vh;
+  left: 42vw;
+  transform: rotate(2deg);
   /* Apply a shape class */
 }
 
 #orange {
   background-color: #ed872d; /* Orange */
-  bottom: 20vh;
-  left: 35vw;
+  top: 10vh;
+  left: 40vw;
   transform: rotate(-5deg);
   /* Apply a shape class */
 }
 
 #blue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background-color: #0069be; /* Blue */
-  top: 10vh;
-  right: 5vw;
-  transform: rotate(-8deg);
+  bottom: 40vh;
+  right: 0;
+  transform: rotate(18deg);
   /* Apply a shape class */
 }
 
 #red {
   background-color: #cd2000; /* Red */
-  top: 50vh;
-  left: 60vw;
-  transform: rotate(20deg);
+  top: 16vh;
+  left: 68vw;
+  transform: rotate(-24deg);
+  z-index: -1;
   /* Apply a shape class */
 }
 
-#green {
-  background-color: #009b00; /* Cream */
-  bottom: 8vh;
-  right: 20vw;
-  transform: rotate(15deg);
+#purple {
+  background-color: #9b5de5; /* Purple */
+  top: 38vh;
+  left: 10vw;
+  transform: rotate(-40deg);
+  z-index: -2;
   /* Apply a shape class */
 }
 
-.container {
-  margin-top: 30px;
+.homepage-dash {
+  width: 90%;
+  height: 90%;
   display: flex;
-  flex-direction: row;
-  width: 96%;
-  gap: 50px;
-  max-width: 100%;
   justify-content: center;
-}
-
-h2 {
-  display: inline-block;
-  border-bottom: 1px solid #5b92e5;
-  font-size: 25px;
-  margin-top: 0;
-  padding-bottom: 0;
-  margin-bottom: 5px;
-}
-
-h3 {
-  color: #5b92e5;
-}
-
-label {
-  color: #5b92e5;
-}
-
-.profile-information {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  gap: 50px;
 }
 .user-functions {
   display: flex;
@@ -153,26 +186,35 @@ label {
 }
 
 .key-container {
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  background-color: rgba(242, 242, 242, 0.7);
+  flex-direction: row;
   border-radius: 5px;
   padding: 10px;
-  min-width: 250px;
-  max-width: 250px;
-  max-height: 300px;
   overflow-y: auto;
+  justify-content: space-between;
 }
 
+.key-edits {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+}
 .change-info {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
-  margin-bottom: 20px;
-  background-color: rgba(242, 242, 242, 0.7);
-  border-radius: 5px;
-  padding: 10px;
-  min-width: 200px;
-  max-width: 200px;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+#username-change-form {
+  max-width: 50%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
 }
 
 #api-key-messages {
@@ -193,7 +235,7 @@ label {
 .delete-key-button,
 .select-key-button {
   background: transparent;
-  color: #333333;
+  color: #0069be;
   border: none;
   cursor: pointer;
 }
@@ -201,18 +243,20 @@ label {
 .retest-key-button:hover,
 .delete-key-button:hover,
 .select-key-button:hover {
-  color: #d4af37;
+  color: #cd2000;
   transform: scale(1.1); /* Example for scaling up */
 }
 
 .key-list {
+  color: #654321;
   display: flex;
   margin: 0;
 }
 
 .dropdown-button {
-  background-color: #5b92e5;
-  color: white;
+  max-width: 80%;
+  color: #faf5e6;
+  background-color: #0069be;
   padding: 10px 15px;
   border-radius: 5px;
   cursor: pointer;
@@ -220,12 +264,7 @@ label {
   border: none;
   align-items: center;
   justify-content: space-between;
-  font-family: Window-Book, sans-serif;
   margin-top: 5px;
-  max-width: 120px;
-}
-.dropdown-button:hover {
-  background-color: #71a2ef;
 }
 
 .dropdown-button i {
@@ -251,32 +290,23 @@ label {
 .save-api-key-button:hover {
   background-color: #43a047;
 }
+
 ul {
   margin: 0;
 }
+
 .save-api-key-button i {
   margin-right: 5px;
 }
 
 .change-info input {
+  width: 100%;
   margin-top: 10px;
   margin-bottom: 5px;
   padding: 10px 20px;
   border-radius: 5px;
   border: 1px solid #333333;
   color: #333333;
-}
-
-#svg-container {
-  position: absolute;
-  width: 80%;
-  height: 100px; /* Adjust as needed */
-  left: 10%; /* Center the container */
-  bottom: 30%; /* Position from the bottom */
-  z-index: -1; /* Ensure it's above other elements */
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 a {
@@ -286,8 +316,8 @@ a {
 }
 .btn {
   background-color: #da291c;
-  max-width: 120px;
 }
+
 .submit-user {
   background-color: #4caf50;
   color: white;
@@ -298,59 +328,18 @@ a {
   transition: background-color 0.3s ease;
 }
 
-.change-info button {
-  max-width: 120px;
-}
-
-.submit-user:hover {
-  background-color: #43a047;
-}
-
-.username-change-form {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  width: 300px;
-  max-width: 300px;
-}
 #api-key-form {
   margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.custom-line {
-  height: 1px;
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.banner {
-  width: 100%;
-  max-height: 300px;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.banner img {
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-}
 
 .redirect-links {
-  background-color: rgba(242, 242, 242, 0.7);
-  padding: 10px;
   border-radius: 5px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  max-width: 200px;
 }
 
 .redirect-links h2 {
@@ -358,7 +347,6 @@ a {
 }
 
 .redirect-links ul {
-  list-style: none;
   padding: 0;
 }
 
@@ -367,9 +355,13 @@ a {
 }
 
 .redirect-links ul li a {
-  color: #007bff;
-  text-decoration: none;
+  max-width: 100%;
+  white-space: nowrap;
+  color: #e6d200;
+  font-size: 1.3em;
+  font-family: "Univers-CondensedBold", sans-serif;
   transition: color 0.3s ease;
+  text-decoration: #cd2000 underline;
 }
 
 .redirect-links ul li a:hover {
@@ -377,7 +369,8 @@ a {
 }
 
 .selected-key {
-  color: green;
+  color: #ed872d;
+  font-size: 1.1em;
 }
 
 @keyframes spin {
