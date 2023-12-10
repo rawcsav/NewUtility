@@ -6,67 +6,117 @@ html {
   overflow: hidden; /* Ensures no scrolling */
 }
 
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+body {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  min-height: 100vh;
+  background-color: #faf5e6; /* Retro Cream */
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.2) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-#picture-container,
-#hands-container {
+.shape {
+  position: absolute;
+  border: 5px solid #141414; /* Thick black border */
+}
+
+.rectangle {
+  width: 50vw;
+  height: 45vh;
+}
+
+.circle {
+  width: 35vw;
+  height: 35vw;
+  border-radius: 50%;
+}
+
+.square {
+  width: 24vw;
+  height: 24vw;
+}
+
+p {
+  color: #faf5e6;
+  padding: 5px 10px;
+  margin: 10px;
+  font-size: 1.2em;
+}
+
+#pink {
+  background-color: #ec9ca0;
+  top: 8vh;
+  left: 2vw;
+  transform: rotate(-10deg);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 1;
 }
 
-#workshop,
-#magic {
-  height: 400px;
-  width: 400px;
-}
-.grid-item {
-  width: 50vw;
-  height: 50vh;
-}
-
-.grid-item.red {
-  background: #da291c; /* Red */
+#red {
+  background-color: #cd2000;
+  top: 6vh;
+  right: 10vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(345deg);
 }
 
-.grid-item.white {
-  background: #ffffff; /* White */
+#yellow {
+  background-color: #e6d200;
+  bottom: 6vh;
+  left: 16vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-20deg); /* Angled */
+  z-index: 0;
 }
 
-#text-container p {
-  color: #ffffff;
-  font-size: 20px;
-  padding: 20px;
+#blue {
+  background-color: #0069be;
+  transform: rotate(8deg);
+  bottom: 3vh;
+  right: 12vw;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#swiss-flag {
-  height: 300px;
-  width: 300px;
-}
 .button {
   --bg-color: #f2f2f2;
   --main-color: #333333;
-  width: 120px;
+  width: 160px;
   margin: 0;
-  height: 40px;
+  height: 60px;
   border-radius: 5px;
   border: 2px solid var(--main-color);
   background-color: var(--bg-color);
   box-shadow: 4px 4px var(--main-color);
-  font-size: 17px;
+  font-size: 22px;
   font-weight: 600;
+  margin-bottom: 20px;
   cursor: pointer;
 }
 
+.landing-homepage {
+  height: 80%;
+  width: 80%;
+  display: flex;
+  justify-content: center;
+}
 .button:hover {
   cursor: pointer;
   box-shadow: 0px 0px #ffff;
@@ -75,7 +125,7 @@ html {
 
 .button-link:hover {
   cursor: pointer;
-  color: #fff;
+  color: #ed872d;
 }
 
 ul li {
@@ -83,35 +133,57 @@ ul li {
 }
 
 .button-list {
+  margin-top: -40px;
   cursor: pointer;
   display: flex;
-  flex-direction: row;
-  gap: 100px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
 }
 
 h1 {
-  font-family: Window-Bold, sans-serif;
-  font-size: 60px;
-  position: absolute;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-size: 10em;
+  font-weight: 900;
   margin: 0;
   top: 0;
   text-align: center;
-  color: #ffffff;
-  -webkit-touch-callout: none;
+  color: #faf5e6;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  -webkit-text-stroke-width: 5px;
+  -webkit-text-stroke-color: #654321;
 }
 
-h1 img {
-  height: 100px;
-  vertical-align: middle;
+h2 {
+  font-family: "ITCGaramondStd-UltNarrowIta", serif;
+  font-size: 3em;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #faf5e6;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #654321;
 }
 
-#info-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
+.hand1 {
+  position: absolute;
+  left: 48%;
+  top: 8%;
+  transform: rotate(40deg);
+}
+
+.hand1 img,
+.hand2 img {
+  width: 225px;
+  height: auto;
+}
+
+.hand2 {
+  position: absolute;
+  right: 0;
+  top: 40%;
 }

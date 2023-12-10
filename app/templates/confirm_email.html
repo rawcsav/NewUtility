@@ -4,14 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
-      name="keywords"
-      content="Email Confirmation, Swiss AI, User Verification"
-    />
-    <meta
       name="description"
-      content="Email confirmation page of Swiss AI. Allows users to confirm their email addresses."
+      content="Signup page of Swiss AI. Allows new users to create an account."
     />
-
+    <meta name="keywords" content="Signup, Swiss AI, User Registration" />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -40,42 +36,56 @@
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
     <title>Confirm Email</title>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
+    {% include 'menu.html' %}
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/fonts.css') }}"
     />
-    <link
-      href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
-      rel="stylesheet"
-    />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% include 'menu.html' %}
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/confirm_email.css') }}"
     />
   </head>
   <body>
-    <h1 class="outlined-text">
-      Swiss <img src="/static/logo/swissimg.png" alt="Company Logo" /> AI
-    </h1>
-    <h2 class="title">Confirm Email</h2>
-    <p>Please enter the confirmation code sent to your email.</p>
-    <form
-      action="{{ url_for('auth.confirm_email') }}"
-      id="confirm-email-form"
-      class="form"
-      method="post"
-    >
-      {{ form.hidden_tag() }}
-
-      <label for="code">Confirmation Code:</label>
-      <input type="text" id="code" name="code" required />
-      <button type="submit">Confirm</button>
-    </form>
-    {% include 'footer.html' %}
-    <div class="banner">
-      <img src="../static/logo/test2.png" />
+    <div class="shape rectangle" id="pink">
+      <h1>JACK</h1>
+      <h2>Of all Trades</h2>
     </div>
+    <div class="shape circle" id="red"></div>
+    <div class="shape square" id="yellow">
+      <a class="landing-homepage" href="https://rawcsav.com">
+        <img alt="Homepage" src="/static/logo/landinglogo.svg" />
+      </a>
+    </div>
+    <div class="shape rectangle" id="blue">
+      <h3>Please enter the confirmation code sent to your email.</h3>
+    </div>
+    <div class="shape form-rectangle" id="green">
+      <form
+        action="{{ url_for('auth.confirm_email') }}"
+        id="confirm-email-form"
+        class="form"
+        method="post"
+      >
+        {{ form.hidden_tag() }}
+        <div class="input-group">
+          <input
+            type="text"
+            id="code"
+            name="code"
+            required
+            placeholder="Confirmation Code"
+          />
+        </div>
+        <button type="submit" class="submit">Confirm</button>
+        <div id="message-container"></div>
+      </form>
+    </div>
+    <div class="shape square" id="orange">
+      <h2 id="confirm-title">Confirm Email</h2>
+    </div>
+    {% include 'footer.html' %}
   </body>
+  <script src="{{ url_for('static', filename='js/confirm_email.js') }}"></script>
 </html>

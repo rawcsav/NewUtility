@@ -1,184 +1,4 @@
 @font-face {
-  font-family: "Window-Book";
-  src:
-    url("../fonts/Window-Book.woff2") format("woff2"),
-    url("../fonts/Window-Book.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-BoldItalic";
-  src:
-    url("../fonts/Helvagoth-BoldItalic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-BoldItalic.woff") format("woff");
-  font-weight: bold;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Window-Bold";
-  src:
-    url("../fonts/Window-Bold.woff2") format("woff2"),
-    url("../fonts/Window-Bold.woff") format("woff");
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Window-Medium";
-  src:
-    url("../fonts/Window-Medium.woff2") format("woff2"),
-    url("../fonts/Window-Medium.woff") format("woff");
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-ThinItalic";
-  src:
-    url("../fonts/Helvagoth-ThinItalic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-ThinItalic.woff") format("woff");
-  font-weight: 200;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Helvagoth-UltraItalic";
-  src:
-    url("../fonts/Helvagoth-UltraItalic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-UltraItalic.woff") format("woff");
-  font-weight: 800;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Window-Thin";
-  src:
-    url("../fonts/Window-Thin.woff2") format("woff2"),
-    url("../fonts/Window-Thin.woff") format("woff");
-  font-weight: 200;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-Medium";
-  src:
-    url("../fonts/Helvagoth-Medium.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Medium.woff") format("woff");
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Window-Light";
-  src:
-    url("../fonts/Window-Light.woff2") format("woff2"),
-    url("../fonts/Window-Light.woff") format("woff");
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Window-Regular";
-  src:
-    url("../fonts/Window-Regular.woff2") format("woff2"),
-    url("../fonts/Window-Regular.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-Light";
-  src:
-    url("../fonts/Helvagoth-Light.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Light.woff") format("woff");
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-Italic";
-  src:
-    url("../fonts/Helvagoth-Italic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Italic.woff") format("woff");
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Helvagoth-MediumItalic";
-  src:
-    url("../fonts/Helvagoth-MediumItalic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-MediumItalic.woff") format("woff");
-  font-weight: 500;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Helvagoth-Ultra";
-  src:
-    url("../fonts/Helvagoth-Ultra.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Ultra.woff") format("woff");
-  font-weight: 800;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-HeavyItalic";
-  src:
-    url("../fonts/Helvagoth-HeavyItalic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-HeavyItalic.woff") format("woff");
-  font-weight: 800;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Helvagoth-LightItalic";
-  src:
-    url("../fonts/Helvagoth-LightItalic.woff2") format("woff2"),
-    url("../fonts/Helvagoth-LightItalic.woff") format("woff");
-  font-weight: 300;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Helvagoth-Regular";
-  src:
-    url("../fonts/Helvagoth-Regular.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Regular.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-Thin";
-  src:
-    url("../fonts/Helvagoth-Thin.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Thin.woff") format("woff");
-  font-weight: 200;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-Bold";
-  src:
-    url("../fonts/Helvagoth-Bold.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Bold.woff") format("woff");
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Helvagoth-Heavy";
-  src:
-    url("../fonts/Helvagoth-Heavy.woff2") format("woff2"),
-    url("../fonts/Helvagoth-Heavy.woff") format("woff");
-  font-weight: 800;
-  font-style: normal;
-}
-
-@font-face {
   font-family: "Univers-CondensedBold";
   src:
     url("../fonts/univers-condensedbold.woff2") format("woff2"),
@@ -239,4 +59,373 @@
     url("../fonts/univers.woff") format("woff");
   font-weight: normal;
   font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BdCond";
+  src:
+    url("../fonts/ITCGaramondStd-BdCond.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BdCond.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-UltCondIta";
+  src:
+    url("../fonts/ITCGaramondStd-UltCondIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-UltCondIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-Ult";
+  src:
+    url("../fonts/ITCGaramondStd-Ult.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-Ult.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BkNarrow";
+  src:
+    url("../fonts/ITCGaramondStd-BkNarrow.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BkNarrow.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-LtCond";
+  src:
+    url("../fonts/ITCGaramondStd-LtCond.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-LtCond.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BdIta";
+  src:
+    url("../fonts/ITCGaramondStd-BdIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BdIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-Bd";
+  src:
+    url("../fonts/ITCGaramondStd-Bd.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-Bd.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BdNarrowIta";
+  src:
+    url("../fonts/ITCGaramondStd-BdNarrowIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BdNarrowIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-UltCond";
+  src:
+    url("../fonts/ITCGaramondStd-UltCond.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-UltCond.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-UltNarrowIta";
+  src:
+    url("../fonts/ITCGaramondStd-UltNarrowIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-UltNarrowIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-LtNarrow";
+  src:
+    url("../fonts/ITCGaramondStd-LtNarrow.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-LtNarrow.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-LtNarrowIta";
+  src:
+    url("../fonts/ITCGaramondStd-LtNarrowIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-LtNarrowIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-Bk";
+  src:
+    url("../fonts/ITCGaramondStd-Bk.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-Bk.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-LtIta";
+  src:
+    url("../fonts/ITCGaramondStd-LtIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-LtIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BdNarrow";
+  src:
+    url("../fonts/ITCGaramondStd-BdNarrow.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BdNarrow.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-Lt";
+  src:
+    url("../fonts/ITCGaramondStd-Lt.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-Lt.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-UltNarrow";
+  src:
+    url("../fonts/ITCGaramondStd-UltNarrow.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-UltNarrow.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BkCond";
+  src:
+    url("../fonts/ITCGaramondStd-BkCond.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BkCond.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BkCondIta";
+  src:
+    url("../fonts/ITCGaramondStd-BkCondIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BkCondIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCModern216W01Lg";
+  src:
+    url("../fonts/ITC Modern No. 216 W01 Lg.woff2") format("woff2"),
+    url("../fonts/ITC Modern No. 216 W01 Lg.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BkNarrowIta";
+  src:
+    url("../fonts/ITCGaramondStd-BkNarrowIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BkNarrowIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BdCondIta";
+  src:
+    url("../fonts/ITCGaramondStd-BdCondIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BdCondIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-UltIta";
+  src:
+    url("../fonts/ITCGaramondStd-UltIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-UltIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-BkIta";
+  src:
+    url("../fonts/ITCGaramondStd-BkIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-BkIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ITCGaramondStd-LtCondIta";
+  src:
+    url("../fonts/ITCGaramondStd-LtCondIta.woff2") format("woff2"),
+    url("../fonts/ITCGaramondStd-LtCondIta.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-15UltTh.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-15UltTh.woff") format("woff");
+  font-weight: 100;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-16UltThIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-16UltThIt.woff") format("woff");
+  font-weight: 100;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-25Th.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-25Th.woff") format("woff");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-26ThIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-26ThIt.woff") format("woff");
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-35XLt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-35XLt.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-36XLtIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-36XLtIt.woff") format("woff");
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-45Lt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-45Lt.woff") format("woff");
+  font-weight: 300; /* This might be a lighter weight, adjust as necessary */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-46LtIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-46LtIt.woff") format("woff");
+  font-weight: 300; /* This might be a lighter weight, adjust as necessary */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-55Rg.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-55Rg.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-56It.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-56It.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-65Md.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-65Md.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-66MdIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-66MdIt.woff") format("woff");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-75Bd.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-75Bd.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-76BdIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-76BdIt.woff") format("woff");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-95Blk.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-95Blk.woff") format("woff");
+  font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src:
+    url("../fonts/NHaasGroteskDSPro-96BlkIt.woff2") format("woff2"),
+    url("../fonts/NHaasGroteskDSPro-96BlkIt.woff") format("woff");
+  font-weight: 900;
+  font-style: italic;
 }

@@ -1,59 +1,72 @@
-$(document).ready(function () {
-  $("#password-reset-request-form").on("submit", function (event) {
-    event.preventDefault();
-    var form = $(this);
-    $.ajax({
-      url: form.attr("action"),
-      type: form.attr("method"),
-      data: form.serialize(),
-      dataType: "json",
-      success: function (response) {
-        var messageContainer = $("#password-reset-request-message");
-        messageContainer.text(response.message);
-        if (response.status === "success") {
-          messageContainer.removeClass("error").addClass("success");
-        } else {
-          messageContainer.removeClass("success").addClass("error");
-        }
-      },
-      error: function (xhr, status, error) {
-        var messageContainer = $("#password-reset-request-message");
-        messageContainer.text("An error occurred: " + xhr.responseText);
-        messageContainer.removeClass("success").addClass("error");
-      }
+document.addEventListener("DOMContentLoaded", function () {
+  var passwordResetRequestForm = document.getElementById(
+    "password-reset-request-form"
+  );
+  var passwordResetForm = document.getElementById("password-reset-form");
+
+  // Ensure the form elements exist before adding event listeners
+  if (passwordResetRequestForm) {
+    passwordResetRequestForm.addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent the normal form submission
+      submitFormWithRecaptcha(
+        passwordResetRequestForm,
+        "password-reset-request-message"
+      );
     });
-  });
+  }
 
-  $("#password-reset-form").on("submit", function (event) {
-    event.preventDefault();
-    var form = $(this);
-    $.ajax({
-      url: form.attr("action"),
-      type: form.attr("method"),
-      data: form.serialize(),
-      dataType: "json",
-      success: function (response) {
-        var messageContainer = $("#password-reset-message");
-        messageContainer.text(response.message);
-        if (response.status === "success") {
-          messageContainer.removeClass("error").addClass("success");
-
-          window.location.href = response.redirect;
-        } else {
-          messageContainer.removeClass("success").addClass("error");
-
-          if (response.redirect) {
-            setTimeout(function () {
-              window.location.href = response.redirect;
-            }, 3000);
-          }
-        }
-      },
-      error: function (xhr, status, error) {
-        var messageContainer = $("#password-reset-message");
-        messageContainer.text("An error occurred: " + xhr.responseText);
-        messageContainer.removeClass("success").addClass("error");
-      }
+  if (passwordResetForm) {
+    passwordResetForm.addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent the normal form submission
+      submitFormWithRecaptcha(
+        passwordResetForm,
+        "password-reset-message",
+        true
+      );
     });
-  });
+  }
+
+  function submitFormWithRecaptcha(form, messageContainerId, shouldRedirect) {
+    grecaptcha.ready(function () {
+      grecaptcha
+        .execute("6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme", {
+          action: "submit"
+        })
+        .then(function (captcha_token) {
+          var formData = new FormData(form);
+          formData.append("g-recaptcha-response", captcha_token);
+
+          fetch(form.action, {
+            method: form.method,
+            body: formData
+          })
+            .then((response) => response.json())
+            .then((data) =>
+              handleResponse(data, messageContainerId, shouldRedirect)
+            )
+            .catch((error) => handleError(error, messageContainerId));
+        });
+    });
+  }
+
+  function handleResponse(data, messageContainerId, shouldRedirect) {
+    var messageContainer = document.getElementById(messageContainerId);
+    messageContainer.textContent = data.message;
+    messageContainer.classList.remove("success", "error");
+    messageContainer.classList.add(
+      data.status === "success" ? "success" : "error"
+    );
+
+    if (data.status === "success" && shouldRedirect) {
+      setTimeout(function () {
+        window.location.href = data.redirect;
+      }, 3000);
+    }
+  }
+  function handleError(error, messageContainerId) {
+    var messageContainer = document.getElementById(messageContainerId);
+    messageContainer.textContent = "An error occurred: " + error;
+    messageContainer.classList.remove("success");
+    messageContainer.classList.add("error");
+  }
 });

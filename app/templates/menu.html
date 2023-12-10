@@ -17,60 +17,12 @@
       width: 100%;
     }
 
-    .outlined-text {
-      -webkit-text-stroke: 1px #ff0000; /* Keep the original stroke */
-      color: #ffffff; /* Maintain the text color as transparent */
-    }
-
-    @keyframes pathMotion {
-      0% {
-        text-shadow:
-          -3px -3px 0 rgba(255, 0, 0, 0.7),
-          /* Swiss Red, more opaque */ -6px -6px 0 rgba(255, 255, 255, 0.6),
-          /* White, slightly transparent */ -9px -9px 0 rgba(255, 0, 0, 0.5),
-          /* Swiss Red, less opaque */ -12px -12px 0 rgba(255, 255, 255, 0.4),
-          /* White, more transparent */ -15px -15px 0 rgba(255, 0, 0, 0.3); /* Swiss Red, even less opaque */
-      }
-      100% {
-        text-shadow:
-          3px 3px 0 rgba(255, 0, 0, 0.7),
-          /* Swiss Red, more opaque */ 6px 6px 0 rgba(255, 255, 255, 0.6),
-          /* White, slightly transparent */ 9px 9px 0 rgba(255, 0, 0, 0.5),
-          /* Swiss Red, less opaque */ 12px 12px 0 rgba(255, 255, 255, 0.4),
-          /* White, more transparent */ 15px 15px 0 rgba(255, 0, 0, 0.3); /* Swiss Red, even less opaque */
-      }
-    }
-
     body {
       font-family: Univers, sans-serif;
       margin: 0;
-      justify-content: space-between; /* Add this line */
-      flex-direction: column;
-      align-items: center;
-      opacity: 0;
       transition: opacity 0.5s ease;
     }
 
-    h1 {
-      font-family: Window-Bold, sans-serif;
-      font-size: 70px;
-      text-align: center;
-      color: #da291c;
-      margin: 0;
-      margin-bottom: 20px;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-    h2 {
-      font-size: 2.5em; /* Increase size for better visual separation */
-      color: #5b92e5;
-      border-bottom: 3px solid #d4af37; /* Thicker border */
-      padding-bottom: 1em; /* More padding for aesthetics */
-      margin-top: 100px;
-    }
     p {
       color: #333333;
       font-size: 1.4em;
@@ -93,15 +45,7 @@
     ul li a:hover {
       color: #f2f2f2;
     }
-    .custom-line {
-      background-color: #d4af37; /* Using the color property value as the background color */
-      border: none;
-      clear: both;
-      display: block;
-      height: 1px;
-      width: 96%;
-      margin: 0 auto;
-    }
+
     nav {
       display: flex;
       position: absolute;
@@ -113,7 +57,6 @@
     .hamburger-menu {
       font-size: 20px;
       cursor: pointer;
-      color: #da291c;
     }
     .hamburger-menu:hover {
       transform: scale(1.05);
@@ -146,12 +89,8 @@
       opacity: 1;
     }
     header {
-      position: relative;
-      text-align: center;
-      width: 100%;
       -webkit-touch-callout: none; /* iOS Safari */
       -webkit-user-select: none; /* Safari */
-      -khtml-user-select: none; /* Konqueror HTML */
       -moz-user-select: none; /* Old versions of Firefox */
       -ms-user-select: none; /* Internet Explorer/Edge */
       user-select: none;
@@ -232,9 +171,6 @@
   />
 </head>
 <header>
-  <a class="homepage-link" href="https://rawcsav.com">
-    <img alt="Homepage" src="/static/logo/redswisslogo.svg" />
-  </a>
   <nav>
     <i class="fas fa-bars hamburger-menu"></i>
     <div class="dropdown-menu">
@@ -249,7 +185,6 @@
     </div>
   </nav>
 </header>
-
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const dropdown = document.querySelector(".dropdown-menu");

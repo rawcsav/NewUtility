@@ -154,15 +154,26 @@ def confirm_email():
     form = ConfirmEmailForm()
     if form.validate_on_submit():
         code = request.form.get('code')
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        recaptcha_error = verify_recaptcha(current_app.config['GOOGLE_SECRET_KEY'],
+                                           recaptcha_response)
+
+        if recaptcha_error:
+            return jsonify(*recaptcha_error)
 
         user = User.query.filter_by(confirmation_code=code).first()
         if user:
             user.email_confirmed = True
             db.session.commit()
-            flash('Email confirmed successfully!', 'success')
-            return redirect(url_for('auth.login'))
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Email confirmed successfully! Redirecting to login page in 5s...',
+                'redirect': url_for('auth.login')
+            })
         else:
-            flash('Invalid confirmation code.', 'danger')
+            return jsonify(
+                {'status': 'error', 'message': 'Invalid confirmation code.'}), 400
 
     return render_template('confirm_email.html', form=form)
 
@@ -192,6 +203,13 @@ def reset_password_request():
     s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        recaptcha_error = verify_recaptcha(current_app.config['GOOGLE_SECRET_KEY'],
+                                           recaptcha_response)
+
+        if recaptcha_error:
+            return jsonify(*recaptcha_error)
+
         email = form.email.data
         user = User.query.filter_by(email=email).first()
 
@@ -241,6 +259,13 @@ def reset_password(token):
         return redirect(url_for('auth.reset_password_request'))
 
     if form.validate_on_submit():
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        recaptcha_error = verify_recaptcha(current_app.config['GOOGLE_SECRET_KEY'],
+                                           recaptcha_response)
+
+        if recaptcha_error:
+            return jsonify(*recaptcha_error)
+
         password = form.password.data
         confirm_password = form.confirm_password.data
 

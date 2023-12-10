@@ -41,74 +41,71 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/fonts.css') }}"
     />
-    <link
-      href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
-      rel="stylesheet"
-    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% include 'menu.html' %}
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/fonts.css') }}"
     />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% include 'menu.html' %}
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/landing.css') }}"
     />
   </head>
   <body>
-    <a class="homepage-link" href="https://rawcsav.com">
-      <img alt="Homepage" src="/static/logo/swisslogo.svg" />
-    </a>
-    <div class="grid-container">
-      <div class="grid-item red" id="info-container">
-        <h1>Swiss AI</h1>
-        <img src="../static/logo/Flag_of_Switzerland.svg" id="swiss-flag" />
-        <ul class="button-list">
-          <li>
-            <button class="button">
-              <a href="{{ url_for('auth.signup') }}" class="button-link"
-                >Sign Up</a
-              >
-            </button>
-          </li>
-          <li>
-            <button class="button">
-              <a href="{{ url_for('user.dashboard') }}" class="button-link"
-                >Login →</a
-              >
-            </button>
-          </li>
-        </ul>
-      </div>
-      <div class="grid-item white" id="picture-container">
-        <img src="../static/logo/workshop copy.svg" id="workshop" />
-      </div>
-      <div class="grid-item white" id="hands-container">
-        <img src="../static/logo/magic.svg" id="magic" />
-      </div>
-      <div class="grid-item red" id="text-container">
-        <p>
-          Swiss AI offers users (and myself) a straightforward interface that
-          grants access to a suite of developer tools powered by OpenAI.
-          <br /><br />
-          The platform is designed with a simple profile system to preserve user
-          preferences and manage authorizations efficiently. The Sign-Up and
-          Login pages are readily accessible below.
-          <br /><br />
-          To follow the development progress and access the source code, visit
-          the project's GitHub page
-          <a
-            href="https://github.com/rawcsav/AIUtilsFlask"
-            target="_blank"
-            style="color: inherit"
-            >here</a
-          >.
-        </p>
-      </div>
+    <div class="shape rectangle" id="pink">
+      <h1>JACK</h1>
+      <h2>Of all Trades</h2>
+    </div>
+    <div class="shape circle" id="red">
+      <ul class="button-list">
+        <li>
+          <button class="button">
+            <a href="{{ url_for('auth.signup') }}" class="button-link"
+              >Sign Up</a
+            >
+          </button>
+        </li>
+        <li>
+          <button class="button">
+            <a href="{{ url_for('user.dashboard') }}" class="button-link"
+              >Login →</a
+            >
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="hand1">
+      <img alt="Hand1" src="/static/logo/hand1.svg" />
+    </div>
+    <div class="hand2">
+      <img alt="Hand2" src="/static/logo/hand2.svg" />
+    </div>
+    <div class="shape square" id="yellow">
+      <a class="landing-homepage" href="https://rawcsav.com">
+        <img alt="Homepage" src="/static/logo/landinglogo.svg" />
+      </a>
+    </div>
+    <div class="shape rectangle" id="blue">
+      <p>
+        Jack offers users (and myself) a straightforward interface that grants
+        access to the suite of developer tools provided by OpenAI.
+        <br /><br />
+        In doing so, Jack utilizes a simple profile system to preserve user
+        preferences and manage authorizations efficiently. The Sign-Up and Login
+        pages are readily accessible above.
+        <br /><br />
+        To follow the development progress and access the source code, visit the
+        project's GitHub page.
+        <a
+          href="https://github.com/rawcsav/AIUtilsFlask"
+          target="_blank"
+          style="color: inherit"
+          >here</a
+        >.
+      </p>
     </div>
 
-    <p></p>
     {% include 'footer.html' %}
   </body>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

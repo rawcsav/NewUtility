@@ -8,7 +8,7 @@ from app import db
 class UserAPIKey(db.Model):
     __tablename__ = 'user_api_keys'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     nickname = db.Column(db.String(25), nullable=False)
     identifier = db.Column(db.String(6), nullable=False)
     encrypted_api_key = db.Column(BLOB, nullable=False)
@@ -34,7 +34,8 @@ class User(UserMixin, db.Model):
     reset_token_hash = db.Column(db.String(255), nullable=True)
     color_mode = db.Column(db.String(10), nullable=False, default='dark')
 
-    selected_api_key_id = db.Column(db.Integer, db.ForeignKey('user_api_keys.id'),
+    selected_api_key_id = db.Column(db.Integer, db.ForeignKey('user_api_keys.id',
+                                                              ondelete='CASCADE'),
                                     nullable=True)
 
     conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
@@ -47,7 +48,8 @@ class User(UserMixin, db.Model):
     speeches = db.relationship('Speech', backref='user', lazy='dynamic')
     api_keys = db.relationship('UserAPIKey', backref='user', lazy='dynamic',
                                foreign_keys=[UserAPIKey.user_id])
-    selected_api_key = db.relationship('UserAPIKey', foreign_keys=[selected_api_key_id])
+    selected_api_key = db.relationship('UserAPIKey', foreign_keys=[selected_api_key_id]
+                                       )
     generated_images = db.relationship('GeneratedImage', back_populates='user',
                                        lazy='dynamic')
     chat_preferences = db.relationship('ChatPreferences', backref='user', uselist=False,
@@ -57,7 +59,7 @@ class User(UserMixin, db.Model):
 class Conversation(db.Model):
     __tablename__ = 'conversations'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     system_prompt = db.Column(db.String(2048),
                               nullable=True)  # New field for system prompts
@@ -106,7 +108,8 @@ class AudioFile(db.Model):
 class Document(db.Model):
     __tablename__ = 'documents'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer,
+                        db.ForeignKey('users.id', ondelete='CASCADE'))
     title = db.Column(db.String(255),
                       nullable=False)
     author = db.Column(db.String(255),
@@ -140,7 +143,8 @@ class DocumentEmbedding(db.Model):
     __tablename__ = 'document_embeddings'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer,
-                        db.ForeignKey('users.id'))  # Add user_id for direct reference
+                        db.ForeignKey('users.id',
+                                      ondelete='CASCADE'))  # Add user_id for direct reference
     chunk_id = db.Column(db.Integer,
                          db.ForeignKey('document_chunks.id', ondelete='CASCADE'),
                          nullable=False)
@@ -156,7 +160,7 @@ class DocumentEmbedding(db.Model):
 class Translation(db.Model):
     __tablename__ = 'translations'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     source_text = db.Column(db.Text, nullable=False)
     translated_text = db.Column(db.Text, nullable=False)
     source_language = db.Column(db.String(10), nullable=False)
@@ -167,7 +171,7 @@ class Translation(db.Model):
 class APIUsage(db.Model):
     __tablename__ = 'api_usage'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     endpoint = db.Column(db.String(50), nullable=False)
     request_payload = db.Column(db.Text)
     response_payload = db.Column(db.Text)
@@ -177,7 +181,7 @@ class APIUsage(db.Model):
 class Speech(db.Model):
     __tablename__ = 'speeches'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     text = db.Column(db.Text, nullable=False)
     voice = db.Column(db.String(50), nullable=False)
     audio_data = db.Column(db.Text,
@@ -188,7 +192,7 @@ class Speech(db.Model):
 class GeneratedImage(db.Model):
     __tablename__ = 'generated_images'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())

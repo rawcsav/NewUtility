@@ -1,26 +1,41 @@
-html,
-body {
+body,
+html {
+  margin: 0;
+  padding: 0;
   height: 100%;
   width: 100%;
-  margin: 0;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  overflow: hidden;
+  overflow: hidden; /* Ensures no scrolling */
 }
 
-.form .form-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+body {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  min-height: 100vh;
+  background-color: #faf5e6; /* Retro Cream */
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.2) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .form label .input:valid + span {
   color: green;
 }
 
-.submit:hover {
+#signup-form {
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.form-container .submit:hover {
   background-color: #f1c73e;
 }
 
@@ -36,28 +51,8 @@ body {
   }
 }
 
-.form-container {
-  width: 350px;
-  background-color: #f2f2f2;
-  padding: 10px;
-  color: #5b92e5;
-  border-radius: 0.75rem;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin-top: -30px;
-}
-
-.title {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-
-  text-align: center;
-  font-size: 1.5rem;
-  line-height: 1rem;
-  letter-spacing: 1px;
-  color: #da291c;
-  font-weight: 900;
+.info-container {
+  display: flex;
 }
 
 .icon,
@@ -76,14 +71,7 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  margin: 20px;
-}
-
-.form .form-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  margin: 10px;
 }
 
 .input-group {
@@ -92,16 +80,9 @@ body {
   line-height: 1rem;
 }
 
-.input-group label {
-  display: block;
-  color: #5b92e5;
-  margin-bottom: 4px;
-}
-
 .input-group input {
-  width: 90%;
   border-radius: 0.375rem;
-  border: 1px solid #d4af37;
+  border: 1px solid #654321;
   outline: 0;
   background-color: #ffffff;
   padding: 0.75rem 1rem;
@@ -109,33 +90,34 @@ body {
 }
 
 .input-group input:focus {
-  border-color: #d4af37;
+  border-color: #654321;
 }
 
 .submit {
   display: block;
   width: 100%;
-  background-color: #d4af37;
+  background-color: #654321;
   padding: 0.75rem;
   text-align: center;
-  color: #333333;
+  color: #faf5e6;
   border: none;
   border-radius: 0.375rem;
-  font-weight: 600;
+  font-family: Univers, sans-serif;
+  font-size: 1rem;
 }
 
 .social-message {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding-top: 1rem;
 }
 
 .social-message .message {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: #da291c;
+  font-size: 4rem;
+  font-family: ITCGaramondStd-BdNarrow, sans-serif;
+  color: #faf5e6;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #654321;
 }
 
 .social-icons {
@@ -153,10 +135,36 @@ body {
   z-index: 11;
 }
 
+.hand1 img {
+  width: 225px;
+  height: auto;
+}
+
+.hand1 {
+  position: absolute;
+  top: -4vh;
+  right: 46vw;
+  rotate: 70deg;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.peace {
+  position: absolute;
+  top: 10vh;
+  right: 1vw;
+  rotate: 50deg;
+}
+.peace img {
+  width: 180px;
+  height: auto;
+  pointer-events: none;
+}
+
 .social-icons .icon svg {
-  height: 1.25rem;
-  width: 1.25rem;
-  fill: #da291c;
+  height: 3rem;
+  width: 3rem;
+  fill: #faf5e6;
   z-index: 11;
 }
 
@@ -166,11 +174,6 @@ body {
   line-height: 1.25rem;
   color: #d4af37;
   margin-top: 20px;
-}
-
-h1 img {
-  height: 100px;
-  vertical-align: middle;
 }
 
 .signup a {
@@ -185,21 +188,183 @@ h1 img {
 .line {
   height: 1px;
   flex: 1 1 0%;
-  background-color: #d4af37;
+  background-color: #faf5e6;
 }
 
-.banner {
-  width: 100%;
-  max-height: 300px;
+h1 {
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-size: 10em;
+  font-weight: 900;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #faf5e6;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-text-stroke-width: 5px;
+  -webkit-text-stroke-color: #654321;
+}
+
+h2 {
+  font-family: "ITCGaramondStd-UltNarrowIta", serif;
+  font-size: 3em;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #faf5e6;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #654321;
+}
+
+.shape {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-  pointer-events: none;
+  border: 5px solid #141414; /* Thick black border */
 }
 
-.banner img {
-  width: 100%;
-  height: auto;
-  pointer-events: none;
+.rectangle {
+  width: 50vw;
+  height: 45vh;
+}
+
+.form-rectangle {
+  width: 20vw;
+  height: 50vh;
+}
+
+.circle {
+  width: 35vw;
+  height: 35vw;
+  border-radius: 50%;
+}
+
+.square {
+  width: 24vw;
+  height: 24vw;
+}
+
+p {
+  color: #faf5e6;
+  padding: 5px 10px;
+  margin: 10px;
+}
+
+#pink {
+  background-color: #ec9ca0;
+  top: 8vh;
+  left: 2vw;
+  transform: rotate(-10deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+#red {
+  background-color: #cd2000;
+  top: 6vh;
+  right: 10vw;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.social-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 30px;
+  text-align: center;
+  justify-content: center;
+}
+
+#yellow {
+  background-color: #e6d200;
+  bottom: 6vh;
+  left: 16vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-20deg); /* Angled */
+  z-index: 0;
+}
+
+#blue {
+  background-color: #0069be;
+  transform: rotate(8deg);
+  bottom: 3vh;
+  right: 12vw;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.social-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 30px;
+  text-align: center;
+  justify-content: center;
+}
+#green {
+  background-color: #00a86b;
+  top: 10vh;
+  display: flex;
+  right: 14vw;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 2;
+}
+
+#orange {
+  background-color: #ed872d;
+  top: 16vh;
+  align-text: center;
+  right: 32vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  transform: rotate(-4deg);
+  z-index: 1;
+}
+
+.landing-homepage {
+  height: 80%;
+  width: 80%;
+  display: flex;
+  justify-content: center;
+}
+
+#signup-title {
+  font-family: "ITCGaramondStd-BdNarrow", serif;
+  font-size: 6.5em;
+  margin: 0;
+  text-align: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  justify-content: center;
+  display: flex;
+  white-space: normal;
+  max-width: 50%;
+}
+
+h3 {
+  font-family: ITCGaramondStd-BdNarrowIta, serif;
+  font-size: 3.5em;
+  margin: 0;
+  text-align: center;
+  color: #faf5e6;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #654321;
 }

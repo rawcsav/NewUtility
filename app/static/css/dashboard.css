@@ -1,7 +1,115 @@
-body {
-  overflow: hidden;
-  font-family: Helvagoth-Bold, "sans-serif";
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Ensures no scrolling */
 }
+
+body {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  min-height: 100vh;
+  background-color: #faf5e6; /* Retro Cream */
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.2) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Base shape styles */
+.shape {
+  position: absolute;
+  border: 5px solid #141414; /* Example border color */
+}
+
+/* Specific shapes with dimensions */
+.rectangle {
+  width: 45vw;
+  height: 40vh;
+}
+
+.circle {
+  width: 30vw;
+  height: 30vw; /* Same value as width for a perfect circle */
+  border-radius: 50%;
+}
+
+.square {
+  width: 25vw;
+  height: 25vw; /* Same value as width for a square */
+}
+
+.oval {
+  width: 20vw;
+  height: 40vh;
+  border-radius: 50%;
+}
+
+.tall-rectangle {
+  width: 15vw;
+  height: 50vh;
+}
+
+.wide-rectangle {
+  width: 60vw;
+  height: 15vh;
+}
+
+/* Specific shapes with placement and color */
+#pink {
+  background-color: #ec9ca0; /* Brown */
+  top: 15vh;
+  left: 10vw;
+  transform: rotate(5deg);
+  /* Apply a shape class */
+}
+
+#yellow {
+  background-color: #ffdd00; /* Yellow */
+  top: 70vh;
+  right: 15vw;
+  transform: rotate(-10deg);
+  /* Apply a shape class */
+}
+
+#orange {
+  background-color: #ed872d; /* Orange */
+  bottom: 20vh;
+  left: 35vw;
+  transform: rotate(-5deg);
+  /* Apply a shape class */
+}
+
+#blue {
+  background-color: #0069be; /* Blue */
+  top: 10vh;
+  right: 5vw;
+  transform: rotate(-8deg);
+  /* Apply a shape class */
+}
+
+#red {
+  background-color: #cd2000; /* Red */
+  top: 50vh;
+  left: 60vw;
+  transform: rotate(20deg);
+  /* Apply a shape class */
+}
+
+#green {
+  background-color: #009b00; /* Cream */
+  bottom: 8vh;
+  right: 20vw;
+  transform: rotate(15deg);
+  /* Apply a shape class */
+}
+
 .container {
   margin-top: 30px;
   display: flex;
@@ -42,18 +150,6 @@ label {
   flex-direction: row;
   justify-content: flex-start;
   gap: 60px;
-}
-#welcome {
-  color: #d4af37;
-  border-bottom: none;
-  font-size: 40px;
-  margin-bottom: 10px;
-  padding: 0;
-}
-
-h1 img {
-  height: 100px;
-  vertical-align: middle;
 }
 
 .key-container {
