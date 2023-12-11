@@ -57,16 +57,19 @@
     />
   </head>
   <body>
-    <h1 class="outlined-text">
-      Image
-      <img src="/static/logo/swissimg.png" alt="Company Logo" /> Generation
-    </h1>
+    <div class="dalle-svg">
+      <img alt="dalle" src="/static/logo/dalle.svg" />
+    </div>
+    <div class="hand1">
+      <img alt="Hand1" src="/static/logo/hand1.svg" />
+    </div>
+    <div class="shape rectangle" id="pink">
+      <h1>JACK</h1>
+      <h2>Image Gen</h2>
+    </div>
     <div class="main-row">
       <div class="messages-inc">
         <div class="img_with_form">
-          <div class="artist">
-            <img src="../static/logo/swissartist.png" />
-          </div>
           <form id="image-generation-form" class="flex-form">
             {{ form.hidden_tag() }}
             <div class="input-row">
@@ -131,6 +134,11 @@
       <div id="loader-template" style="display: none">
         {% include 'image_loading.html' %}
       </div>
+    </div>
+    <div class="shape small-square" id="purple">
+      <a class="homepage-dash" href="https://rawcsav.com">
+        <img alt="Homepage" src="/static/logo/jacklogo.svg" />
+      </a>
     </div>
     {% include 'footer.html' %}
     <script src="{{ url_for('static', filename='js/image.js') }}"></script>
