@@ -60,6 +60,34 @@ def is_api_key_valid(api_key):
         return True
 
 
+def check_dalle3(api_key):
+    openai.api_key = api_key
+
+    try:
+        # Setting the API key for the session
+
+        # Attempt to generate an image
+        openai.images.generate(
+            model="dall-e-3",
+            prompt="""test""",
+            size="1024x1024",
+            quality="standard",
+            style="vivid",
+            n=1)
+
+    except openai.APIConnectionError as e:
+        print(f"Invalid request: {e}")
+        return False
+    except openai.APIStatusError as e:
+        print(f"OpenAI error: {e}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return False
+    else:
+        return True
+
+
 def get_openai_client():
     if current_user.is_authenticated:
         encrypted_api_key = current_user.selected_api_key.encrypted_api_key
@@ -95,10 +123,17 @@ def test_gpt4(key):
             max_tokens=10,
             temperature=0,
         )
-        if test.choices[0].message.content:
-            return True
-    except openai.OpenAIError:
+    except openai.APIConnectionError as e:
+        print(f"Invalid request: {e}")
         return False
+    except openai.APIStatusError as e:
+        print(f"OpenAI error: {e}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return False
+    else:
+        return True
 
 
 def test_gpt3(key):
@@ -114,22 +149,6 @@ def test_gpt3(key):
             temperature=0,
         )
         if test.choices[0].message.content:
-            return True
-    except openai.OpenAIError:
-        return False
-
-
-def test_dalle3_key(key):
-    openai.api_key = key
-    try:
-        response_dalle3 = openai.images.generate(
-            model="dall-e-3",
-            prompt="a white siamese cat",
-            size="1024x1024",
-            n=1,
-        )
-        image_url = response_dalle3.data[0].url
-        if image_url:
             return True
     except openai.OpenAIError:
         return False

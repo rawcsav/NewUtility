@@ -7,8 +7,8 @@ from flask_login import login_required, current_user
 from app.database import UserAPIKey
 from app.util.forms_util import ChangeUsernameForm, UploadAPIKeyForm, DeleteAPIKeyForm, \
     RetestAPIKeyForm, SelectAPIKeyForm
-from app.util.session_util import check_available_models, test_gpt4, test_dalle3_key, \
-    test_gpt3, encrypt_api_key, decrypt_api_key, hash_api_key
+from app.util.session_util import check_available_models, test_gpt4, \
+    test_gpt3, encrypt_api_key, decrypt_api_key, hash_api_key, check_dalle3
 
 bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -72,54 +72,62 @@ def upload_api_key():
     if form.validate_on_submit():
         api_key = request.form.get('api_key').strip()
         nickname = request.form.get('nickname')
-    api_key_pattern = re.compile(r'sk-[A-Za-z0-9]{48}')
-    if not api_key_pattern.match(api_key):
-        return jsonify({'status': 'error', 'message': 'Invalid API key format.'}), 400
+        api_key_pattern = re.compile(r'sk-[A-Za-z0-9]{48}')
+        if not api_key_pattern.match(api_key):
+            return jsonify(
+                {'status': 'error', 'message': 'Invalid API key format.'}), 400
 
-    api_key_token = hash_api_key(api_key)
+        api_key_token = hash_api_key(api_key)
 
-    existing_key = UserAPIKey.query.filter_by(user_id=current_user.id,
-                                              api_key_token=api_key_token).first()
-    if existing_key:
-        return jsonify({'status': 'error', 'message': 'API key already exists.'}), 400
-    try:
-        available_models = check_available_models(api_key)
-        has_gpt_3_5_turbo = 'gpt-3.5-turbo' in available_models
-        has_gpt_4 = 'gpt-4' in available_models
-        label = 'Error'
-        if has_gpt_4 and test_gpt4(api_key):
-            label = 'gpt-4'
-        elif has_gpt_3_5_turbo and test_gpt3(api_key):
-            label = 'gpt-3.5-turbo'
-        api_key_identifier = api_key[:6]
-        encrypted_api_key = encrypt_api_key(api_key)
+        existing_key = UserAPIKey.query.filter_by(user_id=current_user.id,
+                                                  api_key_token=api_key_token).first()
+        if existing_key:
+            return jsonify(
+                {'status': 'error', 'message': 'API key already exists.'}), 400
+        try:
+            available_models = check_available_models(api_key)
+            has_gpt_3_5_turbo = 'gpt-3.5-turbo' in available_models
+            has_gpt_4 = 'gpt-4' in available_models
+            has_dalle_3 = 'dall-e-3' in available_models
 
-        counter = 1
-        original_nickname = nickname
-        while UserAPIKey.query.filter_by(user_id=current_user.id,
-                                         nickname=nickname).filter(
-            UserAPIKey.label != 'Error').first():
-            nickname = f"{original_nickname}({counter})"
-            counter += 1
+            label = 'Error'
+            if has_gpt_4 and test_gpt4(api_key):
+                label = 'gpt-4'
+            elif has_gpt_3_5_turbo and test_gpt3(api_key):
+                label = 'gpt-3.5-turbo'
+            if has_dalle_3 and check_dalle3(api_key):
+                label += ', dalle-3' if label != 'Error' else 'dalle-3'
 
-        new_key = UserAPIKey(user_id=current_user.id,
-                             encrypted_api_key=encrypted_api_key, nickname=nickname,
-                             identifier=api_key_identifier, api_key_token=api_key_token,
-                             label=label)
-        db.session.add(new_key)
-        db.session.commit()
-        if label == 'Error':
-            return jsonify({'success': False,
-                            'status': 'error',
-                            'message': 'API key is not valid.'}), 400
-        else:
-            return jsonify({'success': True,
-                            'status': 'success',
-                            'message': f'API key "{nickname}" added successfully with access to: ' + label}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify(
-            {'status': 'error', 'message': 'Failed to verify API key'}), 400
+            api_key_identifier = api_key[:6]
+            encrypted_api_key = encrypt_api_key(api_key)
+
+            counter = 1
+            original_nickname = nickname
+            while UserAPIKey.query.filter_by(user_id=current_user.id,
+                                             nickname=nickname).filter(
+                UserAPIKey.label != 'Error').first():
+                nickname = f"{original_nickname}({counter})"
+                counter += 1
+
+            new_key = UserAPIKey(user_id=current_user.id,
+                                 encrypted_api_key=encrypted_api_key, nickname=nickname,
+                                 identifier=api_key_identifier,
+                                 api_key_token=api_key_token,
+                                 label=label)
+            db.session.add(new_key)
+            db.session.commit()
+            if label == 'Error':
+                return jsonify({'success': False,
+                                'status': 'error',
+                                'message': 'API key is not valid.'}), 400
+            else:
+                return jsonify({'success': True,
+                                'status': 'success',
+                                'message': f'API key "{nickname}" added successfully with access to: ' + label}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify(
+                {'status': 'error', 'message': 'Failed to verify API key'}), 400
 
 
 @bp.route('/retest_api_key', methods=['POST'])
@@ -139,11 +147,21 @@ def retest_api_key():
             available_models = check_available_models(api_key)
             has_gpt_3_5_turbo = 'gpt-3.5-turbo' in available_models
             has_gpt_4 = 'gpt-4' in available_models
+            has_dalle_3 = 'dall-e-3' in available_models  # Corrected variable name
+
             label = 'Error'
             if has_gpt_4 and test_gpt4(api_key):
                 label = 'gpt-4'
             elif has_gpt_3_5_turbo and test_gpt3(api_key):
                 label = 'gpt-3.5-turbo'
+
+            # Check for DALL-E 3 access and append if present
+            if has_dalle_3 and check_dalle3(api_key):  # Corrected variable name
+                label += ', dalle-3' if label != 'Error' else 'dalle-3'
+            print(f"Available models: {available_models}")  # For debugging
+            print(f"has_gpt_3_5_turbo: {has_gpt_3_5_turbo}")  # For debugging
+            print(f"has_gpt_4: {has_gpt_4}")  # For debugging
+            print(f"has_dalle_3: {has_dalle_3}")  # For debugging
             user_api_key.label = label
             db.session.commit()
             if label == 'Error':

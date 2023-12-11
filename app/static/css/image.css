@@ -138,12 +138,14 @@ h2 {
   left: 5vw;
   top: 28vh;
   z-index: 2;
+  pointer-events: none;
 }
 
 .dalle-svg img,
 .hand1 img {
   width: 150px;
   height: auto;
+  pointer-events: none;
 }
 
 .img_with_form {
