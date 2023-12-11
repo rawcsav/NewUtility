@@ -14,6 +14,10 @@ function enableEditing(editButton) {
 
   inputs.forEach(function (input) {
     input.removeAttribute("readonly");
+    // If this is the author input, remove the "Author: " prefix
+    if (input.name === "author" && input.value.startsWith("Author: ")) {
+      input.value = input.value.substring("Author: ".length);
+    }
   });
   inputs[0].focus();
 
@@ -178,4 +182,19 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+});
+
+var fileInput = document.getElementById("file");
+var fileNameDisplay = document.getElementById("file-name-display");
+
+fileInput.addEventListener("change", function () {
+  // Check if a file was selected
+  if (fileInput.files.length > 0) {
+    // Update the display with the file name
+    fileNameDisplay.textContent =
+      "Selected document: " + fileInput.files[0].name;
+  } else {
+    // Clear the display if no file is selected
+    fileNameDisplay.textContent = "";
+  }
 });

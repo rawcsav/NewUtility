@@ -41,10 +41,7 @@
       href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/fonts.css') }}"
-    />
+
     <script
       src="https://kit.fontawesome.com/5c8c7a1eba.js"
       crossorigin="anonymous"
@@ -54,14 +51,71 @@
     {% include 'menu.html' %}
     <link
       rel="stylesheet"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
+    />
+    <link
+      rel="stylesheet"
       href="{{ url_for('static', filename='css/embeddings.css') }}"
     />
   </head>
   <body>
-    <h1 class="outlined-text">
-      Docs <img src="/static/logo/swissimg.png" alt="Company Logo" /> Center
-    </h1>
+    <div class="hand1">
+      <img alt="Hand1" src="/static/logo/hand1.svg" />
+    </div>
+    <div class="doc">
+      <img alt="doc" src="/static/logo/doc.svg" />
+    </div>
     <div class="upload-container">
+      <div class="shape-container">
+        <div class="shape rectangle" id="pink">
+          <h1>JACK</h1>
+          <h2>Embeddings</h2>
+        </div>
+        <div class="shape small-square" id="purple">
+          <a class="homepage-dash" href="https://rawcsav.com">
+            <img alt="Homepage" src="/static/logo/jacklogo.svg" />
+          </a>
+        </div>
+      </div>
+      <div class="information-container">
+        <div class="shape info-square" id="green">
+          <ul id="info-list">
+            <li>
+              Embeddings are high-dimensional numerical vectors that represent
+              the semantic properties of words or phrases.
+            </li>
+            <li>
+              Text is divided into 'tokens,' which can be words, parts of words,
+              or punctuation, serving as the input units for AI processing.
+            </li>
+            <li>
+              Users can define 'chunk size' to determine how text is segmented,
+              directly impacting the AI's reference scope during Q&A sessions.
+            </li>
+            <li>
+              Customizable Title and Author fields enable the AI to provide
+              precise document references, enhancing the relevance of AI
+              responses.
+            </li>
+          </ul>
+        </div>
+        <div class="shape info-square" id="blue">
+          <h3>Max Token Limits by Model:</h3>
+          <ul id="token-limits-list">
+            <li><strong>'gpt-4-1106-preview':</strong> 128,000 tokens</li>
+            <li><strong>'gpt-4-vision-preview':</strong> 128,000 tokens</li>
+            <li><strong>'gpt-4':</strong> 8,192 tokens</li>
+            <li><strong>'gpt-4-32k':</strong> 32,768 tokens</li>
+            <li><strong>'gpt-4-0613':</strong> 8,192 tokens</li>
+            <li><strong>'gpt-4-32k-0613':</strong> 32,768 tokens</li>
+            <li><strong>'gpt-4-0314':</strong> 8,192 tokens</li>
+            <li><strong>'gpt-4-32k-0314':</strong> 32,768 tokens</li>
+            <li><strong>'gpt-3.5-turbo-1106':</strong> 16,385 tokens</li>
+            <li><strong>'gpt-3.5-turbo':</strong> 4,096 tokens</li>
+            <li><strong>'gpt-3.5-turbo-16k':</strong> 16,385 tokens</li>
+          </ul>
+        </div>
+      </div>
       <div class="doc-upload">
         <form
           id="uploadForm"
@@ -71,9 +125,20 @@
         >
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <div class="form-group">
-            <label for="file">Choose a document to upload:</label>
-            <input type="file" id="file" name="file" required />
+            <label for="file" class="file-upload-btn"
+              >Choose a document to upload</label
+            >
+            <input
+              type="file"
+              id="file"
+              name="file"
+              required
+              style="display: none"
+            />
           </div>
+          <p id="file-name-display"></p>
+          <!-- Placeholder for the file name -->
+
           <div class="form-group">
             <label for="title">Document Title (optional):</label>
             <input
@@ -165,7 +230,7 @@
                 onclick="enableEditing(this)"
                 title="Edit Document"
               >
-                <i class="fa fa-pencil"></i>
+                <i class="fa fa-edit"></i>
               </button>
               <!-- Save button (initially hidden) -->
               <button
@@ -191,7 +256,6 @@
         </ul>
       </div>
     </div>
-
     {% include 'footer.html' %}
     <script src="{{ url_for('static', filename='js/embeddings.js') }}"></script>
   </body>
