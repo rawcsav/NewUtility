@@ -6,7 +6,7 @@ from openai import OpenAI
 from app import db
 from app.database import UserAPIKey, ChatPreferences, Conversation
 from app.util.chat_util import chat_stream, chat_nonstream, save_message, \
-    get_user_preferences
+    get_user_preferences, get_user_conversation
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
 from app.util.session_util import decrypt_api_key
@@ -180,3 +180,17 @@ def chat_completion():
             return jsonify({'status': 'error', 'message': str(e)})
     else:
         return jsonify({'status': 'error', 'errors': form.errors})
+
+
+@bp.route('/conversation/<int:conversation_id>', methods=['GET'])
+@login_required
+def get_conversation_messages(conversation_id):
+    conversation, conversation_history = get_user_conversation(current_user.id,
+                                                               conversation_id)
+    if conversation:
+        messages = [
+            {'content': message['content'], 'className': message['role'] + '-message'}
+            for message in conversation_history]
+        return jsonify({'messages': messages})
+    else:
+        return jsonify({'error': 'Conversation not found'}), 404

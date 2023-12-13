@@ -1,3 +1,5 @@
+var chatBox = document.getElementById("chat-box");
+
 function toggleHistory() {
   document.getElementById("conversation-history").style.display = "block";
   document.getElementById("preference-popup").style.display = "none";
@@ -53,6 +55,25 @@ function selectConversation(conversationId) {
   if (conversationIdInput) {
     conversationIdInput.value = conversationId;
   }
+
+  // Clear the chat box
+  chatBox.innerHTML = "";
+
+  // Fetch the messages for the selected conversation
+  fetch(`/chat/conversation/${conversationId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      // Append each message to the chat box
+      data.messages.forEach((message) => {
+        appendMessageToChatBox(message.content, message.className);
+      });
+    })
+    .catch((error) => console.error("Error:", error));
 }
 
 const modelMaxTokens = {
@@ -70,7 +91,6 @@ const modelMaxTokens = {
 };
 
 document.addEventListener("DOMContentLoaded", function () {
-  var chatBox = document.getElementById("chat-box");
   var messageInput = document.getElementById("message-input");
   var newConversationForm = document.getElementById("new-conversation-form");
   var chatCompletionForm = document.getElementById("chat-completion-form");
