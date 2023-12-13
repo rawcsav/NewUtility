@@ -130,13 +130,15 @@ def get_user_preferences(user_id):
 
 
 # Utility function to save a message to the database
-def save_message(conversation_id, content, direction, model, is_knowledge_query=False):
+def save_message(conversation_id, content, direction, model, is_knowledge_query=False,
+                 is_error=False):
     message = Message(
         conversation_id=conversation_id,
         content=content,
         direction=direction,
         model=model,
-        is_knowledge_query=is_knowledge_query
+        is_knowledge_query=is_knowledge_query,
+        is_error=is_error,
     )
     db.session.add(message)
     try:
@@ -147,41 +149,44 @@ def save_message(conversation_id, content, direction, model, is_knowledge_query=
 
 
 def chat_stream(prompt, client, user_id, conversation_id):
+    # Retrieve the user's conversation history and preferences
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
-    if not conversation:
-        print("No conversation found for user.")
-        return
-
     preferences = get_user_preferences(user_id)
-    truncate_limit = preferences["truncate_limit"]
 
-    truncate_conversation(conversation_history, truncate_limit)
-    full_response = ""
+    # Apply truncation to the conversation history if needed
+    truncate_limit = preferences.get("truncate_limit")
+    if truncate_limit:
+        truncate_conversation(conversation_history, truncate_limit)
+
+    # Prepare the API request payload
+    request_payload = {
+        "model": preferences["model"],
+        "messages": conversation_history + [{"role": "user", "content": prompt}],
+        "temperature": preferences["temperature"],
+        "max_tokens": preferences["max_tokens"],
+        "frequency_penalty": preferences["frequency_penalty"],
+        "presence_penalty": preferences["presence_penalty"],
+        "top_p": preferences["top_p"],
+        "stream": True,
+    }
+
+    # Log the request payload for debugging
+    save_message(conversation_id, prompt, 'outgoing', preferences['model'])
+
+    full_response = ""  # Initialize a variable to accumulate the full response
     try:
-        response = client.chat.completions.create(
-            model=preferences["model"],
-            messages=conversation_history + [{"role": "user", "content": prompt}],
-            temperature=preferences["temperature"],
-            max_tokens=preferences["max_tokens"],
-            frequency_penalty=preferences["frequency_penalty"],
-            presence_penalty=preferences["presence_penalty"],
-            top_p=preferences["top_p"],
-            stream=True,
-        )
+        response = client.chat.completions.create(**request_payload)
+
         for part in response:
             content = part.choices[0].delta.content
             if content:
-                full_response += content
-                print(content, end="")
-    except openai.RateLimitError as e:
-        print("Rate limit reached. Sleeping for a minute...")
-        print(e)
-        sleep(10)
+                full_response += content  # Accumulate the content
+                yield content  # Yield each content part as it comes in
+        if full_response.strip():  # Save only if there's non-empty content
+            save_message(conversation_id, full_response, 'incoming',
+                         preferences['model'])
     except Exception as e:
-        print(f"An error occurred: {e}")
-
-    print("\n")
-    return full_response
+        handle_stream_error(e, conversation_id, preferences['model'])
 
 
 def chat_nonstream(prompt, client, user_id, conversation_id):
@@ -193,6 +198,7 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
     preferences = get_user_preferences(user_id)
     truncate_limit = preferences["truncate_limit"]
     full_response = ""
+    save_message(conversation_id, prompt, 'outgoing', preferences['model'])
     truncate_conversation(conversation_history, truncate_limit)
     try:
         response = client.chat.completions.create(
@@ -207,13 +213,21 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
         )
         if response:
             full_response = response.choices[0].message.content
-
-    except openai.RateLimitError as e:
-        print("Rate limit reached. Sleeping for a minute...")
-        print(e)
-        sleep(10)
+            if full_response.strip():
+                save_message(conversation_id, full_response, 'incoming',
+                             preferences['model'])
+            return full_response
     except Exception as e:
-        print(f"An error occurred: {e}")
+        return handle_nonstream_error(e, conversation_id, preferences['model'])
 
-    print("\n")
-    return full_response
+
+# Helper functions to handle errors in streaming and non-streaming modes
+def handle_stream_error(e, conversation_id, model):
+    error_message = f"An error occurred: {e}"
+    save_message(conversation_id, error_message, 'incoming', model, is_error=True)
+
+
+def handle_nonstream_error(e, conversation_id, model):
+    error_message = f"An error occurred: {e}"
+    save_message(conversation_id, error_message, 'incoming', model, is_error=True)
+    return error_message

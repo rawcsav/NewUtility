@@ -158,13 +158,10 @@
   </body>
   <script>
     $(document).ready(function () {
-      // Event listener for the Google login button
       $("#google-login-button").on("click", function () {
-        // Redirect to the Google login route
         window.location.href = "{{ url_for('auth.google_login') }}";
       });
       $("#github-login-button").on("click", function () {
-        // Redirect to the GitHub login route
         window.location.href = "{{ url_for('auth.github_login') }}";
       });
     });

@@ -1,9 +1,8 @@
 import os
 from datetime import timedelta
 import cloudinary
-from authlib.integrations.flask_client import OAuth
 
-from app.util.database_util import get_tunnel
+from app.util.tunnel_util import get_tunnel
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 

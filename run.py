@@ -10,5 +10,10 @@ from app import create_app
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(port=8080, static_files={
-        '/static': '/Users/gavinmason/PycharmProjects/SwissAI/app/static'})
+    app.run(
+        port=8080,
+        host='localhost',
+        static_files={
+            '/static': '/Users/gavinmason/PycharmProjects/SwissAI/app/static'},
+        ssl_context=('cert.pem', 'key.pem')
+    )

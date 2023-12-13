@@ -90,13 +90,17 @@ def upload_api_key():
             has_gpt_4 = 'gpt-4' in available_models
             has_dalle_3 = 'dall-e-3' in available_models
 
-            label = 'Error'
+            # Inside upload_api_key route
+            label = None
             if has_gpt_4 and test_gpt4(api_key):
                 label = 'gpt-4'
             elif has_gpt_3_5_turbo and test_gpt3(api_key):
                 label = 'gpt-3.5-turbo'
             if has_dalle_3 and check_dalle3(api_key):
-                label += ', dalle-3' if label != 'Error' else 'dalle-3'
+                label = f'{label}, dalle-3' if label else 'dalle-3'
+
+            if label is None:
+                label = 'Error'
 
             api_key_identifier = api_key[:6]
             encrypted_api_key = encrypt_api_key(api_key)
@@ -149,19 +153,18 @@ def retest_api_key():
             has_gpt_4 = 'gpt-4' in available_models
             has_dalle_3 = 'dall-e-3' in available_models  # Corrected variable name
 
-            label = 'Error'
+            # Inside retest_api_key route
+            label = None
             if has_gpt_4 and test_gpt4(api_key):
                 label = 'gpt-4'
             elif has_gpt_3_5_turbo and test_gpt3(api_key):
                 label = 'gpt-3.5-turbo'
+            if has_dalle_3 and check_dalle3(api_key):
+                label += ', dalle-3' if label else 'dalle-3'
 
-            # Check for DALL-E 3 access and append if present
-            if has_dalle_3 and check_dalle3(api_key):  # Corrected variable name
-                label += ', dalle-3' if label != 'Error' else 'dalle-3'
-            print(f"Available models: {available_models}")  # For debugging
-            print(f"has_gpt_3_5_turbo: {has_gpt_3_5_turbo}")  # For debugging
-            print(f"has_gpt_4: {has_gpt_4}")  # For debugging
-            print(f"has_dalle_3: {has_dalle_3}")  # For debugging
+            if label is None:
+                label = 'Error'
+
             user_api_key.label = label
             db.session.commit()
             if label == 'Error':

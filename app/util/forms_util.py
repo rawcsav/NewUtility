@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileRequired, FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, \
-    IntegerField, TextAreaField, FloatField
+    IntegerField, TextAreaField, FloatField, DecimalField, SelectField
 from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo, \
     NumberRange, Optional
 
@@ -65,7 +65,7 @@ class UploadAPIKeyForm(FlaskForm):
         DataRequired(),
         Regexp(r'sk-[A-Za-z0-9]{48}', message='Invalid API key format.')
     ])
-    nickname = StringField('Nickname', validators=[DataRequired()])
+    nickname = StringField('Nickname', validators=[Optional()])
     submit = SubmitField('Upload')
 
 
@@ -139,31 +139,45 @@ class EditDocumentForm(FlaskForm):
 
 class ChatCompletionForm(FlaskForm):
     prompt = TextAreaField('Prompt', validators=[DataRequired()])
-    conversation_id = HiddenField('Conversation ID', validators=[Optional()])
+    conversation_id = HiddenField('Conversation ID', validators=[DataRequired()])
     submit = SubmitField('Get Completion')
 
 
 class UserPreferencesForm(FlaskForm):
-    show_timestamps = BooleanField('Show Timestamps')
-    model = StringField('Model', validators=[DataRequired()])
-    max_tokens = IntegerField('Max Tokens',
-                              validators=[NumberRange(min=1, max=128000), Optional()],
-                              default=2000)
-    temperature = FloatField('Temperature',
-                             validators=[NumberRange(min=0, max=2), Optional()],
-                             default=0.7)
-    top_p = FloatField('Top P', validators=[NumberRange(min=0, max=1), Optional()],
-                       default=1)
-    frequency_penalty = FloatField('Frequency Penalty',
-                                   validators=[NumberRange(min=0, max=2), Optional()],
-                                   default=0)
-    presence_penalty = FloatField('Presence Penalty',
-                                  validators=[NumberRange(min=0, max=2), Optional()],
-                                  default=0)
+    show_timestamps = BooleanField('Timestamps')
+    model = SelectField('Model', choices=[
+        ('gpt-4-1106-preview', 'GPT-4 1106 Preview'),
+        ('gpt-4-vision-preview', 'GPT-4 Vision Preview'),
+        ('gpt-4', 'GPT-4'),
+        ('gpt-4-32k', 'GPT-4 32k'),
+        ('gpt-4-0613', 'GPT-4 0613'),
+        ('gpt-4-32k-0613', 'GPT-4 32k 0613'),
+        ('gpt-4-0314', 'GPT-4 0314'),
+        ('gpt-4-32k-0314', 'GPT-4 32k 0314'),
+        ('gpt-3.5-turbo-1106', 'GPT-3.5 Turbo 1106'),
+        ('gpt-3.5-turbo', 'GPT-3.5 Turbo'),
+        ('gpt-3.5-turbo-16k', 'GPT-3.5 Turbo 16k')
+    ])
+    max_tokens = IntegerField('Max Tokens')
+    temperature = DecimalField('Temperature',
+                               validators=[NumberRange(min=0, max=2), Optional()],
+                               places=1,
+                               default=0.7)
+    top_p = DecimalField('Top P', validators=[NumberRange(min=0, max=1)], places=2,
+                         default=1.0)
+
+    frequency_penalty = DecimalField('Frequency Penalty',
+                                     validators=[NumberRange(min=-2, max=2)], places=2,
+                                     default=0)
+
+    presence_penalty = DecimalField('Presence Penalty',
+                                    validators=[NumberRange(min=-2, max=2)], places=2,
+                                    default=0)
+
     stream = BooleanField('Stream')
     submit = SubmitField('Get Completion')
 
 
 class NewConversationForm(FlaskForm):
     system_prompt = TextAreaField('System Prompt', validators=[DataRequired()])
-    ssubmit = SubmitField('Start Conversation')
+    submit = SubmitField('Start Conversation')

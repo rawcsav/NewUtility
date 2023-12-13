@@ -1,100 +1,290 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Chat page of Swiss AI. Allows users to interact with each other or with AI."
-    />
-    <meta name="keywords" content="Chat, Swiss AI, Interaction, AI" />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
-    />
-    <link
-      rel="manifest"
-      href="{{ url_for('static', filename='favicon/manifest.json') }}"
-    />
-    <link
-      rel="mask-icon"
-      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
-    />
-    <meta name="msapplication-TileColor" content="#da532c" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>Dashboard</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/fonts.css') }}"
-    />
-    <script
-      src="https://kit.fontawesome.com/5c8c7a1eba.js"
-      crossorigin="anonymous"
-    ></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    {% include 'menu.html' %}
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/dashboard.css') }}"
-    />
-  </head>
-  <body>
-    <h1 class="outlined-text">
-      Chat <img src="/static/logo/swissimg.png" alt="Company Logo" /> Tools
-    </h1>
-    <div class="container">
-      <h2>Start a New Conversation</h2>
-      <form
-        id="new-conversation-form"
-        action="{{ url_for('chat.new_conversation') }}"
-        method="post"
-      >
-        {{ new_conversation_form.hidden_tag() }} {{
-        new_conversation_form.system_prompt.label }}: {{
-        new_conversation_form.system_prompt() }}
-        <input type="submit" value="Start Conversation" />
-      </form>
-      <h2>Update Preferences</h2>
-      <form
-        id="update-preferences-form"
-        action="{{ url_for('chat.update_preferences') }}"
-        method="post"
-      >
-        {{ user_preferences_form.hidden_tag() }} {{
-        user_preferences_form.show_timestamps.label }}: {{
-        user_preferences_form.show_timestamps() }} {{
-        user_preferences_form.model.label }}: {{ user_preferences_form.model()
-        }}
-        <input type="submit" value="Update Preferences" />
-      </form>
-      <h2>Send a Message</h2>
-      <form
-        id="chat-completion-form"
-        action="{{ url_for('chat.chat_completion') }}"
-        method="post"
-      >
-        {{ chat_completion_form.hidden_tag() }} {{
-        chat_completion_form.conversation_id.label }}: {{
-        chat_completion_form.conversation_id() }} {{
-        chat_completion_form.prompt.label }}: {{ chat_completion_form.prompt()
-        }}
-        <input type="submit" value="Send Message" />
-      </form>
-    </div>
-    {% include 'footer.html' %}
-  </body>
-  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+   <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <meta
+         name="description"
+         content="Chat page of Swiss AI. Allows users to interact with each other or with AI."
+         />
+      <meta name="keywords" content="Chat, Swiss AI, Interaction, AI"/>
+      <link
+         rel="apple-touch-icon"
+         sizes="180x180"
+         href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
+         />
+      <link
+         rel="icon"
+         type="image/png"
+         sizes="32x32"
+         href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
+         />
+      <link
+         rel="icon"
+         type="image/png"
+         sizes="16x16"
+         href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
+         />
+      <link
+         rel="manifest"
+         href="{{ url_for('static', filename='favicon/manifest.json') }}"
+         />
+      <link
+         rel="mask-icon"
+         href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
+         />
+      <meta name="msapplication-TileColor" content="#da532c"/>
+      <meta name="theme-color" content="#ffffff"/>
+      <title>Chat</title>
+      <script
+         src="https://kit.fontawesome.com/5c8c7a1eba.js"
+         crossorigin="anonymous"
+         ></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      {% include 'menu.html' %}
+      <link
+         rel="stylesheet"
+         href="{{ url_for('static', filename='css/fonts.css') }}"
+         />
+      <link
+         rel="stylesheet"
+         href="{{ url_for('static', filename='css/chat.css') }}"
+         />
+   </head>
+   <body>
+      <div class="container">
+         <div class="page-info">
+            <div class="shape small-square" id="purple">
+               <a class="homepage-dash" href="https://rawcsav.com">
+               <img alt="Homepage" src="/static/logo/jacklogo.svg"/>
+               </a>
+            </div>
+            <div class="shape rectangle" id="pink">
+               <h1>JACK</h1>
+               <h2>GPT</h2>
+            </div>
+         </div>
+         <div class="shape tall-rectangle" id="brown">
+          <div id="conversation-history">
+            {% for conversation in conversation_history %}
+            <div class="conversation-entry" data-conversation-id="{{ conversation.id }}" onclick="selectConversation({{ conversation.id }})">
+              {{ conversation.created_at }} - {conversation.system_prompt}
+            </div>
+            {% endfor %}
+          </div>
+         <input type="hidden" id="selected-conversation-id" value="">
+
+            <div id="preference-popup" class="preference-popup hidden">
+               <form id="update-preferences-form">
+                  {{ user_preferences_form.hidden_tag() }}
+                  <div class="form-group">
+                     <div class="tooltip-container">{{ user_preferences_form.model.label }}
+                        <img src="{{ url_for('static', filename='logo/info.svg') }}" alt="Info" class="info-icon" />
+                        <span class="tooltip-text">ID of the model to use.</span>
+                     </div>
+                     {{ user_preferences_form.model() }}
+                  </div>
+                  <div class="form-group">
+                     <div class="tooltip-container">          {{ user_preferences_form.temperature.label }}
+                        <img src="{{ url_for('static', filename='logo/info.svg') }}" alt="Info" class="info-icon" />
+                        <span class="tooltip-text">Defaults to 0.7. Higher values like 1 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.</span>
+                     </div>
+                     <input
+                        type="range"
+                        id="temperature"
+                        name="temperature"
+                        min="0"
+                        max="2"
+                        step="0.1"
+                        value="{{ user_preferences_form.temperature.data }}"
+                        oninput="document.getElementById('temperature-value').value = this.value"
+                        />
+                     <input
+                        type="text"
+                        id="temperature-value"
+                        class="range-value-input"
+                        value="{{ user_preferences_form.temperature.data }}"
+                        oninput="document.getElementById('temperature').value = this.value"
+                        />
+                  </div>
+                  <div class="form-group">
+                     <div class="tooltip-container">          {{ user_preferences_form.max_tokens.label }}
+                        <img src="{{ url_for('static', filename='logo/info.svg') }}" alt="Info" class="info-icon" />
+                        <span class="tooltip-text">The maximum number of tokens to generate in the chat completion.
+                        The total length of input tokens and generated tokens is limited by the model's context length.</span>
+                     </div>
+                     <input
+                        type="range"
+                        id="max_tokens"
+                        name="max_tokens"
+                        min="0"
+                        max="128000"
+                        step="1"
+                        value="{{ user_preferences_form.max_tokens.data }}"
+                        oninput="document.getElementById('max-tokens-value').value = this.value"
+                        />
+                     <input
+                        type="text"
+                        id="max-tokens-value"
+                        class="range-value-input"
+                        value="{{ user_preferences_form.max_tokens.data }}"
+                        oninput="document.getElementById('max_tokens').value = this.value"
+                        />
+                  </div>
+                  <div class="form-group">
+                     <div class="tooltip-container">          {{ user_preferences_form.frequency_penalty.label }}
+                        <img src="{{ url_for('static', filename='logo/info.svg') }}" alt="Info" class="info-icon" />
+                        <span class="tooltip-text">Defaults to 0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.</span>
+                     </div>
+                     <input
+                        type="range"
+                        id="frequency_penalty"
+                        name="frequency_penalty"
+                        min="-2"
+                        max="2"
+                        step="0.1"
+                        value="{{ user_preferences_form.frequency_penalty.data }}"
+                        oninput="document.getElementById('frequency-penalty-value').value = this.value"
+                        />
+                     <input
+                        type="text"
+                        id="frequency-penalty-value"
+                        class="range-value-input"
+                        value="{{ user_preferences_form.frequency_penalty.data }}"
+                        oninput="document.getElementById('frequency_penalty').value = this.value"
+                        />
+                  </div>
+                  <div class="form-group">
+                     <div class="tooltip-container">          {{ user_preferences_form.presence_penalty.label }}
+                        <img src="{{ url_for('static', filename='logo/info.svg') }}" alt="Info" class="info-icon" />
+                        <span class="tooltip-text">Defaults to 0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+                        </span>
+                     </div>
+                     <input
+                        type="range"
+                        id="presence_penalty"
+                        name="presence_penalty"
+                        min="-2"
+                        max="2"
+                        step="0.1"
+                        value="{{ user_preferences_form.presence_penalty.data }}"
+                        oninput="document.getElementById('presence-penalty-value').value = this.value"
+                        />
+                     <input
+                        type="text"
+                        id="presence-penalty-value"
+                        class="range-value-input"
+                        value="{{ user_preferences_form.presence_penalty.data }}"
+                        oninput="document.getElementById('presence_penalty').value = this.value"
+                        />
+                  </div>
+                  <div class="form-group">
+                     <div class="tooltip-container">          {{ user_preferences_form.top_p.label }}
+                        <img src="{{ url_for('static', filename='logo/info.svg') }}" alt="Info" class="info-icon" />
+                        <span class="tooltip-text">Defaults to 1. An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.</span>
+                     </div>
+                     <input
+                        type="range"
+                        id="top_p"
+                        name="top_p"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="{{ user_preferences_form.top_p.data }}"
+                        oninput="document.getElementById('top-p-value').value = this.value"
+                        />
+                     <input
+                        type="text"
+                        id="top-p-value"
+                        class="range-value-input"
+                        value="{{ user_preferences_form.top_p.data }}"
+                        oninput="document.getElementById('top_p').value = this.value"
+                        />
+                  </div>
+                  <div class="form-group" id="chat-checkbox">
+                     <div class="timestamp-check">
+                        <label>
+                        {{ user_preferences_form.show_timestamps.label }}
+                        <input
+                        type="checkbox"
+                        id="show_timestamps"
+                        name="show_timestamps"
+                        {{ 'checked' if user_preferences_form.show_timestamps.data else '' }}
+                        />
+                        </label>
+                     </div>
+                     <!-- Stream Checkbox -->
+                     <div class="stream-check">
+                        <label>
+                        {{ user_preferences_form.stream.label }}
+                        <input
+                        type="checkbox"
+                        id="stream"
+                        name="stream"
+                        {{ 'checked' if user_preferences_form.stream.data else '' }}
+                        />
+                        </label>
+                     </div>
+                  </div>
+                  <input type="submit" value="Update Preferences" id="preference-submit" class="button-send"/>
+               </form>
+               <div id="preference-messages"></div>
+            </div>
+         </div>
+         <div class="chat-container">
+            <div class="top-banner">
+               <h4 id="convo-title">New Conversation</h4>
+          <button id="show-history-btn" onclick="toggleHistory()">Show History</button>
+            <button id="show-preferences-btn" onclick="togglePreferences()">Show Preferences</button>
+               <form
+                  id="new-conversation-form"
+                  action="{{ url_for('chat.new_conversation') }}"
+                  method="post"
+                  class="{{ 'hidden' if has_conversation_history else '' }}"
+                  >
+                  {{ new_conversation_form.hidden_tag() }}
+                  <div>
+                     {{ new_conversation_form.system_prompt.label(class="form-label") }} {{ new_conversation_form.system_prompt(class="form-control") }}
+                  </div>
+                  <input
+                     type="submit"
+                     value="Start Conversation"
+                     class="button-send"
+                     name="system_prompt"
+                     />
+               </form>
+            </div>
+            <div class="messages" id="chat-box"></div>
+            <div class="message-input-container">
+               <form
+                  id="chat-completion-form"
+                  action="{{ url_for('chat.chat_completion') }}"
+                  method="post"
+                  class="{{ '' if has_conversation_history else 'hidden' }}"
+                  >
+                  {{ chat_completion_form.hidden_tag() }}
+                  <input type="hidden" name="conversation_id" id="completion-conversation-id" value="">
+
+                  <div class="input-group">
+                     <input
+                        type="text"
+                        id="message-input"
+                        class="message-input"
+                        placeholder="Type your message here..."
+                        />
+                     <button type="submit" id="send-button" class="button-send">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="sr-only">Send Message</span>
+                     </button>
+                  </div>
+               </form>
+            </div>
+         </div>
+      </div>
+      {% include 'footer.html' %}<script type="text/javascript">
+    // Pass the serialized conversationHistory from Flask to JavaScript
+    var conversationHistory = {{ conversation_history|tojson|safe }};
+</script>
+      <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+   </body>
 </html>

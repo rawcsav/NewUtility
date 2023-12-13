@@ -5,11 +5,18 @@ from sqlalchemy.sql import func
 from app import db
 
 
+def generate_default_nickname():
+    max_number = db.session.query(db.func.max(UserAPIKey.nickname)).scalar()
+    next_number = int(max_number or 0) + 1  # Increment the max number by 1
+    return f"User{next_number}"
+
+
 class UserAPIKey(db.Model):
     __tablename__ = 'user_api_keys'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    nickname = db.Column(db.String(25), nullable=False)
+    nickname = db.Column(db.String(25), nullable=False,
+                         default=generate_default_nickname)
     identifier = db.Column(db.String(6), nullable=False)
     encrypted_api_key = db.Column(BLOB, nullable=False)
     label = db.Column(db.String(50))
@@ -59,6 +66,7 @@ class User(UserMixin, db.Model):
 class Conversation(db.Model):
     __tablename__ = 'conversations'
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=True, default='New Conversation')
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     system_prompt = db.Column(db.String(2048),
@@ -77,6 +85,7 @@ class Message(db.Model):
     direction = db.Column(db.Enum('incoming', 'outgoing'), nullable=False)
     model = db.Column(db.String(50), nullable=False)
     is_knowledge_query = db.Column(db.Boolean, default=False)
+    is_error = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
