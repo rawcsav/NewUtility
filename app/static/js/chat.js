@@ -118,6 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
     maxTokensValueInput.value = maxTokensSlider.value; // Update the output display
   });
 
+  // Inside the 'DOMContentLoaded' event listener
   if (chatCompletionForm) {
     chatCompletionForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -151,34 +152,15 @@ document.addEventListener("DOMContentLoaded", function () {
                   return;
                 }
                 var chunk = new TextDecoder().decode(value);
-                // Check if the chunk starts with a JSON structure for an error message
-                if (chunk.startsWith("{") && chunk.endsWith("}\n\n")) {
-                  try {
-                    // Parse the JSON chunk to check for errors
-                    var jsonChunk = JSON.parse(chunk.trim());
-                    if (jsonChunk.status === "error") {
-                      // Display the error message
-                      appendMessageToChatBox(
-                        jsonChunk.message,
-                        "error-message"
-                      );
-                    }
-                  } catch (error) {
-                    // Handle errors that occur while parsing the JSON chunk
-                    appendMessageToChatBox(
-                      "Error parsing streamed response: " + error.message,
-                      "error-message"
-                    );
-                    console.error("Error parsing streamed response:", error);
-                  }
+
+                if (chunk.startsWith("An error occurred:")) {
+                  appendMessageToChatBox(chunk, "error-message");
                 } else {
-                  // Append normal content to the chat box
                   appendStreamedResponse(chunk, chatBox);
                 }
                 return reader.read().then(processText);
               })
               .catch((streamError) => {
-                // Handle errors that occur during reading the stream
                 appendMessageToChatBox(
                   "Streaming Error: " + streamError.message,
                   "error-message"
@@ -186,17 +168,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.error("Streaming error:", streamError);
               });
           } else {
-            // Handle non-streaming response
-            return response.json();
-          }
-        })
-        .then((data) => {
-          if (data && data.status === "success") {
-            // Display the AI's response
-            appendMessageToChatBox(data.message, "system-message");
-          } else if (data && data.status === "error") {
-            // Display the error message
-            appendMessageToChatBox(data.message, "error-message");
+            return response.text().then((text) => {
+              if (text.includes("An error occurred:")) {
+                appendMessageToChatBox(text, "error-message");
+              } else {
+                try {
+                  const data = JSON.parse(text);
+                  appendMessageToChatBox(data.message, "system-message");
+                } catch (e) {
+                  appendMessageToChatBox(
+                    "Unexpected response format: " + text,
+                    "error-message"
+                  );
+                }
+              }
+            });
           }
         })
         .catch((error) => {

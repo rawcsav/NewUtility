@@ -182,11 +182,14 @@ def chat_stream(prompt, client, user_id, conversation_id):
             if content:
                 full_response += content  # Accumulate the content
                 yield content  # Yield each content part as it comes in
+
         if full_response.strip():  # Save only if there's non-empty content
             save_message(conversation_id, full_response, 'incoming',
                          preferences['model'])
+
     except Exception as e:
-        handle_stream_error(e, conversation_id, preferences['model'])
+        error_message = handle_stream_error(e, conversation_id, preferences['model'])
+        yield error_message
 
 
 def chat_nonstream(prompt, client, user_id, conversation_id):
@@ -218,13 +221,15 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
                              preferences['model'])
             return full_response
     except Exception as e:
-        return handle_nonstream_error(e, conversation_id, preferences['model'])
+        error_message = handle_nonstream_error(e, conversation_id, preferences['model'])
+        return error_message
 
 
 # Helper functions to handle errors in streaming and non-streaming modes
 def handle_stream_error(e, conversation_id, model):
     error_message = f"An error occurred: {e}"
     save_message(conversation_id, error_message, 'incoming', model, is_error=True)
+    return error_message
 
 
 def handle_nonstream_error(e, conversation_id, model):
