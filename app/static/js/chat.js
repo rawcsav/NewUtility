@@ -10,7 +10,7 @@ function appendStreamedResponse(chunk, chatBox) {
   // Create a message element for the stream if it does not exist
   if (!window.currentStreamMessageDiv) {
     window.currentStreamMessageDiv = document.createElement("div");
-    window.currentStreamMessageDiv.classList.add("message", "system-message");
+    window.currentStreamMessageDiv.classList.add("message", "ai-message");
     chatBox.appendChild(window.currentStreamMessageDiv);
   }
 
@@ -122,8 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     } else {
       // No historical conversations, switch to the new conversation system prompt
-      messageInput.placeholder =
-        "Enter system prompt to start a new conversation...";
       newConversationForm.style.display = "block";
       chatCompletionForm.style.display = "none";
     }
@@ -194,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
               } else {
                 try {
                   const data = JSON.parse(text);
-                  appendMessageToChatBox(data.message, "system-message");
+                  appendMessageToChatBox(data.message, "ai-message");
                 } catch (e) {
                   appendMessageToChatBox(
                     "Unexpected response format: " + text,
@@ -212,6 +210,50 @@ document.addEventListener("DOMContentLoaded", function () {
             "error-message"
           );
           console.error("Fetch error:", error);
+        });
+    });
+  }
+  if (newConversationForm) {
+    newConversationForm.addEventListener("submit", function (e) {
+      e.preventDefault(); // Prevent default form submission
+
+      // Gather form data to send
+      var formData = new FormData(newConversationForm);
+
+      // Send AJAX request to create a new conversation
+      fetch("/chat/new-conversation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": formData.get("csrf_token")
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(Object.fromEntries(formData))
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            // Assuming 'data.conversation' contains the new conversation details
+            const newConversationId = data.conversation_id;
+            const newConversationPrompt = data.system_prompt;
+            // Clear the chat box and set the new conversation as active
+            chatBox.innerHTML = "";
+            selectConversation(newConversationId); // Update the UI with the new conversation
+
+            // Append the initial system prompt from the server response with the "system-message" class
+            // appendMessageToChatBox(newConversationPrompt, "system-message");
+          } else {
+            // Handle any errors, such as displaying a message to the user
+            appendMessageToChatBox(
+              "Failed to start a new conversation.",
+              "error-message"
+            );
+          }
+        })
+        .catch((error) => {
+          // Handle the error case, such as displaying a message to the user
+          appendMessageToChatBox("Error: " + error.message, "error-message");
+          console.error("New conversation error:", error);
         });
     });
   }

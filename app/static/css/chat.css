@@ -107,6 +107,8 @@ h2 {
   border-radius: 5px;
   display: flex;
   z-index: 2;
+  max-height: 100%;
+  overflow-y: auto;
 }
 .homepage-dash {
   width: 80%;

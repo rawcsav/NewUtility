@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileRequired, FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, \
@@ -179,5 +181,15 @@ class UserPreferencesForm(FlaskForm):
 
 
 class NewConversationForm(FlaskForm):
-    system_prompt = TextAreaField('System Prompt', validators=[DataRequired()])
+    # Dynamically generate the default system prompt with the current date
+    default_prompt = (
+        "You are Jack, a large language model trained by OpenAI, "
+        "based on the GPT-4 architecture. You are chatting with the user "
+        "via the RAWCSAV interface. This means most of the time you should "
+        "return lines in proper machine-readable markdown format, unless "
+        "the user's request deviates from this format. Knowledge cutoff: 2022-01. "
+        f"The current date is {datetime.now().strftime('%Y-%m-%d')}."
+    )
+
+    system_prompt = StringField('System Prompt', default=default_prompt)
     submit = SubmitField('Start Conversation')

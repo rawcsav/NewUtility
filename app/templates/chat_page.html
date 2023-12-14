@@ -68,9 +68,9 @@
           <div id="conversation-history">
             {% for conversation in conversation_history %}
             <div class="conversation-entry" data-conversation-id="{{ conversation.id }}" onclick="selectConversation({{ conversation.id }})">
-              {{ conversation.created_at }} - {conversation.system_prompt}
-            </div>
-            {% endfor %}
+               {{ conversation.title }} - {{ conversation.created_at.strftime('%m/%d/%y') }}
+              </div>
+              {% endfor %}
           </div>
          <input type="hidden" id="selected-conversation-id" value="">
 
@@ -236,23 +236,11 @@
                <h4 id="convo-title">New Conversation</h4>
           <button id="show-history-btn" onclick="toggleHistory()">Show History</button>
             <button id="show-preferences-btn" onclick="togglePreferences()">Show Preferences</button>
-               <form
-                  id="new-conversation-form"
-                  action="{{ url_for('chat.new_conversation') }}"
-                  method="post"
-                  class="{{ 'hidden' if has_conversation_history else '' }}"
-                  >
-                  {{ new_conversation_form.hidden_tag() }}
-                  <div>
-                     {{ new_conversation_form.system_prompt.label(class="form-label") }} {{ new_conversation_form.system_prompt(class="form-control") }}
-                  </div>
-                  <input
-                     type="submit"
-                     value="Start Conversation"
-                     class="button-send"
-                     name="system_prompt"
-                     />
-               </form>
+               <form id="new-conversation-form" action="{{ url_for('chat.new_conversation') }}" method="post" class="{{ 'hidden' if has_conversation_history else '' }}">
+              {{ new_conversation_form.hidden_tag() }}
+              {{ new_conversation_form.system_prompt(class_="hidden") }}
+              <input type="submit" value="Start New Conversation" class="button-send" />
+            </form>
             </div>
             <div class="messages" id="chat-box"></div>
             <div class="message-input-container">

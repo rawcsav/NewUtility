@@ -86,14 +86,14 @@ def new_conversation():
     form = NewConversationForm()
     if form.validate_on_submit():
         user_id = current_user.id
-        system_prompt = form.system_prompt.data
-        new_conversation = Conversation(user_id=user_id, system_prompt=system_prompt)
+        new_conversation = Conversation(user_id=user_id,
+                                        system_prompt=form.system_prompt.data)
         db.session.add(new_conversation)
         try:
             db.session.commit()
-            print(new_conversation.id)
             return jsonify(
-                {'status': 'success', 'conversation_id': new_conversation.id})
+                {'status': 'success', 'conversation_id': new_conversation.id,
+                 'system_prompt': new_conversation.system_prompt})
         except Exception as e:
             db.session.rollback()
             return jsonify({'status': 'error', 'message': str(e)})
