@@ -1,31 +1,74 @@
 var chatBox = document.getElementById("chat-box");
 
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 function toggleHistory() {
-  document.getElementById("conversation-history").style.display = "block";
+  document.getElementById("conversation-container").style.display = "block";
   document.getElementById("preference-popup").style.display = "none";
 }
 
-// Function to handle appending streamed responses
 function appendStreamedResponse(chunk, chatBox) {
-  // Create a message element for the stream if it does not exist
   if (!window.currentStreamMessageDiv) {
     window.currentStreamMessageDiv = document.createElement("div");
-    window.currentStreamMessageDiv.classList.add("message", "ai-message");
+    window.currentStreamMessageDiv.classList.add(
+      "message",
+      "assistant-message"
+    );
     chatBox.appendChild(window.currentStreamMessageDiv);
+    window.incompleteMarkdownBuffer = "";
+
+    // Create a container for the message content
+    window.currentStreamContentDiv = document.createElement("div");
+
+    // Create a title element
+    var title = document.createElement("h5");
+
+    // Set the title text based on the message's class name
+    if (
+      window.currentStreamMessageDiv.classList.contains("assistant-message")
+    ) {
+      title.textContent = "Jack";
+    } else if (
+      window.currentStreamMessageDiv.classList.contains("user-message")
+    ) {
+      title.textContent = "User";
+    }
+
+    // Append the title to the message div
+    window.currentStreamMessageDiv.appendChild(title);
+    // Append the content container to the message div
+    window.currentStreamMessageDiv.appendChild(window.currentStreamContentDiv);
   }
 
-  // Append new text chunk to the current message element
-  window.currentStreamMessageDiv.textContent += chunk;
+  // Combine the new chunk with any incomplete Markdown from the previous chunk
+  window.incompleteMarkdownBuffer += chunk;
+
+  // Convert the combined Markdown chunk to HTML using marked.js
+  // Note: We are not sanitizing here to avoid breaking HTML structure with partial data
+  window.currentStreamContentDiv.innerHTML = marked.parse(
+    window.incompleteMarkdownBuffer
+  );
+  hljs.highlightAll();
   chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom of the chat box
 }
 
-// Function to finalize the streamed response
 function finalizeStreamedResponse() {
-  window.currentStreamMessageDiv = null; // Clear the reference to the message element
+  if (window.currentStreamMessageDiv) {
+    window.currentStreamMessageDiv.innerHTML = DOMPurify.sanitize(
+      window.currentStreamMessageDiv.innerHTML
+    );
+
+    window.currentStreamMessageDiv = null;
+    window.incompleteMarkdownBuffer = "";
+  }
 }
 
 function togglePreferences() {
-  document.getElementById("conversation-history").style.display = "none";
+  document.getElementById("conversation-container").style.display = "none";
   document.getElementById("preference-popup").style.display = "block";
 }
 
@@ -43,9 +86,30 @@ function togglePreferencePopup() {
 function appendMessageToChatBox(message, className) {
   var messageDiv = document.createElement("div");
   messageDiv.classList.add("message", className);
-  messageDiv.textContent = message;
+
+  // Create a title element
+  var title = document.createElement("h5");
+  // Set the title text based on the message's class name
+  if (className === "assistant-message") {
+    title.textContent = "Jack";
+  } else if (className === "user-message") {
+    title.textContent = "User";
+  }
+
+  // Append the title to the message div
+  messageDiv.appendChild(title);
+
+  // Convert Markdown to HTML using marked.js
+  var messageContent = document.createElement("div");
+  messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
+
+  // Append the message content to the message div
+  messageDiv.appendChild(messageContent);
+
   chatBox.appendChild(messageDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom of the chat box
+
+  hljs.highlightAll();
 }
 
 function selectConversation(conversationId) {
@@ -76,6 +140,52 @@ function selectConversation(conversationId) {
     .catch((error) => console.error("Error:", error));
 }
 
+function deleteConversation(conversationId) {
+  const statusMessageDiv = document.getElementById(
+    "conversation-history-status"
+  );
+  statusMessageDiv.textContent = ""; // Clear any previous messages
+  statusMessageDiv.className = "";
+
+  if (!confirm("Are you sure you want to delete this conversation?")) {
+    return;
+  }
+
+  fetch(`/chat/delete-conversation/${conversationId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken() // Include the CSRF token here
+    },
+    credentials: "same-origin"
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        // Remove the conversation entry from the DOM
+        var entry = document.querySelector(
+          `.conversation-entry[data-conversation-id="${conversationId}"]`
+        );
+        if (entry) {
+          entry.remove();
+          // Display a success message
+          statusMessageDiv.textContent = "Conversation deleted successfully.";
+          statusMessageDiv.className = "success"; // Use your CSS class for success messages
+        }
+      } else {
+        // Display an error message
+        statusMessageDiv.textContent =
+          "Failed to delete the conversation: " + data.message;
+        statusMessageDiv.className = "error"; // Use your CSS class for error messages
+      }
+    })
+    .catch((error) => {
+      // Display an error message
+      statusMessageDiv.textContent = "Error deleting conversation: " + error;
+      statusMessageDiv.className = "error"; // Use your CSS class for error messages
+    });
+}
+
 const modelMaxTokens = {
   "gpt-4-1106-preview": 128000,
   "gpt-4-vision-preview": 128000,
@@ -98,16 +208,65 @@ document.addEventListener("DOMContentLoaded", function () {
     "update-preferences-form"
   );
 
-  // Utility function to append messages to the chat box
-  function appendMessageToChatBox(message, className) {
-    var messageDiv = document.createElement("div");
-    messageDiv.classList.add("message", className);
-    messageDiv.textContent = message;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+  // Function to fade out tooltips
+  // Function to fade out tooltips
+  function fadeOutTooltip(tooltip) {
+    tooltip.style.opacity = "0";
+    tooltip.style.transition = "opacity 0.5s ease-out";
+    // Set a timeout to change visibility after the opacity transition
+    setTimeout(() => {
+      tooltip.style.visibility = "hidden";
+    }, 500); // This should match the transition duration
   }
 
-  // Call toggleHistory on page load to show conversation history first
+  // Function to hide all tooltips
+  function hideAllTooltips(exceptId) {
+    let tooltipTexts = document.querySelectorAll(".tooltip-text");
+    tooltipTexts.forEach((tooltip) => {
+      // Fade out all tooltips except the one that should remain open
+      if (tooltip.getAttribute("data-info-id") !== exceptId) {
+        fadeOutTooltip(tooltip);
+      }
+    });
+  }
+
+  // Add click event listener to each info icon
+  let infoIcons = document.querySelectorAll(".info-icon");
+  infoIcons.forEach((icon) => {
+    icon.addEventListener("click", function (event) {
+      // Prevent the click event from triggering any parent element's click event
+      event.stopPropagation();
+
+      let tooltipText = this.nextElementSibling;
+
+      // Hide all other tooltips except this one
+      hideAllTooltips(tooltipText.getAttribute("data-info-id"));
+
+      // Toggle the visibility of this tooltip text
+      if (tooltipText.style.opacity === "1") {
+        fadeOutTooltip(tooltipText);
+      } else {
+        tooltipText.style.visibility = "visible";
+        tooltipText.style.opacity = "1";
+        tooltipText.style.transition = "opacity 0.5s ease-in";
+      }
+    });
+  });
+
+  // Add click event listener to each tooltip text
+  let tooltipTexts = document.querySelectorAll(".tooltip-text");
+  tooltipTexts.forEach((tooltip) => {
+    tooltip.addEventListener("click", function (event) {
+      // Stop the propagation to prevent triggering the click event on the window
+      event.stopPropagation();
+      fadeOutTooltip(this); // Fade out this tooltip
+    });
+  });
+
+  // Global click event to hide tooltips when clicking anywhere else
+  window.addEventListener("click", function () {
+    hideAllTooltips(); // Hide all tooltips
+  });
 
   function checkConversationHistory() {
     if (conversationHistory && conversationHistory.length > 0) {
@@ -153,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": formData.get("csrf_token")
+          "X-CSRFToken": getCsrfToken() // Include the CSRF token here
         },
         credentials: "same-origin",
         body: JSON.stringify(Object.fromEntries(formData))
@@ -192,7 +351,7 @@ document.addEventListener("DOMContentLoaded", function () {
               } else {
                 try {
                   const data = JSON.parse(text);
-                  appendMessageToChatBox(data.message, "ai-message");
+                  appendMessageToChatBox(data.message, "assistant-message");
                 } catch (e) {
                   appendMessageToChatBox(
                     "Unexpected response format: " + text,
@@ -225,39 +384,76 @@ document.addEventListener("DOMContentLoaded", function () {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": formData.get("csrf_token")
+          "X-CSRFToken": getCsrfToken() // Include the CSRF token here
         },
         credentials: "same-origin",
         body: JSON.stringify(Object.fromEntries(formData))
       })
         .then((response) => response.json())
         .then((data) => {
+          const statusMessageDiv = document.getElementById(
+            "conversation-history-status"
+          );
           if (data.status === "success") {
-            // Assuming 'data.conversation' contains the new conversation details
+            // Handle successful conversation creation
             const newConversationId = data.conversation_id;
             const newConversationPrompt = data.system_prompt;
+            const newConversationTitle = data.title; // Assuming the title is included in the response
+            const createdAt = data.created_at; // Assuming created_at is included in the response
+
             // Clear the chat box and set the new conversation as active
             chatBox.innerHTML = "";
-            selectConversation(newConversationId); // Update the UI with the new conversation
+            selectConversation(newConversationId);
 
-            // Append the initial system prompt from the server response with the "system-message" class
-            // appendMessageToChatBox(newConversationPrompt, "system-message");
-          } else {
-            // Handle any errors, such as displaying a message to the user
-            appendMessageToChatBox(
-              "Failed to start a new conversation.",
-              "error-message"
+            // Update conversationHistory variable
+            conversationHistory.push({
+              id: newConversationId,
+              title: newConversationTitle,
+              created_at: createdAt,
+              system_prompt: newConversationPrompt
+            });
+
+            // Update conversation history in the HTML
+            const conversationHistoryDiv = document.getElementById(
+              "conversation-history"
             );
+            const newConvoEntry = document.createElement("div");
+            newConvoEntry.classList.add("conversation-entry");
+            newConvoEntry.setAttribute(
+              "data-conversation-id",
+              newConversationId
+            );
+
+            newConvoEntry.addEventListener("click", function () {
+              selectConversation(newConversationId);
+            });
+
+            newConvoEntry.innerHTML = `${newConversationTitle} - ${createdAt} <span class="delete-conversation" onclick="deleteConversation(${newConversationId})"><i class="fas fa-trash-alt"></i></span>`;
+            conversationHistoryDiv.appendChild(newConvoEntry);
+            statusMessageDiv.textContent = "";
+            // Display a success message
+            statusMessageDiv.textContent =
+              "New conversation created successfully!";
+            statusMessageDiv.className = "success"; // Use your CSS class for success messages
+          } else if (data.status === "limit-reached") {
+            // Inform the user they've hit the limit
+            statusMessageDiv.textContent = data.message;
+            statusMessageDiv.className = "error"; // Use your CSS class for error messages
+          } else {
+            // Handle any other errors
+            statusMessageDiv.textContent =
+              "Failed to start a new conversation: " + data.message;
+            statusMessageDiv.className = "error"; // Use your CSS class for error messages
           }
         })
         .catch((error) => {
           // Handle the error case, such as displaying a message to the user
-          appendMessageToChatBox("Error: " + error.message, "error-message");
+          statusMessageDiv.textContent = "Error: " + error.message;
+          statusMessageDiv.className = "error-message"; // Use your CSS class for error messages
           console.error("New conversation error:", error);
         });
     });
   }
-
   if (updatePreferencesForm) {
     updatePreferencesForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -265,7 +461,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fetch("/chat/update-preferences", {
         method: "POST",
         headers: {
-          "X-CSRFToken": formData.get("csrf_token")
+          "X-CSRFToken": getCsrfToken() // Include the CSRF token here
         },
         body: formData
       })

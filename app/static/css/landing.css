@@ -133,7 +133,6 @@ ul li {
 }
 
 .button-list {
-  margin-top: -40px;
   cursor: pointer;
   display: flex;
   align-items: center;

@@ -75,7 +75,7 @@ h2 {
   font-size: 4em;
 }
 .rectangle h2 {
-  font-family: "ITCGaramondStd-UltNarrowIta", serif;
+  font-family: "ITCGaramondStd-BdCondIta", serif;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #654321;
   font-size: 3em;
@@ -104,8 +104,7 @@ h2 {
 #brown {
   background-color: #fefdf9; /* Red */
   border: 5px solid #654321; /* Example border color */
-  border-radius: 5px;
-  display: flex;
+  border-right: 2px solid #654321;
   z-index: 2;
   max-height: 100%;
   overflow-y: auto;
@@ -128,9 +127,7 @@ h2 {
 /* static/css/chat.css */
 .container {
   display: flex;
-  height: 90vh;
-  padding: 40px;
-  gap: 20px;
+  height: calc(100vh - 30px); /* Replace 60px with your footer's height */
 }
 
 .sidebar {
@@ -143,7 +140,7 @@ h2 {
   flex-direction: column;
   background-color: #fefdf9;
   border: 5px solid #654321;
-  border-radius: 8px;
+  border-left: none;
   overflow-y: auto;
   flex: 3;
 }
@@ -154,12 +151,6 @@ h2 {
   border-radius: 8px;
   padding: 20px;
   overflow-y: auto;
-}
-
-.user-message {
-  background-color: #007bff;
-  color: white;
-  text-align: right;
 }
 
 .error-message {
@@ -368,6 +359,8 @@ h4 {
 /* Tooltip text */
 .tooltip-container .tooltip-text {
   visibility: hidden;
+  transition: opacity 0.5s ease-out; /* Smooth transition for fading */
+  opacity: 0; /* Start hidden */
   font-size: 12px;
   width: 120px;
   background-color: black;
@@ -381,12 +374,6 @@ h4 {
   bottom: 100%;
   right: 0;
   margin-left: -60px;
-  z-index: 10;
-}
-
-/* Show the tooltip text when you hover over the tooltip container */
-.tooltip-container:hover .tooltip-text {
-  visibility: visible;
   z-index: 10;
 }
 
@@ -414,4 +401,116 @@ h4 {
 
 #preference-popup {
   display: none; /* Hide preferences on page load */
+}
+
+/* Styles for Markdown content */
+.message {
+  font-family: "Univers", sans-serif;
+  color: #383737;
+  background-color: #fefdf9;
+  line-height: 1.5;
+}
+
+/* Headers */
+.message h1 {
+  font-size: 2em;
+}
+.message h2 {
+  font-size: 1.8em;
+}
+.message h3 {
+  font-size: 1.6em;
+}
+.message h4 {
+  font-size: 1.4em;
+}
+.message h5 {
+  font-size: 1.2em;
+}
+.message h6 {
+  font-size: 1em;
+}
+
+/* Headers styled with the primary font and color scheme */
+.message h1,
+.message h2,
+.message h3,
+.message h4,
+.message h5,
+.message h6 {
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  color: #654321;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.message p {
+  margin-top: 5px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.message a {
+  color: #0069be;
+  text-decoration: none;
+  border-bottom: 1px dotted #0069be;
+}
+.message a:hover {
+  border-bottom-style: solid;
+}
+
+/* Lists */
+.message ul,
+.message ol {
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+.message li {
+  margin-bottom: 5px;
+}
+
+/* Blockquotes */
+.message blockquote {
+  border-left: 4px solid #ec9ca0;
+  padding-left: 15px;
+  margin: 10px 0;
+  font-style: italic;
+  background-color: #faf5e6;
+}
+
+/* Code blocks and inline code */
+.message code,
+.message pre {
+  font-family: "IBMPlexMono", monospace;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 0.5em;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+/* Additional style for code blocks */
+.message pre {
+  margin-bottom: 1em;
+  padding: 1em;
+}
+
+/* Inline code specific styles */
+.message code {
+  padding: 0.2em 0.4em;
+}
+
+.assistant-message h5,
+.user-message h5 {
+  margin-top: 20px;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.assistant-message h5 {
+  color: #00a86b;
+}
+
+.user-message h5 {
+  color: #0069be;
 }

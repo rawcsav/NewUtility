@@ -167,7 +167,7 @@ p {
   background-color: #009b00; /* Cream */
   top: 46vh;
   padding: 10px;
-  left: 16vw;
+  left: 12vw;
   margin: 10px;
   transform: rotate(2deg);
 }
@@ -199,7 +199,7 @@ p {
 .hand1 {
   position: absolute;
   bottom: 15vh;
-  left: 36vw;
+  left: 32vw;
   rotate: -15deg;
 }
 

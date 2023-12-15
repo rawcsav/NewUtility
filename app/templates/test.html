@@ -43,6 +43,12 @@
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2/dist/purify.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% include 'menu.html' %}
     <link
       rel="stylesheet"
@@ -279,91 +285,15 @@
             </div>
             <div class="form-group" id="chat-checkbox">
               <div class="timestamp-check">
-                <label>
-                  {{ user_preferences_form.show_timestamps.label }} {% if
-                  user_preferences_form.show_timestamps.data %}
-                  <input
-                    type="checkbox"
-                    id="show_timestamps"
-                    name="show_timestamps"
-                    checked
-                  />
-                  {% else %}
-                  <input
-                    type="checkbox"
-                    id="show_timestamps"
-                    name="show_timestamps"
-                  />
-                  {% endif %}
-                </label>
+                <input />
+                type="checkbox" id="show_timestamps" name="show_timestamps" {{
+                'checked' if user_preferences_form.show_timestamps.data else ''
+                }} />
               </div>
-              <!-- Stream Checkbox -->
-              <div class="stream-check">
-                <label>
-                  {{ user_preferences_form.stream.label }} {% if
-                  user_preferences_form.stream.data %}
-                  <input type="checkbox" id="stream" name="stream" checked />
-                  {% else %}
-                  <input type="checkbox" id="stream" name="stream" />
-                  {% endif %}
-                </label>
-              </div>
-            </div>
-            <input
-              type="submit"
-              value="Update Preferences"
-              id="preference-submit"
-              class="button-send"
-            />
-          </form>
-          <div id="preference-messages"></div>
-        </div>
-      </div>
-      <div class="chat-container">
-        <div class="top-banner">
-          <h4 id="convo-title">New Conversation</h4>
-        </div>
-        <div class="messages" id="chat-box"></div>
-        <div class="message-input-container">
-          <form
-            id="chat-completion-form"
-            action="{{ url_for('chat.chat_completion') }}"
-            method="post"
-            class="{{ '' if has_conversation_history else 'hidden' }}"
-          >
-            <input
-              type="hidden"
-              name="conversation_id"
-              id="completion-conversation-id"
-              value=""
-            />
-
-            <div class="input-group">
-              <input
-                type="text"
-                id="message-input"
-                class="message-input"
-                placeholder="Type your message here..."
-              />
-              <button type="submit" id="send-button" class="button-send">
-                <i class="fas fa-paper-plane"></i>
-                <span class="sr-only">Send Message</span>
-              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-    {% include 'footer.html' %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="../static/css/solarized.css" />
-    <script type="text/javascript">
-      var conversationHistory = {{ conversation_history|tojson|safe }};
-    </script>
-
-    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
-    <script>
-      hljs.highlightAll();
-    </script>
   </body>
 </html>

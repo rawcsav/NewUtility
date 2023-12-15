@@ -49,7 +49,7 @@ body {
 
 .wave {
   rotate: 10deg;
-  right: 2vw;
+  right: 1vw;
   position: absolute;
   top: 0;
   z-index: 1;

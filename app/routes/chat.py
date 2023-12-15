@@ -34,12 +34,9 @@ def chat_index():
     # Retrieve the user's conversation history
     conversation_history = Conversation.query.filter_by(user_id=current_user.id).all()
 
-    # If no conversation history exists for the user, create a new conversation
     if not conversation_history:
-        # Define a default system prompt similar to ChatGPT's web interface
-        default_system_prompt = "Hello! How can I assist you today?"
         new_conversation = Conversation(user_id=current_user.id,
-                                        system_prompt=default_system_prompt)
+                                        system_prompt=new_conversation_form.system_prompt.data)
         db.session.add(new_conversation)
         try:
             db.session.commit()
@@ -47,10 +44,7 @@ def chat_index():
             conversation_history = [new_conversation]
         except Exception as e:
             db.session.rollback()
-            # Handle the exception by logging and flashing an error message to the user
-            current_app.logger.error(f'Error creating a new conversation: {e}')
             flash('An error occurred while creating a new conversation.', 'error')
-            # Optionally, you may choose to redirect the user or perform other error-handling steps here.
 
     # Try to get the existing preferences or create a new instance if they don't exist
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
@@ -65,7 +59,6 @@ def chat_index():
             'title': conversation.title,
             'created_at': conversation.created_at,
             'system_prompt': conversation.system_prompt,
-            # Add other fields as necessary
         }
         for conversation in conversation_history
     ]
@@ -86,19 +79,64 @@ def new_conversation():
     form = NewConversationForm()
     if form.validate_on_submit():
         user_id = current_user.id
+        # Check the number of existing conversations
+        existing_conversations = Conversation.query.filter_by(user_id=user_id).order_by(
+            Conversation.created_at).all()
+
+        if len(existing_conversations) >= 5:
+            # User has reached the limit of conversations
+            return jsonify({
+                'status': 'limit-reached',
+                'message': 'You have reached the maximum number of conversations. Please delete an old conversation to create a new one.'
+            })
+
+        # If under the limit, create new conversation
         new_conversation = Conversation(user_id=user_id,
                                         system_prompt=form.system_prompt.data)
         db.session.add(new_conversation)
+
         try:
             db.session.commit()
-            return jsonify(
-                {'status': 'success', 'conversation_id': new_conversation.id,
-                 'system_prompt': new_conversation.system_prompt})
+            # Get formatted creation date and title for the new conversation
+            creation_date = new_conversation.created_at.strftime('%m/%d/%Y')
+            title = new_conversation.title if hasattr(new_conversation,
+                                                      'title') else 'New Conversation'
+
+            return jsonify({
+                'status': 'success',
+                'conversation_id': new_conversation.id,
+                'title': title,
+                'created_at': creation_date,
+                'system_prompt': new_conversation.system_prompt
+            })
         except Exception as e:
             db.session.rollback()
             return jsonify({'status': 'error', 'message': str(e)})
     else:
         return jsonify({'status': 'error', 'errors': form.errors})
+
+
+@bp.route('/delete-conversation/<int:conversation_id>', methods=['POST'])
+@login_required
+def delete_conversation(conversation_id):
+    conversation_to_delete = Conversation.query.get_or_404(conversation_id)
+    if conversation_to_delete.user_id != current_user.id:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    # Check if this is the user's last conversation
+    conversation_count = Conversation.query.filter_by(user_id=current_user.id).count()
+    if conversation_count <= 1:
+        return jsonify(
+            {'status': 'error', 'message': 'Cannot have 0 conversations.'}), 403
+
+    db.session.delete(conversation_to_delete)
+    try:
+        db.session.commit()
+        return jsonify(
+            {'status': 'success', 'message': 'Conversation deleted successfully.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)})
 
 
 @bp.route('/update-preferences', methods=['POST'])
