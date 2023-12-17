@@ -209,7 +209,7 @@ h2 {
 
 label {
   display: block;
-  font-size: 1em;
+  font-size: 12px;
   font-family: Univers, sans-serif;
 }
 
@@ -223,10 +223,11 @@ label {
 #chat-checkbox label {
   margin-bottom: 0;
 }
+
 input[type="range"] {
   -webkit-appearance: none;
-  width: 100%;
-  height: 5px;
+  width: 80%;
+  height: 3px;
   border-radius: 5px;
   background: #ddd;
   outline: none;
@@ -237,8 +238,8 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #333;
   cursor: pointer;
@@ -250,8 +251,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border: none;
   border-radius: 50%;
   background: #333;
@@ -259,8 +260,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 input[type="range"]::-ms-thumb {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #333;
 }
@@ -322,10 +323,10 @@ h4 {
   display: flex;
   flex-direction: column;
   padding: 20px;
-
   align-items: center;
   justify-content: space-evenly;
 }
+
 #send-button i {
   font-size: 1rem; /* Adjust icon size as needed */
 }
@@ -335,6 +336,7 @@ h4 {
   background-color: #faf5e6;
   border-radius: 10px;
   text-align: center;
+  font-size: 12px;
   width: 20%; /* Adjust the width as needed */
   display: inline-block;
   font-family: "Univers", sans-serif; /* Match the font of other inputs */
@@ -345,7 +347,7 @@ h4 {
 }
 
 .info-icon {
-  width: 16px; /* Adjust the size as needed */
+  width: 14px; /* Adjust the size as needed */
   height: auto; /* Adjust the size as needed */
   margin-left: 5px; /* Adjust spacing as needed */
   vertical-align: middle; /* Aligns the icon with the text */

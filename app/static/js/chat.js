@@ -222,6 +222,13 @@ function selectConversation(conversationId) {
       data.messages.forEach((message) => {
         appendMessageToChatBox(message.content, message.className);
       });
+      // Update the hidden input field for conversation_id
+      var completionConversationIdInput = document.getElementById(
+        "completion-conversation-id"
+      );
+      if (completionConversationIdInput) {
+        completionConversationIdInput.value = conversationId;
+      }
     })
     .catch((error) => console.error("Error:", error));
 }
