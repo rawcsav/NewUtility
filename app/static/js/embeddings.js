@@ -1,27 +1,23 @@
 function updateUploadMessages(message, status) {
   var messageDiv = document.getElementById("uploadStatus");
-  // Replace newline characters with <br> tags for HTML
   var formattedMessage = message.replace(/\n/g, "<br>");
-  messageDiv.innerHTML = formattedMessage; // Use innerHTML to render <br> tags
+  messageDiv.innerHTML = formattedMessage;
   messageDiv.className = status;
 }
 
 function enableEditing(editButton) {
-  // Find the closest parent list item and then the form within it
   var listItem = editButton.closest("li");
   var form = listItem.querySelector("form.edit-document-form");
   var inputs = form.querySelectorAll(".editable");
 
   inputs.forEach(function (input) {
     input.removeAttribute("readonly");
-    // If this is the author input, remove the "Author: " prefix
     if (input.name === "author" && input.value.startsWith("Author: ")) {
       input.value = input.value.substring("Author: ".length);
     }
   });
   inputs[0].focus();
 
-  // Update button display properties
   editButton.style.display = "none";
   var saveButton = listItem.querySelector(".save-btn");
   saveButton.style.display = "inline-block";
@@ -44,7 +40,6 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
       var formData = new FormData(uploadForm);
 
-      // Show an in-progress message
       updateUploadMessages("Uploading and processing...", "info");
 
       fetch(uploadForm.action, {
@@ -62,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Server error:", data.error);
             updateUploadMessages(data.error, "error");
           } else {
-            uploadForm.reset(); // Reset the form after successful upload
+            uploadForm.reset();
             updateUploadMessages(
               "File uploaded and processed successfully!\nPlease refresh to see changes",
               "success"
@@ -88,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var form = listItem.querySelector("form.edit-document-form");
 
         if (form) {
-          event.preventDefault(); // Prevent default form submission
+          event.preventDefault();
           var formData = new FormData(form);
 
           fetch(form.action, {
@@ -109,11 +104,9 @@ document.addEventListener("DOMContentLoaded", function () {
                   "Document details updated successfully!",
                   "success"
                 );
-                // Hide the save button and set inputs back to read-only
                 saveButton.style.display = "none";
                 listItem.querySelector(".edit-btn").style.display =
-                  "inline-block"; // Re-show the edit button
-
+                  "inline-block";
                 Array.from(listItem.querySelectorAll(".editable")).forEach(
                   (input) => {
                     input.setAttribute("readonly", "readonly");
@@ -137,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function () {
       event.target.classList.contains("delete-btn") ||
       event.target.closest(".delete-btn")
     ) {
-      // If the clicked element is not the button itself but an icon inside it, find the button
       var deleteButton = event.target.classList.contains("delete-btn")
         ? event.target
         : event.target.closest(".delete-btn");
@@ -148,11 +140,11 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch(`/embeddings/delete/${documentId}`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json", // Assuming the server expects JSON
+            "Content-Type": "application/json",
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRF-Token": csrfToken
           },
-          body: JSON.stringify({ document_id: documentId }) // Send the document ID in the request body if needed
+          body: JSON.stringify({ document_id: documentId })
         })
           .then((response) => {
             if (!response.ok) {
@@ -165,7 +157,6 @@ document.addEventListener("DOMContentLoaded", function () {
               alert("Error deleting document: " + data.error);
             } else {
               updateUploadMessages("Document deleted successfully!", "success");
-              // Remove the document from the DOM
               var listItem = deleteButton.closest("li");
               if (listItem) {
                 listItem.remove();
@@ -188,13 +179,10 @@ var fileInput = document.getElementById("file");
 var fileNameDisplay = document.getElementById("file-name-display");
 
 fileInput.addEventListener("change", function () {
-  // Check if a file was selected
   if (fileInput.files.length > 0) {
-    // Update the display with the file name
     fileNameDisplay.textContent =
       "Selected document: " + fileInput.files[0].name;
   } else {
-    // Clear the display if no file is selected
     fileNameDisplay.textContent = "";
   }
 });

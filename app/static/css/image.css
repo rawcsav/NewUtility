@@ -4,7 +4,7 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Ensures no scrolling */
+  overflow: hidden;
 }
 
 body {
@@ -12,7 +12,7 @@ body {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  background-color: #faf5e6; /* Retro Cream */
+  background-color: #faf5e6;
   background-image: linear-gradient(
       to right,
       rgba(0, 0, 0, 0.2) 1px,
@@ -160,21 +160,19 @@ h2 {
   z-index: 1;
 }
 
-/* Base shape styles */
 .shape {
   position: absolute;
-  border: 5px solid #141414; /* Example border color */
+  border: 5px solid #141414;
 }
 
 #pink {
-  background-color: #ec9ca0; /* Brown */
+  background-color: #ec9ca0;
   top: 1vh;
   left: -5vw;
   transform: rotate(-10deg);
   z-index: 2;
-  /* Apply a shape class */
 }
-/* Specific shapes with dimensions */
+
 .rectangle {
   width: 28vw;
   height: 24vh;
@@ -259,7 +257,7 @@ h2 {
   z-index: 10;
 }
 #purple {
-  background-color: #9b5de5; /* Purple */
+  background-color: #9b5de5;
   top: 15vh;
   left: 8vw;
   display: flex;
@@ -306,15 +304,14 @@ select {
 }
 
 #icons-container {
-  text-align: center; /* Center the icons within the container */
+  text-align: center;
 }
 
-/* General styles for all icons within the icons-container */
 #icons-container .image-icon {
-  margin: 5px 10px; /* Add some space around the icons */
-  text-decoration: none; /* Remove underline from anchor elements */
-  color: #d4af37; /* Set a default color for the icons (change as needed) */
-  font-size: 18px; /* Set the size of the icons (adjust as needed) */
+  margin: 5px 10px;
+  text-decoration: none;
+  color: #d4af37;
+  font-size: 18px;
 }
 
 .carousel {
@@ -327,11 +324,11 @@ select {
 
 .carousel-inner {
   display: flex;
-  width: 300px; /* Adjust as needed */
+  width: 300px;
 }
 
 .thumbnail {
-  width: 100px; /* Adjust as needed */
+  width: 100px;
   height: 100px;
   margin: 5px;
   cursor: pointer;

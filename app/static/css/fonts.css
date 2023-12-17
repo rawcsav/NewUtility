@@ -21,7 +21,7 @@
   src:
     url("../fonts/univers-condensedlightoblique.woff2") format("woff2"),
     url("../fonts/univers-condensedlightoblique.woff") format("woff");
-  font-weight: 300; /* Light */
+  font-weight: 300;
   font-style: oblique;
 }
 
@@ -30,7 +30,7 @@
   src:
     url("../fonts/univers-light.woff2") format("woff2"),
     url("../fonts/univers-light.woff") format("woff");
-  font-weight: 300; /* Light */
+  font-weight: 300;
   font-style: normal;
 }
 
@@ -39,7 +39,7 @@
   src:
     url("../fonts/univers-lightoblique.woff2") format("woff2"),
     url("../fonts/univers-lightoblique.woff") format("woff");
-  font-weight: 300; /* Light */
+  font-weight: 300;
   font-style: oblique;
 }
 
@@ -48,7 +48,7 @@
   src:
     url("../fonts/univers-lightultracondensed.woff2") format("woff2"),
     url("../fonts/univers-lightultracondensed.woff") format("woff");
-  font-weight: 300; /* Light */
+  font-weight: 300;
   font-style: normal;
 }
 
@@ -345,7 +345,7 @@
   src:
     url("../fonts/NHaasGroteskDSPro-45Lt.woff2") format("woff2"),
     url("../fonts/NHaasGroteskDSPro-45Lt.woff") format("woff");
-  font-weight: 300; /* This might be a lighter weight, adjust as necessary */
+  font-weight: 300;
   font-style: normal;
 }
 
@@ -354,7 +354,7 @@
   src:
     url("../fonts/NHaasGroteskDSPro-46LtIt.woff2") format("woff2"),
     url("../fonts/NHaasGroteskDSPro-46LtIt.woff") format("woff");
-  font-weight: 300; /* This might be a lighter weight, adjust as necessary */
+  font-weight: 300;
   font-style: italic;
 }
 
@@ -453,7 +453,7 @@
   src:
     url("../fonts/IBMPlexMono-Medium.woff2") format("woff2"),
     url("../fonts/IBMPlexMono-Medium.woff") format("woff");
-  font-weight: 500; /* Medium weight */
+  font-weight: 500;
   font-style: normal;
 }
 
@@ -462,7 +462,7 @@
   src:
     url("../fonts/IBMPlexMono-MediumItalic.woff2") format("woff2"),
     url("../fonts/IBMPlexMono-MediumItalic.woff") format("woff");
-  font-weight: 500; /* Medium weight */
+  font-weight: 500;
   font-style: italic;
 }
 
@@ -471,7 +471,7 @@
   src:
     url("../fonts/IBMPlexMono-SemiBold.woff2") format("woff2"),
     url("../fonts/IBMPlexMono-SemiBold.woff") format("woff");
-  font-weight: 600; /* SemiBold weight */
+  font-weight: 600;
   font-style: normal;
 }
 
@@ -480,7 +480,7 @@
   src:
     url("../fonts/IBMPlexMono-SemiBoldItalic.woff2") format("woff2"),
     url("../fonts/IBMPlexMono-SemiBoldItalic.woff") format("woff");
-  font-weight: 600; /* SemiBold weight */
+  font-weight: 600;
   font-style: italic;
 }
 
@@ -489,7 +489,7 @@
   src:
     url("../fonts/IBMPlexMono-Bold.woff2") format("woff2"),
     url("../fonts/IBMPlexMono-Bold.woff") format("woff");
-  font-weight: bold; /* Bold weight */
+  font-weight: bold;
   font-style: normal;
 }
 
@@ -498,6 +498,6 @@
   src:
     url("../fonts/IBMPlexMono-BoldItalic.woff2") format("woff2"),
     url("../fonts/IBMPlexMono-BoldItalic.woff") format("woff");
-  font-weight: bold; /* Bold weight */
+  font-weight: bold;
   font-style: italic;
 }

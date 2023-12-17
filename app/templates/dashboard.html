@@ -166,7 +166,6 @@
               >
                 <i class="fa fa-edit"></i>
               </button>
-              <!-- Save button (initially hidden) -->
               <button
                 type="button"
                 class="btn-icon save-btn"
@@ -322,7 +321,6 @@
               alt="Generated Image"
             />
             {% else %}
-            <!-- Lazy-load the rest of the images -->
             <img
               src="{{ url_for('static', filename='temp_img/' ~ image.uuid ~ '.webp') }}"
               alt="Generated Image"

@@ -4,7 +4,7 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Ensures no scrolling */
+  overflow: hidden;
 }
 .hidden {
   display: none;
@@ -15,7 +15,7 @@ body {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  background-color: #faf5e6; /* Retro Cream */
+  background-color: #faf5e6;
   background-image: linear-gradient(
       to right,
       rgba(0, 0, 0, 0.2) 1px,
@@ -55,19 +55,18 @@ h2 {
 
 .shape {
   position: absolute;
-  border: 5px solid #141414; /* Example border color */
+  border: 5px solid #141414;
 }
 
 #pink {
-  background-color: #ec9ca0; /* Brown */
+  background-color: #ec9ca0;
   top: 1vh;
   left: 0;
   padding: 10px;
   transform: rotate(-10deg);
   z-index: -1;
-  /* Apply a shape class */
 }
-/* Specific shapes with dimensions */
+
 .rectangle {
   z-index: 1;
 }
@@ -82,7 +81,7 @@ h2 {
 }
 
 #purple {
-  background-color: #9b5de5; /* Purple */
+  background-color: #9b5de5;
   top: 4vh;
   left: 11vw;
   display: flex;
@@ -98,12 +97,12 @@ h2 {
 }
 .tall-rectangle {
   width: 20vw;
-  position: relative; /* Ensure that absolute positioning is relative to this container */
+  position: relative;
   flex: 1;
 }
 #brown {
-  background-color: #fefdf9; /* Red */
-  border: 5px solid #654321; /* Example border color */
+  background-color: #fefdf9;
+  border: 5px solid #654321;
   border-right: 2px solid #654321;
   z-index: 2;
   max-height: 100%;
@@ -128,10 +127,9 @@ h2 {
   z-index: 10;
 }
 
-/* static/css/chat.css */
 .container {
   display: flex;
-  height: calc(100vh - 30px); /* Replace 60px with your footer's height */
+  height: calc(100vh - 30px);
 }
 
 .sidebar {
@@ -196,6 +194,7 @@ h2 {
 .message-input-container {
   position: relative;
   padding-top: 20px;
+  padding-bottom: 10px;
 }
 
 #new-convo-icon {
@@ -283,8 +282,8 @@ h4 {
   font-size: 2em;
   font-weight: 900;
   margin: 0;
+  display: inline-block;
   top: 0;
-  text-align: center;
   color: #0069be;
 }
 
@@ -294,24 +293,32 @@ h4 {
 }
 
 #chat-completion-form .input-group {
-  width: 50%;
-}
-
-.message-input {
+  width: 60%;
   border: 1px solid #383737;
   background-color: #f8f8f8;
   font-family: Univers, sans-serif;
+  border-radius: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.top-banner {
+  text-align: center;
+}
+.message-input {
+  font-family: Univers, sans-serif;
   height: auto;
-  resize: none; /* Prevents the user from resizing the textarea */
-  overflow-y: hidden; /* Adds scrollbar if content exceeds max-height */
-  max-height: 100px; /* Adjust as needed */
+  resize: none;
+  overflow-y: auto;
+  background-color: #f8f8f8;
+  max-height: 80px;
   line-height: 20px;
-  min-height: 20px; /* Adjust as needed */
+  min-height: 20px;
+  border: none;
+  padding: 0;
   width: 100%;
-  align-items: flex-start; /* If using flex or grid, align items to the start */
+  align-items: flex-start;
   flex-grow: 1;
-  border-radius: 4px 0 0 4px; /* Rounded corners on the left side */
-  border-right: none; /* Hide the right border to blend with the button */
 }
 
 .message-input:focus,
@@ -320,12 +327,14 @@ h4 {
 }
 
 #send-button {
-  border-radius: 0 4px 4px 0; /* Rounded corners on the right side */
-  margin: 0; /* Remove any default margin */
-  background-color: #f8f8f8; /* Match the input's border */
-  border: 1px solid #383737; /* Match the input's border */
-  border-left: none; /* Hide the left border to blend with the input */
-  /* Other styles as needed */
+  margin: 0;
+  border: none;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #update-preferences-form {
@@ -337,7 +346,7 @@ h4 {
 }
 
 #send-button i {
-  font-size: 1rem; /* Adjust icon size as needed */
+  font-size: 1rem;
 }
 
 .range-value-input {
@@ -346,9 +355,9 @@ h4 {
   border-radius: 10px;
   text-align: center;
   font-size: 12px;
-  width: 20%; /* Adjust the width as needed */
+  width: 20%;
   display: inline-block;
-  font-family: "Univers", sans-serif; /* Match the font of other inputs */
+  font-family: "Univers", sans-serif;
 }
 
 .range-value-input:focus {
@@ -360,14 +369,13 @@ h4 {
 }
 
 .info-icon {
-  width: 14px; /* Adjust the size as needed */
-  height: auto; /* Adjust the size as needed */
-  margin-left: 5px; /* Adjust spacing as needed */
-  vertical-align: middle; /* Aligns the icon with the text */
-  cursor: pointer; /* Changes cursor to indicate it's interactive */
+  width: 14px;
+  height: auto;
+  margin-left: 5px;
+  vertical-align: middle;
+  cursor: pointer;
 }
 
-/* Tooltip container */
 .tooltip-container {
   position: relative;
   z-index: 10;
@@ -376,12 +384,10 @@ h4 {
   flex-direction: row;
 }
 
-/* Preference Popup styles */
 .preference-popup {
-  display: none; /* Hidden by default */
+  display: none;
 }
 
-/* Show class to reveal the popup */
 .show {
   display: block;
 }
@@ -394,11 +400,10 @@ h4 {
   color: red;
 }
 
-/* Tooltip text */
 .tooltip-container .tooltip-text {
   visibility: hidden;
-  transition: opacity 0.5s ease-out; /* Smooth transition for fading */
-  opacity: 0; /* Start hidden */
+  transition: opacity 0.5s ease-out;
+  opacity: 0;
   font-size: 12px;
   width: 120px;
   background-color: black;
@@ -407,7 +412,6 @@ h4 {
   border-radius: 6px;
   padding: 5px 0;
 
-  /* Position the tooltip */
   position: absolute;
   bottom: 100%;
   right: 0;
@@ -438,10 +442,9 @@ h4 {
 }
 
 #preference-popup {
-  display: none; /* Hide preferences on page load */
+  display: none;
 }
 
-/* Styles for Markdown content */
 .message {
   font-family: "Univers", sans-serif;
   color: #383737;
@@ -449,7 +452,6 @@ h4 {
   line-height: 1.5;
 }
 
-/* Headers */
 .message h1 {
   font-size: 2em;
 }
@@ -463,18 +465,17 @@ h4 {
   font-size: 1.4em;
 }
 .message h5 {
-  font-size: 1.2em;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-size: 1.1em;
 }
 .message h6 {
   font-size: 1em;
 }
 
-/* Headers styled with the primary font and color scheme */
 .message h1,
 .message h2,
 .message h3,
 .message h4,
-.message h5,
 .message h6 {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   color: #654321;
@@ -497,7 +498,6 @@ h4 {
   border-bottom-style: solid;
 }
 
-/* Lists */
 .message ul,
 .message ol {
   padding-left: 20px;
@@ -507,7 +507,6 @@ h4 {
   margin-bottom: 5px;
 }
 
-/* Blockquotes */
 .message blockquote {
   border-left: 4px solid #ec9ca0;
   padding-left: 15px;
@@ -516,7 +515,6 @@ h4 {
   background-color: #faf5e6;
 }
 
-/* Code blocks and inline code */
 .message code,
 .message pre {
   font-family: "IBMPlexMono", monospace;
@@ -527,34 +525,36 @@ h4 {
   font-size: 12px;
 }
 
-/* Additional style for code blocks */
 .message pre {
   margin-bottom: 1em;
   padding: 1em;
 }
 
-/* Inline code specific styles */
 .message code {
   padding: 0.2em 0.4em;
 }
 
 .assistant-message h5,
 .user-message h5 {
-  margin-top: 20px;
-  margin-bottom: 0;
   text-align: left;
 }
 
+.message-header {
+  margin-top: 15px;
+}
+
 .assistant-message h5 {
+  margin: 0;
   color: #00a86b;
 }
 
 .user-message h5 {
+  margin: 0;
   color: #0069be;
 }
 
 .system-message h5 {
-  margin-top: 0;
+  margin: 0;
   color: #9b5de5;
 }
 #conversation-container {
@@ -611,24 +611,24 @@ h3 {
 
 .options-button,
 .button-send {
-  background-color: transparent; /* Example background color */
-  border: none; /* No border */
-  cursor: pointer; /* Cursor to indicate it's clickable */
-  transition: background-color 0.3s; /* Smooth background color change on hover */
-  line-height: 1; /* Aligns icon vertically */
-  display: flex; /* Use flexbox to center the icon */
-  justify-content: center; /* Center icon horizontally */
-  align-items: center; /* Center icon vertically */
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .options-button i,
 .button-send i {
-  font-size: 1.2em; /* Adjust icon size as needed */
+  font-size: 1.2em;
 }
 
 .button-send:hover {
-  transform: scale(1.1); /* Slightly increase icon size on hover */
-  color: #45a049; /* Darker background on hover for send */
+  transform: scale(1.1);
+  color: #45a049;
 }
 
 #options {
@@ -636,22 +636,20 @@ h3 {
   justify-content: center;
 }
 
-/* Add a hover effect to change color and scale up the icons */
 .options-button i,
 .button-send i {
   transition:
     color 0.2s,
-    transform 0.2s; /* Smooth transition for color and transform */
+    transform 0.2s;
 }
 
 .options-button:hover i {
-  color: #555; /* Change icon color on hover */
+  color: #555;
 }
 
-/* Active state styling for history and preferences buttons */
 #show-history-btn.active i,
 #show-preferences-btn.active i {
-  color: #cd2000; /* Active state icon color */
+  color: #cd2000;
 }
 
 .system-message p {

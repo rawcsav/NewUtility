@@ -65,7 +65,6 @@ $("#toggleUserButton").on("click", function () {
   $(this).toggleClass("active");
 });
 
-// Define a function to start spinning the refresh icon
 function startSpinningIcon(form) {
   const submitButton = form.querySelector(".retest-key-button i");
   if (submitButton) {
@@ -73,7 +72,6 @@ function startSpinningIcon(form) {
   }
 }
 
-// Define a function to stop spinning the refresh icon
 function stopSpinningIcon(form) {
   const submitButton = form.querySelector(".retest-key-button i");
   if (submitButton) {
@@ -85,8 +83,7 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
   form.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    // Start the spinning effect on the refresh button
-    var refreshButton = form.querySelector(".retest-key-button i.fa-sync-alt");
+        var refreshButton = form.querySelector(".retest-key-button i.fa-sync-alt");
     if (refreshButton) {
       refreshButton.classList.add("spinning");
     }
@@ -114,37 +111,30 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
         );
       })
       .finally(() => {
-        // Stop the spinning effect on the refresh button
-        if (refreshButton) {
+                if (refreshButton) {
           refreshButton.classList.remove("spinning");
         }
       });
   });
 });
 
-// Function to update the selected key visual indication
 function updateSelectedKeyVisual(selectedForm) {
-  // Remove the 'selected-key' class from all key list elements
-  document.querySelectorAll(".key-list").forEach((keyItem) => {
+    document.querySelectorAll(".key-list").forEach((keyItem) => {
     keyItem.classList.remove("selected-key");
   });
 
-  // Add the 'selected-key' class to the key list element of the selected form
-  const keyListItem = selectedForm.closest(".key-list");
+    const keyListItem = selectedForm.closest(".key-list");
   if (keyListItem) {
     keyListItem.classList.add("selected-key");
   }
 }
 
-// Function to remove a key from the UI
 function removeKeyFromUI(form) {
   const keyListItem = form.closest(".key-list");
   if (keyListItem) {
-    keyListItem.remove(); // Removes the key item from the list
-  }
+    keyListItem.remove();   }
 }
 
-// Event listeners for the select and delete key forms
 document
   .querySelectorAll(".delete-api-key-form, .select-api-key-form")
   .forEach((form) => {
@@ -164,11 +154,9 @@ document
             updateApiKeyMessages(data.message, "success");
 
             if (isSelectForm) {
-              // If this is a select API key form, update the UI to show the selected key
-              updateSelectedKeyVisual(form);
+                            updateSelectedKeyVisual(form);
             } else {
-              // If this is a delete API key form, remove the key from the UI
-              removeKeyFromUI(form);
+                            removeKeyFromUI(form);
             }
           } else {
             updateApiKeyMessages(data.message, "error");
@@ -186,15 +174,12 @@ document
 
 function updateUploadMessages(message, status) {
   var messageDiv = document.getElementById("docsStatus");
-  // Replace newline characters with <br> tags for HTML
-  var formattedMessage = message.replace(/\n/g, "<br>");
-  messageDiv.innerHTML = formattedMessage; // Use innerHTML to render <br> tags
-  messageDiv.className = status;
+    var formattedMessage = message.replace(/\n/g, "<br>");
+  messageDiv.innerHTML = formattedMessage;   messageDiv.className = status;
 }
 
 function enableEditing(editButton) {
-  // Find the closest parent list item and then the form within it
-  var listItem = editButton.closest("li");
+    var listItem = editButton.closest("li");
   var form = listItem.querySelector("form.edit-document-form");
   var inputs = form.querySelectorAll(".editable");
 
@@ -203,8 +188,7 @@ function enableEditing(editButton) {
   });
   inputs[0].focus();
 
-  // Update button display properties
-  editButton.style.display = "none";
+    editButton.style.display = "none";
   var saveButton = listItem.querySelector(".save-btn");
   saveButton.style.display = "inline-block";
 
@@ -231,8 +215,7 @@ saveButtons.forEach(function (saveButton) {
       var form = listItem.querySelector("form.edit-document-form");
 
       if (form) {
-        event.preventDefault(); // Prevent default form submission
-        var formData = new FormData(form);
+        event.preventDefault();         var formData = new FormData(form);
 
         fetch(form.action, {
           method: "POST",
@@ -249,11 +232,9 @@ saveButtons.forEach(function (saveButton) {
               alert("Error updating document: " + data.error);
             } else {
               updateUploadMessages("Updated successfully!", "success");
-              // Hide the save button and set inputs back to read-only
-              saveButton.style.display = "none";
+                            saveButton.style.display = "none";
               listItem.querySelector(".edit-btn").style.display =
-                "inline-block"; // Re-show the edit button
-
+                "inline-block"; 
               Array.from(listItem.querySelectorAll(".editable")).forEach(
                 (input) => {
                   input.setAttribute("readonly", "readonly");
@@ -277,8 +258,7 @@ document.addEventListener("click", function (event) {
     event.target.classList.contains("delete-btn") ||
     event.target.closest(".delete-btn")
   ) {
-    // If the clicked element is not the button itself but an icon inside it, find the button
-    var deleteButton = event.target.classList.contains("delete-btn")
+        var deleteButton = event.target.classList.contains("delete-btn")
       ? event.target
       : event.target.closest(".delete-btn");
     var documentId = deleteButton.dataset.docId;
@@ -288,12 +268,10 @@ document.addEventListener("click", function (event) {
       fetch(`/embeddings/delete/${documentId}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Assuming the server expects JSON
-          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json",           "X-Requested-With": "XMLHttpRequest",
           "X-CSRF-Token": csrfToken
         },
-        body: JSON.stringify({ document_id: documentId }) // Send the document ID in the request body if needed
-      })
+        body: JSON.stringify({ document_id: documentId })       })
         .then((response) => {
           if (!response.ok) {
             throw new Error("Server returned an error response");
@@ -305,8 +283,7 @@ document.addEventListener("click", function (event) {
             alert("Error deleting document: " + data.error);
           } else {
             updateUploadMessages("Document deleted successfully!", "success");
-            // Remove the document from the DOM
-            var listItem = deleteButton.closest("li");
+                        var listItem = deleteButton.closest("li");
             if (listItem) {
               listItem.remove();
             }
@@ -324,42 +301,32 @@ document.addEventListener("click", function (event) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Add click event listeners to all thumbnails in the image history carousel
-  const thumbnails = document.querySelectorAll(".image-history-item img");
+    const thumbnails = document.querySelectorAll(".image-history-item img");
   thumbnails.forEach((thumbnail) => {
     thumbnail.addEventListener("click", function () {
-      // Extract the UUID from the image src attribute
-      const uuid = this.getAttribute("src").split("/").pop().split(".")[0];
-      // Toggle the icons for the clicked image
-      toggleIcons(uuid, this);
+            const uuid = this.getAttribute("src").split("/").pop().split(".")[0];
+            toggleIcons(uuid, this);
     });
   });
 });
 
 function toggleIcons(uuid, imageElement) {
-  // Find the image history item container for the clicked thumbnail
-  const imageItem = imageElement.closest(".image-history-item");
-  // Check if the .icons-container exists
-  const iconsContainer = imageItem.querySelector(".icons-container");
+    const imageItem = imageElement.closest(".image-history-item");
+    const iconsContainer = imageItem.querySelector(".icons-container");
 
-  // If icons already exist, toggle visibility
-  if (iconsContainer && iconsContainer.hasChildNodes()) {
-    // Icons are already present, so toggle visibility
-    iconsContainer.style.display =
+    if (iconsContainer && iconsContainer.hasChildNodes()) {
+        iconsContainer.style.display =
       iconsContainer.style.display === "none" ? "block" : "none";
   } else {
-    // No icons present, add them
-    addIconsToImage(uuid, iconsContainer);
+        addIconsToImage(uuid, iconsContainer);
   }
 }
 
 function addIconsToImage(uuid, iconsContainer) {
   if (iconsContainer) {
-    // Clear any previously added icons
-    iconsContainer.innerHTML = "";
+        iconsContainer.innerHTML = "";
 
-    // Append new icons
-    iconsContainer.appendChild(
+        iconsContainer.appendChild(
       createIconLink(`/image/download_image/${uuid}`, "fa-download")
     );
     iconsContainer.appendChild(
@@ -370,8 +337,7 @@ function addIconsToImage(uuid, iconsContainer) {
       )
     );
 
-    // Set display to block to ensure icons are visible
-    iconsContainer.style.display = "block";
+        iconsContainer.style.display = "block";
   } else {
     console.error("Icons container not found for image UUID:", uuid);
   }

@@ -4,10 +4,9 @@ document.addEventListener("DOMContentLoaded", function () {
   );
   var passwordResetForm = document.getElementById("password-reset-form");
 
-  // Ensure the form elements exist before adding event listeners
   if (passwordResetRequestForm) {
     passwordResetRequestForm.addEventListener("submit", function (event) {
-      event.preventDefault(); // Prevent the normal form submission
+      event.preventDefault();
       submitFormWithRecaptcha(
         passwordResetRequestForm,
         "password-reset-request-message"
@@ -17,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (passwordResetForm) {
     passwordResetForm.addEventListener("submit", function (event) {
-      event.preventDefault(); // Prevent the normal form submission
+      event.preventDefault();
       submitFormWithRecaptcha(
         passwordResetForm,
         "password-reset-message",

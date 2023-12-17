@@ -55,24 +55,19 @@ code.hljs {
   color: #586e75;
 }
 
-
-/* purposely do not highlight these things */
 .hljs-formula,
 .hljs-params,
-.hljs-property
-{}
+.hljs-property {
+}
 
-/* base03 - #839496 -  Comments, Invisibles, Line Highlighting */
 .hljs-comment {
   color: #839496;
 }
 
-/* base04 - #657b83 -  Dark Foreground (Used for status bars) */
 .hljs-tag {
   color: #657b83;
 }
 
-/* base05 - #586e75 -  Default Foreground, Caret, Delimiters, Operators */
 .hljs-subst,
 .hljs-punctuation,
 .hljs-operator {
@@ -83,7 +78,6 @@ code.hljs {
   opacity: 0.7;
 }
 
-/* base08 - Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
 .hljs-bullet,
 .hljs-variable,
 .hljs-template-variable,
@@ -93,7 +87,6 @@ code.hljs {
   color: #dc322f;
 }
 
-/* base09 - Integers, Boolean, Constants, XML Attributes, Markup Link Url */
 .hljs-symbol,
 .hljs-number,
 .hljs-link,
@@ -103,20 +96,17 @@ code.hljs {
   color: #cb4b16;
 }
 
-/* base0A - Classes, Markup Bold, Search Text Background */
 .hljs-title,
 .hljs-class .hljs-title,
-.hljs-title.class_
-{
+.hljs-title.class_ {
   color: #b58900;
 }
 
 .hljs-strong {
-  font-weight:bold;
+  font-weight: bold;
   color: #b58900;
 }
 
-/* base0B - Strings, Inherited Class, Markup Code, Diff Inserted */
 .hljs-code,
 .hljs-addition,
 .hljs-title.class_.inherited__,
@@ -124,16 +114,14 @@ code.hljs {
   color: #859900;
 }
 
-/* base0C - Support, Regular Expressions, Escape Characters, Markup Quotes */
 .hljs-built_in,
-.hljs-doctag, /* guessing */
+.hljs-doctag,
 .hljs-quote,
 .hljs-keyword.hljs-atrule,
 .hljs-regexp {
   color: #2aa198;
 }
 
-/* base0D - Functions, Methods, Attribute IDs, Headings */
 .hljs-function .hljs-title,
 .hljs-attribute,
 .ruby .hljs-property,
@@ -142,12 +130,7 @@ code.hljs {
   color: #268bd2;
 }
 
-/* base0E - Keywords, Storage, Selector, Markup Italic, Diff Changed */
 .hljs-type,
-/* .hljs-selector-id, */
-/* .hljs-selector-class, */
-/* .hljs-selector-attr, */
-/* .hljs-selector-pseudo, */
 .hljs-template-tag,
 .diff .hljs-meta,
 .hljs-keyword {
@@ -158,20 +141,17 @@ code.hljs {
   font-style: italic;
 }
 
-/* base0F - Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
 .hljs-meta,
 /*
   prevent top level .keyword and .string scopes
   from leaking into meta by accident
 */
 .hljs-meta .hljs-keyword,
-.hljs-meta .hljs-string
-{
+.hljs-meta .hljs-string {
   color: #d33682;
 }
 
 .hljs-meta .hljs-keyword,
-/* for v10 compatible themes */
 .hljs-meta-keyword {
   font-weight: bold;
 }

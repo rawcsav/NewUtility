@@ -27,15 +27,13 @@ function saveSystemPrompt(conversationId, newPrompt) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken() // Ensure this function correctly retrieves the CSRF token
+      "X-CSRFToken": getCsrfToken()
     },
     body: JSON.stringify(payload)
   })
     .then((response) => {
       if (!response.ok) {
-        // Non-2xx HTTP status code response
         return response.json().then((data) => {
-          // Assuming the server sends a JSON response with a 'message' field even on errors
           throw new Error(
             data.message || "HTTP error! Status: " + response.status
           );
@@ -48,13 +46,11 @@ function saveSystemPrompt(conversationId, newPrompt) {
         console.log("System prompt updated successfully");
         updateStatusMessage("System prompt updated successfully", "success");
       } else {
-        // Handle any other cases where the server indicates failure but doesn't throw an error
         console.error("Failed to update system prompt: " + data.message);
         updateStatusMessage(data.message, "error");
       }
     })
     .catch((error) => {
-      // Handle network errors, parsing errors, and rejections from the server validation
       console.error("Failed to update system prompt: " + error.message);
       updateStatusMessage(error.message, "error");
     });
@@ -77,13 +73,12 @@ function saveConvoTitle(conversationId, newTitle) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken() // Ensure this function correctly retrieves the CSRF token
+      "X-CSRFToken": getCsrfToken()
     },
     body: JSON.stringify(payload)
   })
     .then((response) => {
       if (!response.ok) {
-        // Non-2xx HTTP status code response, try to parse and get error message
         return response.json().then((data) => {
           throw new Error(
             data.message || "HTTP error! Status: " + response.status
@@ -97,20 +92,16 @@ function saveConvoTitle(conversationId, newTitle) {
         console.log("Title updated successfully");
         updateStatusMessage("Title updated successfully", "success");
 
-        // Update the conversation entry with the new title in the UI
         var conversationEntry = document.querySelector(
           `.conversation-entry[data-conversation-id="${conversationId}"]`
         );
         if (conversationEntry) {
           let textEntryElement = conversationEntry.querySelector(".text-entry");
           if (textEntryElement) {
-            // Update the visible title in the conversation history
             textEntryElement.textContent = newTitle;
           }
-          // Update the data-conversation-title attribute
           conversationEntry.setAttribute("data-conversation-title", newTitle);
 
-          // Update the conversationHistory array with the new title, if it exists
           if (typeof conversationHistory !== "undefined") {
             let conversation = conversationHistory.find(
               (conv) => conv.id == conversationId
@@ -126,7 +117,6 @@ function saveConvoTitle(conversationId, newTitle) {
       }
     })
     .catch((error) => {
-      // Handle network errors, parsing errors, and rejections from server validation
       console.error("Failed to update title: " + error.message);
       updateStatusMessage(error.message, "error");
     });
@@ -227,6 +217,9 @@ function appendMessageToChatBox(message, className) {
   var messageDiv = document.createElement("div");
   messageDiv.classList.add("message", className);
 
+  var messageHeader = document.createElement("div");
+  messageHeader.classList.add("message-header");
+
   var title = document.createElement("h5");
   if (className === "assistant-message") {
     title.textContent = "Jack";
@@ -236,13 +229,12 @@ function appendMessageToChatBox(message, className) {
     title.textContent = "System";
   }
 
-  messageDiv.appendChild(title);
+  messageHeader.appendChild(title);
 
   if (message != null) {
     var messageContent = document.createElement("div");
     messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
 
-    // Make the system prompt editable when the icon is clicked
     if (className === "system-message") {
       var editIcon = document.createElement("i");
       editIcon.classList.add("fas", "fa-edit");
@@ -253,11 +245,9 @@ function appendMessageToChatBox(message, className) {
 
       messageContent.addEventListener("blur", function () {
         messageContent.contentEditable = "false";
-        // Get the conversation ID
         var conversationId = document
           .getElementById("convo-title")
           .getAttribute("data-conversation-id");
-        // Save the changes to the database
         saveSystemPrompt(conversationId, messageContent.textContent);
       });
 
@@ -268,9 +258,10 @@ function appendMessageToChatBox(message, className) {
         }
       });
 
-      messageDiv.appendChild(editIcon);
+      messageHeader.appendChild(editIcon);
     }
 
+    messageDiv.appendChild(messageHeader);
     messageDiv.appendChild(messageContent);
   }
 
@@ -306,7 +297,6 @@ function selectConversation(conversationId) {
       data.messages.forEach((message) => {
         appendMessageToChatBox(message.content, message.className);
       });
-      // Update the hidden input field for conversation_id
       var completionConversationIdInput = document.getElementById(
         "completion-conversation-id"
       );
@@ -320,7 +310,6 @@ function selectConversation(conversationId) {
 function deleteConversation(conversationId) {
   var allConversations = document.querySelectorAll(".conversation-entry");
 
-  // Check if there's only one conversation left
   if (allConversations.length <= 1) {
     updateStatusMessage("Cannot delete the last conversation.", "error");
     return;
@@ -341,7 +330,6 @@ function deleteConversation(conversationId) {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        // Remove the conversation from the list
         var entry = document.querySelector(
           `.conversation-entry[data-conversation-id="${conversationId}"]`
         );
@@ -350,12 +338,10 @@ function deleteConversation(conversationId) {
         }
         updateStatusMessage("Conversation deleted successfully.", "success");
       } else {
-        // Handle error case
         updateStatusMessage("Failed to delete conversation.", "error");
       }
     })
     .catch((error) => {
-      // Handle error case
       updateStatusMessage("Error: " + error.message, "error");
     });
 }
@@ -379,42 +365,24 @@ document.addEventListener("DOMContentLoaded", function () {
   var newConversationForm = document.getElementById("new-conversation-form");
   var chatCompletionForm = document.getElementById("chat-completion-form");
   var messageInput = document.querySelector(".message-input");
-  var maxLines = 5;
-  var lineHeight = parseInt(getComputedStyle(messageInput).lineHeight, 10);
 
-  function adjustHeight() {
-    messageInput.style.height = "auto"; // Reset the height so the scrollHeight includes only the text
-    var textHeight = messageInput.scrollHeight;
+  messageInput.addEventListener("input", function () {
+    this.style.height = "auto";
+    this.style.height = this.scrollHeight + "px";
+  });
 
-    // Calculate the height of the text area based on the line height and number of lines
-    if (textHeight > maxLines * lineHeight) {
-      messageInput.style.overflowY = "scroll"; // Enable scrolling
-      messageInput.style.height = maxLines * lineHeight + "px"; // Set the maximum height
-    } else {
-      messageInput.style.overflowY = "hidden"; // Hide scrollbar
-      messageInput.style.height = textHeight + "px"; // Expand to fit content
-    }
-  }
-
-  messageInput.addEventListener("input", adjustHeight);
-
-  // Handle Enter key press for form submission or adding a new line
   messageInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && !e.shiftKey) {
-      var lines = messageInput.value.split("\n");
-      if (lines.length < maxLines) {
-        e.preventDefault();
-        document
-          .getElementById("chat-completion-form")
-          .dispatchEvent(
-            new Event("submit", { cancelable: true, bubbles: true })
-          );
-      } // If the max lines have been reached, the default behavior will add a new line, which is handled by the 'input' event
+      e.preventDefault(); // Prevent the default behavior of enter key
+      // Trigger form submission
+      document
+        .getElementById("chat-completion-form")
+        .dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true })
+        );
     }
   });
 
-  // Initial adjustment
-  adjustHeight();
   var updatePreferencesForm = document.getElementById(
     "update-preferences-form"
   );
@@ -635,8 +603,7 @@ document.addEventListener("DOMContentLoaded", function () {
             newConvoEntry.setAttribute(
               "data-conversation-title",
               newConversationTitle
-            ); // Set the title attribute
-
+            );
             newConvoEntry.addEventListener("click", function () {
               selectConversation(newConversationId);
             });

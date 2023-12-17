@@ -12,11 +12,9 @@ function showLoader() {
   const imageContainer = document.getElementById("generated-images");
   const loaderTemplate = document.getElementById("loader-template").innerHTML;
 
-  // Clear the image container and insert the loader HTML
   imageContainer.innerHTML = loaderTemplate;
 
-  // Make the loader visible
-  const loader = imageContainer.querySelector(".loader"); // Adjust the selector to target the loader within the container
+  const loader = imageContainer.querySelector(".loader");
   if (loader) {
     loader.style.display = "block";
   }
@@ -24,7 +22,7 @@ function showLoader() {
 
 function hideLoader() {
   const imageContainer = document.getElementById("generated-images");
-  const loader = imageContainer.querySelector(".loader"); // Adjust the selector to target the loader within the container
+  const loader = imageContainer.querySelector(".loader");
   if (loader) {
     loader.style.display = "none";
   }
@@ -96,8 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("image-generation-form")
     .addEventListener("submit", function (event) {
       event.preventDefault();
-      showLoader(); // Call this to show the loader
-
+      showLoader();
       var formData = new FormData(this);
 
       fetch("/image/generate_image", {
@@ -116,31 +113,27 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then((data) => {
           if (data.error_message) {
-            hideLoader(); // Call this to hide the loader once images are loaded
+            hideLoader();
             console.error("Server error:", data.error_message);
             updateImageGenerationMessages(data.error_message, "error");
           } else {
-            hideLoader(); // Call this to hide the loader once images are loaded
+            hideLoader();
             var imageContainer = document.getElementById("generated-images");
             var iconsContainer = document.getElementById("icons-container");
 
             imageContainer.innerHTML = "";
             iconsContainer.innerHTML = "";
 
-            // Select the last image URL from the array
             var lastImageUrl = data.image_urls[data.image_urls.length - 1];
 
-            // Assuming lastImageUrl is the full path to the image file
             var imageUuid = lastImageUrl.split("/").pop().split(".")[0];
 
-            // Create and append the download link
             var downloadLink = document.createElement("a");
             downloadLink.href = `/image/download_image/${imageUuid}`;
             downloadLink.innerHTML = '<i class="fas fa-download"></i>';
             downloadLink.className = "image-icon download-icon";
             iconsContainer.appendChild(downloadLink);
 
-            // Create and append the open link
             var openLink = document.createElement("a");
             openLink.href = lastImageUrl;
             openLink.target = "_blank";
@@ -148,7 +141,6 @@ document.addEventListener("DOMContentLoaded", function () {
             openLink.className = "image-icon open-icon";
             iconsContainer.appendChild(openLink);
 
-            // Create and append the image
             var img = document.createElement("img");
             img.onload = function () {
               resizeImage(img);
@@ -165,8 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         })
         .catch((error) => {
-          hideLoader(); // Call this to hide the loader once images are loaded
-
+          hideLoader();
           console.error("Error:", error);
           updateImageGenerationMessages("Error: " + error.message, "error");
         });
@@ -181,22 +172,18 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((response) => response.json())
       .then((data) => {
         const carousel = document.getElementById("image-history-carousel");
-        carousel.innerHTML = ""; // Clear existing items
-
-        // Limit the history to the last 15 images
+        carousel.innerHTML = "";
         const limitedData = data.slice(-15);
 
         limitedData.forEach((item, index) => {
-          // Create an img element with a data-src attribute instead of a src
           const imgThumbnail = document.createElement("img");
-          imgThumbnail.dataset.src = item.url; // Store the image URL in data-src for lazy loading
+          imgThumbnail.dataset.src = item.url;
           imgThumbnail.className = "thumbnail lazy";
-          imgThumbnail.alt = `Image History ${index + 1}`; // Provide a useful alt attribute
+          imgThumbnail.alt = `Image History ${index + 1}`;
           imgThumbnail.onclick = () => displayImage(item.uuid, item.url);
           carousel.appendChild(imgThumbnail);
         });
 
-        // Initialize lazy loading using IntersectionObserver
         initializeLazyLoading();
       })
       .catch((error) => {
@@ -208,11 +195,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const imageContainer = document.getElementById("generated-images");
     const iconsContainer = document.getElementById("icons-container");
 
-    // Clear existing content
     imageContainer.innerHTML = "";
     iconsContainer.innerHTML = "";
 
-    // Add the selected image
     const img = document.createElement("img");
     img.onload = function () {
       resizeImage(img);
@@ -221,7 +206,6 @@ document.addEventListener("DOMContentLoaded", function () {
     img.alt = "Generated Image";
     imageContainer.appendChild(img);
 
-    // Add download and open icons
     addDownloadAndOpenIcons(uuid, iconsContainer);
   }
 
@@ -233,14 +217,13 @@ document.addEventListener("DOMContentLoaded", function () {
     iconsContainer.appendChild(downloadLink);
 
     var openLink = document.createElement("a");
-    openLink.href = `/static/temp_img/${uuid}.webp`; // Assuming this is the correct path to the image
+    openLink.href = `/static/temp_img/${uuid}.webp`;
     openLink.target = "_blank";
     openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
     openLink.className = "image-icon open-icon";
     iconsContainer.appendChild(openLink);
   }
 
-  // Call this function when the page loads to display the user's image history
   function moveCarousel(step) {
     const carouselInner = document.getElementById("carousel-inner");
     const thumbnails = carouselInner.getElementsByClassName("thumbnail");
@@ -250,13 +233,11 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     const maxIndex = totalThumbnails - maxVisibleThumbnails;
 
-    // Calculate new slide index
     currentSlideIndex = Math.min(
       maxIndex,
       Math.max(0, currentSlideIndex + step)
     );
 
-    // Move carousel to new slide index
     const newLeft = -(thumbnails[0].offsetWidth * currentSlideIndex);
     carouselInner.style.left = `${newLeft}px`;
   }
@@ -268,9 +249,9 @@ document.addEventListener("DOMContentLoaded", function () {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const image = entry.target;
-          image.src = image.dataset.src; // Set the actual image src from data-src
-          image.classList.remove("lazy"); // Remove the lazy class
-          observer.unobserve(image); // Stop observing the current target
+          image.src = image.dataset.src;
+          image.classList.remove("lazy");
+          observer.unobserve(image);
         }
       });
     });
@@ -280,6 +261,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Call this function when the page loads to display the user's image history
   loadImageHistory();
 });

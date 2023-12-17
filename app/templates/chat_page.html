@@ -309,7 +309,6 @@
                   {% endif %}
                 </label>
               </div>
-              <!-- Stream Checkbox -->
               <div class="stream-check">
                 <label>
                   {{ user_preferences_form.stream.label }} {% if
@@ -355,9 +354,9 @@
               id="completion-conversation-id"
               value=""
             />
-
             <div class="input-group">
               <textarea
+                rows="1"
                 id="message-input"
                 class="message-input"
                 placeholder="Type your message here..."

@@ -4,7 +4,7 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Ensures no scrolling */
+  overflow: hidden;
 }
 
 body {
@@ -12,7 +12,7 @@ body {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  background-color: #faf5e6; /* Retro Cream */
+  background-color: #faf5e6;
   background-image: linear-gradient(
       to right,
       rgba(0, 0, 0, 0.2) 1px,
@@ -145,7 +145,7 @@ h2 {
 
 .shape {
   position: absolute;
-  border: 5px solid #141414; /* Thick black border */
+  border: 5px solid #141414;
 }
 
 .rectangle {
@@ -215,7 +215,7 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transform: rotate(-20deg); /* Angled */
+  transform: rotate(-20deg);
   z-index: 0;
 }
 
