@@ -46,16 +46,12 @@ h2 {
   top: 0;
   text-align: center;
   color: #faf5e6;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #141414;
 }
 .rectangle h1 {
   font-size: 10em;
 }
 .rectangle h2 {
   font-family: "ITCGaramondStd-UltNarrowIta", serif;
-  -webkit-text-stroke-width: 3px;
-  -webkit-text-stroke-color: #654321;
   font-size: 5em;
 }
 
@@ -131,6 +127,7 @@ h2 {
 
 #yellow h2 {
   margin-top: 20px;
+  color: #654321;
 }
 
 #green {

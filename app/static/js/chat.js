@@ -1,5 +1,93 @@
 var chatBox = document.getElementById("chat-box");
 
+function updateStatusMessage(message, type) {
+  const statusElement = document.getElementById("conversation-history-status");
+  if (statusElement) {
+    statusElement.textContent = message;
+    statusElement.classList.remove("error", "success");
+    if (type === "success") {
+      statusElement.classList.add("success");
+    } else if (type === "error") {
+      statusElement.classList.add("error");
+    }
+
+    setTimeout(() => {
+      statusElement.textContent = "";
+      statusElement.classList.remove("error", "success");
+    }, 10000);
+  }
+}
+
+function toggleEditConvoTitle() {
+  var titleInput = document.getElementById("editable-convo-title");
+  titleInput.readOnly = !titleInput.readOnly;
+  if (!titleInput.readOnly) {
+    titleInput.focus();
+  }
+}
+
+function saveConvoTitle(conversationId, newTitle) {
+  const payload = {
+    title: newTitle
+  };
+
+  fetch(`/chat/update-conversation-title/${conversationId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken()
+    },
+    body: JSON.stringify(payload)
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("HTTP error! Status: " + response.status);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.status === "success") {
+        console.log("Title updated successfully");
+        updateStatusMessage("Title updated successfully", "success");
+
+        // Update the conversation entry with the new title
+        var conversationEntry = document.querySelector(
+          `.conversation-entry[data-conversation-id="${conversationId}"]`
+        );
+        if (conversationEntry) {
+          let textEntryElement = conversationEntry.querySelector(".text-entry");
+          if (textEntryElement) {
+            // Update the visible title in the conversation history
+            textEntryElement.textContent = newTitle;
+          }
+          // Update the data-conversation-title attribute
+          conversationEntry.setAttribute("data-conversation-title", newTitle);
+
+          // Update the conversationHistory array with the new title
+          let conversation = conversationHistory.find(
+            (conv) => conv.id == conversationId
+          );
+          if (conversation) {
+            conversation.title = newTitle;
+          }
+        }
+      } else {
+        console.error("Failed to update title", data.message);
+        updateStatusMessage(data.message, "error");
+      }
+    });
+}
+function setActiveButton(activeButtonId) {
+  document.querySelectorAll(".options-button").forEach(function (button) {
+    button.classList.remove("active");
+  });
+
+  var activeButton = document.getElementById(activeButtonId);
+  if (activeButton) {
+    activeButton.classList.add("active");
+  }
+}
+
 function getCsrfToken() {
   return document
     .querySelector('meta[name="csrf-token"]')
@@ -9,6 +97,7 @@ function getCsrfToken() {
 function toggleHistory() {
   document.getElementById("conversation-container").style.display = "block";
   document.getElementById("preference-popup").style.display = "none";
+  setActiveButton("show-history-btn");
 }
 
 function appendStreamedResponse(chunk, chatBox) {
@@ -21,13 +110,10 @@ function appendStreamedResponse(chunk, chatBox) {
     chatBox.appendChild(window.currentStreamMessageDiv);
     window.incompleteMarkdownBuffer = "";
 
-    // Create a container for the message content
     window.currentStreamContentDiv = document.createElement("div");
 
-    // Create a title element
     var title = document.createElement("h5");
 
-    // Set the title text based on the message's class name
     if (
       window.currentStreamMessageDiv.classList.contains("assistant-message")
     ) {
@@ -38,22 +124,20 @@ function appendStreamedResponse(chunk, chatBox) {
       title.textContent = "User";
     }
 
-    // Append the title to the message div
     window.currentStreamMessageDiv.appendChild(title);
-    // Append the content container to the message div
     window.currentStreamMessageDiv.appendChild(window.currentStreamContentDiv);
   }
 
-  // Combine the new chunk with any incomplete Markdown from the previous chunk
-  window.incompleteMarkdownBuffer += chunk;
+  if (chunk != null) {
+    window.incompleteMarkdownBuffer += chunk;
 
-  // Convert the combined Markdown chunk to HTML using marked.js
-  // Note: We are not sanitizing here to avoid breaking HTML structure with partial data
-  window.currentStreamContentDiv.innerHTML = marked.parse(
-    window.incompleteMarkdownBuffer
-  );
+    window.currentStreamContentDiv.innerHTML = marked.parse(
+      window.incompleteMarkdownBuffer
+    );
+  }
+
   hljs.highlightAll();
-  chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom of the chat box
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 function finalizeStreamedResponse() {
@@ -70,6 +154,7 @@ function finalizeStreamedResponse() {
 function togglePreferences() {
   document.getElementById("conversation-container").style.display = "none";
   document.getElementById("preference-popup").style.display = "block";
+  setActiveButton("show-preferences-btn");
 }
 
 function updatePreferenceMessages(message, status) {
@@ -87,43 +172,45 @@ function appendMessageToChatBox(message, className) {
   var messageDiv = document.createElement("div");
   messageDiv.classList.add("message", className);
 
-  // Create a title element
   var title = document.createElement("h5");
-  // Set the title text based on the message's class name
   if (className === "assistant-message") {
     title.textContent = "Jack";
   } else if (className === "user-message") {
     title.textContent = "User";
+  } else if (className === "system-message") {
+    title.textContent = "System";
   }
 
-  // Append the title to the message div
   messageDiv.appendChild(title);
 
-  // Convert Markdown to HTML using marked.js
-  var messageContent = document.createElement("div");
-  messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
+  if (message != null) {
+    var messageContent = document.createElement("div");
+    messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
 
-  // Append the message content to the message div
-  messageDiv.appendChild(messageContent);
+    messageDiv.appendChild(messageContent);
+  }
 
   chatBox.appendChild(messageDiv);
-  chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom of the chat box
-
+  chatBox.scrollTop = chatBox.scrollHeight;
   hljs.highlightAll();
 }
 
 function selectConversation(conversationId) {
-  var conversationIdInput = document.getElementById(
-    "completion-conversation-id"
+  var conversationEntry = document.querySelector(
+    `.conversation-entry[data-conversation-id="${conversationId}"]`
   );
-  if (conversationIdInput) {
-    conversationIdInput.value = conversationId;
+
+  if (conversationEntry && conversationEntry.dataset.conversationTitle) {
+    var convoTitleElement = document.getElementById("convo-title");
+    if (convoTitleElement) {
+      convoTitleElement.textContent =
+        conversationEntry.dataset.conversationTitle;
+      convoTitleElement.setAttribute("data-conversation-id", conversationId);
+    }
   }
 
-  // Clear the chat box
   chatBox.innerHTML = "";
 
-  // Fetch the messages for the selected conversation
   fetch(`/chat/conversation/${conversationId}`, {
     method: "GET",
     headers: {
@@ -132,7 +219,6 @@ function selectConversation(conversationId) {
   })
     .then((response) => response.json())
     .then((data) => {
-      // Append each message to the chat box
       data.messages.forEach((message) => {
         appendMessageToChatBox(message.content, message.className);
       });
@@ -141,12 +227,6 @@ function selectConversation(conversationId) {
 }
 
 function deleteConversation(conversationId) {
-  const statusMessageDiv = document.getElementById(
-    "conversation-history-status"
-  );
-  statusMessageDiv.textContent = ""; // Clear any previous messages
-  statusMessageDiv.className = "";
-
   if (!confirm("Are you sure you want to delete this conversation?")) {
     return;
   }
@@ -155,34 +235,26 @@ function deleteConversation(conversationId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken() // Include the CSRF token here
+      "X-CSRFToken": getCsrfToken()
     },
     credentials: "same-origin"
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        // Remove the conversation entry from the DOM
         var entry = document.querySelector(
           `.conversation-entry[data-conversation-id="${conversationId}"]`
         );
         if (entry) {
           entry.remove();
-          // Display a success message
-          statusMessageDiv.textContent = "Conversation deleted successfully.";
-          statusMessageDiv.className = "success"; // Use your CSS class for success messages
+          updateStatusMessage("Conversation deleted successfully.", "success");
         }
       } else {
-        // Display an error message
-        statusMessageDiv.textContent =
-          "Failed to delete the conversation: " + data.message;
-        statusMessageDiv.className = "error"; // Use your CSS class for error messages
+        updateStatusMessage("Failed to delete conversation.", "error");
       }
     })
     .catch((error) => {
-      // Display an error message
-      statusMessageDiv.textContent = "Error deleting conversation: " + error;
-      statusMessageDiv.className = "error"; // Use your CSS class for error messages
+      updateStatusMessage("Error: " + error.message, "error");
     });
 }
 
@@ -207,42 +279,64 @@ document.addEventListener("DOMContentLoaded", function () {
   var updatePreferencesForm = document.getElementById(
     "update-preferences-form"
   );
+  var convoTitleElement = document.getElementById("convo-title");
+  if (convoTitleElement) {
+    convoTitleElement.addEventListener("blur", function () {
+      var conversationId = this.getAttribute("data-conversation-id");
+      var newTitle = this.textContent.trim();
 
-  // Function to fade out tooltips
-  // Function to fade out tooltips
+      if (newTitle.length >= 1 && newTitle.length <= 25) {
+        saveConvoTitle(conversationId, newTitle);
+      } else {
+        updateStatusMessage(
+          "Conversation title must be between 1 and 25 characters.",
+          "error"
+        );
+        this.textContent = this.getAttribute("data-conversation-title");
+      }
+    });
+
+    convoTitleElement.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.blur();
+      }
+    });
+  }
+
+  convoTitleElement.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      this.blur();
+    }
+  });
+
   function fadeOutTooltip(tooltip) {
     tooltip.style.opacity = "0";
     tooltip.style.transition = "opacity 0.5s ease-out";
-    // Set a timeout to change visibility after the opacity transition
     setTimeout(() => {
       tooltip.style.visibility = "hidden";
-    }, 500); // This should match the transition duration
+    }, 500);
   }
 
-  // Function to hide all tooltips
   function hideAllTooltips(exceptId) {
     let tooltipTexts = document.querySelectorAll(".tooltip-text");
     tooltipTexts.forEach((tooltip) => {
-      // Fade out all tooltips except the one that should remain open
       if (tooltip.getAttribute("data-info-id") !== exceptId) {
         fadeOutTooltip(tooltip);
       }
     });
   }
 
-  // Add click event listener to each info icon
   let infoIcons = document.querySelectorAll(".info-icon");
   infoIcons.forEach((icon) => {
     icon.addEventListener("click", function (event) {
-      // Prevent the click event from triggering any parent element's click event
       event.stopPropagation();
 
       let tooltipText = this.nextElementSibling;
 
-      // Hide all other tooltips except this one
       hideAllTooltips(tooltipText.getAttribute("data-info-id"));
 
-      // Toggle the visibility of this tooltip text
       if (tooltipText.style.opacity === "1") {
         fadeOutTooltip(tooltipText);
       } else {
@@ -253,34 +347,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Add click event listener to each tooltip text
   let tooltipTexts = document.querySelectorAll(".tooltip-text");
   tooltipTexts.forEach((tooltip) => {
     tooltip.addEventListener("click", function (event) {
-      // Stop the propagation to prevent triggering the click event on the window
       event.stopPropagation();
-      fadeOutTooltip(this); // Fade out this tooltip
+      fadeOutTooltip(this);
     });
   });
 
-  // Global click event to hide tooltips when clicking anywhere else
   window.addEventListener("click", function () {
-    hideAllTooltips(); // Hide all tooltips
+    hideAllTooltips();
   });
 
   function checkConversationHistory() {
     if (conversationHistory && conversationHistory.length > 0) {
-      // Set the completion-conversation-id to the most recent conversation ID
       var mostRecentConversation =
         conversationHistory[conversationHistory.length - 1];
-      selectConversation(mostRecentConversation.id); // Ensure 'id' matches your data structure
-
-      // Append historical messages to the chat box
+      selectConversation(mostRecentConversation.id);
       conversationHistory.forEach(function (message) {
-        appendMessageToChatBox(message.content, message.className); // Ensure 'content' and 'className' match your data structure
+        appendMessageToChatBox(message.content, message.className);
       });
     } else {
-      // No historical conversations, switch to the new conversation system prompt
       newConversationForm.style.display = "block";
       chatCompletionForm.style.display = "none";
     }
@@ -291,11 +378,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var maxTokensSlider = document.getElementById("max_tokens");
     var maxTokensValueInput = document.getElementById("max-tokens-value");
     maxTokensSlider.max = modelMaxTokens[selectedModel];
-    maxTokensSlider.value = modelMaxTokens[selectedModel]; // Set to max or a default value within the range
-    maxTokensValueInput.value = maxTokensSlider.value; // Update the output display
+    maxTokensSlider.value = modelMaxTokens[selectedModel];
+    maxTokensValueInput.value = maxTokensSlider.value;
   });
 
-  // Inside the 'DOMContentLoaded' event listener
   if (chatCompletionForm) {
     chatCompletionForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -303,16 +389,14 @@ document.addEventListener("DOMContentLoaded", function () {
       var formData = new FormData(chatCompletionForm);
       formData.append("prompt", messageToSend);
 
-      // Display the outgoing message immediately
       appendMessageToChatBox(messageToSend, "user-message");
 
-      messageInput.value = ""; // Clear the input field
-
+      messageInput.value = "";
       fetch("/chat/completion", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCsrfToken() // Include the CSRF token here
+          "X-CSRFToken": getCsrfToken()
         },
         credentials: "same-origin",
         body: JSON.stringify(Object.fromEntries(formData))
@@ -325,7 +409,7 @@ document.addEventListener("DOMContentLoaded", function () {
               .read()
               .then(function processText({ done, value }) {
                 if (done) {
-                  finalizeStreamedResponse(); // Finalize the message when the streaming is done
+                  finalizeStreamedResponse();
                   return;
                 }
                 var chunk = new TextDecoder().decode(value);
@@ -363,7 +447,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         })
         .catch((error) => {
-          // Display the error message if the fetch fails
           appendMessageToChatBox(
             "Fetch Error: " + error.message,
             "error-message"
@@ -374,38 +457,28 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   if (newConversationForm) {
     newConversationForm.addEventListener("submit", function (e) {
-      e.preventDefault(); // Prevent default form submission
-
-      // Gather form data to send
+      e.preventDefault();
       var formData = new FormData(newConversationForm);
 
-      // Send AJAX request to create a new conversation
       fetch("/chat/new-conversation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCsrfToken() // Include the CSRF token here
+          "X-CSRFToken": getCsrfToken()
         },
         credentials: "same-origin",
         body: JSON.stringify(Object.fromEntries(formData))
       })
         .then((response) => response.json())
         .then((data) => {
-          const statusMessageDiv = document.getElementById(
-            "conversation-history-status"
-          );
           if (data.status === "success") {
-            // Handle successful conversation creation
             const newConversationId = data.conversation_id;
             const newConversationPrompt = data.system_prompt;
-            const newConversationTitle = data.title; // Assuming the title is included in the response
-            const createdAt = data.created_at; // Assuming created_at is included in the response
-
-            // Clear the chat box and set the new conversation as active
+            const newConversationTitle = data.title;
+            const createdAt = data.created_at;
             chatBox.innerHTML = "";
             selectConversation(newConversationId);
 
-            // Update conversationHistory variable
             conversationHistory.push({
               id: newConversationId,
               title: newConversationTitle,
@@ -413,7 +486,6 @@ document.addEventListener("DOMContentLoaded", function () {
               system_prompt: newConversationPrompt
             });
 
-            // Update conversation history in the HTML
             const conversationHistoryDiv = document.getElementById(
               "conversation-history"
             );
@@ -423,37 +495,30 @@ document.addEventListener("DOMContentLoaded", function () {
               "data-conversation-id",
               newConversationId
             );
+            newConvoEntry.setAttribute(
+              "data-conversation-title",
+              newConversationTitle
+            ); // Set the title attribute
 
             newConvoEntry.addEventListener("click", function () {
               selectConversation(newConversationId);
             });
 
-            newConvoEntry.innerHTML = `${newConversationTitle} - ${createdAt} <span class="delete-conversation" onclick="deleteConversation(${newConversationId})"><i class="fas fa-trash-alt"></i></span>`;
+            newConvoEntry.innerHTML = `<p class="text-entry">${newConversationTitle}</p> <span class="delete-conversation" onclick="deleteConversation(${newConversationId})"><i class="fas fa-trash-alt"></i></span>`;
             conversationHistoryDiv.appendChild(newConvoEntry);
-            statusMessageDiv.textContent = "";
-            // Display a success message
-            statusMessageDiv.textContent =
-              "New conversation created successfully!";
-            statusMessageDiv.className = "success"; // Use your CSS class for success messages
+            updateStatusMessage("New conversation started.", "success");
           } else if (data.status === "limit-reached") {
-            // Inform the user they've hit the limit
-            statusMessageDiv.textContent = data.message;
-            statusMessageDiv.className = "error"; // Use your CSS class for error messages
+            updateStatusMessage(data.message, "error");
           } else {
-            // Handle any other errors
-            statusMessageDiv.textContent =
-              "Failed to start a new conversation: " + data.message;
-            statusMessageDiv.className = "error"; // Use your CSS class for error messages
+            updateStatusMessage(data.message, "error");
           }
         })
         .catch((error) => {
-          // Handle the error case, such as displaying a message to the user
-          statusMessageDiv.textContent = "Error: " + error.message;
-          statusMessageDiv.className = "error-message"; // Use your CSS class for error messages
-          console.error("New conversation error:", error);
+          updateStatusMessage("Error: " + error.message, "error");
         });
     });
   }
+
   if (updatePreferencesForm) {
     updatePreferencesForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -461,7 +526,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fetch("/chat/update-preferences", {
         method: "POST",
         headers: {
-          "X-CSRFToken": getCsrfToken() // Include the CSRF token here
+          "X-CSRFToken": getCsrfToken()
         },
         body: formData
       })
@@ -475,7 +540,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         })
         .catch((error) => {
-          updateApiKeyMessages("Error: " + error, "error");
+          updatePreferencMessages("Error: " + error, "error");
         });
     });
   }

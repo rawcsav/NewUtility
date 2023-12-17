@@ -40,7 +40,6 @@ def chat_index():
         db.session.add(new_conversation)
         try:
             db.session.commit()
-            # Reload the conversation history after creating the new conversation
             conversation_history = [new_conversation]
         except Exception as e:
             db.session.rollback()
@@ -79,33 +78,37 @@ def new_conversation():
     form = NewConversationForm()
     if form.validate_on_submit():
         user_id = current_user.id
-        # Check the number of existing conversations
-        existing_conversations = Conversation.query.filter_by(user_id=user_id).order_by(
-            Conversation.created_at).all()
+        # Fetch all conversations for the user that start with "Convo #"
+        existing_conversations = Conversation.query.filter(
+            Conversation.user_id == user_id,
+            Conversation.title.like("Convo #%")
+        ).all()
 
-        if len(existing_conversations) >= 5:
-            # User has reached the limit of conversations
-            return jsonify({
-                'status': 'limit-reached',
-                'message': 'You have reached the maximum number of conversations. Please delete an old conversation to create a new one.'
-            })
+        # Extract the numbers from the titles and find the maximum
+        convo_numbers = [int(c.title.split('#')[-1]) for c in existing_conversations if
+                         c.title.split('#')[-1].isdigit()]
+        max_number = max(convo_numbers) if convo_numbers else 0
 
-        # If under the limit, create new conversation
-        new_conversation = Conversation(user_id=user_id,
-                                        system_prompt=form.system_prompt.data)
+        # The title for the new conversation will be "Convo #{max_number + 1}"
+        new_title = f"Convo #{max_number + 1}"
+
+        # Create new conversation with the generated title
+        new_conversation = Conversation(
+            user_id=user_id,
+            title=new_title,
+            system_prompt=form.system_prompt.data
+        )
         db.session.add(new_conversation)
 
         try:
             db.session.commit()
-            # Get formatted creation date and title for the new conversation
-            creation_date = new_conversation.created_at.strftime('%m/%d/%Y')
-            title = new_conversation.title if hasattr(new_conversation,
-                                                      'title') else 'New Conversation'
+            # Get formatted creation date for the new conversation
+            creation_date = new_conversation.created_at.strftime('%m/%d/%y')
 
             return jsonify({
                 'status': 'success',
                 'conversation_id': new_conversation.id,
-                'title': title,
+                'title': new_conversation.title,
                 'created_at': creation_date,
                 'system_prompt': new_conversation.system_prompt
             })
@@ -232,3 +235,22 @@ def get_conversation_messages(conversation_id):
         return jsonify({'messages': messages})
     else:
         return jsonify({'error': 'Conversation not found'}), 404
+
+
+@bp.route('/update-conversation-title/<int:conversation_id>', methods=['POST'])
+@login_required
+def update_conversation_title(conversation_id):
+    data = request.get_json()
+    new_title = data.get('title')
+    conversation = Conversation.query.get_or_404(conversation_id)
+
+    if conversation.user_id != current_user.id:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    conversation.title = new_title
+    try:
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Title updated successfully.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)})

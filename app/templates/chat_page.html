@@ -56,41 +56,52 @@
   <body>
     <div class="container">
       <div class="shape tall-rectangle" id="brown">
-        <button id="show-history-btn" onclick="toggleHistory()">
-          Show History
-        </button>
-        <button id="show-preferences-btn" onclick="togglePreferences()">
-          Show Preferences
-        </button>
-        <form
-          id="new-conversation-form"
-          action="{{ url_for('chat.new_conversation') }}"
-          method="post"
-          class="{{ 'hidden' if has_conversation_history else '' }}"
-        >
-          {{ new_conversation_form.system_prompt(class_="hidden") }}
-          <input
-            type="submit"
-            value="Start New Conversation"
-            class="button-send"
-          />
-        </form>
+        <div id="options-container">
+          <h3>Options</h3>
+          <div id="options">
+            <button
+              id="show-history-btn"
+              onclick="toggleHistory()"
+              class="options-button"
+            >
+              <i class="fas fa-history"></i>
+            </button>
+            <button
+              id="show-preferences-btn"
+              onclick="togglePreferences()"
+              class="options-button"
+            >
+              <i class="fas fa-cog"></i>
+            </button>
+            <form
+              id="new-conversation-form"
+              action="{{ url_for('chat.new_conversation') }}"
+              method="post"
+              class="{{ 'hidden' if has_conversation_history else '' }}"
+            >
+              {{ new_conversation_form.system_prompt(class_="hidden") }}
+              <button type="submit" class="button-send">
+                <i class="fas fa-plus-circle"></i>
+              </button>
+            </form>
+          </div>
+        </div>
         <div id="conversation-container">
+          <h3>History</h3>
           <div id="conversation-history">
             {% for conversation in conversation_history %}
             <div
               class="conversation-entry"
               data-conversation-id="{{ conversation.id }}"
+              data-conversation-title="{{ conversation.title }}"
               onclick="selectConversation({{ conversation.id }})"
             >
-              {{ conversation.title }} - {{
-              conversation.created_at.strftime('%m/%d/%y') }}
+              <p class="text-entry">{{ conversation.title }}</p>
               <span
                 class="delete-conversation"
                 onclick="deleteConversation({{ conversation.id }})"
               >
                 <i class="fas fa-trash-alt"></i>
-                <!-- Font Awesome delete icon -->
               </span>
             </div>
             {% endfor %}
@@ -102,6 +113,7 @@
         </div>
         <input type="hidden" id="selected-conversation-id" value="" />
         <div id="preference-popup" class="preference-popup hidden">
+          <h3>Preferences</h3>
           <form id="update-preferences-form">
             <div class="form-group">
               <div class="tooltip-container">
@@ -321,7 +333,13 @@
       </div>
       <div class="chat-container">
         <div class="top-banner">
-          <h4 id="convo-title">New Conversation</h4>
+          <h4
+            id="convo-title"
+            contenteditable="true"
+            data-conversation-id="{{ conversation_id }}"
+          >
+            {{ conversation_title }}
+          </h4>
         </div>
         <div class="messages" id="chat-box"></div>
         <div class="message-input-container">

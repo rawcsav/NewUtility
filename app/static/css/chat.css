@@ -107,6 +107,10 @@ h2 {
   border-right: 2px solid #654321;
   z-index: 2;
   max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   overflow-y: auto;
 }
 .homepage-dash {
@@ -142,7 +146,25 @@ h2 {
   border: 5px solid #654321;
   border-left: none;
   overflow-y: auto;
-  flex: 3;
+  flex: 5;
+}
+
+.conversation-entry {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.conversation-entry p,
+.conversation-entry span {
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.conversation-entry:hover p {
+  transform: scale(1.05);
 }
 
 .messages {
@@ -167,8 +189,9 @@ h2 {
   align-items: baseline;
 }
 .system-message {
-  background-color: #e1e1e1;
   text-align: left;
+  font-style: italic;
+  border-bottom: 1px solid #9b5de5;
 }
 
 .message-input-container {
@@ -513,4 +536,109 @@ h4 {
 
 .user-message h5 {
   color: #0069be;
+}
+
+.system-message h5 {
+  margin-top: 0;
+  color: #9b5de5;
+}
+#conversation-container {
+  height: 90%;
+  max-height: 90%;
+  text-align: center;
+  width: 100%;
+}
+
+#conversation-history {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#options {
+  margin-bottom: 5px;
+}
+#conversation-history-status {
+  font-size: 12px;
+  margin: 10px;
+  margin-top: 15px;
+  font-style: italic;
+}
+
+#options-container {
+  border-bottom: 1px solid #654321;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  width: 100%;
+}
+
+h3 {
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-size: 1.5em;
+  font-weight: 900;
+  margin: 0;
+  margin-bottom: 10px;
+  top: 0;
+  text-align: center;
+}
+
+#options-container h3 {
+  font-size: 18px;
+  color: #cd2000;
+}
+
+#conversation-container h3,
+#preference-popup h3 {
+  font-size: 18px;
+  color: #ed872d;
+}
+
+.options-button,
+.button-send {
+  background-color: transparent; /* Example background color */
+  border: none; /* No border */
+  cursor: pointer; /* Cursor to indicate it's clickable */
+  transition: background-color 0.3s; /* Smooth background color change on hover */
+  line-height: 1; /* Aligns icon vertically */
+  display: flex; /* Use flexbox to center the icon */
+  justify-content: center; /* Center icon horizontally */
+  align-items: center; /* Center icon vertically */
+}
+
+.options-button i,
+.button-send i {
+  font-size: 1.2em; /* Adjust icon size as needed */
+}
+
+.button-send:hover {
+  transform: scale(1.1); /* Slightly increase icon size on hover */
+  color: #45a049; /* Darker background on hover for send */
+}
+
+#options {
+  display: flex;
+  justify-content: center;
+}
+
+/* Add a hover effect to change color and scale up the icons */
+.options-button i,
+.button-send i {
+  transition:
+    color 0.2s,
+    transform 0.2s; /* Smooth transition for color and transform */
+}
+
+.options-button:hover i {
+  color: #555; /* Change icon color on hover */
+}
+
+/* Active state styling for history and preferences buttons */
+#show-history-btn.active i,
+#show-preferences-btn.active i {
+  color: #cd2000; /* Active state icon color */
+}
+
+.system-message p {
+  font-size: 12px;
 }
