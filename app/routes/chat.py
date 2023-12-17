@@ -242,15 +242,54 @@ def get_conversation_messages(conversation_id):
 def update_conversation_title(conversation_id):
     data = request.get_json()
     new_title = data.get('title')
+
+    # Validate new_title: not None, not just whitespace, and 25 characters or fewer
+    if new_title is None or not new_title.strip() or len(new_title.strip()) > 25:
+        return jsonify({
+            'status': 'error',
+            'message': 'Title must be provided, not just whitespace, and 25 characters or fewer.'
+        }), 400
+
     conversation = Conversation.query.get_or_404(conversation_id)
 
     if conversation.user_id != current_user.id:
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
 
-    conversation.title = new_title
+    # Update the conversation title with the validated and stripped title
+    conversation.title = new_title.strip()
     try:
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Title updated successfully.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)})
+
+
+@bp.route('/update-system-prompt/<int:conversation_id>', methods=['POST'])
+@login_required
+def update_system_prompt(conversation_id):
+    data = request.get_json()
+    new_system_prompt = data.get('system_prompt')
+
+    # Check if new_system_prompt is not None, not just whitespace, and its length is less than 1000 characters
+    if new_system_prompt.strip() is None or not new_system_prompt.strip() or len(
+            new_system_prompt.strip()) >= 1000:
+        return jsonify({
+            'status': 'error',
+            'message': 'System prompt must be provided, not just whitespace, and less than 1000 characters.'
+        }), 400
+
+    conversation = Conversation.query.get_or_404(conversation_id)
+
+    if conversation.user_id != current_user.id:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    # Since we've already stripped the string for the check, it's a good idea to use the stripped version
+    conversation.system_prompt = new_system_prompt.strip()
+    try:
+        db.session.commit()
+        return jsonify(
+            {'status': 'success', 'message': 'System prompt updated successfully.'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)})

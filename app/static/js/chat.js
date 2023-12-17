@@ -18,6 +18,48 @@ function updateStatusMessage(message, type) {
   }
 }
 
+function saveSystemPrompt(conversationId, newPrompt) {
+  const payload = {
+    system_prompt: newPrompt
+  };
+
+  fetch(`/chat/update-system-prompt/${conversationId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken() // Ensure this function correctly retrieves the CSRF token
+    },
+    body: JSON.stringify(payload)
+  })
+    .then((response) => {
+      if (!response.ok) {
+        // Non-2xx HTTP status code response
+        return response.json().then((data) => {
+          // Assuming the server sends a JSON response with a 'message' field even on errors
+          throw new Error(
+            data.message || "HTTP error! Status: " + response.status
+          );
+        });
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.status === "success") {
+        console.log("System prompt updated successfully");
+        updateStatusMessage("System prompt updated successfully", "success");
+      } else {
+        // Handle any other cases where the server indicates failure but doesn't throw an error
+        console.error("Failed to update system prompt: " + data.message);
+        updateStatusMessage(data.message, "error");
+      }
+    })
+    .catch((error) => {
+      // Handle network errors, parsing errors, and rejections from the server validation
+      console.error("Failed to update system prompt: " + error.message);
+      updateStatusMessage(error.message, "error");
+    });
+}
+
 function toggleEditConvoTitle() {
   var titleInput = document.getElementById("editable-convo-title");
   titleInput.readOnly = !titleInput.readOnly;
@@ -35,13 +77,18 @@ function saveConvoTitle(conversationId, newTitle) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken() // Ensure this function correctly retrieves the CSRF token
     },
     body: JSON.stringify(payload)
   })
     .then((response) => {
       if (!response.ok) {
-        throw new Error("HTTP error! Status: " + response.status);
+        // Non-2xx HTTP status code response, try to parse and get error message
+        return response.json().then((data) => {
+          throw new Error(
+            data.message || "HTTP error! Status: " + response.status
+          );
+        });
       }
       return response.json();
     })
@@ -50,7 +97,7 @@ function saveConvoTitle(conversationId, newTitle) {
         console.log("Title updated successfully");
         updateStatusMessage("Title updated successfully", "success");
 
-        // Update the conversation entry with the new title
+        // Update the conversation entry with the new title in the UI
         var conversationEntry = document.querySelector(
           `.conversation-entry[data-conversation-id="${conversationId}"]`
         );
@@ -63,20 +110,28 @@ function saveConvoTitle(conversationId, newTitle) {
           // Update the data-conversation-title attribute
           conversationEntry.setAttribute("data-conversation-title", newTitle);
 
-          // Update the conversationHistory array with the new title
-          let conversation = conversationHistory.find(
-            (conv) => conv.id == conversationId
-          );
-          if (conversation) {
-            conversation.title = newTitle;
+          // Update the conversationHistory array with the new title, if it exists
+          if (typeof conversationHistory !== "undefined") {
+            let conversation = conversationHistory.find(
+              (conv) => conv.id == conversationId
+            );
+            if (conversation) {
+              conversation.title = newTitle;
+            }
           }
         }
       } else {
-        console.error("Failed to update title", data.message);
+        console.error("Failed to update title: " + data.message);
         updateStatusMessage(data.message, "error");
       }
+    })
+    .catch((error) => {
+      // Handle network errors, parsing errors, and rejections from server validation
+      console.error("Failed to update title: " + error.message);
+      updateStatusMessage(error.message, "error");
     });
 }
+
 function setActiveButton(activeButtonId) {
   document.querySelectorAll(".options-button").forEach(function (button) {
     button.classList.remove("active");
@@ -187,6 +242,35 @@ function appendMessageToChatBox(message, className) {
     var messageContent = document.createElement("div");
     messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
 
+    // Make the system prompt editable when the icon is clicked
+    if (className === "system-message") {
+      var editIcon = document.createElement("i");
+      editIcon.classList.add("fas", "fa-edit");
+      editIcon.addEventListener("click", function () {
+        messageContent.contentEditable = "true";
+        messageContent.focus();
+      });
+
+      messageContent.addEventListener("blur", function () {
+        messageContent.contentEditable = "false";
+        // Get the conversation ID
+        var conversationId = document
+          .getElementById("convo-title")
+          .getAttribute("data-conversation-id");
+        // Save the changes to the database
+        saveSystemPrompt(conversationId, messageContent.textContent);
+      });
+
+      messageContent.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          this.blur();
+        }
+      });
+
+      messageDiv.appendChild(editIcon);
+    }
+
     messageDiv.appendChild(messageContent);
   }
 
@@ -234,6 +318,14 @@ function selectConversation(conversationId) {
 }
 
 function deleteConversation(conversationId) {
+  var allConversations = document.querySelectorAll(".conversation-entry");
+
+  // Check if there's only one conversation left
+  if (allConversations.length <= 1) {
+    updateStatusMessage("Cannot delete the last conversation.", "error");
+    return;
+  }
+
   if (!confirm("Are you sure you want to delete this conversation?")) {
     return;
   }
@@ -249,18 +341,21 @@ function deleteConversation(conversationId) {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
+        // Remove the conversation from the list
         var entry = document.querySelector(
           `.conversation-entry[data-conversation-id="${conversationId}"]`
         );
         if (entry) {
           entry.remove();
-          updateStatusMessage("Conversation deleted successfully.", "success");
         }
+        updateStatusMessage("Conversation deleted successfully.", "success");
       } else {
+        // Handle error case
         updateStatusMessage("Failed to delete conversation.", "error");
       }
     })
     .catch((error) => {
+      // Handle error case
       updateStatusMessage("Error: " + error.message, "error");
     });
 }
@@ -483,8 +578,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const newConversationPrompt = data.system_prompt;
             const newConversationTitle = data.title;
             const createdAt = data.created_at;
-            chatBox.innerHTML = "";
-            selectConversation(newConversationId);
 
             conversationHistory.push({
               id: newConversationId,
@@ -513,6 +606,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             newConvoEntry.innerHTML = `<p class="text-entry">${newConversationTitle}</p> <span class="delete-conversation" onclick="deleteConversation(${newConversationId})"><i class="fas fa-trash-alt"></i></span>`;
             conversationHistoryDiv.appendChild(newConvoEntry);
+            chatBox.innerHTML = "";
+            selectConversation(newConversationId);
             updateStatusMessage("New conversation started.", "success");
           } else if (data.status === "limit-reached") {
             updateStatusMessage(data.message, "error");

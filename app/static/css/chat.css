@@ -171,7 +171,6 @@ h2 {
   flex-grow: 1;
   background-color: #fefdf9;
   border-radius: 8px;
-  padding: 20px;
   overflow-y: auto;
 }
 
@@ -344,6 +343,10 @@ h4 {
 
 .range-value-input:focus {
   outline: none;
+}
+
+#model {
+  margin-top: 5px;
 }
 
 .info-icon {
@@ -553,7 +556,7 @@ h4 {
 
 #conversation-history {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 15px;
 }
 
