@@ -195,6 +195,7 @@ h2 {
 
 .message-input-container {
   position: relative;
+  padding-top: 20px;
 }
 
 #new-convo-icon {
@@ -298,21 +299,30 @@ h4 {
 
 .message-input {
   border: 1px solid #383737;
-  min-height: 25px;
+  background-color: #f8f8f8;
   font-family: Univers, sans-serif;
-  max-height: 100px; /* Maximum size for 3 lines of text */
-  overflow-y: auto; /* Show scrollbar when content exceeds max-height */
-  line-height: normal;
+  height: auto;
+  resize: none; /* Prevents the user from resizing the textarea */
+  overflow-y: hidden; /* Adds scrollbar if content exceeds max-height */
+  max-height: 100px; /* Adjust as needed */
+  line-height: 20px;
+  min-height: 20px; /* Adjust as needed */
+  width: 100%;
   align-items: flex-start; /* If using flex or grid, align items to the start */
   flex-grow: 1;
   border-radius: 4px 0 0 4px; /* Rounded corners on the left side */
   border-right: none; /* Hide the right border to blend with the button */
 }
 
+.message-input:focus,
+#convo-title:focus {
+  outline: none;
+}
+
 #send-button {
   border-radius: 0 4px 4px 0; /* Rounded corners on the right side */
   margin: 0; /* Remove any default margin */
-  background-color: transparent; /* Match the input's border */
+  background-color: #f8f8f8; /* Match the input's border */
   border: 1px solid #383737; /* Match the input's border */
   border-left: none; /* Hide the left border to blend with the input */
   /* Other styles as needed */

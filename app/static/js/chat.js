@@ -378,6 +378,43 @@ document.addEventListener("DOMContentLoaded", function () {
   var messageInput = document.getElementById("message-input");
   var newConversationForm = document.getElementById("new-conversation-form");
   var chatCompletionForm = document.getElementById("chat-completion-form");
+  var messageInput = document.querySelector(".message-input");
+  var maxLines = 5;
+  var lineHeight = parseInt(getComputedStyle(messageInput).lineHeight, 10);
+
+  function adjustHeight() {
+    messageInput.style.height = "auto"; // Reset the height so the scrollHeight includes only the text
+    var textHeight = messageInput.scrollHeight;
+
+    // Calculate the height of the text area based on the line height and number of lines
+    if (textHeight > maxLines * lineHeight) {
+      messageInput.style.overflowY = "scroll"; // Enable scrolling
+      messageInput.style.height = maxLines * lineHeight + "px"; // Set the maximum height
+    } else {
+      messageInput.style.overflowY = "hidden"; // Hide scrollbar
+      messageInput.style.height = textHeight + "px"; // Expand to fit content
+    }
+  }
+
+  messageInput.addEventListener("input", adjustHeight);
+
+  // Handle Enter key press for form submission or adding a new line
+  messageInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      var lines = messageInput.value.split("\n");
+      if (lines.length < maxLines) {
+        e.preventDefault();
+        document
+          .getElementById("chat-completion-form")
+          .dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+      } // If the max lines have been reached, the default behavior will add a new line, which is handled by the 'input' event
+    }
+  });
+
+  // Initial adjustment
+  adjustHeight();
   var updatePreferencesForm = document.getElementById(
     "update-preferences-form"
   );
