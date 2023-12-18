@@ -400,6 +400,13 @@ h4 {
   color: red;
 }
 
+.fa-edit {
+  cursor: pointer;
+}
+.fa-edit:hover {
+  transform: scale(1.05);
+}
+
 .tooltip-container .tooltip-text {
   visibility: hidden;
   transition: opacity 0.5s ease-out;
@@ -498,6 +505,13 @@ h4 {
   border-bottom-style: solid;
 }
 
+.user-message {
+  font-size: 14px;
+}
+
+.message {
+  font-size: 14px;
+}
 .message ul,
 .message ol {
   padding-left: 20px;

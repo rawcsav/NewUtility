@@ -1,5 +1,9 @@
 var chatBox = document.getElementById("chat-box");
 
+hljs.configure({
+  ignoreUnescapedHTML: true
+});
+
 function updateStatusMessage(message, type) {
   const statusElement = document.getElementById("conversation-history-status");
   if (statusElement) {
@@ -145,52 +149,58 @@ function toggleHistory() {
   setActiveButton("show-history-btn");
 }
 
-function appendStreamedResponse(chunk, chatBox) {
+function appendStreamedResponse(chunk, chatBox, isUserMessage = false) {
   if (!window.currentStreamMessageDiv) {
     window.currentStreamMessageDiv = document.createElement("div");
     window.currentStreamMessageDiv.classList.add(
       "message",
-      "assistant-message"
+      isUserMessage ? "user-message" : "assistant-message"
     );
     chatBox.appendChild(window.currentStreamMessageDiv);
+
     window.incompleteMarkdownBuffer = "";
 
     window.currentStreamContentDiv = document.createElement("div");
 
     var title = document.createElement("h5");
-
-    if (
-      window.currentStreamMessageDiv.classList.contains("assistant-message")
-    ) {
-      title.textContent = "Jack";
-    } else if (
-      window.currentStreamMessageDiv.classList.contains("user-message")
-    ) {
-      title.textContent = "User";
-    }
-
+    title.textContent = isUserMessage ? "User" : "Jack";
     window.currentStreamMessageDiv.appendChild(title);
     window.currentStreamMessageDiv.appendChild(window.currentStreamContentDiv);
   }
 
   if (chunk != null) {
+    // Append chunk based on the message source
     window.incompleteMarkdownBuffer += chunk;
 
-    window.currentStreamContentDiv.innerHTML = marked.parse(
-      window.incompleteMarkdownBuffer
-    );
+    if (isUserMessage) {
+      // Treat user message as plain text to prevent HTML rendering
+      window.currentStreamContentDiv.textContent += chunk;
+    } else {
+      // Parse assistant messages as Markdown and apply syntax highlighting
+      window.currentStreamContentDiv.innerHTML = marked.parse(
+        window.incompleteMarkdownBuffer
+      );
+      // Apply syntax highlighting to the newly appended chunk only
+      window.currentStreamContentDiv
+        .querySelectorAll("pre code")
+        .forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+    }
   }
 
-  hljs.highlightAll();
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function finalizeStreamedResponse() {
+function finalizeStreamedResponse(isUserMessage = false) {
   if (window.currentStreamMessageDiv) {
-    window.currentStreamMessageDiv.innerHTML = DOMPurify.sanitize(
-      window.currentStreamMessageDiv.innerHTML
-    );
-
+    if (!isUserMessage) {
+      // Sanitize the assistant's message content
+      window.currentStreamMessageDiv.innerHTML = DOMPurify.sanitize(
+        window.currentStreamMessageDiv.innerHTML
+      );
+    }
+    // Clean up after the message is completely streamed
     window.currentStreamMessageDiv = null;
     window.incompleteMarkdownBuffer = "";
   }
@@ -222,7 +232,7 @@ function appendMessageToChatBox(message, className) {
 
   var title = document.createElement("h5");
   if (className === "assistant-message") {
-    title.textContent = "Jack";
+    title.textContent = "Assistant";
   } else if (className === "user-message") {
     title.textContent = "User";
   } else if (className === "system-message") {
@@ -233,7 +243,17 @@ function appendMessageToChatBox(message, className) {
 
   if (message != null) {
     var messageContent = document.createElement("div");
-    messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
+    // Treat assistant messages as potentially containing Markdown
+    if (className === "assistant-message") {
+      messageContent.innerHTML = DOMPurify.sanitize(marked.parse(message));
+      // Apply syntax highlighting to this message content only
+      messageContent.querySelectorAll("pre code").forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    } else {
+      // User and system messages are treated as plain text
+      messageContent.textContent = message;
+    }
 
     if (className === "system-message") {
       var editIcon = document.createElement("i");
@@ -265,9 +285,9 @@ function appendMessageToChatBox(message, className) {
     messageDiv.appendChild(messageContent);
   }
 
+  // Assuming chatBox is a global variable or within scope that references the chat container
   chatBox.appendChild(messageDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
-  hljs.highlightAll();
 }
 
 function selectConversation(conversationId) {
