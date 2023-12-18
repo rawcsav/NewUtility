@@ -287,6 +287,36 @@ function createClipboardIcon(copyTarget) {
   return clipboardIcon;
 }
 
+function removeSubsequentMessagesUI(messageId) {
+  const allMessages = Array.from(chatBox.getElementsByClassName("message"));
+  const currentMessageIndex = allMessages.findIndex(
+    (msg) => msg.dataset.messageId === messageId.toString()
+  );
+
+  // Check if the message is found and it's not the last one
+  if (
+    currentMessageIndex !== -1 &&
+    currentMessageIndex + 1 < allMessages.length
+  ) {
+    // Remove all messages after the current message
+    allMessages.slice(currentMessageIndex + 1).forEach((msg) => msg.remove());
+  }
+}
+
+function retryMessage(messageId) {
+  performFetch(`/chat/retry-message/${messageId}`, {}).then((response) => {
+    if (!response.ok) {
+      throw new Error("Failed to retry message.");
+    }
+    const contentType = response.headers.get("Content-Type");
+    if (contentType && contentType.includes("text/plain")) {
+      processStreamedResponse(response);
+    } else {
+      response.text().then((text) => processNonStreamedResponse(text));
+    }
+  });
+}
+
 function setupMessageEditing(content, messageId) {
   content.contentEditable = "true";
   content.focus();
@@ -329,6 +359,17 @@ function createMessageHeader(className, messageId) {
     header.appendChild(clipboardIcon);
   }
 
+  if (className === "user-message") {
+    let retryIcon = document.createElement("i");
+    retryIcon.classList.add("fas", "fa-redo", "retry-icon");
+    retryIcon.addEventListener("click", function (event) {
+      event.stopPropagation();
+      removeSubsequentMessagesUI(messageId);
+      retryMessage(messageId);
+    });
+    header.appendChild(retryIcon);
+  }
+
   // Append edit icon to the header for all messages
   let editIcon = createEditIcon();
   header.appendChild(editIcon);
@@ -365,6 +406,69 @@ function createEditIcon() {
   let editIcon = document.createElement("i");
   editIcon.classList.add("fas", "fa-edit");
   return editIcon;
+}
+
+function processStreamedResponse(response) {
+  const reader = response.body.getReader();
+  readStreamedResponseChunk(reader);
+}
+
+function readStreamedResponseChunk(reader) {
+  reader
+    .read()
+    .then(({ done, value }) => {
+      if (done) {
+        finalizeStreamedResponse();
+        var conversationId = document
+          .getElementById("convo-title")
+          .getAttribute("data-conversation-id");
+        locateNewMessages(conversationId);
+        return;
+      }
+      handleResponseChunk(value);
+      readStreamedResponseChunk(reader);
+    })
+    .catch((error) => {
+      appendMessageToChatBox(
+        "Streaming Error: " + error.message,
+        "error-message"
+      );
+      console.error("Streaming error:", error);
+    });
+}
+
+function handleResponseChunk(value) {
+  const chunk = new TextDecoder().decode(value);
+  if (chunk.startsWith("An error occurred:")) {
+    appendMessageToChatBox(chunk, "error-message");
+  } else {
+    appendStreamedResponse(chunk, chatBox);
+  }
+}
+
+function processNonStreamedResponse(text) {
+  if (text.includes("An error occurred:")) {
+    appendMessageToChatBox(text, "error-message");
+  } else {
+    try {
+      const data = JSON.parse(text);
+      appendMessageToChatBox(data.message, "assistant-message");
+      var conversationId = document
+        .getElementById("convo-title")
+        .getAttribute("data-conversation-id");
+      locateNewMessages(conversationId);
+    } catch (error) {
+      appendMessageToChatBox(
+        "Unexpected response format: " + text,
+        "error-message"
+      );
+    }
+  }
+}
+
+function handleChatCompletionError(error) {
+  appendMessageToChatBox("Fetch Error: " + error.message, "error-message");
+  console.error("Fetch error:", error);
 }
 
 function createMessageContent(message, className) {
