@@ -25,34 +25,6 @@ body {
   background-size: 20px 20px;
 }
 
-h1 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 5em;
-  font-weight: 900;
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: #faf5e6;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-text-stroke-width: 5px;
-  -webkit-text-stroke-color: #654321;
-}
-
-h2 {
-  font-family: "Neue Haas Grotesk Display Pro", serif;
-  font-weight: 500;
-  font-size: 2em;
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: #faf5e6;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #141414;
-}
-
 .shape {
   position: absolute;
   border: 5px solid #141414;
@@ -170,8 +142,9 @@ h2 {
   background-color: #fefdf9;
   border-radius: 8px;
   overflow-y: auto;
-  margin-right: 50px;
-  margin-left: 50px;
+  margin-right: 125px;
+  padding: 10px;
+  margin-left: 125px;
 }
 
 .error-message {
@@ -193,18 +166,19 @@ h2 {
   border-bottom: 1px solid #9b5de5;
   margin-bottom: 10px;
 }
-.fa-clipboard {
+.fa-clipboard,
+.retry-icon {
   cursor: pointer;
 }
 
-.fa-clipboard:hover {
+.fa-clipboard:hover,
+.retry-icon:hover {
   transform: scale(1.1);
 }
 
 .message-input-container {
   position: relative;
-  padding-top: 20px;
-  padding-bottom: 10px;
+  padding-top: 40px;
 }
 
 #new-convo-icon {
@@ -325,6 +299,7 @@ pre {
 
 .top-banner {
   text-align: center;
+  padding-bottom: 20px;
 }
 .message-input {
   font-family: Univers, sans-serif;
@@ -338,6 +313,7 @@ pre {
   border: none;
   padding: 0;
   width: 100%;
+  font-size: 1rem;
   align-items: flex-start;
   flex-grow: 1;
 }
@@ -478,7 +454,8 @@ pre {
   font-family: "Univers", sans-serif;
   color: #383737;
   background-color: #fefdf9;
-  line-height: 1.5;
+  font-size: 1.1rem;
+  margin-top: 40px;
 }
 
 .message h1 {
@@ -510,18 +487,20 @@ pre {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   color: #654321;
   outline: none;
-  margin-top: 20px;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
 .message p {
   margin-top: 5px;
-  font-size: 14px;
+  font-size: 1.1rem;
   margin-bottom: 5px;
 }
 
 .message a {
   color: #0069be;
+  font-size: 1.1rem;
+
   text-decoration: none;
   border-bottom: 1px dotted #0069be;
 }
@@ -529,19 +508,16 @@ pre {
   border-bottom-style: solid;
 }
 
-.user-message {
-  font-size: 14px;
-}
-
-.message {
-  font-size: 14px;
-}
 .message ul,
 .message ol {
+  font-size: 1rem;
+
   padding-left: 20px;
   margin-bottom: 10px;
 }
 .message li {
+  font-size: 1rem;
+
   margin-bottom: 5px;
 }
 
@@ -560,7 +536,7 @@ pre {
   border-radius: 4px;
   padding: 0.5em;
   overflow-x: auto;
-  font-size: 12px;
+  font-size: 1rem;
 }
 
 .message pre {
@@ -580,11 +556,6 @@ pre {
 .assistant-message h5 {
   margin: 0;
   color: #00a86b;
-}
-
-.assistant-message,
-.user-message {
-  margin-bottom: 10px;
 }
 
 .user-message h5 {
@@ -695,8 +666,34 @@ h3 {
 .system-message p {
   font-size: 12px;
 }
+
+.system-message {
+  margin: 0;
+  margin-top: 20px;
+}
 .message h5 {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 1.1em;
+  font-size: 1.2rem;
   margin-right: auto;
+}
+
+.user-message i {
+  color: #0069be;
+}
+
+.assistant-message i {
+  color: #00a86b;
+}
+
+.system-message i {
+  color: #9b5de5;
+}
+
+.message i {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.message:hover i {
+  opacity: 1;
 }

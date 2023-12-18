@@ -159,10 +159,12 @@ function createStreamMessageDiv(isUserMessage) {
   return messageDiv;
 }
 
-function updateStreamMessageContent(isUserMessage) {
+function updateStreamMessageContent(isUserMessage, chunk) {
   if (isUserMessage) {
+    // If it's a user message, simply append the text content.
     window.currentStreamContentDiv.textContent += chunk;
   } else {
+    // If it's an assistant message, parse as Markdown and then apply syntax highlighting.
     window.currentStreamContentDiv.innerHTML = marked.parse(
       window.incompleteMarkdownBuffer
     );
@@ -178,10 +180,11 @@ function applySyntaxHighlighting(element) {
 
 function finalizeStreamedResponse(isUserMessage = false) {
   if (window.currentStreamMessageDiv) {
-    // Assuming the first <div> inside currentStreamMessageDiv contains the message content
     let messageContentDiv = window.currentStreamMessageDiv.querySelector("div");
     if (messageContentDiv) {
-      let finalMessageContent = messageContentDiv.textContent;
+      let finalMessageContent = isUserMessage
+        ? messageContentDiv.textContent
+        : marked.parse(window.incompleteMarkdownBuffer);
       let messageId =
         window.currentStreamMessageDiv.getAttribute("data-message-id");
       let className = isUserMessage ? "user-message" : "assistant-message";
@@ -193,13 +196,20 @@ function finalizeStreamedResponse(isUserMessage = false) {
 
       // Replace the temporary streamed message with the final one
       window.currentStreamMessageDiv.remove();
-      appendMessageToChatBox(finalMessageContent, className, messageId);
+      let finalDiv = appendMessageToChatBox(
+        finalMessageContent,
+        className,
+        messageId
+      );
+
+      // Apply syntax highlighting to the final message content if it's not a user message
+      if (!isUserMessage) {
+        applySyntaxHighlighting(finalDiv);
+      }
     } else {
-      // Handle the case where the message content div was not found
       console.error("Streamed message content div not found.");
     }
 
-    // Reset global variables for streaming
     resetStreamMessageGlobals();
   }
 }
@@ -230,6 +240,7 @@ function appendMessageToChatBox(message, className, messageId) {
   let messageDiv = createMessageDiv(message, className, messageId);
   chatBox.appendChild(messageDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
+  return messageDiv; // Return the created message div
 }
 
 function createMessageDiv(message, className, messageId) {
@@ -288,10 +299,18 @@ function createClipboardIcon(copyTarget) {
 }
 
 function removeSubsequentMessagesUI(messageId) {
+  if (messageId == null) {
+    console.error(
+      "removeSubsequentMessagesUI was called with an undefined or null messageId."
+    );
+    return;
+  }
+
   const allMessages = Array.from(chatBox.getElementsByClassName("message"));
-  const currentMessageIndex = allMessages.findIndex(
-    (msg) => msg.dataset.messageId === messageId.toString()
-  );
+
+  const currentMessageIndex = allMessages.findIndex((msg) => {
+    return msg.dataset.messageId === messageId.toString();
+  });
 
   // Check if the message is found and it's not the last one
   if (
@@ -364,6 +383,17 @@ function createMessageHeader(className, messageId) {
     retryIcon.classList.add("fas", "fa-redo", "retry-icon");
     retryIcon.addEventListener("click", function (event) {
       event.stopPropagation();
+      // Retrieve the messageId from the closest message element when clicked
+      let messageElement = event.target.closest(".message");
+      if (!messageElement) {
+        console.error("Message element not found for the retry icon.");
+        return;
+      }
+      let messageId = messageElement.dataset.messageId;
+      if (!messageId) {
+        console.error("Message ID is undefined for the retry icon.");
+        return;
+      }
       removeSubsequentMessagesUI(messageId);
       retryMessage(messageId);
     });
