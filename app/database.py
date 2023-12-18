@@ -71,6 +71,8 @@ class Conversation(db.Model):
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     system_prompt = db.Column(db.String(2048),
                               nullable=True)  # New field for system prompts
+    last_checked_time = db.Column(
+        db.DateTime(timezone=False))  # New field for last checked time
 
     messages = db.relationship('Message', backref='conversation', lazy='dynamic',
                                cascade='all, delete-orphan')

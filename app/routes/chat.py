@@ -1,12 +1,14 @@
+from datetime import datetime
+
 import openai
 from flask import Blueprint, render_template, jsonify, Response
 from flask_login import login_required, current_user
 from openai import OpenAI
 
 from app import db
-from app.database import UserAPIKey, ChatPreferences, Conversation
+from app.database import UserAPIKey, ChatPreferences, Conversation, Message
 from app.util.chat_util import chat_stream, chat_nonstream, save_message, \
-    get_user_preferences, get_user_conversation
+    get_user_preferences, get_user_conversation, user_history
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
 from app.util.session_util import decrypt_api_key
@@ -226,12 +228,17 @@ def chat_completion():
 @bp.route('/conversation/<int:conversation_id>', methods=['GET'])
 @login_required
 def get_conversation_messages(conversation_id):
-    conversation, conversation_history = get_user_conversation(current_user.id,
-                                                               conversation_id)
+    conversation, conversation_history = user_history(current_user.id, conversation_id)
     if conversation:
         messages = [
-            {'content': message['content'], 'className': message['role'] + '-message'}
+            {'content': message['content'], 'className': message['role'] + '-message',
+             'messageId': message['id']}
             for message in conversation_history]
+
+        # Update the last_checked_time for the conversation
+        conversation.last_checked_time = datetime.utcnow()
+        db.session.commit()
+
         return jsonify({'messages': messages})
     else:
         return jsonify({'error': 'Conversation not found'}), 404
@@ -293,3 +300,57 @@ def update_system_prompt(conversation_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)})
+
+
+@bp.route('/edit-message/<int:message_id>', methods=['POST'])
+@login_required
+def edit_message(message_id):
+    data = request.get_json()
+    new_content = data.get('content')
+
+    # Validate new_content: not None and not just whitespace
+    if new_content is None or not new_content.strip():
+        return jsonify({
+            'status': 'error',
+            'message': 'Content must be provided and not just whitespace.'
+        }), 400
+
+    message = Message.query.get_or_404(message_id)
+
+    # Check if the current user is authorized to edit the message
+    if message.conversation.user_id != current_user.id:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    # Update the message content with the validated and stripped content
+    message.content = new_content.strip()
+    try:
+        db.session.commit()
+        return jsonify(
+            {'status': 'success', 'message': 'Message updated successfully.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)})
+
+
+@bp.route('/check-new-messages/<int:conversation_id>', methods=['GET'])
+@login_required
+def check_new_messages(conversation_id):
+    # Get the conversation from the database
+    conversation = Conversation.query.get_or_404(conversation_id)
+
+    # Get the last_checked_time from the conversation
+    last_checked_time = conversation.last_checked_time
+
+    # Query the database for new messages
+    new_messages = Message.query.filter(
+        Message.conversation_id == conversation_id,
+        Message.created_at > last_checked_time
+    ).all()
+
+    # Convert the new messages to a list of dictionaries
+    new_messages_dict = [{'id': message.id, 'content': message.content,
+                          "className": "assistant-message" if message.direction == 'incoming' else "user-message",
+                          'created_at': message.created_at.isoformat()} for message in
+                         new_messages]
+
+    return jsonify({'status': 'success', 'new_messages': new_messages_dict})

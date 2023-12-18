@@ -79,14 +79,40 @@ def get_user_conversation(user_id, conversation_id):
         if system_prompt:
             conversation_history.append({
                 "role": "system",
-                "content": system_prompt
+                "content": system_prompt,
             })
 
         messages = Message.query.filter_by(conversation_id=conversation.id).all()
         for message in messages:
             conversation_history.append({
                 "role": "assistant" if message.direction == 'incoming' else "user",
-                "content": message.content
+                "content": message.content,
+            })
+
+        return conversation, conversation_history
+    else:
+        return None, []
+
+
+def user_history(user_id, conversation_id):
+    conversation = Conversation.query.filter_by(user_id=user_id,
+                                                id=conversation_id).first()
+    if conversation:
+        conversation_history = []
+        system_prompt = conversation.system_prompt
+        if system_prompt:
+            conversation_history.append({
+                "role": "system",
+                "content": system_prompt,
+                "id": conversation_id,
+            })
+
+        messages = Message.query.filter_by(conversation_id=conversation.id).all()
+        for message in messages:
+            conversation_history.append({
+                "role": "assistant" if message.direction == 'incoming' else "user",
+                "content": message.content,
+                "id": message.id,
             })
 
         return conversation, conversation_history
