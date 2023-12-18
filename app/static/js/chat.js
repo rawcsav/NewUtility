@@ -258,6 +258,35 @@ function createMessageDiv(message, className, messageId) {
   return messageDiv;
 }
 
+function createClipboardIcon(copyTarget) {
+  let clipboardIcon = document.createElement("i");
+  clipboardIcon.classList.add("fas", "fa-clipboard", "clipboard-icon");
+  clipboardIcon.addEventListener("click", function (event) {
+    // Prevent the icon click from bubbling up to other elements
+    event.stopPropagation();
+
+    // Copy the specified part of the message to the clipboard
+    let textToCopy;
+    if (copyTarget === "code") {
+      textToCopy = this.parentNode.textContent;
+    } else if (copyTarget === "message") {
+      textToCopy = this.parentNode.parentNode.textContent;
+    }
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        // Success feedback
+        console.log("Text copied to clipboard!");
+      })
+      .catch((err) => {
+        // Error feedback
+        console.error("Failed to copy text:", err);
+      });
+  });
+
+  return clipboardIcon;
+}
+
 function setupMessageEditing(content, messageId) {
   content.contentEditable = "true";
   content.focus();
@@ -294,6 +323,12 @@ function createMessageHeader(className, messageId) {
   title.textContent = getTitleBasedOnClassName(className);
   header.appendChild(title);
 
+  // Append clipboard icon to the header for assistant messages
+  if (className === "assistant-message") {
+    let clipboardIcon = createClipboardIcon("message");
+    header.appendChild(clipboardIcon);
+  }
+
   // Append edit icon to the header for all messages
   let editIcon = createEditIcon();
   header.appendChild(editIcon);
@@ -302,6 +337,8 @@ function createMessageHeader(className, messageId) {
   // If this is a system message, set up the specific functionality
   if (className === "system-message") {
     editIcon.addEventListener("click", function () {
+      messageContent = document.querySelector(".message-content");
+
       messageContent.contentEditable = "true";
       messageContent.focus();
       // Call the function to handle system message editing
@@ -336,9 +373,17 @@ function createMessageContent(message, className) {
   if (className === "assistant-message") {
     content.innerHTML = DOMPurify.sanitize(marked.parse(message));
     applySyntaxHighlighting(content);
+    // Append clipboard icons to code blocks within the assistant message
+    let codeBlocks = content.querySelectorAll("pre > code");
+    codeBlocks.forEach((code) => {
+      let clipboardIcon = createClipboardIcon("code");
+      clipboardIcon.classList.add("code-clipboard-icon");
+      code.parentNode.insertBefore(clipboardIcon, code);
+    });
   } else {
     content.textContent = message;
   }
+
   return content;
 }
 
@@ -531,8 +576,8 @@ function locateNewMessages(conversationId) {
 }
 
 const modelMaxTokens = {
-  "gpt-4-1106-preview": 128000,
-  "gpt-4-vision-preview": 128000,
+  "gpt-4-1106-preview": 4096,
+  "gpt-4-vision-preview": 4096,
   "gpt-4": 8192,
   "gpt-4-32k": 32768,
   "gpt-4-0613": 8192,
@@ -541,7 +586,7 @@ const modelMaxTokens = {
   "gpt-4-32k-0314": 32768,
   "gpt-3.5-turbo-1106": 16385,
   "gpt-3.5-turbo": 4096,
-  "gpt-3.5-turbo-16k": 16385
+  "gpt-3.5-turbo-16k": 4096
 };
 
 document.addEventListener("DOMContentLoaded", function () {

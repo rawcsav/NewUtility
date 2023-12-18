@@ -1,20 +1,17 @@
 from datetime import datetime
 
-import openai
-from flask import Blueprint, render_template, jsonify, Response
+from flask import jsonify, Response
+from flask import render_template, flash, request, stream_with_context, Blueprint
 from flask_login import login_required, current_user
 from openai import OpenAI
 
 from app import db
 from app.database import UserAPIKey, ChatPreferences, Conversation, Message
-from app.util.chat_util import chat_stream, chat_nonstream, save_message, \
-    get_user_preferences, get_user_conversation, user_history
+from app.util.chat_util import chat_stream, chat_nonstream, get_user_preferences, \
+    user_history
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
 from app.util.session_util import decrypt_api_key
-from flask import Blueprint, request, render_template, flash, redirect, url_for, \
-    session, request, stream_with_context, Blueprint, current_app
-from flask_login import login_required, current_user
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -354,3 +351,67 @@ def check_new_messages(conversation_id):
                          new_messages]
 
     return jsonify({'status': 'success', 'new_messages': new_messages_dict})
+
+
+@bp.route('/retry-message/<int:message_id>', methods=['POST'])
+@login_required
+def retry_message(message_id):
+    # Retrieve the message from the database
+    message = Message.query.get_or_404(message_id)
+
+    # Check if the current user is authorized to retry the message
+    if message.conversation.user_id != current_user.id:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    # Resubmit the message content to the OpenAI API
+    user_id = current_user.id
+    conversation_id = message.conversation_id
+    key_id = current_user.selected_api_key_id
+    user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
+
+    if not user_api_key:
+        return jsonify({'status': 'error', 'message': 'API Key not found.'})
+
+    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
+    client = OpenAI(api_key=api_key)
+
+    preferences = get_user_preferences(user_id)
+    stream_preference = preferences.get('stream', True)
+    prompt = message.content  # Use the content of the message being retried as the prompt
+
+    try:
+        if stream_preference:
+            full_response = ""  # Initialize a variable to accumulate the full response
+
+            def generate():
+                nonlocal full_response  # Allow access to the full_response variable within the generator
+                for content in chat_stream(prompt, client, user_id, conversation_id):
+                    full_response += content  # Accumulate the content
+                    yield content
+
+            # Create a response object that streams the content
+            response = Response(
+                stream_with_context(generate()),
+                content_type="text/plain"
+            )
+            response.headers["X-Accel-Buffering"] = "no"
+            return response
+        else:
+            full_response = chat_nonstream(prompt, client, user_id, conversation_id)
+            if full_response:
+                return jsonify(
+                    {'status': 'success',
+                     'message': full_response.strip()})
+        Message.query.filter(Message.conversation_id == conversation_id,
+                             Message.created_at > message.created_at).delete()
+        db.session.commit()
+
+        # Create a new message with the new completion from the OpenAI API
+        new_message = Message(conversation_id=conversation_id, content=full_response,
+                              direction='incoming')
+        db.session.add(new_message)
+        db.session.commit()
+
+        return jsonify({'status': 'success', 'message': full_response})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})

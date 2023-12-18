@@ -170,6 +170,8 @@ h2 {
   background-color: #fefdf9;
   border-radius: 8px;
   overflow-y: auto;
+  margin-right: 50px;
+  margin-left: 50px;
 }
 
 .error-message {
@@ -189,6 +191,14 @@ h2 {
   text-align: left;
   font-style: italic;
   border-bottom: 1px solid #9b5de5;
+  margin-bottom: 10px;
+}
+.fa-clipboard {
+  cursor: pointer;
+}
+
+.fa-clipboard:hover {
+  transform: scale(1.1);
 }
 
 .message-input-container {
@@ -292,6 +302,17 @@ h4 {
   display: flex;
 }
 
+pre {
+  position: relative;
+}
+
+.code-clipboard-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+
 #chat-completion-form .input-group {
   width: 60%;
   border: 1px solid #383737;
@@ -333,8 +354,9 @@ h4 {
 
 .message-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
+  gap: 10px;
 }
 
 #update-preferences-form {
@@ -474,6 +496,7 @@ h4 {
 .message h5 {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 1.1em;
+  margin-right: auto;
 }
 .message h6 {
   font-size: 1em;
@@ -486,6 +509,7 @@ h4 {
 .message h6 {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   color: #654321;
+  outline: none;
   margin-top: 20px;
   margin-bottom: 10px;
 }
@@ -493,7 +517,7 @@ h4 {
 .message p {
   margin-top: 5px;
   font-size: 14px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .message a {
@@ -553,13 +577,14 @@ h4 {
   text-align: left;
 }
 
-.message-header {
-  margin-top: 15px;
-}
-
 .assistant-message h5 {
   margin: 0;
   color: #00a86b;
+}
+
+.assistant-message,
+.user-message {
+  margin-bottom: 10px;
 }
 
 .user-message h5 {
@@ -587,7 +612,8 @@ h4 {
 #options {
   margin-bottom: 5px;
 }
-#conversation-history-status {
+#conversation-history-status,
+#preference-messages {
   font-size: 12px;
   margin: 10px;
   margin-top: 15px;
@@ -668,4 +694,9 @@ h3 {
 
 .system-message p {
   font-size: 12px;
+}
+.message h5 {
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-size: 1.1em;
+  margin-right: auto;
 }
