@@ -15,5 +15,4 @@ if __name__ == '__main__':
         host='localhost',
         static_files={
             '/static': '/Users/gavinmason/PycharmProjects/SwissAI/app/static'},
-        ssl_context=('cert.pem', 'key.pem')
     )

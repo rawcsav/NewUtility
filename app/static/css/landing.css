@@ -167,6 +167,14 @@ h2 {
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #654321;
 }
+ul {
+  list-style: none;
+}
+
+a {
+  color: #333333;
+  text-decoration: none;
+}
 
 .hand1 {
   position: absolute;
@@ -185,4 +193,12 @@ h2 {
   position: absolute;
   right: 0;
   top: 40%;
+}
+
+.button-pause .fa-paper-plane {
+  display: none;
+}
+
+.button-pause .fa-pause {
+  display: inline-block;
 }

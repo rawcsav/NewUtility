@@ -106,6 +106,15 @@ h2 {
   color: #333333;
 }
 
+ul {
+  list-style: none;
+}
+
+a {
+  color: #333333;
+  text-decoration: none;
+}
+
 .prompt-submit-container button:hover {
   background-color: #e2e2e2;
 }

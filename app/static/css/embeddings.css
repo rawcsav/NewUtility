@@ -200,6 +200,15 @@ p {
   rotate: -15deg;
 }
 
+ul {
+  list-style: none;
+}
+
+a {
+  color: #333333;
+  text-decoration: none;
+}
+
 .doc {
   position: absolute;
   bottom: 15vh;

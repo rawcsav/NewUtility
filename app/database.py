@@ -73,6 +73,7 @@ class Conversation(db.Model):
                               nullable=True)  # New field for system prompts
     last_checked_time = db.Column(
         db.DateTime(timezone=False))  # New field for last checked time
+    is_interrupted = db.Column(db.Boolean, default=False)
 
     messages = db.relationship('Message', backref='conversation', lazy='dynamic',
                                cascade='all, delete-orphan')

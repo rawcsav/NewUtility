@@ -1,9 +1,9 @@
 from time import sleep
-
 import numpy as np
 import openai
 import tiktoken
-
+from flask_login import current_user
+from flask import abort
 from app import db
 from app.database import ChatPreferences, Message, Conversation
 
@@ -177,45 +177,66 @@ def save_message(conversation_id, content, direction, model, is_knowledge_query=
 def chat_stream(prompt, client, user_id, conversation_id):
     # Retrieve the user's conversation history and preferences
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
-    preferences = get_user_preferences(user_id)
+    if not conversation:
+        print("No conversation found for user.")
+        return
+    if conversation.user_id != current_user.id:
+        abort(403)  # HTTP 403 Forbidden
+    else:
+        conversation.is_interrupted = False
+        db.session.commit()
+        preferences = get_user_preferences(user_id)
 
-    # Apply truncation to the conversation history if needed
-    truncate_limit = preferences.get("truncate_limit")
-    if truncate_limit:
-        truncate_conversation(conversation_history, truncate_limit)
+        # Apply truncation to the conversation history if needed
+        truncate_limit = preferences.get("truncate_limit")
+        if truncate_limit:
+            truncate_conversation(conversation_history, truncate_limit)
 
-    # Prepare the API request payload
-    request_payload = {
-        "model": preferences["model"],
-        "messages": conversation_history + [{"role": "user", "content": prompt}],
-        "temperature": preferences["temperature"],
-        "max_tokens": preferences["max_tokens"],
-        "frequency_penalty": preferences["frequency_penalty"],
-        "presence_penalty": preferences["presence_penalty"],
-        "top_p": preferences["top_p"],
-        "stream": True,
-    }
+        # Prepare the API request payload
+        request_payload = {
+            "model": preferences["model"],
+            "messages": conversation_history + [{"role": "user", "content": prompt}],
+            "temperature": preferences["temperature"],
+            "max_tokens": preferences["max_tokens"],
+            "frequency_penalty": preferences["frequency_penalty"],
+            "presence_penalty": preferences["presence_penalty"],
+            "top_p": preferences["top_p"],
+            "stream": True,
+        }
 
-    # Log the request payload for debugging
-    save_message(conversation_id, prompt, 'outgoing', preferences['model'])
+        # Log the request payload for debugging
+        save_message(conversation_id, prompt, 'outgoing', preferences['model'])
 
-    full_response = ""  # Initialize a variable to accumulate the full response
-    try:
-        response = client.chat.completions.create(**request_payload)
+        full_response = ""  # Initialize a variable to accumulate the full response
+        try:
+            response = client.chat.completions.create(**request_payload)
 
-        for part in response:
-            content = part.choices[0].delta.content
-            if content:
-                full_response += content  # Accumulate the content
-                yield content  # Yield each content part as it comes in
+            for part in response:
+                db.session.commit()
+                conversation = Conversation.query.get(
+                    conversation_id)  # Re-fetch the conversation object
+                db.session.refresh(conversation)
+                if conversation.is_interrupted:
+                    print("Conversation has been interrupted.")
+                    conversation.is_interrupted = False
+                    db.session.commit()
+                    break
 
-        if full_response.strip():  # Save only if there's non-empty content
-            save_message(conversation_id, full_response, 'incoming',
-                         preferences['model'])
+                content = part.choices[0].delta.content
+                if content:
+                    full_response += content
+                    yield content
 
-    except Exception as e:
-        error_message = handle_stream_error(e, conversation_id, preferences['model'])
-        yield error_message
+            # Save the response, whether full or partial
+            if full_response.strip():  # Save only if there's non-empty content
+                save_message(conversation_id, full_response, 'incoming',
+                             preferences['model'])
+
+
+        except Exception as e:
+            error_message = handle_stream_error(e, conversation_id,
+                                                preferences['model'])
+            yield error_message
 
 
 def chat_nonstream(prompt, client, user_id, conversation_id):
@@ -223,32 +244,35 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
     if not conversation:
         print("No conversation found for user.")
         return
-
-    preferences = get_user_preferences(user_id)
-    truncate_limit = preferences["truncate_limit"]
-    full_response = ""
-    save_message(conversation_id, prompt, 'outgoing', preferences['model'])
-    truncate_conversation(conversation_history, truncate_limit)
-    try:
-        response = client.chat.completions.create(
-            model=preferences["model"],
-            messages=conversation_history + [{"role": "user", "content": prompt}],
-            temperature=preferences["temperature"],
-            max_tokens=preferences["max_tokens"],
-            frequency_penalty=preferences["frequency_penalty"],
-            presence_penalty=preferences["presence_penalty"],
-            top_p=preferences["top_p"],
-            stream=False,
-        )
-        if response:
-            full_response = response.choices[0].message.content
-            if full_response.strip():
-                save_message(conversation_id, full_response, 'incoming',
-                             preferences['model'])
-            return full_response
-    except Exception as e:
-        error_message = handle_nonstream_error(e, conversation_id, preferences['model'])
-        return error_message
+    if conversation.user_id != current_user.id:
+        abort(403)
+    else:
+        preferences = get_user_preferences(user_id)
+        truncate_limit = preferences["truncate_limit"]
+        full_response = ""
+        save_message(conversation_id, prompt, 'outgoing', preferences['model'])
+        truncate_conversation(conversation_history, truncate_limit)
+        try:
+            response = client.chat.completions.create(
+                model=preferences["model"],
+                messages=conversation_history + [{"role": "user", "content": prompt}],
+                temperature=preferences["temperature"],
+                max_tokens=preferences["max_tokens"],
+                frequency_penalty=preferences["frequency_penalty"],
+                presence_penalty=preferences["presence_penalty"],
+                top_p=preferences["top_p"],
+                stream=False,
+            )
+            if response:
+                full_response = response.choices[0].message.content
+                if full_response.strip():
+                    save_message(conversation_id, full_response, 'incoming',
+                                 preferences['model'])
+                return full_response
+        except Exception as e:
+            error_message = handle_nonstream_error(e, conversation_id,
+                                                   preferences['model'])
+            return error_message
 
 
 # Helper functions to handle errors in streaming and non-streaming modes

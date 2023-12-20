@@ -26,6 +26,15 @@ body {
   color: green;
 }
 
+ul {
+  list-style: none;
+}
+
+a {
+  color: #333333;
+  text-decoration: none;
+}
+
 #signup-form {
   margin-top: 50px;
   display: flex;

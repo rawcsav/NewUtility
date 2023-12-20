@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import jsonify, Response
+from flask import jsonify, Response, abort
 from flask import render_template, flash, request, stream_with_context, Blueprint
 from flask_login import login_required, current_user
 from openai import OpenAI
@@ -194,10 +194,13 @@ def chat_completion():
                 full_response = ""  # Initialize a variable to accumulate the full response
 
                 def generate():
-                    nonlocal full_response  # Allow access to the full_response variable within the generator
+                    nonlocal full_response
+                    conversation = Conversation.query.get(
+                        conversation_id)  # Access the conversation object
+
                     for content in chat_stream(prompt, client, user_id,
                                                conversation_id):
-                        full_response += content  # Accumulate the content
+                        full_response += content
                         yield content
 
                 # Create a response object that streams the content
@@ -378,7 +381,6 @@ def retry_message(message_id):
     preferences = get_user_preferences(user_id)
     stream_preference = preferences.get('stream', True)
     prompt = message.content  # Use the content of the message being retried as the prompt
-
     try:
         if stream_preference:
             full_response = ""  # Initialize a variable to accumulate the full response
@@ -415,3 +417,23 @@ def retry_message(message_id):
         return jsonify({'status': 'success', 'message': full_response})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
+
+
+# An endpoint to signal interruption from the frontend
+@bp.route('/interrupt-stream/<int:conversation_id>', methods=['POST'])
+@login_required
+def interrupt_stream(conversation_id):
+    conversation = Conversation.query.get_or_404(conversation_id)
+    if conversation.user_id != current_user.id:
+        abort(403)  # HTTP 403 Forbidden
+
+    # Log the current state before setting the flag
+    print(f"Before setting interrupt: {conversation.is_interrupted}")
+
+    conversation.is_interrupted = True
+    db.session.commit()
+
+    # Log the state after setting the flag
+    print(f"After setting interrupt: {conversation.is_interrupted}")
+
+    return jsonify({'status': 'success', 'message': 'Interruption signal received.'})

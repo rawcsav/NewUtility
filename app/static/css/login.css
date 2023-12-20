@@ -7,6 +7,15 @@ html {
   overflow: hidden;
 }
 
+ul {
+  list-style: none;
+}
+
+a {
+  color: #333333;
+  text-decoration: none;
+}
+
 body {
   margin: 0;
   padding: 0;

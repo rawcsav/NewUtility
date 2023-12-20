@@ -1,8 +1,49 @@
 var chatBox = document.getElementById("chat-box");
+let isInterrupted = false;
 
 hljs.configure({
   ignoreUnescapedHTML: true
 });
+
+function toggleButtonState() {
+  const button = document.getElementById("toggle-button");
+  const currentState = button.getAttribute("data-state");
+  const icon = button.querySelector("i");
+
+  if (currentState === "send") {
+    // Switch to pause state
+    icon.classList.remove("fa-paper-plane");
+    icon.classList.add("fa-pause");
+    button.setAttribute("data-state", "pause");
+  } else {
+    // Switch to send state
+    icon.classList.remove("fa-pause");
+    icon.classList.add("fa-paper-plane");
+    button.setAttribute("data-state", "send");
+  }
+}
+
+function interruptAIResponse() {
+  var conversationId = document
+    .getElementById("convo-title")
+    .getAttribute("data-conversation-id");
+
+  fetch(`/chat/interrupt-stream/${conversationId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken() // Assuming you have a function to get CSRF token
+    },
+    credentials: "same-origin" // Include cookies in the request for CSRF protection
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data.message); // Log the server's response
+      isInterrupted = true; // Set the frontend flag to indicate interruption
+      toggleButtonState(); // Update the UI
+    })
+    .catch((error) => console.error("Error interrupting the stream:", error));
+}
 
 function toggleHistory() {
   document.getElementById("conversation-container").style.display = "block";
@@ -201,7 +242,8 @@ function finalizeStreamedResponse(isUserMessage = false) {
         className,
         messageId
       );
-
+      toggleButtonState(); // Call this function to switch back to the send button
+      window.isWaitingForResponse = false;
       // Apply syntax highlighting to the final message content if it's not a user message
       if (!isUserMessage) {
         applySyntaxHighlighting(finalDiv);
@@ -439,11 +481,21 @@ function createEditIcon() {
 }
 
 function processStreamedResponse(response) {
+  isInterrupted = false;
   const reader = response.body.getReader();
   readStreamedResponseChunk(reader);
 }
 
 function readStreamedResponseChunk(reader) {
+  if (isInterrupted) {
+    console.log("Response processing was interrupted.");
+    finalizeStreamedResponse(); // Finalizes the response with the partial content.
+    var conversationId = document
+      .getElementById("convo-title")
+      .getAttribute("data-conversation-id");
+    locateNewMessages(conversationId);
+    return;
+  }
   reader
     .read()
     .then(({ done, value }) => {
@@ -725,6 +777,21 @@ const modelMaxTokens = {
 
 document.addEventListener("DOMContentLoaded", function () {
   setupMessageInput();
+  window.isWaitingForResponse = false;
+  const toggleButton = document.getElementById("toggle-button");
+  toggleButton.setAttribute("data-state", "send"); // Initialize the button state as 'send'
+
+  toggleButton.addEventListener("click", function (event) {
+    const currentState = this.getAttribute("data-state");
+
+    if (currentState === "send") {
+    } else {
+      event.preventDefault(); // Prevent form submission
+      interruptAIResponse();
+      toggleButtonState(); // Switch back to the send button
+    }
+  });
+
   setupConversationTitleEditing();
   initializeTooltipBehavior();
   setupModelChangeListener();
@@ -760,11 +827,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleSubmitOnEnter(event, textarea) {
     if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault(); // Prevent the default behavior of enter key
-      triggerFormSubmission("chat-completion-form");
+      if (textarea.value.trim() === "") {
+        event.preventDefault(); // Prevent form submission if the input is empty
+        console.error("Cannot submit an empty message.");
+      } else if (window.isWaitingForResponse) {
+        event.preventDefault(); // Prevent form submission if waiting for a response
+        console.error("Please wait for the current AI response.");
+      } else {
+        event.preventDefault(); // Prevent the default behavior of enter key
+        triggerFormSubmission("chat-completion-form");
+      }
     }
   }
-
   function triggerFormSubmission(formId) {
     var form = document.getElementById(formId);
     if (form) {
@@ -962,6 +1036,15 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleChatCompletionFormSubmission(event, form) {
     event.preventDefault();
     const messageToSend = document.getElementById("message-input").value;
+    if (messageToSend.trim() === "") {
+      console.error("Cannot send an empty message.");
+      return;
+    }
+    if (window.isWaitingForResponse) {
+      console.error("Please wait for the current AI response.");
+      return;
+    }
+    window.isWaitingForResponse = true;
     submitChatMessage(messageToSend, form);
     document.getElementById("message-input").value = "";
   }
@@ -971,7 +1054,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const formData = new FormData(form);
     formData.append("prompt", message);
-
     fetchChatCompletionResponse(formData)
       .then((response) => processChatCompletionResponse(response))
       .catch((error) => handleChatCompletionError(error));
@@ -992,6 +1074,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function processChatCompletionResponse(response) {
     const contentType = response.headers.get("Content-Type");
     if (contentType && contentType.includes("text/plain")) {
+      toggleButtonState();
       processStreamedResponse(response);
     } else {
       response.text().then((text) => processNonStreamedResponse(text));
@@ -999,11 +1082,21 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function processStreamedResponse(response) {
+    isInterrupted = false;
     const reader = response.body.getReader();
     readStreamedResponseChunk(reader);
   }
 
   function readStreamedResponseChunk(reader) {
+    if (isInterrupted) {
+      console.log("Response processing was interrupted.");
+      finalizeStreamedResponse(); // Finalizes the response with the partial content.
+      var conversationId = document
+        .getElementById("convo-title")
+        .getAttribute("data-conversation-id");
+      locateNewMessages(conversationId);
+      return;
+    }
     reader
       .read()
       .then(({ done, value }) => {
@@ -1054,6 +1147,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
     }
+    window.isWaitingForResponse = false;
   }
 
   function handleChatCompletionError(error) {
