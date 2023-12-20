@@ -6,6 +6,8 @@ from flask_login import current_user
 from flask import abort
 from app import db
 from app.database import ChatPreferences, Message, Conversation
+from app.util.usage_util import chat_cost, update_usage_and_costs, \
+    num_tokens_from_string
 
 MODEL_TOKEN_LIMITS = {
     'gpt-4-1106-preview': 4096,
@@ -14,8 +16,6 @@ MODEL_TOKEN_LIMITS = {
     'gpt-4-32k': 32768,
     'gpt-4-0613': 8192,
     'gpt-4-32k-0613': 32768,
-    'gpt-4-0314': 8192,
-    'gpt-4-32k-0314': 32768,
     'gpt-3.5-turbo-1106': 16385,
     'gpt-3.5-turbo': 4096,
     'gpt-3.5-turbo-16k': 4096,
@@ -227,6 +227,18 @@ def chat_stream(prompt, client, user_id, conversation_id):
                     full_response += content
                     yield content
 
+            total_prompt_tokens = num_tokens_from_string(prompt, preferences['model'])
+            total_completion_tokens = num_tokens_from_string(full_response,
+                                                             preferences['model'])
+
+            # After the chat is completed, calculate the cost based on token counts
+            cost = chat_cost(preferences["model"], total_prompt_tokens,
+                             total_completion_tokens)
+            update_usage_and_costs(user_id=user_id,
+                                   api_key_id=current_user.selected_api_key_id,
+                                   usage_type='chat',
+                                   cost=cost)
+
             # Save the response, whether full or partial
             if full_response.strip():  # Save only if there's non-empty content
                 save_message(conversation_id, full_response, 'incoming',
@@ -268,6 +280,16 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
                 if full_response.strip():
                     save_message(conversation_id, full_response, 'incoming',
                                  preferences['model'])
+
+                    # Use the token counts from the response to calculate the cost
+                    prompt_tokens = response.usage.prompt_tokens
+                    completion_tokens = response.usage.completion_tokens
+                    cost = chat_cost(preferences["model"], prompt_tokens,
+                                     completion_tokens)
+                    update_usage_and_costs(user_id=user_id,
+                                           api_key_id=current_user.selected_api_key_id,
+                                           usage_type='chat',
+                                           cost=cost)
                 return full_response
         except Exception as e:
             error_message = handle_nonstream_error(e, conversation_id,

@@ -154,8 +154,6 @@ class UserPreferencesForm(FlaskForm):
         ('gpt-4-32k', 'GPT-4 32k'),
         ('gpt-4-0613', 'GPT-4 0613'),
         ('gpt-4-32k-0613', 'GPT-4 32k 0613'),
-        ('gpt-4-0314', 'GPT-4 0314'),
-        ('gpt-4-32k-0314', 'GPT-4 32k 0314'),
         ('gpt-3.5-turbo-1106', 'GPT-3.5 Turbo 1106'),
         ('gpt-3.5-turbo', 'GPT-3.5 Turbo'),
         ('gpt-3.5-turbo-16k', 'GPT-3.5 Turbo 16k')

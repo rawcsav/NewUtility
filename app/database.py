@@ -23,6 +23,10 @@ class UserAPIKey(db.Model):
     api_key_token = db.Column(db.String(64), unique=True, nullable=False,
                               default=lambda: str(uuid.uuid4()))
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    usage_image_gen = db.Column(db.Numeric(10, 5), default=0, nullable=False)
+    usage_chat = db.Column(db.Numeric(10, 5), default=0, nullable=False)
+    usage_embedding = db.Column(db.Numeric(10, 5), default=0, nullable=False)
+    usage_audio = db.Column(db.Numeric(10, 5), default=0, nullable=False)
 
 
 class User(UserMixin, db.Model):
@@ -46,13 +50,10 @@ class User(UserMixin, db.Model):
                                     nullable=True)
 
     conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
-    audio_files = db.relationship('AudioFile', backref='user', lazy='dynamic')
     document_embeddings = db.relationship('DocumentEmbedding', backref='user',
                                           lazy='dynamic')
     documents = db.relationship('Document', backref='user', lazy='dynamic')
-    translations = db.relationship('Translation', backref='user', lazy='dynamic')
     api_usage = db.relationship('APIUsage', backref='user', lazy='dynamic')
-    speeches = db.relationship('Speech', backref='user', lazy='dynamic')
     api_keys = db.relationship('UserAPIKey', backref='user', lazy='dynamic',
                                foreign_keys=[UserAPIKey.user_id])
     selected_api_key = db.relationship('UserAPIKey', foreign_keys=[selected_api_key_id]
@@ -88,6 +89,8 @@ class Message(db.Model):
     direction = db.Column(db.Enum('incoming', 'outgoing'), nullable=False)
     model = db.Column(db.String(50), nullable=False)
     is_knowledge_query = db.Column(db.Boolean, default=False)
+    is_voice = db.Column(db.Boolean, default=False)
+    is_vision = db.Column(db.Boolean, default=False)
     is_error = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
@@ -97,7 +100,6 @@ class ChatPreferences(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
-    show_timestamps = db.Column(db.Boolean, default=True)
     model = db.Column(db.String(50), default='gpt-3.5-turbo')
     temperature = db.Column(db.Float, default=0.7)
     max_tokens = db.Column(db.Integer, default=2000)
@@ -105,16 +107,11 @@ class ChatPreferences(db.Model):
     presence_penalty = db.Column(db.Float, default=0.0)
     top_p = db.Column(db.Float, default=1.0)
     stream = db.Column(db.Boolean, default=True)
-
-
-class AudioFile(db.Model):
-    __tablename__ = 'audio_files'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    file_path = db.Column(db.String(255), nullable=False)
-    transcription = db.Column(db.Text)
-    language = db.Column(db.String(10), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    voice_mode = db.Column(db.Boolean, default=False)
+    voice_model = db.Column(db.String(50), default='alloy')
+    voice_quality = db.Column(db.String(50), default='tts-1')
+    vision_mode = db.Column(db.Boolean, default=False)
+    knowledge_query_mode = db.Column(db.Boolean, default=False)
 
 
 class Document(db.Model):
@@ -127,6 +124,7 @@ class Document(db.Model):
     author = db.Column(db.String(255),
                        nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)
+    pages = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     chunks = db.relationship('DocumentChunk', back_populates='document',
                              order_by='DocumentChunk.chunk_index',
@@ -142,6 +140,7 @@ class DocumentChunk(db.Model):
     chunk_index = db.Column(db.Integer, nullable=False)
     content = db.Column(db.Text, nullable=False)
     tokens = db.Column(db.Integer, nullable=False)
+    pages = db.Column(db.Integer, nullable=True)
     document = db.relationship('Document', back_populates='chunks')
     embeddings = db.relationship('DocumentEmbedding', back_populates='chunk',
                                  cascade='all, delete, delete-orphan')  # Add cascade option here
@@ -161,44 +160,22 @@ class DocumentEmbedding(db.Model):
                          db.ForeignKey('document_chunks.id', ondelete='CASCADE'),
                          nullable=False)
     embedding = db.Column(db.LargeBinary,
-                          nullable=False)  # The binary representation of the embedding
+                          nullable=False)
     model = db.Column(db.String(50),
-                      nullable=False)  # The name of the model used to generate the embedding
+                      nullable=False)
     created_at = db.Column(db.DateTime(timezone=False),
                            server_default=func.now())  # Timestamp of when the embedding was created
     chunk = db.relationship('DocumentChunk', back_populates='embeddings')
-
-
-class Translation(db.Model):
-    __tablename__ = 'translations'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    source_text = db.Column(db.Text, nullable=False)
-    translated_text = db.Column(db.Text, nullable=False)
-    source_language = db.Column(db.String(10), nullable=False)
-    target_language = db.Column(db.String(10), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 
 class APIUsage(db.Model):
     __tablename__ = 'api_usage'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    endpoint = db.Column(db.String(50), nullable=False)
-    request_payload = db.Column(db.Text)
-    response_payload = db.Column(db.Text)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
-
-
-class Speech(db.Model):
-    __tablename__ = 'speeches'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    text = db.Column(db.Text, nullable=False)
-    voice = db.Column(db.String(50), nullable=False)
-    audio_data = db.Column(db.Text,
-                           nullable=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    usage_image_gen = db.Column(db.Numeric(10, 5), default=0, nullable=False)
+    usage_chat = db.Column(db.Numeric(10, 5), default=0, nullable=False)
+    usage_embedding = db.Column(db.Numeric(10, 5), default=0, nullable=False)
+    usage_audio = db.Column(db.Numeric(10, 5), default=0, nullable=False)
 
 
 class GeneratedImage(db.Model):

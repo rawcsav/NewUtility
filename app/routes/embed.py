@@ -10,6 +10,7 @@ from app.util.embeddings_util import split_text, extract_text_from_file, \
     remove_temp_file, get_embedding_batch, store_embeddings, save_temp_file
 from app.util.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm
 from app.util.session_util import decrypt_api_key
+from app.util.usage_util import embedding_cost, update_usage_and_costs
 
 # Initialize the blueprint
 bp = Blueprint('embeddings', __name__, url_prefix='/embeddings')
@@ -82,7 +83,19 @@ def upload_document():
             )
             db.session.add(chunk)
         embeddings = get_embedding_batch(chunks, client)
+        # Calculate the cost for embedding generation
+        cost = embedding_cost(total_tokens)
+        print(cost)
+        print(total_tokens)
+        # Update the API key and APIUsage with the new cost
+        update_usage_and_costs(user_id=current_user.id,
+                               api_key_id=key_id,
+                               usage_type='embedding',
+                               cost=cost)
+
+        # Now store the embeddings in the database
         store_embeddings(new_document.id, embeddings)
+
         db.session.commit()
         return jsonify({
             'status': 'success',

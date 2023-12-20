@@ -11,6 +11,7 @@ from app.database import GeneratedImage, UserAPIKey
 from app.util.forms_util import GenerateImageForm
 from app.util.image_util import download_and_convert_image
 from app.util.session_util import decrypt_api_key
+from app.util.usage_util import dalle_cost, update_usage_and_costs
 
 bp = Blueprint('image', __name__, url_prefix='/image')
 
@@ -51,8 +52,19 @@ def generate_image():
                     request_params['quality'] = quality
                 if style:
                     request_params['style'] = style
+            else:
+                quality = None
+                style = None
 
             response = openai.images.generate(**request_params)
+            # Check if the response is successful
+            if response is not None and hasattr(response, 'data'):
+                cost = dalle_cost(model_name=model, resolution=size, num_images=n,
+                                  quality=quality)
+
+                # Update the API key and APIUsage with the new cost
+                update_usage_and_costs(user_id=current_user.id, api_key_id=key_id,
+                                       usage_type='image_gen', cost=cost)
 
             for image_response in response.data:
                 image_url = image_response.url
