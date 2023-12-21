@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required, current_user
@@ -69,8 +70,10 @@ def upload_document():
     temp_path = save_temp_file(file)
 
     try:
-        content = extract_text_from_file(temp_path)
-        chunks, total_tokens, chunk_token_counts = split_text(content, chunk_size)
+        text_pages = extract_text_from_file(
+            temp_path)  # This should return a list of (text, page_number) tuples
+        chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(text_pages,
+                                                                           chunk_size)
 
         new_document = Document(
             user_id=current_user.id,
@@ -82,17 +85,20 @@ def upload_document():
         db.session.add(new_document)
         db.session.flush()  # Flush the session to get the new ID
 
-        # Create and store chunks in the database
-        for i, (chunk_content, token_count) in enumerate(
-                zip(chunks, chunk_token_counts)):
+        # Create and store chunks in the database, including page number information
+        for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
+            serialized_pages = pickle.dumps(list(pages))  # Serialize the page numbers
             chunk = DocumentChunk(
                 document_id=new_document.id,
                 chunk_index=i,
                 content=chunk_content,
-                tokens=token_count
+                tokens=chunk_token_counts[i],
+                pages=serialized_pages  # Store the serialized page numbers
             )
             db.session.add(chunk)
+
         embeddings = get_embedding_batch(chunks, client)
+
         # Calculate the cost for embedding generation
         cost = embedding_cost(total_tokens)
         # Update the API key and APIUsage with the new cost

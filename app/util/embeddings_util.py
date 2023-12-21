@@ -20,6 +20,7 @@ import tempfile
 ENCODING = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = 'text-embedding-ada-002'
 MAX_TOKENS_PER_BATCH = 8000  # Define the maximum tokens per batch
+WORDS_PER_PAGE = 500  # Define the number of words per page
 
 
 def save_temp_file(uploaded_file):
@@ -40,35 +41,38 @@ def count_tokens(string: str) -> int:
     return num_tokens
 
 
+def extract_text_from_pdf(filepath):
+    page_texts = []
+    with open(filepath, "rb") as file:
+        reader = PdfReader(file)
+        for page_number, page in enumerate(reader.pages, start=1):
+            page_text = page.extract_text()
+            if page_text:
+                page_texts.append((page_text, page_number))
+    return page_texts
+
+
+def estimate_pages(text):
+    words = word_tokenize(text)
+    pages = [(text[i:i + WORDS_PER_PAGE], i // WORDS_PER_PAGE + 1) for i in
+             range(0, len(words), WORDS_PER_PAGE)]
+    return pages
+
+
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
-
-    if ext == ".txt":
-        with open(filepath, 'r', encoding='utf-8') as file:
-            return file.read()
-
-    extracted_text = ""
-
-    try:
-        if ext == ".pdf":
-            with open(filepath, "rb") as file:
-                reader = PdfReader(file)
-                for page in reader.pages:
-                    page_text = page.extract_text()
-                    if page_text:  # ensure there's text on the page
-                        extracted_text += page_text
-
-        elif ext == ".docx":
-            extracted_text = docx2txt.process(filepath)
-
-        else:
-            raise ValueError(f"Unsupported file type: {ext}")
-
-        return extracted_text
-
-    except Exception as e:
-        print(f"Error processing the file {filepath}. Details: {e}")
-        return None  # You may choose to return None or raise the exception
+    if ext == ".pdf":
+        return extract_text_from_pdf(filepath)
+    elif ext in [".docx", ".txt"]:
+        if ext == ".docx":
+            text = docx2txt.process(filepath)
+        else:  # ext == ".txt"
+            with open(filepath, 'r', encoding='utf-8') as file:
+                text = file.read()
+        # Estimate page numbers based on word count
+        return estimate_pages(text)
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
 
 
 def preprocess_text(text):
@@ -93,54 +97,67 @@ def preprocess_text(text):
     return text.strip().lower()
 
 
-def split_text(text, max_tokens=512):
-    text = preprocess_text(text)
-    sentences = sent_tokenize(text)
-
+def split_text(text_pages, max_tokens=512):
+    # text_pages is a list of tuples (text, page_number)
     chunks = []
+    chunk_pages = []  # List to hold the pages for each chunk
     current_chunk = []
     current_chunk_token_count = 0
+    current_chunk_pages = set()  # Keep track of pages in the current chunk
 
-    for sentence in sentences:
-        sentence_token_count = count_tokens(sentence)
-        if sentence_token_count > max_tokens:
-            words = word_tokenize(sentence)
-            current_sentence_chunk = []
-            for word in words:
-                word_token_count = count_tokens(word)
-                if current_chunk_token_count + word_token_count <= max_tokens:
-                    current_sentence_chunk.append(word)
-                    current_chunk_token_count += word_token_count
-                else:
+    for text, page_number in text_pages:
+        text = preprocess_text(text)
+        sentences = sent_tokenize(text)
+
+        for sentence in sentences:
+            sentence_token_count = count_tokens(sentence)
+            if sentence_token_count > max_tokens:
+                # Split the sentence into words and create chunks that fit within max_tokens
+                words = word_tokenize(sentence)
+                current_sentence_chunk = []
+                for word in words:
+                    word_token_count = count_tokens(word)
+                    if current_chunk_token_count + word_token_count <= max_tokens:
+                        current_sentence_chunk.append(word)
+                        current_chunk_token_count += word_token_count
+                    else:
+                        # When the current chunk is full, save it and start a new one
+                        chunks.append(' '.join(current_sentence_chunk))
+                        chunk_pages.append(current_chunk_pages.copy())
+                        current_sentence_chunk = [word]
+                        current_chunk_token_count = word_token_count
+                        current_chunk_pages = set([page_number])
+                if current_sentence_chunk:
+                    # Add the remaining words from the long sentence as a new chunk
                     chunks.append(' '.join(current_sentence_chunk))
-                    current_sentence_chunk = [word]
-                    current_chunk_token_count = word_token_count
-            if current_sentence_chunk:
-                # Add the remaining words from the long sentence as a new chunk
-                chunks.append(' '.join(current_sentence_chunk))
-            # Reset for a new sentence
-            current_chunk = []
-            current_chunk_token_count = 0
-        elif current_chunk_token_count + sentence_token_count <= max_tokens:
-            # If the current chunk plus the new sentence is less than max_tokens, add it
-            current_chunk.append(sentence)
-            current_chunk_token_count += sentence_token_count
-        else:
-            # If the current chunk is full, start a new chunk
-            chunks.append(' '.join(current_chunk))
-            current_chunk = [sentence]
-            current_chunk_token_count = sentence_token_count
+                    chunk_pages.append(current_chunk_pages.copy())
+                # Reset for a new sentence
+                current_chunk = []
+                current_chunk_token_count = 0
+                current_chunk_pages = set([page_number])
+            elif current_chunk_token_count + sentence_token_count <= max_tokens:
+                # If the current chunk plus the new sentence is less than max_tokens, add it
+                current_chunk.append(sentence)
+                current_chunk_token_count += sentence_token_count
+                current_chunk_pages.add(page_number)
+            else:
+                # If the current chunk is full, start a new chunk
+                chunks.append(' '.join(current_chunk))
+                chunk_pages.append(current_chunk_pages.copy())
+                current_chunk = [sentence]
+                current_chunk_token_count = sentence_token_count
+                current_chunk_pages = set([page_number])
 
     # Add the last chunk if it's not empty
     if current_chunk:
         chunks.append(' '.join(current_chunk))
+        chunk_pages.append(current_chunk_pages)
 
     # Calculate the token count for each chunk
     chunk_token_counts = [count_tokens(chunk) for chunk in chunks]
-    # Calculate the total token count
     total_tokens = sum(chunk_token_counts)
 
-    return chunks, total_tokens, chunk_token_counts
+    return chunks, chunk_pages, total_tokens, chunk_token_counts
 
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
