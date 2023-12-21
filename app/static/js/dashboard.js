@@ -83,7 +83,7 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
   form.addEventListener("submit", function (event) {
     event.preventDefault();
 
-        var refreshButton = form.querySelector(".retest-key-button i.fa-sync-alt");
+    var refreshButton = form.querySelector(".retest-key-button i.fa-sync-alt");
     if (refreshButton) {
       refreshButton.classList.add("spinning");
     }
@@ -111,7 +111,7 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
         );
       })
       .finally(() => {
-                if (refreshButton) {
+        if (refreshButton) {
           refreshButton.classList.remove("spinning");
         }
       });
@@ -119,11 +119,11 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
 });
 
 function updateSelectedKeyVisual(selectedForm) {
-    document.querySelectorAll(".key-list").forEach((keyItem) => {
+  document.querySelectorAll(".key-list").forEach((keyItem) => {
     keyItem.classList.remove("selected-key");
   });
 
-    const keyListItem = selectedForm.closest(".key-list");
+  const keyListItem = selectedForm.closest(".key-list");
   if (keyListItem) {
     keyListItem.classList.add("selected-key");
   }
@@ -132,7 +132,8 @@ function updateSelectedKeyVisual(selectedForm) {
 function removeKeyFromUI(form) {
   const keyListItem = form.closest(".key-list");
   if (keyListItem) {
-    keyListItem.remove();   }
+    keyListItem.remove();
+  }
 }
 
 document
@@ -154,9 +155,9 @@ document
             updateApiKeyMessages(data.message, "success");
 
             if (isSelectForm) {
-                            updateSelectedKeyVisual(form);
+              updateSelectedKeyVisual(form);
             } else {
-                            removeKeyFromUI(form);
+              removeKeyFromUI(form);
             }
           } else {
             updateApiKeyMessages(data.message, "error");
@@ -174,12 +175,13 @@ document
 
 function updateUploadMessages(message, status) {
   var messageDiv = document.getElementById("docsStatus");
-    var formattedMessage = message.replace(/\n/g, "<br>");
-  messageDiv.innerHTML = formattedMessage;   messageDiv.className = status;
+  var formattedMessage = message.replace(/\n/g, "<br>");
+  messageDiv.innerHTML = formattedMessage;
+  messageDiv.className = status;
 }
 
 function enableEditing(editButton) {
-    var listItem = editButton.closest("li");
+  var listItem = editButton.closest("li");
   var form = listItem.querySelector("form.edit-document-form");
   var inputs = form.querySelectorAll(".editable");
 
@@ -188,7 +190,7 @@ function enableEditing(editButton) {
   });
   inputs[0].focus();
 
-    editButton.style.display = "none";
+  editButton.style.display = "none";
   var saveButton = listItem.querySelector(".save-btn");
   saveButton.style.display = "inline-block";
 
@@ -215,7 +217,8 @@ saveButtons.forEach(function (saveButton) {
       var form = listItem.querySelector("form.edit-document-form");
 
       if (form) {
-        event.preventDefault();         var formData = new FormData(form);
+        event.preventDefault();
+        var formData = new FormData(form);
 
         fetch(form.action, {
           method: "POST",
@@ -232,9 +235,9 @@ saveButtons.forEach(function (saveButton) {
               alert("Error updating document: " + data.error);
             } else {
               updateUploadMessages("Updated successfully!", "success");
-                            saveButton.style.display = "none";
+              saveButton.style.display = "none";
               listItem.querySelector(".edit-btn").style.display =
-                "inline-block"; 
+                "inline-block";
               Array.from(listItem.querySelectorAll(".editable")).forEach(
                 (input) => {
                   input.setAttribute("readonly", "readonly");
@@ -258,7 +261,7 @@ document.addEventListener("click", function (event) {
     event.target.classList.contains("delete-btn") ||
     event.target.closest(".delete-btn")
   ) {
-        var deleteButton = event.target.classList.contains("delete-btn")
+    var deleteButton = event.target.classList.contains("delete-btn")
       ? event.target
       : event.target.closest(".delete-btn");
     var documentId = deleteButton.dataset.docId;
@@ -268,10 +271,12 @@ document.addEventListener("click", function (event) {
       fetch(`/embeddings/delete/${documentId}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",           "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
           "X-CSRF-Token": csrfToken
         },
-        body: JSON.stringify({ document_id: documentId })       })
+        body: JSON.stringify({ document_id: documentId })
+      })
         .then((response) => {
           if (!response.ok) {
             throw new Error("Server returned an error response");
@@ -283,7 +288,7 @@ document.addEventListener("click", function (event) {
             alert("Error deleting document: " + data.error);
           } else {
             updateUploadMessages("Document deleted successfully!", "success");
-                        var listItem = deleteButton.closest("li");
+            var listItem = deleteButton.closest("li");
             if (listItem) {
               listItem.remove();
             }
@@ -301,32 +306,32 @@ document.addEventListener("click", function (event) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    const thumbnails = document.querySelectorAll(".image-history-item img");
+  const thumbnails = document.querySelectorAll(".image-history-item img");
   thumbnails.forEach((thumbnail) => {
     thumbnail.addEventListener("click", function () {
-            const uuid = this.getAttribute("src").split("/").pop().split(".")[0];
-            toggleIcons(uuid, this);
+      const uuid = this.getAttribute("src").split("/").pop().split(".")[0];
+      toggleIcons(uuid, this);
     });
   });
 });
 
 function toggleIcons(uuid, imageElement) {
-    const imageItem = imageElement.closest(".image-history-item");
-    const iconsContainer = imageItem.querySelector(".icons-container");
+  const imageItem = imageElement.closest(".image-history-item");
+  const iconsContainer = imageItem.querySelector(".icons-container");
 
-    if (iconsContainer && iconsContainer.hasChildNodes()) {
-        iconsContainer.style.display =
+  if (iconsContainer && iconsContainer.hasChildNodes()) {
+    iconsContainer.style.display =
       iconsContainer.style.display === "none" ? "block" : "none";
   } else {
-        addIconsToImage(uuid, iconsContainer);
+    addIconsToImage(uuid, iconsContainer);
   }
 }
 
 function addIconsToImage(uuid, iconsContainer) {
   if (iconsContainer) {
-        iconsContainer.innerHTML = "";
+    iconsContainer.innerHTML = "";
 
-        iconsContainer.appendChild(
+    iconsContainer.appendChild(
       createIconLink(`/image/download_image/${uuid}`, "fa-download")
     );
     iconsContainer.appendChild(
@@ -337,7 +342,7 @@ function addIconsToImage(uuid, iconsContainer) {
       )
     );
 
-        iconsContainer.style.display = "block";
+    iconsContainer.style.display = "block";
   } else {
     console.error("Icons container not found for image UUID:", uuid);
   }
@@ -354,4 +359,13 @@ function createIconLink(href, iconClass, isNewWindow) {
   }
   link.appendChild(icon);
   return link;
+}
+
+function toggleUsageInfo(usageInfoId) {
+  var usageInfoDiv = document.getElementById(usageInfoId);
+  if (usageInfoDiv.style.display === "none") {
+    usageInfoDiv.style.display = "block";
+  } else {
+    usageInfoDiv.style.display = "none";
+  }
 }

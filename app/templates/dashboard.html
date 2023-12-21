@@ -238,6 +238,16 @@
               <p id="key-tag">{{ key.identifier }}</p>
               <p id="key-model">{{ key.label }}</p>
             </div>
+            <div
+              id="usage-info-{{ key.id }}"
+              class="key-usage"
+              style="display: none"
+            >
+              <p>Image Gen Usage: {{ key.usage_image_gen }}</p>
+              <p>Chat Usage: {{ key.usage_chat }}</p>
+              <p>Embedding Usage: {{ key.usage_embedding }}</p>
+              <p>Audio Usage: {{ key.usage_audio }}</p>
+            </div>
             <div class="key-forms">
               <form
                 class="retest-api-key-form"
@@ -285,6 +295,13 @@
                   <i class="fas fa-hand-pointer"></i>
                 </button>
               </form>
+              <button
+                onclick="toggleUsageInfo('usage-info-{{ key.id }}')"
+                class="button view-usage-button"
+                title="See Usage Info"
+              >
+                <i class="fas fa-dollar-sign"></i>
+              </button>
             </div>
           </li>
           {% endfor %}

@@ -217,7 +217,7 @@ h2 {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: row-reverse;
   border-radius: 5px;
   overflow-y: auto;
   justify-content: space-between;
@@ -266,7 +266,8 @@ h2 {
 
 .retest-key-button,
 .delete-key-button,
-.select-key-button {
+.select-key-button,
+.view-usage-button {
   background: transparent;
   color: #e6d200;
   border: none;
@@ -275,7 +276,8 @@ h2 {
 
 .retest-key-button:hover,
 .delete-key-button:hover,
-.select-key-button:hover {
+.select-key-button:hover,
+.view-usage-button:hover {
   color: #cd2000;
   transform: scale(1.1);
 }
@@ -337,7 +339,7 @@ h2 {
   max-height: 80%;
   overflow-y: auto;
   margin: 0;
-  margin-right: 45px;
+  padding-right: 45px;
 }
 .key-edits .dropdown-button {
   max-width: 100%;
@@ -511,7 +513,8 @@ a {
   transform: scale(1.05);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
-.key-info p {
+.key-info p,
+.key-usage p {
   margin: 0;
   font-size: 0.8em;
   color: #faf5e6;

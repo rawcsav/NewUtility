@@ -5,6 +5,32 @@ hljs.configure({
   ignoreUnescapedHTML: true
 });
 
+function showToast(message, type) {
+  // Create toast element if it doesn't exist
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    document.body.appendChild(toast);
+  }
+
+  // Set the message and type (e.g., error, success)
+  toast.textContent = message;
+  toast.className = type; // This can be used to style the toast differently based on the type
+
+  // Make the toast visible
+  toast.style.display = "block";
+  toast.style.opacity = "1";
+
+  // Hide the toast after a delay
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 600); // Assuming fade out transition is 0.6s
+  }, 3000); // Show toast for 3 seconds
+}
+
 function throttle(func, limit) {
   let inThrottle;
   return function () {
@@ -70,25 +96,6 @@ function toggleHistory() {
   setActiveButton("show-history-btn");
 }
 
-function updateStatusMessage(message, type) {
-  requestAnimationFrame(() => {
-    const statusElement = document.getElementById(
-      "conversation-history-status"
-    );
-    if (statusElement) {
-      statusElement.textContent = message;
-      statusElement.className = type; // 'error' or 'success'
-
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          statusElement.textContent = "";
-          statusElement.className = "";
-        });
-      }, 10000);
-    }
-  });
-}
-
 function performFetch(url, payload) {
   return fetch(url, {
     method: "POST",
@@ -107,7 +114,7 @@ function handleFetchResponse(response, successMessage) {
   return response.json().then((data) => {
     if (data.status === "success") {
       console.log(successMessage);
-      updateStatusMessage(successMessage, "success");
+      showToast(successMessage, "success");
     } else {
       throw new Error(data.message);
     }
@@ -123,7 +130,7 @@ function saveSystemPrompt(conversationId, newPrompt) {
     )
     .catch((error) => {
       console.error("Failed to update system prompt: " + error.message);
-      updateStatusMessage(error.message, "error");
+      showToast(error.message, "error");
     });
 }
 
@@ -145,7 +152,7 @@ function saveConvoTitle(conversationId, newTitle) {
     .then(() => updateConversationUI(conversationId, newTitle))
     .catch((error) => {
       console.error("Failed to update title: " + error.message);
-      updateStatusMessage(error.message, "error");
+      showToast(error.message, "error");
     });
 }
 
@@ -300,14 +307,6 @@ function togglePreferences() {
   });
 }
 
-function updatePreferenceMessages(message, status) {
-  requestAnimationFrame(() => {
-    var messageDiv = document.getElementById("preference-messages");
-    messageDiv.textContent = message;
-    messageDiv.className = status;
-  });
-}
-
 function togglePreferencePopup() {
   requestAnimationFrame(() => {
     var popup = document.getElementById("preference-popup");
@@ -437,7 +436,7 @@ function saveMessageContent(messageId, newContent) {
     )
     .catch((error) => {
       console.error("Failed to update message: " + error.message);
-      updateStatusMessage(error.message, "error");
+      showToast(error.message, "error");
     });
 }
 // Function to create the message header and include the edit icon
@@ -546,10 +545,7 @@ function readStreamedResponseChunk(reader) {
       readStreamedResponseChunk(reader);
     })
     .catch((error) => {
-      appendMessageToChatBox(
-        "Streaming Error: " + error.message,
-        "error-message"
-      );
+      showToast("Streaming Error: " + error.message, "error");
       console.error("Streaming error:", error);
     });
 }
@@ -557,7 +553,7 @@ function readStreamedResponseChunk(reader) {
 function handleResponseChunk(value) {
   const chunk = new TextDecoder().decode(value);
   if (chunk.startsWith("An error occurred:")) {
-    appendMessageToChatBox(chunk, "error-message");
+    appendMessageToChatBox(chunk, "error");
   } else {
     appendStreamedResponse(chunk, chatBox);
   }
@@ -565,7 +561,7 @@ function handleResponseChunk(value) {
 
 function processNonStreamedResponse(text) {
   if (text.includes("An error occurred:")) {
-    appendMessageToChatBox(text, "error-message");
+    appendMessageToChatBox(text, "error");
   } else {
     try {
       const data = JSON.parse(text);
@@ -584,7 +580,7 @@ function processNonStreamedResponse(text) {
 }
 
 function handleChatCompletionError(error) {
-  appendMessageToChatBox("Fetch Error: " + error.message, "error-message");
+  showToast("Fetch Error: " + error.message, "error");
   console.error("Fetch error:", error);
 }
 
@@ -703,7 +699,7 @@ function updateCompletionConversationId(conversationId) {
 function deleteConversation(conversationId) {
   requestAnimationFrame(() => {
     if (isLastConversation()) {
-      updateStatusMessage("Cannot delete the last conversation.", "error");
+      showToast("Cannot delete the last conversation.", "error");
       return;
     }
 
@@ -740,13 +736,13 @@ function performDeletion(conversationId) {
     .then((data) => {
       if (data.status === "success") {
         removeConversationEntry(conversationId);
-        updateStatusMessage("Conversation deleted successfully.", "success");
+        showToast("Conversation deleted successfully.", "success");
       } else {
-        updateStatusMessage("Failed to delete conversation.", "error");
+        showToast("Failed to delete conversation.", "error");
       }
     })
     .catch((error) => {
-      updateStatusMessage("Error: " + error.message, "error");
+      showToast("Error: " + error.message, "error");
     });
 }
 
@@ -823,7 +819,6 @@ document.addEventListener("DOMContentLoaded", function () {
     setupMessageInput();
     initializeToggleButton();
     setupConversationTitleEditing();
-    initializeTooltipBehavior();
     setupModelChangeListener();
     setupChatCompletionForm();
     setupNewConversationForm();
@@ -833,17 +828,6 @@ document.addEventListener("DOMContentLoaded", function () {
     checkConversationHistory();
   });
   window.isWaitingForResponse = false;
-  document.addEventListener("click", function (event) {
-    if (event.target.matches(".info-icon")) {
-      const icon = event.target;
-      handleInfoIconClick(event, icon);
-    } else if (event.target.matches(".tooltip-text")) {
-      const tooltip = event.target;
-      fadeOutTooltip(tooltip);
-    } else {
-      hideAllTooltips();
-    }
-  });
 
   document.addEventListener("click", function (event) {
     if (event.target.matches(".fa-edit")) {
@@ -965,7 +949,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (newTitle.length >= 1 && newTitle.length <= 25) {
       saveConvoTitle(conversationId, newTitle);
     } else {
-      updateStatusMessage(
+      showToast(
         "Conversation title must be between 1 and 25 characters.",
         "error"
       );
@@ -979,67 +963,7 @@ document.addEventListener("DOMContentLoaded", function () {
       element.blur();
     }
   }
-  function initializeTooltipBehavior() {
-    requestAnimationFrame(() => {
-      setupWindowClick();
-    });
-  }
 
-  function toggleTooltip(tooltip) {
-    requestAnimationFrame(() => {
-      const isTooltipVisible = tooltip.style.opacity === "1";
-      hideAllTooltips(
-        !isTooltipVisible ? tooltip.getAttribute("data-info-id") : null
-      );
-
-      if (isTooltipVisible) {
-        fadeOutTooltip(tooltip);
-      } else {
-        fadeInTooltip(tooltip);
-      }
-    });
-  }
-
-  function fadeInTooltip(tooltip) {
-    tooltip.style.visibility = "visible";
-    tooltip.style.opacity = "1";
-    tooltip.style.transition = "opacity 0.5s ease-in";
-  }
-
-  function fadeOutTooltip(tooltip) {
-    tooltip.style.opacity = "0";
-    tooltip.style.transition = "opacity 0.5s ease-out";
-    setTimeout(() => {
-      tooltip.style.visibility = "hidden";
-    }, 500);
-  }
-
-  function hideAllTooltips(exceptId = null) {
-    requestAnimationFrame(() => {
-      document.querySelectorAll(".tooltip-text").forEach((tooltip) => {
-        if (!exceptId || tooltip.getAttribute("data-info-id") !== exceptId) {
-          fadeOutTooltip(tooltip);
-        }
-      });
-    });
-  }
-
-  function setupTooltipClicks() {
-    requestAnimationFrame(() => {
-      document.querySelectorAll(".tooltip-text").forEach((tooltip) => {
-        tooltip.addEventListener("click", function (event) {
-          event.stopPropagation();
-          fadeOutTooltip(this);
-        });
-      });
-    });
-  }
-
-  function setupWindowClick() {
-    window.addEventListener("click", function () {
-      hideAllTooltips();
-    });
-  }
   function checkConversationHistory() {
     if (hasConversationsInHistory()) {
       displayMostRecentConversation();
@@ -1225,7 +1149,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleResponseChunk(value) {
     const chunk = new TextDecoder().decode(value);
     if (chunk.startsWith("An error occurred:")) {
-      appendMessageToChatBox(chunk, "error-message");
+      appendMessageToChatBox(chunk, "error");
     } else {
       appendStreamedResponse(chunk, chatBox);
     }
@@ -1234,7 +1158,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function processNonStreamedResponse(text) {
     requestAnimationFrame(() => {
       if (text.includes("An error occurred:")) {
-        appendMessageToChatBox(text, "error-message");
+        appendMessageToChatBox(text, "error");
       } else {
         try {
           const data = JSON.parse(text);
@@ -1244,10 +1168,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .getAttribute("data-conversation-id");
           locateNewMessages(conversationId);
         } catch (error) {
-          appendMessageToChatBox(
-            "Unexpected response format: " + text,
-            "error-message"
-          );
+          showToast("Unexpected response format: " + text, "error");
         }
       }
       window.isWaitingForResponse = false;
@@ -1256,7 +1177,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleChatCompletionError(error) {
     requestAnimationFrame(() => {
-      appendMessageToChatBox("Fetch Error: " + error.message, "error-message");
+      showToast("Fetch Error: " + error.message, "error");
       console.error("Fetch error:", error);
     });
   }
@@ -1277,9 +1198,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     submitNewConversation(formData)
       .then((data) => processNewConversationResponse(data))
-      .catch((error) =>
-        updateStatusMessage("Error: " + error.message, "error")
-      );
+      .catch((error) => showToast("Error: " + error.message, "error"));
   }
 
   function submitNewConversation(formData) {
@@ -1304,9 +1223,9 @@ document.addEventListener("DOMContentLoaded", function () {
       addNewConversationToHistory(data);
       updateConversationListUI(data.conversation_id, data.title);
       selectConversation(data.conversation_id);
-      updateStatusMessage("New conversation started.", "success");
+      showToast("New conversation started.", "success");
     } else {
-      updateStatusMessage(data.message, "error");
+      showToast(data.message, "error");
     }
   }
 
@@ -1364,9 +1283,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     submitUpdatePreferences(formData)
       .then((data) => processUpdatePreferencesResponse(data))
-      .catch((error) =>
-        updatePreferenceMessages("Error: " + error.message, "error")
-      );
+      .catch((error) => showToast("Error: " + error.message, "error"));
   }
 
   function submitUpdatePreferences(formData) {
@@ -1386,9 +1303,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function processUpdatePreferencesResponse(data) {
     if (data.status === "success") {
-      updatePreferenceMessages(data.message, "success");
+      showToast(data.message, "success");
     } else {
-      updatePreferenceMessages(data.message, "error");
+      showToast(data.message, "error");
       console.error(data.errors);
     }
   }
