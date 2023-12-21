@@ -843,15 +843,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const conversationHistoryDiv = document.getElementById(
     "conversation-history"
   );
-  if (conversationHistoryDiv) {
-    conversationHistoryDiv.addEventListener("click", function (event) {
-      const conversationEntry = event.target.closest(".conversation-entry");
-      if (conversationEntry) {
-        const conversationId = conversationEntry.dataset.conversationId;
-        selectConversation(conversationId);
-      }
-    });
-  }
+  conversationHistoryDiv.addEventListener("click", function (event) {
+    const conversationEntry = event.target.closest(".conversation-entry");
+    if (conversationEntry) {
+      event.stopPropagation(); // This will prevent the event from bubbling up
+      const conversationId = conversationEntry.dataset.conversationId;
+    }
+  });
 
   function initializeToggleButton() {
     const toggleButton = document.getElementById("toggle-button");

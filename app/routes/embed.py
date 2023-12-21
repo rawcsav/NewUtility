@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, jsonify, render_template
+from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from openai import OpenAI
@@ -44,9 +44,19 @@ def upload_document():
     if not form.validate_on_submit():
         return jsonify({'error': 'Invalid form submission'}), 400
 
-    file = form.file.data
-    title = form.title.data or secure_filename(file.filename)
-    author = form.author.data
+    files = request.files.getlist('file')
+    # Assume titles and authors are sent as a single string separated by a comma, or not sent at all
+    titles = request.form.get('title', '').split(',') if 'title' in request.form else []
+    authors = request.form.get('author', '').split(
+        ',') if 'author' in request.form else []
+
+    for i, file in enumerate(files):
+        # Use the filename as the default title if no title is provided
+        title = titles[i] if i < len(titles) and titles[i].strip() else secure_filename(
+            file.filename)
+        # Use None as the default author if no author is provided
+        author = authors[i].strip() if i < len(authors) and authors[i].strip() else None
+
     chunk_size = form.chunk_size.data or 512
     key_id = current_user.selected_api_key_id
     user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id,
@@ -85,8 +95,6 @@ def upload_document():
         embeddings = get_embedding_batch(chunks, client)
         # Calculate the cost for embedding generation
         cost = embedding_cost(total_tokens)
-        print(cost)
-        print(total_tokens)
         # Update the API key and APIUsage with the new cost
         update_usage_and_costs(user_id=current_user.id,
                                api_key_id=key_id,

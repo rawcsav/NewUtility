@@ -5,6 +5,12 @@ function updateUploadMessages(message, status) {
   messageDiv.className = status;
 }
 
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 function enableEditing(editButton) {
   var listItem = editButton.closest("li");
   var form = listItem.querySelector("form.edit-document-form");
@@ -16,8 +22,8 @@ function enableEditing(editButton) {
       input.value = input.value.substring("Author: ".length);
     }
   });
-  inputs[0].focus();
 
+  inputs[0].focus();
   editButton.style.display = "none";
   var saveButton = listItem.querySelector(".save-btn");
   saveButton.style.display = "inline-block";
@@ -34,40 +40,65 @@ function enableEditing(editButton) {
 
 document.addEventListener("DOMContentLoaded", function () {
   var uploadForm = document.getElementById("uploadForm");
+  var fileInput = document.getElementById("file");
+  var fileNameDisplay = document.getElementById("file-name-display");
+  var filesToUpload = [];
+  var currentFileIndex = 0;
+
+  fileInput.addEventListener("change", function () {
+    filesToUpload = Array.from(fileInput.files);
+    if (filesToUpload.length > 0) {
+      fileNameDisplay.textContent =
+        "Selected document: " + filesToUpload[0].name;
+      // Display first file information and wait for user action
+      currentFileIndex = 0; // Start with the first file
+    }
+  });
 
   if (uploadForm) {
     uploadForm.addEventListener("submit", function (e) {
       e.preventDefault();
+      var file = filesToUpload[currentFileIndex];
+
       var formData = new FormData(uploadForm);
-
-      updateUploadMessages("Uploading and processing...", "info");
-
+      formData.set("file", file); // Set the current file in the FormData
       fetch(uploadForm.action, {
         method: "POST",
+        headers: {
+          "X-CSRF-Token": getCsrfToken()
+        },
         body: formData
       })
-        .then((response) => {
+        .then(function (response) {
           if (!response.ok) {
-            throw new Error("Server returned an error response");
+            throw new Error(
+              "Server returned an error response for " + file.name
+            );
           }
           return response.json();
         })
-        .then((data) => {
+        .then(function (data) {
           if (data.error) {
-            console.error("Server error:", data.error);
             updateUploadMessages(data.error, "error");
           } else {
-            uploadForm.reset();
             updateUploadMessages(
-              "File uploaded and processed successfully!\nPlease refresh to see changes",
+              file.name + " uploaded successfully!",
               "success"
             );
+            if (currentFileIndex < filesToUpload.length) {
+              // Update display with the next file name
+              fileNameDisplay.textContent =
+                "Selected document: " + filesToUpload[currentFileIndex].name;
+            } else {
+              fileNameDisplay.textContent = "All files have been uploaded.";
+              fileInput.value = ""; // Optionally clear the file input
+            }
           }
         })
-        .catch((error) => {
-          console.error("Error:", error);
+        .catch(function (error) {
           updateUploadMessages("Error: " + error.message, "error");
         });
+      currentFileIndex++;
     });
   }
   var saveButtons = document.querySelectorAll(".save-btn");
