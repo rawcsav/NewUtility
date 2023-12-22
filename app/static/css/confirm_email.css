@@ -120,7 +120,7 @@ body {
   color: #faf5e6;
   border: none;
   border-radius: 0.375rem;
-  font-family: Univers, sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 1rem;
 }
 
@@ -141,14 +141,12 @@ h1 {
 }
 
 h2 {
-  font-family: "ITCGaramondStd-UltNarrowIta", serif;
+  font-family: "Playfair Display", serif;
   font-size: 3em;
   margin: 0;
   top: 0;
   text-align: center;
   color: #faf5e6;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #654321;
 }
 
 .shape {
@@ -216,7 +214,7 @@ p {
 }
 
 #yellow {
-  background-color: #e6d200;
+  background-color: #ffe437;
   bottom: 6vh;
   left: 16vw;
   display: flex;
@@ -278,7 +276,9 @@ p {
 }
 
 #confirm-title {
-  font-family: "ITCGaramondStd-BdNarrow", serif;
+  font-family: "Playfair Display", serif;
+  font-weight: 900;
+  font-style: italic;
   font-size: 4em;
   margin: 0;
   text-align: center;
@@ -293,13 +293,12 @@ p {
 }
 
 h3 {
-  font-family: ITCGaramondStd-BdNarrow, serif;
-  font-size: 3.5em;
+  font-family: "Playfair Display", serif;
+  font-weight: 900;
+  font-size: 2.5em;
   margin: 0;
   text-align: center;
   color: #faf5e6;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #654321;
 }
 
 .hand1 {

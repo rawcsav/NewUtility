@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       var formData = new FormData(uploadForm);
       formData.set("file", file); // Set the current file in the FormData
+      updateUploadMessages("Processing...", "success");
       fetch(uploadForm.action, {
         method: "POST",
         headers: {

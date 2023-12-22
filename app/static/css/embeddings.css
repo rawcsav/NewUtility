@@ -34,8 +34,6 @@ h1 {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  -webkit-text-stroke-width: 5px;
-  -webkit-text-stroke-color: #654321;
 }
 
 h2 {
@@ -53,9 +51,7 @@ h2 {
   font-size: 6em;
 }
 .rectangle h2 {
-  font-family: "ITCGaramondStd-UltNarrowIta", serif;
-  -webkit-text-stroke-width: 3px;
-  -webkit-text-stroke-color: #654321;
+  font-family: "Playfair Display", serif;
   font-size: 3em;
 }
 
@@ -67,7 +63,7 @@ label {
 
 #uploadStatus {
   font-size: 16px;
-  font-family: Univers, sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
 }
 
 .success {
@@ -104,7 +100,7 @@ label {
 h3 {
   margin: 0;
   padding: 0;
-  font-family: "Univers", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 18px;
   color: #0069be;
 }
@@ -247,20 +243,22 @@ ul {
 }
 
 input {
-  font-family: "Univers", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 18px;
   color: #00a86b;
   padding: 5px 10px;
 }
 
 #title-edit {
-  font-family: "Univers-CondensedBoldOblique", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 18px;
   background-color: transparent;
   color: #0069be;
 }
 #author-edit {
-  font-family: "Univers-CondensedLightOblique", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-weight: 500;
+  font-style: italic;
   font-size: 18px;
   background-color: transparent;
   color: #00a86b;
@@ -407,7 +405,7 @@ ul li {
 #token-limits-list,
 #info-list li,
 #token-limits-list li {
-  font-family: "Univers", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 14px;
   color: #faf5e6;
   list-style: none;
@@ -420,7 +418,9 @@ ul li {
 }
 
 #token-limits-list li strong {
-  font-family: "Univers-CondensedBoldOblique", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-weight: 900;
+  font-style: italic;
   display: inline-block;
   margin-right: 10px;
 }

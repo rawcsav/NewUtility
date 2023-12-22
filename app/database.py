@@ -124,7 +124,7 @@ class Document(db.Model):
     author = db.Column(db.String(255),
                        nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)
-    pages = db.Column(db.BLOB, nullable=True)
+    pages = db.Column(db.String(25), nullable=True)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     chunks = db.relationship('DocumentChunk', back_populates='document',
                              order_by='DocumentChunk.chunk_index',

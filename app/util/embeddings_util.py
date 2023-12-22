@@ -156,7 +156,6 @@ def split_text(text_pages, max_tokens=512):
     # Calculate the token count for each chunk
     chunk_token_counts = [count_tokens(chunk) for chunk in chunks]
     total_tokens = sum(chunk_token_counts)
-
     return chunks, chunk_pages, total_tokens, chunk_token_counts
 
 

@@ -46,8 +46,6 @@ h2 {
   top: 0;
   text-align: center;
   color: #faf5e6;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #141414;
 }
 
 .flex-form {
@@ -191,9 +189,7 @@ a {
   font-size: 6em;
 }
 .rectangle h2 {
-  font-family: "ITCGaramondStd-UltNarrowIta", serif;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #654321;
+  font-family: "Playfair Display", serif;
   font-size: 3em;
 }
 

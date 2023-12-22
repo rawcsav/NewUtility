@@ -87,13 +87,15 @@ def upload_document():
 
         # Create and store chunks in the database, including page number information
         for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
-            serialized_pages = pickle.dumps(list(pages))  # Serialize the page numbers
+            pages_str = ','.join(map(str,
+                                     pages))  # Convert the set of page numbers to a comma-separated string
+
             chunk = DocumentChunk(
                 document_id=new_document.id,
                 chunk_index=i,
                 content=chunk_content,
                 tokens=chunk_token_counts[i],
-                pages=serialized_pages  # Store the serialized page numbers
+                pages=pages_str  # Store the serialized page numbers
             )
             db.session.add(chunk)
 

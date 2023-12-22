@@ -69,9 +69,7 @@ body {
   font-size: 4em;
 }
 .rectangle h2 {
-  font-family: "ITCGaramondStd-BdCondIta", serif;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #654321;
+  font-family: "Playfair Display", serif;
   font-size: 3em;
 }
 
@@ -216,7 +214,7 @@ body {
 label {
   display: block;
   font-size: 12px;
-  font-family: Univers, sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
 }
 
 #chat-checkbox {
@@ -314,7 +312,7 @@ pre {
   width: 60%;
   border: 1px solid #383737;
   background-color: #f8f8f8;
-  font-family: Univers, sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   border-radius: 8px;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -325,7 +323,7 @@ pre {
   padding-bottom: 20px;
 }
 .message-input {
-  font-family: Univers, sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   height: auto;
   resize: none;
   overflow-y: auto;
@@ -378,7 +376,7 @@ pre {
   font-size: 12px;
   width: 20%;
   display: inline-block;
-  font-family: "Univers", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
 }
 
 .range-value-input:focus {
@@ -474,7 +472,7 @@ pre {
 }
 
 .message {
-  font-family: "Univers", sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   color: #383737;
   background-color: #fefdf9;
   font-size: 1.1rem;
