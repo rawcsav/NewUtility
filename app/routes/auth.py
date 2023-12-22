@@ -6,7 +6,8 @@ from app.database import UserAPIKey, User
 from app.util.forms_util import LoginForm, SignupForm, ConfirmEmailForm, \
     ResetPasswordRequestForm, ResetPasswordForm
 from app.util.session_util import decrypt_api_key, \
-    generate_confirmation_code, verify_recaptcha, get_or_create_user
+    generate_confirmation_code, verify_recaptcha, get_or_create_user, \
+    generate_unique_username
 from flask import jsonify, Blueprint, request, render_template, redirect, \
     url_for, flash, current_app
 from itsdangerous import URLSafeTimedSerializer, BadSignature
@@ -14,6 +15,7 @@ from flask_mail import Message
 from app import bcrypt, mail, login_manager, oauth, db
 from sqlalchemy import or_
 from datetime import datetime, timedelta
+from flask_login import fresh_login_required
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -25,6 +27,9 @@ def load_user(user_id):
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('user.dashboard'))
+
     form = LoginForm()
     if form.validate_on_submit():
         login_credential = request.form.get('username')
@@ -199,6 +204,7 @@ def get_api_keys():
 
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
+@fresh_login_required
 def reset_password_request():
     s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     form = ResetPasswordRequestForm()
@@ -321,8 +327,9 @@ def google_authorized():
 
     user_info = resp.json()
     email = user_info['email']
-    original_username = user_info.get('name', email.split('@')[0])
-    user = get_or_create_user(email, original_username, 'Google',
+    base_username = user_info.get('name', email.split('@')[0])
+    unique_username = generate_unique_username(base_username)
+    user = get_or_create_user(email, unique_username, 'Google',
                               current_app.config['DEFAULT_USER_PASSWORD'])
 
     login_user(user, remember=True)
@@ -345,10 +352,11 @@ def github_authorized():
 
     user_data = resp.json()
     email = user_data.get('email')
-    original_username = user_data['login']
-    user = get_or_create_user(email, original_username, 'GitHub',
+    base_username = user_data['login']
+    unique_username = generate_unique_username(base_username)
+    user = get_or_create_user(email, unique_username, 'GitHub',
                               current_app.config['DEFAULT_USER_PASSWORD'])
-
     login_user(user, remember=True)
+
     flash('You have been successfully logged in via GitHub.', 'success')
     return redirect(url_for('user.dashboard'))

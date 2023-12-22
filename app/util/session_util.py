@@ -1,9 +1,13 @@
 import hashlib
 import os
 import string
+from typing import re
+
 import openai
 import requests
 from cryptography.fernet import Fernet
+from flask import jsonify
+
 from app import bcrypt, db
 from flask_login import current_user
 import random
@@ -195,3 +199,21 @@ def get_or_create_user(email, username, login_method, default_user_password):
         user.login_method = login_method
         db.session.commit()
     return user
+
+
+def authenticate_user(request_user_id, current_user_id):
+    if request_user_id != current_user_id:
+        return False, jsonify({'status': 'error', 'message': 'Unauthorized access.'})
+    return True, None
+
+
+def generate_unique_username(base_username):
+    sanitized_username = re.sub(r'\W+', '', base_username)
+
+    new_username = sanitized_username
+    counter = 1
+    while User.query.filter_by(username=new_username).first():
+        new_username = f"{sanitized_username}{counter}"
+        counter += 1
+
+    return new_username

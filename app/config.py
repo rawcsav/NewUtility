@@ -25,7 +25,10 @@ class Config(object):
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    REMEMBER_COOKIE_DURATION = timedelta(days=30)
+
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_DURATION = timedelta(days=14)
 
     SQL_HOSTNAME = os.getenv("SQL_HOSTNAME")
     SQL_USERNAME = os.getenv("SQL_USERNAME")

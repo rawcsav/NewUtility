@@ -1,7 +1,10 @@
+import base64
+import os
 from time import sleep
 import numpy as np
 import openai
 import tiktoken
+from PIL.Image import Image
 from flask_login import current_user
 from flask import abort
 from app import db
@@ -26,6 +29,19 @@ ENCODING = tiktoken.get_encoding("cl100k_base")
 
 def cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+
+# Function to determine the image quality
+def get_image_quality(image_path):
+    with Image.open(image_path) as img:
+        width, height = img.size
+        return 'high' if max(width, height) > 512 else 'low'
+
+
+# Function to encode a local image to base64
+def encode_image_to_base64(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
 
 def get_truncate_limit(model_name):
@@ -174,8 +190,31 @@ def save_message(conversation_id, content, direction, model, is_knowledge_query=
         raise e
 
 
-def chat_stream(prompt, client, user_id, conversation_id):
-    # Retrieve the user's conversation history and preferences
+def get_image_payload(image_path=None, image_url=None):
+    if image_path:
+        if not os.path.isfile(image_path):
+            raise FileNotFoundError(
+                f"The image path provided does not exist: {image_path}")
+        # Local image handling
+        encoded_image = encode_image_to_base64(image_path)
+        detail = get_image_quality(image_path)
+        return {
+            "type": "image",
+            "data": f"data:image/jpeg;base64,{encoded_image}",
+            "detail": detail
+        }
+    elif image_url:
+        # URL image handling
+        return {
+            "type": "image_url",
+            "image_url": image_url
+        }
+    else:
+        raise ValueError("Either an image path or image URL must be provided.")
+
+
+def chat_stream(prompt, client, user_id, conversation_id, image_path=None,
+                image_url=None):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -187,7 +226,15 @@ def chat_stream(prompt, client, user_id, conversation_id):
         db.session.commit()
         preferences = get_user_preferences(user_id)
 
-        # Apply truncation to the conversation history if needed
+        # Only add image payload if the model is 'gpt-4-vision-preview'
+        if preferences["model"] == "gpt-4-vision-preview" and (image_path or image_url):
+            image_payload = get_image_payload(image_path, image_url)
+            # Add the image data to the user's message content
+            user_message_content = [{"type": "text", "text": prompt}]
+            user_message_content.append(image_payload)
+        else:
+            user_message_content = prompt
+
         truncate_limit = preferences.get("truncate_limit")
         if truncate_limit:
             truncate_conversation(conversation_history, truncate_limit)
@@ -251,7 +298,8 @@ def chat_stream(prompt, client, user_id, conversation_id):
             yield error_message
 
 
-def chat_nonstream(prompt, client, user_id, conversation_id):
+def chat_nonstream(prompt, client, user_id, conversation_id, image_path=None,
+                   image_url=None):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -260,6 +308,16 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
         abort(403)
     else:
         preferences = get_user_preferences(user_id)
+
+        # Only add image payload if the model is 'gpt-4-vision-preview'
+        if preferences["model"] == "gpt-4-vision-preview" and (image_path or image_url):
+            image_payload = get_image_payload(image_path, image_url)
+            # Add the image data to the user's message content
+            user_message_content = [{"type": "text", "text": prompt}]
+            user_message_content.append(image_payload)
+        else:
+            user_message_content = prompt
+
         truncate_limit = preferences["truncate_limit"]
         full_response = ""
         save_message(conversation_id, prompt, 'outgoing', preferences['model'])
@@ -297,7 +355,6 @@ def chat_nonstream(prompt, client, user_id, conversation_id):
             return error_message
 
 
-# Helper functions to handle errors in streaming and non-streaming modes
 def handle_stream_error(e, conversation_id, model):
     error_message = f"An error occurred: {e}"
     save_message(conversation_id, error_message, 'incoming', model, is_error=True)

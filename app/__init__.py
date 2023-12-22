@@ -40,6 +40,8 @@ def create_app():
 
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
 
     with app.app_context():
         from .routes import landing, auth, user, image, embed, chat
