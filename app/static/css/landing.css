@@ -62,11 +62,6 @@ body {
   border-radius: 50%;
 }
 
-.square {
-  width: 14vw;
-  height: 14vw;
-}
-
 p {
   color: #faf5e6;
   padding: 5px 10px;
@@ -97,6 +92,11 @@ p {
   transform: rotate(345deg);
 }
 
+.square {
+  width: 14vw;
+  height: 14vw;
+}
+
 #red {
   background-color: #cd2000;
   bottom: 6vh;
@@ -116,7 +116,6 @@ p {
   right: 8vw;
   z-index: 2;
   display: flex;
-
   justify-content: center;
   align-items: center;
 }

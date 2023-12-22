@@ -34,8 +34,6 @@ h1 {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  -webkit-text-stroke-width: 5px;
-  -webkit-text-stroke-color: #654321;
 }
 
 h2 {
@@ -173,7 +171,7 @@ a {
 }
 
 #pink {
-  background-color: #ec9ca0;
+  background-color: #2bae66;
   top: 1vh;
   left: -5vw;
   transform: rotate(-10deg);

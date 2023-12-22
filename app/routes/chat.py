@@ -30,7 +30,6 @@ def chat_index():
     new_conversation_form = NewConversationForm()
     chat_completion_form = ChatCompletionForm()
 
-    # Retrieve the user's conversation history
     conversation_history = Conversation.query.filter_by(user_id=current_user.id).all()
 
     if not conversation_history:
@@ -44,7 +43,6 @@ def chat_index():
             db.session.rollback()
             flash('An error occurred while creating a new conversation.', 'error')
 
-    # Try to get the existing preferences or create a new instance if they don't exist
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
     if not preferences:
         preferences = ChatPreferences(user_id=current_user.id)

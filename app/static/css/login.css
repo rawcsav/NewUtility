@@ -232,27 +232,27 @@ body {
 
 h1 {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 10em;
+  font-size: 12em;
   font-weight: 900;
   margin: 0;
   top: 0;
   text-align: center;
-  color: #faf5e6;
+  color: #ffffff;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  -webkit-text-stroke-width: 5px;
-  -webkit-text-stroke-color: #654321;
 }
 
 h2 {
   font-family: "Playfair Display", serif;
-  font-size: 3em;
+  font-size: 4em;
   margin: 0;
   top: 0;
+  font-weight: 900;
+  font-style: italic;
   text-align: center;
-  color: #faf5e6;
+  color: #ffffff;
 }
 
 .shape {
@@ -276,19 +276,14 @@ h2 {
   border-radius: 50%;
 }
 
-.square {
-  width: 24vw;
-  height: 24vw;
-}
-
 p {
   color: #faf5e6;
   padding: 5px 10px;
   margin: 10px;
 }
 
-#pink {
-  background-color: #ec9ca0;
+#green {
+  background-color: #2bae66;
   top: 8vh;
   left: 2vw;
   transform: rotate(-10deg);
@@ -299,11 +294,10 @@ p {
   z-index: 1;
 }
 
-#red {
-  background-color: #cd2000;
-  top: 6vh;
-  right: 10vw;
-
+#yellow {
+  background-color: #ffdd00;
+  top: 4vh;
+  right: 6vw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -319,31 +313,63 @@ p {
   justify-content: center;
 }
 
-#yellow {
-  background-color: #ffe437;
+.balloon {
+  position: absolute;
+  pointer-events: none;
+  top: 55%;
+  left: 10%;
+  rotate: -10deg;
+  z-index: 3;
+}
+
+.balloon2 {
+  position: absolute;
+  pointer-events: none;
+  top: 60%;
+  left: 30%;
+  rotate: 20deg;
+}
+
+.balloon img,
+.balloon2 img {
+  width: 125px;
+  height: auto;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.square {
+  width: 24vw;
+  height: 24vw;
+}
+
+#red {
+  background-color: #cd2000;
   bottom: 6vh;
   left: 16vw;
   display: flex;
+  width: 14vw;
+  height: 14vw;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transform: rotate(-20deg);
-  z-index: 0;
+  transform: rotate(-30deg);
+  z-index: 5;
 }
 
 #blue {
   background-color: #0069be;
-  transform: rotate(8deg);
-  bottom: 3vh;
-  right: 12vw;
+  transform: rotate(6deg);
+  bottom: 1vh;
+  right: 8vw;
   z-index: 3;
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
-#green {
-  background-color: #00a86b;
+#purple {
+  background-color: #9b5de5;
   top: 10vh;
   display: flex;
   right: 14vw;
@@ -367,8 +393,8 @@ p {
 }
 
 .landing-homepage {
-  height: 80%;
-  width: 80%;
+  height: 90%;
+  width: 90%;
   display: flex;
   justify-content: center;
 }
