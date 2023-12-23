@@ -1,19 +1,18 @@
 from datetime import datetime
 
 from flask import jsonify, Response, abort
-from flask import render_template, flash, request, stream_with_context, Blueprint
+from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
-from openai import OpenAI
 
 from app import db
-from app.database import UserAPIKey, ChatPreferences, Conversation, Message, \
+from app.database import ChatPreferences, Conversation, Message, \
     MessageImages
-from app.util.chat_util import chat_stream, chat_nonstream, get_user_preferences, \
-    user_history, handle_stream, handle_nonstream, update_conversation_messages, \
-    allowed_file, save_image, get_image_url
+from app.util.chat_util import get_user_preferences, \
+    user_history, handle_stream, handle_nonstream, \
+    allowed_file, save_image, get_image_url, retry_delete_messages
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
-from app.util.session_util import decrypt_api_key, initialize_openai_client
+from app.util.session_util import initialize_openai_client
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -358,6 +357,9 @@ def check_new_messages(conversation_id):
 @login_required
 def retry_message(message_id):
     message = Message.query.get_or_404(message_id)
+    conversation_id = message.conversation_id
+    message_id = message.id
+
     if message.conversation.user_id != current_user.id:
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
 
@@ -378,18 +380,19 @@ def retry_message(message_id):
     else:
         image_urls = []
     try:
+        retry_delete_messages(conversation_id, message_id)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+    try:
         if stream_preference:
             response, full_response = handle_stream(prompt, client, user_id,
-                                                    message.conversation_id,
+                                                    conversation_id,
                                                     images=image_urls)
             return Response(response, content_type="text/plain",
                             headers={"X-Accel-Buffering": "no"})
         else:
             full_response = handle_nonstream(prompt, client, user_id,
-                                             message.conversation_id, images=image_urls)
-
-        update_conversation_messages(message.conversation_id, full_response)
-
+                                             conversation_id, images=image_urls)
         if full_response:
             return jsonify({'status': 'success', 'message': full_response.strip()})
         else:

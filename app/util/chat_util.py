@@ -442,15 +442,24 @@ def handle_nonstream_error(e, conversation_id, model):
     return error_message
 
 
-def update_conversation_messages(conversation_id, new_content):
-    Message.query.filter(Message.conversation_id == conversation_id,
-                         Message.created_at > datetime.utcnow()).delete()
-    db.session.commit()
+# Utility function to delete messages after a specified message ID.
+def retry_delete_messages(conversation_id, message_id):
+    try:
+        # Find the message to use as a reference point for deletion
+        message_to_retry = Message.query.get_or_404(message_id)
+        if message_to_retry.conversation_id != conversation_id:
+            raise ValueError("Message ID does not match the conversation ID.")
 
-    new_message = Message(conversation_id=conversation_id, content=new_content,
-                          direction='incoming')
-    db.session.add(new_message)
-    db.session.commit()
+        # Delete messages that come after the specified message
+        Message.query.filter(
+            Message.conversation_id == conversation_id,
+            Message.created_at >= message_to_retry.created_at
+        ).delete()
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        raise e
 
 
 def allowed_file(filename):

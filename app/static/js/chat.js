@@ -384,6 +384,7 @@ function removeSubsequentMessagesUI(messageId) {
 }
 
 function retryMessage(messageId) {
+  toggleButtonState();
   performFetch(`/chat/retry-message/${messageId}`, {}).then((response) => {
     if (!response.ok) {
       throw new Error("Failed to retry message.");
