@@ -1,17 +1,17 @@
 import hashlib
 import os
 import string
-from typing import re
-
+import re
 import openai
 import requests
 from cryptography.fernet import Fernet
 from flask import jsonify
+from openai import OpenAI
 
 from app import bcrypt, db
 from flask_login import current_user
 import random
-from app.database import User
+from app.database import User, UserAPIKey
 
 
 def generate_confirmation_code():
@@ -201,10 +201,16 @@ def get_or_create_user(email, username, login_method, default_user_password):
     return user
 
 
-def authenticate_user(request_user_id, current_user_id):
-    if request_user_id != current_user_id:
-        return False, jsonify({'status': 'error', 'message': 'Unauthorized access.'})
-    return True, None
+def initialize_openai_client(user_id):
+    key_id = current_user.selected_api_key_id
+    user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
+
+    if not user_api_key:
+        return None, 'API Key not found.'
+
+    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
+    client = OpenAI(api_key=api_key)
+    return client, None
 
 
 def generate_unique_username(base_username):

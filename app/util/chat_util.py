@@ -1,14 +1,16 @@
 import base64
 import os
+import uuid
+from datetime import datetime
 from time import sleep
 import numpy as np
 import openai
 import tiktoken
-from PIL.Image import Image
+from PIL import Image
 from flask_login import current_user
-from flask import abort
+from flask import abort, stream_with_context, current_app, url_for
 from app import db
-from app.database import ChatPreferences, Message, Conversation
+from app.database import ChatPreferences, Message, Conversation, MessageImages
 from app.util.usage_util import chat_cost, update_usage_and_costs, \
     num_tokens_from_string
 
@@ -55,13 +57,21 @@ def get_truncate_limit(model_name):
 def get_token_count(conversation_history, encoding=ENCODING):
     num_tokens = 0
     for message in conversation_history:
-        num_tokens += 5
-        for key, value in message.items():
-            if value:
-                num_tokens += len(encoding.encode(value))
-            if key == "name":
-                num_tokens += 5
-    num_tokens += 5
+        num_tokens += 5  # Assuming 5 tokens for the role separator or similar
+        content = message.get('content')
+        if isinstance(content, str):
+            num_tokens += len(encoding.encode(content))
+        elif isinstance(content, dict) and content.get('type') == 'text':
+            # Only encode the 'text' part of the content if it's a dict
+            text_content = content.get('text', '')
+            num_tokens += len(encoding.encode(text_content))
+        elif isinstance(content, list):
+            # If the content is a list, iterate over it and encode text elements
+            for item in content:
+                if item.get('type') == 'text':
+                    text_content = item.get('text', '')
+                    num_tokens += len(encoding.encode(text_content))
+        # If there are other content types that need to be handled, add them here
     return num_tokens
 
 
@@ -100,9 +110,23 @@ def get_user_conversation(user_id, conversation_id):
 
         messages = Message.query.filter_by(conversation_id=conversation.id).all()
         for message in messages:
+            message_content = message.content  # Default to a string for text-only messages
+
+            # If the message has associated images, construct the image payload
+            if message.is_vision:
+                image_records = MessageImages.query.filter_by(
+                    message_id=message.id).all()
+                # Only construct the payload if there are images
+                if image_records:
+                    image_urls = [image.image_url for image in image_records]
+                    image_payloads = get_image_payload(image_urls)
+                    # Combine text and image payloads into a list
+                    message_content = [{"type": "text", "text": message.content}]
+                    message_content.extend(image_payloads)
+
             conversation_history.append({
                 "role": "assistant" if message.direction == 'incoming' else "user",
-                "content": message.content,
+                "content": message_content,
             })
 
         return conversation, conversation_history
@@ -125,15 +149,21 @@ def user_history(user_id, conversation_id):
 
         messages = Message.query.filter_by(conversation_id=conversation.id).all()
         for message in messages:
-            conversation_history.append({
+            message_dict = {
+                "id": message.id,
                 "role": "assistant" if message.direction == 'incoming' else "user",
                 "content": message.content,
-                "id": message.id,
-            })
+            }
+
+            # If the message has associated images, add their URLs
+            if message.is_vision:
+                image_records = MessageImages.query.filter_by(
+                    message_id=message.id).all()
+                message_dict['images'] = [image.image_url for image in image_records]
+
+            conversation_history.append(message_dict)
 
         return conversation, conversation_history
-    else:
-        return None, []
 
 
 def get_user_preferences(user_id):
@@ -171,9 +201,8 @@ def get_user_preferences(user_id):
         }
 
 
-# Utility function to save a message to the database
-def save_message(conversation_id, content, direction, model, is_knowledge_query=False,
-                 is_error=False):
+def save_message(conversation_id, content, direction, model,
+                 is_knowledge_query=False, is_error=False, images=None):
     message = Message(
         conversation_id=conversation_id,
         content=content,
@@ -183,6 +212,63 @@ def save_message(conversation_id, content, direction, model, is_knowledge_query=
         is_error=is_error,
     )
     db.session.add(message)
+    db.session.flush()
+
+    try:
+        if images:
+            for filename in images:
+                image_uuid = filename.rsplit('/', 1)[-1].rsplit('.', 1)[0]
+
+                image_record = MessageImages.query.filter_by(uuid=image_uuid).first()
+                if image_record:
+                    image_record.message_id = message.id
+                    message.is_vision = True
+                    db.session.add(image_record)
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+
+import requests
+
+
+def get_image_payload(images):
+    image_payloads = []
+    for image in images:
+        if image.startswith(('http://', 'https://')):
+            response = requests.get(image)
+            response.raise_for_status()
+            encoded_image = base64.b64encode(response.content).decode('utf-8')
+            image_payloads.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/webp;base64,{encoded_image}"
+                }
+            })
+        elif os.path.isfile(image):
+            encoded_image = encode_image_to_base64(image)
+            image_payloads.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/webp;base64,{encoded_image}"
+                }
+            })
+        else:
+            raise ValueError(f"Invalid image path or URL provided: {image}")
+    return image_payloads
+
+
+def associate_images_with_message(message_id, image_uuids):
+    for image_uuid in image_uuids:
+        # Find the image record by UUID
+        image_record = MessageImages.query.filter_by(uuid=image_uuid).first()
+        if image_record:
+            # Update the image record with the message_id
+            image_record.message_id = message_id
+            db.session.add(image_record)
+
     try:
         db.session.commit()
     except Exception as e:
@@ -190,51 +276,24 @@ def save_message(conversation_id, content, direction, model, is_knowledge_query=
         raise e
 
 
-def get_image_payload(image_path=None, image_url=None):
-    if image_path:
-        if not os.path.isfile(image_path):
-            raise FileNotFoundError(
-                f"The image path provided does not exist: {image_path}")
-        # Local image handling
-        encoded_image = encode_image_to_base64(image_path)
-        detail = get_image_quality(image_path)
-        return {
-            "type": "image",
-            "data": f"data:image/jpeg;base64,{encoded_image}",
-            "detail": detail
-        }
-    elif image_url:
-        # URL image handling
-        return {
-            "type": "image_url",
-            "image_url": image_url
-        }
-    else:
-        raise ValueError("Either an image path or image URL must be provided.")
-
-
-def chat_stream(prompt, client, user_id, conversation_id, image_path=None,
-                image_url=None):
+def chat_stream(prompt, client, user_id, conversation_id, images=None):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
         return
     if conversation.user_id != current_user.id:
-        abort(403)  # HTTP 403 Forbidden
+        abort(403)
     else:
         conversation.is_interrupted = False
         db.session.commit()
         preferences = get_user_preferences(user_id)
 
-        # Only add image payload if the model is 'gpt-4-vision-preview'
-        if preferences["model"] == "gpt-4-vision-preview" and (image_path or image_url):
-            image_payload = get_image_payload(image_path, image_url)
-            # Add the image data to the user's message content
+        if preferences["model"] == "gpt-4-vision-preview" and images:
+            image_payloads = get_image_payload(images)
             user_message_content = [{"type": "text", "text": prompt}]
-            user_message_content.append(image_payload)
+            user_message_content.extend(image_payloads)
         else:
             user_message_content = prompt
-
         truncate_limit = preferences.get("truncate_limit")
         if truncate_limit:
             truncate_conversation(conversation_history, truncate_limit)
@@ -242,7 +301,8 @@ def chat_stream(prompt, client, user_id, conversation_id, image_path=None,
         # Prepare the API request payload
         request_payload = {
             "model": preferences["model"],
-            "messages": conversation_history + [{"role": "user", "content": prompt}],
+            "messages": conversation_history + [
+                {"role": "user", "content": user_message_content}],
             "temperature": preferences["temperature"],
             "max_tokens": preferences["max_tokens"],
             "frequency_penalty": preferences["frequency_penalty"],
@@ -252,7 +312,8 @@ def chat_stream(prompt, client, user_id, conversation_id, image_path=None,
         }
 
         # Log the request payload for debugging
-        save_message(conversation_id, prompt, 'outgoing', preferences['model'])
+        save_message(conversation_id, prompt, 'outgoing', preferences['model'],
+                     images=images)
 
         full_response = ""  # Initialize a variable to accumulate the full response
         try:
@@ -298,8 +359,7 @@ def chat_stream(prompt, client, user_id, conversation_id, image_path=None,
             yield error_message
 
 
-def chat_nonstream(prompt, client, user_id, conversation_id, image_path=None,
-                   image_url=None):
+def chat_nonstream(prompt, client, user_id, conversation_id, images=None):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -309,23 +369,23 @@ def chat_nonstream(prompt, client, user_id, conversation_id, image_path=None,
     else:
         preferences = get_user_preferences(user_id)
 
-        # Only add image payload if the model is 'gpt-4-vision-preview'
-        if preferences["model"] == "gpt-4-vision-preview" and (image_path or image_url):
-            image_payload = get_image_payload(image_path, image_url)
-            # Add the image data to the user's message content
+        if preferences["model"] == "gpt-4-vision-preview" and images:
+            image_payloads = get_image_payload(images)
             user_message_content = [{"type": "text", "text": prompt}]
-            user_message_content.append(image_payload)
+            user_message_content.extend(image_payloads)
         else:
             user_message_content = prompt
 
         truncate_limit = preferences["truncate_limit"]
         full_response = ""
-        save_message(conversation_id, prompt, 'outgoing', preferences['model'])
+        save_message(conversation_id, prompt, 'outgoing', preferences['model'],
+                     images=images)
         truncate_conversation(conversation_history, truncate_limit)
         try:
             response = client.chat.completions.create(
                 model=preferences["model"],
-                messages=conversation_history + [{"role": "user", "content": prompt}],
+                messages=conversation_history + [
+                    {"role": "user", "content": user_message_content}],
                 temperature=preferences["temperature"],
                 max_tokens=preferences["max_tokens"],
                 frequency_penalty=preferences["frequency_penalty"],
@@ -355,13 +415,62 @@ def chat_nonstream(prompt, client, user_id, conversation_id, image_path=None,
             return error_message
 
 
+def handle_stream(prompt, client, user_id, conversation_id, images=None):
+    full_response = ""
+
+    def generate():
+        nonlocal full_response
+        conversation = Conversation.query.get(conversation_id)
+        for content in chat_stream(prompt, client, user_id, conversation_id, images):
+            full_response += content
+            yield content
+
+    return stream_with_context(generate()), full_response
+
+
+def handle_nonstream(prompt, client, user_id, conversation_id, images=None):
+    return chat_nonstream(prompt, client, user_id, conversation_id, images)
+
+
 def handle_stream_error(e, conversation_id, model):
     error_message = f"An error occurred: {e}"
-    save_message(conversation_id, error_message, 'incoming', model, is_error=True)
     return error_message
 
 
 def handle_nonstream_error(e, conversation_id, model):
     error_message = f"An error occurred: {e}"
-    save_message(conversation_id, error_message, 'incoming', model, is_error=True)
     return error_message
+
+
+def update_conversation_messages(conversation_id, new_content):
+    Message.query.filter(Message.conversation_id == conversation_id,
+                         Message.created_at > datetime.utcnow()).delete()
+    db.session.commit()
+
+    new_message = Message(conversation_id=conversation_id, content=new_content,
+                          direction='incoming')
+    db.session.add(new_message)
+    db.session.commit()
+
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_image(file_stream):
+    # Generate a unique UUID for the image file
+    image_uuid = str(uuid.uuid4())
+    webp_file_name = f"{image_uuid}.webp"
+    webp_file_path = os.path.join(current_app.config['CHAT_IMAGE_DIRECTORY'],
+                                  webp_file_name)
+
+    # Convert the image to WEBP and save it
+    image = Image.open(file_stream).convert("RGB")
+    image.save(webp_file_path, 'WEBP')
+
+    return image_uuid, webp_file_name
+
+
+def get_image_url(webp_file_name):
+    return url_for('static', filename=f'user_img/{webp_file_name}', _external=True)

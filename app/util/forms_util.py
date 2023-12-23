@@ -146,7 +146,6 @@ class ChatCompletionForm(FlaskForm):
 
 
 class UserPreferencesForm(FlaskForm):
-    show_timestamps = BooleanField('Timestamps')
     model = SelectField('Model', choices=[
         ('gpt-4-1106-preview', 'GPT-4 1106 Preview'),
         ('gpt-4-vision-preview', 'GPT-4 Vision Preview'),

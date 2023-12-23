@@ -93,6 +93,8 @@ class Message(db.Model):
     is_vision = db.Column(db.Boolean, default=False)
     is_error = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    message_images = db.relationship('MessageImages', backref='message', lazy='joined',
+                                     cascade='all, delete-orphan')
 
 
 class ChatPreferences(db.Model):
@@ -109,7 +111,6 @@ class ChatPreferences(db.Model):
     stream = db.Column(db.Boolean, default=True)
     voice_mode = db.Column(db.Boolean, default=False)
     voice_model = db.Column(db.String(50), default='alloy')
-    voice_quality = db.Column(db.String(50), default='tts-1')
     vision_mode = db.Column(db.Boolean, default=False)
     knowledge_query_mode = db.Column(db.Boolean, default=False)
 
@@ -188,3 +189,18 @@ class GeneratedImage(db.Model):
     uuid = db.Column(db.String(255), nullable=False, unique=True)
 
     user = db.relationship('User', back_populates='generated_images')
+
+
+class MessageImages(db.Model):
+    __tablename__ = 'message_images'
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(255), nullable=False, unique=True)
+    image_url = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    conversation_id = db.Column(db.Integer,
+                                db.ForeignKey('conversations.id', ondelete='CASCADE'))
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.id', ondelete='CASCADE'),
+                           nullable=True)
+    user = db.relationship('User', backref='message_images', lazy='joined')
+    conversation = db.relationship('Conversation', backref='message_images',
+                                   lazy='joined')

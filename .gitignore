@@ -183,3 +183,4 @@ stylelint.config.js
 /app/static/temp_img/*
 /cert.pem
 /key.pem
+/app/static/user_img/*

@@ -53,6 +53,13 @@ body {
   background-color: red;
 }
 
+.thumbnail {
+  width: 50px; /* Or any other size */
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 #pink {
   background-color: #2bae66;
   top: 1vh;
@@ -179,7 +186,7 @@ body {
   flex-direction: row;
   justify-content: center;
   align-content: space-around;
-  align-items: baseline;
+  align-items: center;
 }
 .system-message {
   text-align: left;
@@ -200,6 +207,21 @@ body {
 .message-input-container {
   position: relative;
   padding-top: 40px;
+}
+
+#thumbnail-div {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin-right: 10px;
+}
+
+#image-upload-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  margin-right: 10px;
 }
 
 #new-convo-icon {
@@ -717,4 +739,10 @@ h3 {
 
 .message:hover i {
   opacity: 1;
+}
+
+.user-message .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

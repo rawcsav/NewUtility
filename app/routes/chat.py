@@ -6,12 +6,14 @@ from flask_login import login_required, current_user
 from openai import OpenAI
 
 from app import db
-from app.database import UserAPIKey, ChatPreferences, Conversation, Message
+from app.database import UserAPIKey, ChatPreferences, Conversation, Message, \
+    MessageImages
 from app.util.chat_util import chat_stream, chat_nonstream, get_user_preferences, \
-    user_history
+    user_history, handle_stream, handle_nonstream, update_conversation_messages, \
+    allowed_file, save_image, get_image_url
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
-from app.util.session_util import decrypt_api_key
+from app.util.session_util import decrypt_api_key, initialize_openai_client
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -61,12 +63,24 @@ def chat_index():
     preferences_dict = model_to_dict(preferences)
     user_preferences_form = UserPreferencesForm(data=preferences_dict)
 
-    # Pass the conversation history and other form instances to the template
+    if preferences.model == 'gpt-4-vision-preview':
+        images_without_message_id = MessageImages.query.filter(
+            MessageImages.user_id == current_user.id,
+            MessageImages.message_id.is_(None)
+        ).all()
+
+        # Convert the images to a list of URLs
+        image_urls = [image.image_url for image in images_without_message_id]
+    else:
+        image_urls = []
+
+    # Pass the image URLs to the template
     return render_template('chat_page.html',
                            new_conversation_form=new_conversation_form,
                            user_preferences_form=user_preferences_form,
                            chat_completion_form=chat_completion_form,
-                           conversation_history=conversation_history_data)
+                           conversation_history=conversation_history_data,
+                           image_urls=image_urls)
 
 
 @bp.route('/new-conversation', methods=['POST'])
@@ -81,12 +95,10 @@ def new_conversation():
             Conversation.title.like("Convo #%")
         ).all()
 
-        # Extract the numbers from the titles and find the maximum
         convo_numbers = [int(c.title.split('#')[-1]) for c in existing_conversations if
                          c.title.split('#')[-1].isdigit()]
         max_number = max(convo_numbers) if convo_numbers else 0
 
-        # The title for the new conversation will be "Convo #{max_number + 1}"
         new_title = f"Convo #{max_number + 1}"
 
         # Create new conversation with the generated title
@@ -99,7 +111,6 @@ def new_conversation():
 
         try:
             db.session.commit()
-            # Get formatted creation date for the new conversation
             creation_date = new_conversation.created_at.strftime('%m/%d/%y')
 
             return jsonify({
@@ -145,7 +156,6 @@ def update_preferences():
     form = UserPreferencesForm()
     if form.validate_on_submit():
         preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
-        preferences.show_timestamps = form.show_timestamps.data
         preferences.model = form.model.data
         preferences.temperature = form.temperature.data
         preferences.max_tokens = form.max_tokens.data
@@ -169,58 +179,46 @@ def update_preferences():
 @login_required
 def chat_completion():
     form = ChatCompletionForm()
-    if form.validate_on_submit():
-        user_id = current_user.id
-        conversation_id = form.conversation_id.data
-        if not conversation_id or not Conversation.query.get(conversation_id):
-            return jsonify({'status': 'error', 'message': 'Invalid conversation ID.'})
-        key_id = current_user.selected_api_key_id
-        user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
-
-        if not user_api_key:
-            return jsonify({'status': 'error', 'message': 'API Key not found.'})
-
-        api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-        client = OpenAI(api_key=api_key)
-
-        preferences = get_user_preferences(user_id)
-        stream_preference = preferences.get('stream', True)
-        prompt = form.prompt.data
-
-        try:
-            if stream_preference:
-                full_response = ""  # Initialize a variable to accumulate the full response
-
-                def generate():
-                    nonlocal full_response
-                    conversation = Conversation.query.get(
-                        conversation_id)  # Access the conversation object
-
-                    for content in chat_stream(prompt, client, user_id,
-                                               conversation_id):
-                        full_response += content
-                        yield content
-
-                # Create a response object that streams the content
-                response = Response(
-                    stream_with_context(generate()),
-                    content_type="text/plain"
-                )
-                response.headers["X-Accel-Buffering"] = "no"
-                return response
-            else:
-                full_response = chat_nonstream(prompt, client, user_id, conversation_id)
-                if full_response:
-                    return jsonify(
-                        {'status': 'success',
-                         'message': full_response.strip()})
-                else:
-                    return jsonify(
-                        {'status': 'warning', 'message': 'No response from the AI.'})
-        except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)})
-    else:
+    if not form.validate_on_submit():
         return jsonify({'status': 'error', 'errors': form.errors})
+
+    user_id = current_user.id
+    conversation_id = form.conversation_id.data
+    if not conversation_id or not Conversation.query.get(conversation_id):
+        return jsonify({'status': 'error', 'message': 'Invalid conversation ID.'})
+
+    client, error = initialize_openai_client(user_id)
+    if error:
+        return jsonify({'status': 'error', 'message': error})
+
+    preferences = get_user_preferences(user_id)
+    stream_preference = preferences.get('stream', True)
+    prompt = form.prompt.data
+
+    if preferences['model'] == 'gpt-4-vision-preview':
+        images = MessageImages.query.filter(
+            MessageImages.user_id == current_user.id,
+            MessageImages.message_id.is_(None)
+        ).all()
+        image_urls = [image.image_url for image in images]
+    else:
+        image_urls = []
+    try:
+        if stream_preference:
+            response, _ = handle_stream(prompt, client, user_id, conversation_id,
+                                        image_urls)
+            return Response(response, content_type="text/plain",
+                            headers={"X-Accel-Buffering": "no"})
+        else:
+            full_response = handle_nonstream(prompt, client, user_id, conversation_id,
+                                             image_urls)
+            if full_response:
+                return jsonify({'status': 'success', 'message': full_response.strip()})
+            else:
+                return jsonify(
+                    {'status': 'warning', 'message': 'No response from the AI.'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
 
 
 @bp.route('/conversation/<int:conversation_id>', methods=['GET'])
@@ -229,14 +227,16 @@ def get_conversation_messages(conversation_id):
     conversation, conversation_history = user_history(current_user.id, conversation_id)
     if conversation:
         messages = [
-            {'content': message['content'], 'className': message['role'] + '-message',
-             'messageId': message['id']}
-            for message in conversation_history]
-
-        # Update the last_checked_time for the conversation
+            {
+                'content': message['content'],
+                'className': message['role'] + '-message',
+                'messageId': message['id'],
+                'images': message.get('images', [])  # Include images if they exist
+            }
+            for message in conversation_history
+        ]
         conversation.last_checked_time = datetime.utcnow()
         db.session.commit()
-
         return jsonify({'messages': messages})
     else:
         return jsonify({'error': 'Conversation not found'}), 404
@@ -357,62 +357,43 @@ def check_new_messages(conversation_id):
 @bp.route('/retry-message/<int:message_id>', methods=['POST'])
 @login_required
 def retry_message(message_id):
-    # Retrieve the message from the database
     message = Message.query.get_or_404(message_id)
-
-    # Check if the current user is authorized to retry the message
     if message.conversation.user_id != current_user.id:
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
 
-    # Resubmit the message content to the OpenAI API
     user_id = current_user.id
-    conversation_id = message.conversation_id
-    key_id = current_user.selected_api_key_id
-    user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
-
-    if not user_api_key:
-        return jsonify({'status': 'error', 'message': 'API Key not found.'})
-
-    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-    client = OpenAI(api_key=api_key)
+    client, error = initialize_openai_client(user_id)
+    if error:
+        return jsonify({'status': 'error', 'message': error})
 
     preferences = get_user_preferences(user_id)
     stream_preference = preferences.get('stream', True)
-    prompt = message.content  # Use the content of the message being retried as the prompt
+    prompt = message.content
+    if message.is_vision:
+        images = MessageImages.query.filter(
+            MessageImages.user_id == current_user.id,
+            MessageImages.message_id == message.id
+        ).all()
+        image_urls = [image.image_url for image in images]
+    else:
+        image_urls = []
     try:
         if stream_preference:
-            full_response = ""  # Initialize a variable to accumulate the full response
-
-            def generate():
-                nonlocal full_response  # Allow access to the full_response variable within the generator
-                for content in chat_stream(prompt, client, user_id, conversation_id):
-                    full_response += content  # Accumulate the content
-                    yield content
-
-            # Create a response object that streams the content
-            response = Response(
-                stream_with_context(generate()),
-                content_type="text/plain"
-            )
-            response.headers["X-Accel-Buffering"] = "no"
-            return response
+            response, full_response = handle_stream(prompt, client, user_id,
+                                                    message.conversation_id,
+                                                    images=image_urls)
+            return Response(response, content_type="text/plain",
+                            headers={"X-Accel-Buffering": "no"})
         else:
-            full_response = chat_nonstream(prompt, client, user_id, conversation_id)
-            if full_response:
-                return jsonify(
-                    {'status': 'success',
-                     'message': full_response.strip()})
-        Message.query.filter(Message.conversation_id == conversation_id,
-                             Message.created_at > message.created_at).delete()
-        db.session.commit()
+            full_response = handle_nonstream(prompt, client, user_id,
+                                             message.conversation_id, images=image_urls)
 
-        # Create a new message with the new completion from the OpenAI API
-        new_message = Message(conversation_id=conversation_id, content=full_response,
-                              direction='incoming')
-        db.session.add(new_message)
-        db.session.commit()
+        update_conversation_messages(message.conversation_id, full_response)
 
-        return jsonify({'status': 'success', 'message': full_response})
+        if full_response:
+            return jsonify({'status': 'success', 'message': full_response.strip()})
+        else:
+            return jsonify({'status': 'warning', 'message': 'No response from the AI.'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
@@ -435,3 +416,38 @@ def interrupt_stream(conversation_id):
     print(f"After setting interrupt: {conversation.is_interrupted}")
 
     return jsonify({'status': 'success', 'message': 'Interruption signal received.'})
+
+
+@bp.route('/upload-chat-image', methods=['POST'])
+def upload_image():
+    file = request.files.get('file')
+    conversation_id = request.form.get('conversation_id')
+    print(f"Conversation ID: {conversation_id}")
+    if file and allowed_file(file.filename) and conversation_id:
+        try:
+            image_uuid, webp_file_name = save_image(file.stream)
+            webp_url = get_image_url(webp_file_name)
+
+            # Save image information to the database with the conversation_id
+            new_image_entry = MessageImages(
+                image_url=webp_url,
+                uuid=image_uuid,
+                user_id=current_user.id,
+                conversation_id=conversation_id
+            )
+            db.session.add(new_image_entry)
+            db.session.commit()
+
+            return jsonify({
+                'status': 'success',
+                'image_uuid': image_uuid,
+                'image_url': webp_url,
+                'conversation_id': conversation_id
+            }), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify(
+                {'status': 'error', 'message': f"Error processing image: {e}"}), 500
+    else:
+        return jsonify({'status': 'error', 'message': 'Invalid file upload'}), 400

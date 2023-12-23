@@ -6,7 +6,6 @@ hljs.configure({
 });
 
 function showToast(message, type) {
-  // Create toast element if it doesn't exist
   let toast = document.getElementById("toast");
   if (!toast) {
     toast = document.createElement("div");
@@ -14,21 +13,18 @@ function showToast(message, type) {
     document.body.appendChild(toast);
   }
 
-  // Set the message and type (e.g., error, success)
   toast.textContent = message;
-  toast.className = type; // This can be used to style the toast differently based on the type
+  toast.className = type;
 
-  // Make the toast visible
   toast.style.display = "block";
   toast.style.opacity = "1";
 
-  // Hide the toast after a delay
   setTimeout(() => {
     toast.style.opacity = "0";
     setTimeout(() => {
       toast.style.display = "none";
-    }, 600); // Assuming fade out transition is 0.6s
-  }, 3000); // Show toast for 3 seconds
+    }, 600);
+  }, 3000);
 }
 
 function throttle(func, limit) {
@@ -56,12 +52,10 @@ function toggleButtonState() {
   const icon = button.querySelector("i");
 
   if (currentState === "send") {
-    // Switch to pause state
     icon.classList.remove("fa-paper-plane");
     icon.classList.add("fa-pause");
     button.setAttribute("data-state", "pause");
   } else {
-    // Switch to send state
     icon.classList.remove("fa-pause");
     icon.classList.add("fa-paper-plane");
     button.setAttribute("data-state", "send");
@@ -77,15 +71,15 @@ function interruptAIResponse() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken() // Assuming you have a function to get CSRF token
+      "X-CSRFToken": getCsrfToken()
     },
-    credentials: "same-origin" // Include cookies in the request for CSRF protection
+    credentials: "same-origin"
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log(data.message); // Log the server's response
-      isInterrupted = true; // Set the frontend flag to indicate interruption
-      toggleButtonState(); // Update the UI
+      console.log(data.message);
+      isInterrupted = true;
+      toggleButtonState();
     })
     .catch((error) => console.error("Error interrupting the stream:", error));
 }
@@ -205,10 +199,8 @@ function appendStreamedResponse(chunk, chatBox, isUserMessage = false) {
     }
 
     if (chunk != null) {
-      // Buffer for incomplete Markdown content
       window.incompleteMarkdownBuffer += chunk;
 
-      // Update message content based on the source
       updateStreamMessageContent(isUserMessage);
     }
 
@@ -267,21 +259,19 @@ function finalizeStreamedResponse(isUserMessage = false) {
           window.currentStreamMessageDiv.getAttribute("data-message-id");
         let className = isUserMessage ? "user-message" : "assistant-message";
 
-        // Sanitize the content if not a user message
         if (!isUserMessage) {
           finalMessageContent = DOMPurify.sanitize(finalMessageContent);
         }
 
-        // Replace the temporary streamed message with the final one
         window.currentStreamMessageDiv.remove();
         let finalDiv = appendMessageToChatBox(
           finalMessageContent,
           className,
           messageId
         );
-        toggleButtonState(); // Call this function to switch back to the send button
+        toggleButtonState();
         window.isWaitingForResponse = false;
-        // Apply syntax highlighting to the final message content if it's not a user message
+
         if (!isUserMessage) {
           applySyntaxHighlighting(finalDiv);
         }
@@ -314,21 +304,22 @@ function togglePreferencePopup() {
   });
 }
 
-function appendMessageToChatBox(message, className, messageId) {
+function appendMessageToChatBox(message, className, messageId, images = []) {
   let messageDiv = createMessageDiv(message, className, messageId);
-
+  if (images.length > 0) {
+    appendThumbnailsToMessageElement(messageDiv, images);
+  }
   requestAnimationFrame(() => {
     chatBox.appendChild(messageDiv);
     scrollToBottom(chatBox);
   });
-  return messageDiv; // Return the created message div
+  return messageDiv;
 }
 
 function createMessageDiv(message, className, messageId) {
   let messageDiv = document.createElement("div");
   messageDiv.classList.add("message", className);
 
-  // Set the data-message-id attribute if provided
   if (messageId) {
     messageDiv.setAttribute("data-message-id", messageId);
   }
@@ -349,10 +340,8 @@ function createClipboardIcon(copyTarget) {
   let clipboardIcon = document.createElement("i");
   clipboardIcon.classList.add("fas", "fa-clipboard", "clipboard-icon");
   clipboardIcon.addEventListener("click", function (event) {
-    // Prevent the icon click from bubbling up to other elements
     event.stopPropagation();
 
-    // Copy the specified part of the message to the clipboard
     let textToCopy;
     if (copyTarget === "code") {
       textToCopy = this.parentNode.textContent;
@@ -362,11 +351,9 @@ function createClipboardIcon(copyTarget) {
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
-        // Success feedback
         console.log("Text copied to clipboard!");
       })
       .catch((err) => {
-        // Error feedback
         console.error("Failed to copy text:", err);
       });
   });
@@ -388,12 +375,10 @@ function removeSubsequentMessagesUI(messageId) {
     return msg.dataset.messageId === messageId.toString();
   });
 
-  // Check if the message is found and it's not the last one
   if (
     currentMessageIndex !== -1 &&
     currentMessageIndex + 1 < allMessages.length
   ) {
-    // Remove all messages after the current message
     allMessages.slice(currentMessageIndex + 1).forEach((msg) => msg.remove());
   }
 }
@@ -427,9 +412,34 @@ function setupMessageEditing(content, messageId) {
   });
 }
 
-// Function to save the edited content for non-system messages
+function appendThumbnailsToMessageElement(messageElement, imageUrls) {
+  if (!messageElement || !imageUrls) {
+    console.error("Invalid parameters for appendThumbnailsToMessageElement.");
+    return;
+  }
+
+  // Find the .message-content div within the message element
+  const contentDiv = messageElement.querySelector(".message-content");
+  if (!contentDiv) {
+    console.error("No .message-content div found within the message element.");
+    return;
+  }
+
+  // For each image URL
+  for (let imageUrl of imageUrls) {
+    // Create a new img element
+    let img = document.createElement("img");
+
+    // Set the src of the new img element to the image URL
+    img.src = imageUrl;
+    img.classList.add("thumbnail"); // Add CSS class for styling the thumbnails
+
+    // Append the new img element to the .message-content div
+    contentDiv.appendChild(img);
+  }
+}
+
 function saveMessageContent(messageId, newContent) {
-  // Perform fetch request to save the updated content
   performFetch(`/chat/edit-message/${messageId}`, { content: newContent })
     .then((response) =>
       handleFetchResponse(response, "Message updated successfully")
@@ -439,7 +449,7 @@ function saveMessageContent(messageId, newContent) {
       showToast(error.message, "error");
     });
 }
-// Function to create the message header and include the edit icon
+
 function createMessageHeader(className, messageId) {
   let header = document.createElement("div");
   header.classList.add("message-header");
@@ -448,7 +458,6 @@ function createMessageHeader(className, messageId) {
   title.textContent = getTitleBasedOnClassName(className);
   header.appendChild(title);
 
-  // Append clipboard icon to the header for assistant messages
   if (className === "assistant-message") {
     let clipboardIcon = createClipboardIcon("message");
     header.appendChild(clipboardIcon);
@@ -459,7 +468,7 @@ function createMessageHeader(className, messageId) {
     retryIcon.classList.add("fas", "fa-redo", "retry-icon");
     retryIcon.addEventListener("click", function (event) {
       event.stopPropagation();
-      // Retrieve the messageId from the closest message element when clicked
+
       let messageElement = event.target.closest(".message");
       if (!messageElement) {
         console.error("Message element not found for the retry icon.");
@@ -476,19 +485,16 @@ function createMessageHeader(className, messageId) {
     header.appendChild(retryIcon);
   }
 
-  // Append edit icon to the header for all messages
   let editIcon = createEditIcon();
   header.appendChild(editIcon);
 
-  // Attach the appropriate editing function based on the message type
-  // If this is a system message, set up the specific functionality
   if (className === "system-message") {
     editIcon.addEventListener("click", function () {
       messageContent = document.querySelector(".message-content");
 
       messageContent.contentEditable = "true";
       messageContent.focus();
-      // Call the function to handle system message editing
+
       setupSystemMessageEditing(messageContent, messageId);
     });
   }
@@ -504,10 +510,9 @@ function getTitleBasedOnClassName(className) {
   } else if (className === "system-message") {
     return "System";
   }
-  return ""; // Default title
+  return "";
 }
 
-// Function to create the edit icon and append it to every message header
 function createEditIcon() {
   let editIcon = document.createElement("i");
   editIcon.classList.add("fas", "fa-edit");
@@ -523,7 +528,7 @@ function processStreamedResponse(response) {
 function readStreamedResponseChunk(reader) {
   if (isInterrupted) {
     console.log("Response processing was interrupted.");
-    finalizeStreamedResponse(); // Finalizes the response with the partial content.
+    finalizeStreamedResponse();
     var conversationId = document
       .getElementById("convo-title")
       .getAttribute("data-conversation-id");
@@ -590,7 +595,7 @@ function createMessageContent(message, className) {
   if (className === "assistant-message") {
     content.innerHTML = DOMPurify.sanitize(marked.parse(message));
     applySyntaxHighlighting(content);
-    // Append clipboard icons to code blocks within the assistant message
+
     let codeBlocks = content.querySelectorAll("pre > code");
     codeBlocks.forEach((code) => {
       let clipboardIcon = createClipboardIcon("code");
@@ -607,7 +612,7 @@ function createMessageContent(message, className) {
 function setupSystemMessageEditing(content, messageId) {
   content.addEventListener("blur", function () {
     this.contentEditable = "false";
-    let conversationId = messageId; // Assuming messageId holds the conversation ID
+    let conversationId = messageId;
     saveSystemPrompt(conversationId, this.textContent);
   });
 
@@ -619,17 +624,31 @@ function setupSystemMessageEditing(content, messageId) {
   });
 }
 
+function appendImagesToMessageById(messageId, imageUrls) {
+  // Find the message element by its data-message-id attribute
+  const messageElement = chatBox.querySelector(
+    `[data-message-id="${messageId}"]`
+  );
+  if (messageElement) {
+    // Call the function to append thumbnails to the found message element
+    appendThumbnailsToMessageElement(messageElement, imageUrls);
+  }
+}
+
 function selectConversation(conversationId) {
   updateConversationTitle(conversationId);
   clearChatBox();
 
   fetchConversationMessages(conversationId)
     .then((messages) => {
+      console.log("Loaded conversation messages:", messages);
       messages.forEach((message) => {
+        // Use the existing appendMessageToChatBox function to add the message content
         appendMessageToChatBox(
           message.content,
           message.className,
-          message.messageId
+          message.messageId,
+          message.images || [] // Pass an empty array if no images are present
         );
       });
       updateCompletionConversationId(conversationId);
@@ -776,20 +795,16 @@ function checkNewMessages(conversationId) {
 function locateNewMessages(conversationId) {
   checkNewMessages(conversationId)
     .then((newMessages) => {
-      // Assume that all messages in chatBox are from the current conversation
       let messageElements = chatBox.querySelectorAll(
         ".message:not([data-message-id])"
       );
 
-      // Iterate over the new messages
       newMessages.forEach((newMessage) => {
-        // Find the first message element that matches the new message content
         let matchingElement = Array.from(messageElements).find(
           (messageElement) =>
             messageElement.classList.contains(newMessage.className)
         );
 
-        // If a matching element is found, assign the new message ID to it
         if (matchingElement) {
           matchingElement.setAttribute("data-message-id", newMessage.id);
         }
@@ -826,6 +841,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setupWindowClick();
     toggleHistory();
     checkConversationHistory();
+    setupImageUpload();
   });
   window.isWaitingForResponse = false;
 
@@ -846,27 +862,23 @@ document.addEventListener("DOMContentLoaded", function () {
   conversationHistoryDiv.addEventListener("click", function (event) {
     const conversationEntry = event.target.closest(".conversation-entry");
     if (conversationEntry) {
-      event.stopPropagation(); // This will prevent the event from bubbling up
+      event.stopPropagation();
       const conversationId = conversationEntry.dataset.conversationId;
     }
   });
 
   function initializeToggleButton() {
     const toggleButton = document.getElementById("toggle-button");
-    if (!toggleButton) return; // Guard clause if the button is not present
+    if (!toggleButton) return;
 
-    // Initialize the button state as 'send'
     toggleButton.setAttribute("data-state", "send");
 
-    // Add click event listener to the button
     toggleButton.addEventListener("click", function (event) {
       const currentState = this.getAttribute("data-state");
 
       if (currentState === "send") {
-        // If the button is in 'send' state, the normal click behavior continues
       } else {
-        // If the button is in 'pause' state, interrupt the AI response and switch back to 'send' state
-        event.preventDefault(); // Prevent form submission
+        event.preventDefault();
         interruptAIResponse();
         toggleButtonState();
       }
@@ -905,16 +917,16 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleSubmitOnEnter(event, textarea) {
     if (event.key === "Enter" && !event.shiftKey) {
       if (textarea.value.trim() === "") {
-        event.preventDefault(); // Prevent form submission if the input is empty
+        event.preventDefault();
         console.error("Cannot submit an empty message.");
       } else if (isSubmitting) {
-        event.preventDefault(); // Prevent form submission if already submitting
+        event.preventDefault();
         console.error("Submission in progress.");
       } else {
-        event.preventDefault(); // Prevent the default behavior of enter key
+        event.preventDefault();
         isSubmitting = true;
         triggerFormSubmission("chat-completion-form");
-        setTimeout(() => (isSubmitting = false), 2000); // Allow submissions again after 2 seconds
+        setTimeout(() => (isSubmitting = false), 2000);
       }
     }
   }
@@ -983,9 +995,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function appendAllMessagesFromHistory() {
     requestAnimationFrame(() => {
-      const fragment = document.createDocumentFragment(); // Create DocumentFragment
+      const fragment = document.createDocumentFragment();
       conversationHistory.forEach((message) => {
-        // Skip the message if its id is null, None, or undefined
         if (
           message.messageId === null ||
           message.messageId === "None" ||
@@ -998,10 +1009,10 @@ document.addEventListener("DOMContentLoaded", function () {
           message.className,
           message.messageId
         );
-        fragment.appendChild(messageDiv); // Append to the fragment instead of directly to DOM
+        fragment.appendChild(messageDiv);
       });
 
-      chatBox.appendChild(fragment); // Append the fragment to the DOM at once
+      chatBox.appendChild(fragment);
     });
   }
 
@@ -1016,6 +1027,8 @@ document.addEventListener("DOMContentLoaded", function () {
     modelDropdown.addEventListener("change", function () {
       updateMaxTokensBasedOnModel(this.value);
     });
+
+    updateMaxTokensBasedOnModel(modelDropdown.value);
   }
 
   function updateMaxTokensBasedOnModel(selectedModel) {
@@ -1024,6 +1037,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     updateMaxTokensSlider(maxTokens);
     updateMaxTokensValueInput(maxTokens);
+  }
+
+  function setupImageUpload() {
+    const modelDropdown = document.getElementById("model");
+    toggleImageUploadIcon(modelDropdown.value);
   }
 
   function updateMaxTokensSlider(maxTokens) {
@@ -1038,6 +1056,115 @@ document.addEventListener("DOMContentLoaded", function () {
     const maxTokensValueInput = document.getElementById("max-tokens-value");
     if (maxTokensValueInput) {
       maxTokensValueInput.value = maxTokens;
+    }
+  }
+
+  function toggleImageUploadIcon(selectedModel) {
+    const imageUploadIcon = document.getElementById("image-upload-icon");
+    const chatBox = document.getElementById("chat-box");
+    const fileInput = document.getElementById("image-upload");
+
+    const shouldEnable = selectedModel === "gpt-4-vision-preview";
+    imageUploadIcon.style.display = shouldEnable ? "block" : "none";
+
+    if (shouldEnable) {
+      chatBox.addEventListener("dragover", handleDragOver);
+      chatBox.addEventListener("drop", handleDrop);
+      chatBox.addEventListener("paste", handlePaste);
+
+      imageUploadIcon.onclick = function () {
+        fileInput.click();
+      };
+
+      fileInput.onchange = function (event) {
+        if (event.target.files && event.target.files[0]) {
+          const conversationId = document
+            .getElementById("convo-title")
+            .getAttribute("data-conversation-id");
+          uploadImage(event.target.files[0], conversationId);
+        }
+      };
+    } else {
+      chatBox.removeEventListener("dragover", handleDragOver);
+      chatBox.removeEventListener("drop", handleDrop);
+      chatBox.removeEventListener("paste", handlePaste);
+
+      imageUploadIcon.onclick = null;
+      fileInput.onchange = null;
+    }
+  }
+
+  function uploadImage(file, conversationId) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("conversation_id", conversationId);
+
+    fetch("/chat/upload-chat-image", {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": getCsrfToken()
+      },
+      credentials: "same-origin"
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.status === "success") {
+          showToast("Image uploaded successfully", "success");
+
+          console.log("Uploaded image URL:", data.image_url);
+          displayThumbnail(data.image_url);
+        } else {
+          showToast(data.message, "error");
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "There has been a problem with your fetch operation:",
+          error
+        );
+        showToast(error.message, "error");
+      });
+  }
+
+  function displayThumbnail(imageUrl) {
+    const thumbnailDiv = document.getElementById("thumbnail-div");
+
+    const img = document.createElement("img");
+
+    img.src = imageUrl;
+
+    img.className = "thumbnail";
+
+    thumbnailDiv.appendChild(img);
+  }
+
+  function handleDragOver(event) {
+    event.preventDefault();
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      console.log("Dropped files:", files);
+    }
+  }
+
+  function handlePaste(event) {
+    const items = (event.clipboardData || event.originalEvent.clipboardData)
+      .items;
+    for (index in items) {
+      const item = items[index];
+      if (item.kind === "file") {
+        const blob = item.getAsFile();
+        console.log("Pasted file:", blob);
+      }
     }
   }
 
@@ -1062,18 +1189,25 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     window.isWaitingForResponse = true;
-    submitChatMessage(messageToSend, form);
+    const thumbnailDiv = document.getElementById("thumbnail-div");
+    const thumbnails = thumbnailDiv.getElementsByTagName("img");
+    let imageUrls = [];
+    for (let thumbnail of thumbnails) {
+      let imageUrl = thumbnail.src;
+      imageUrls.push(imageUrl);
+    }
+    submitChatMessage(messageToSend, form, imageUrls);
     document.getElementById("message-input").value = "";
+    thumbnailDiv.innerHTML = "";
   }
 
   const throttledHandleChatCompletionFormSubmission = throttle(
     handleChatCompletionFormSubmission,
     2000
-  ); // 2 seconds throttle
+  );
 
-  function submitChatMessage(message, form) {
-    appendMessageToChatBox(message, "user-message");
-
+  function submitChatMessage(message, form, images = []) {
+    appendMessageToChatBox(message, "user-message", null, images);
     const formData = new FormData(form);
     formData.append("prompt", message);
     fetchChatCompletionResponse(formData)
@@ -1114,7 +1248,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function readStreamedResponseChunk(reader) {
     if (isInterrupted) {
       console.log("Response processing was interrupted.");
-      finalizeStreamedResponse(); // Finalizes the response with the partial content.
+      finalizeStreamedResponse();
       var conversationId = document
         .getElementById("convo-title")
         .getAttribute("data-conversation-id");
@@ -1241,18 +1375,17 @@ document.addEventListener("DOMContentLoaded", function () {
       const conversationHistoryDiv = document.getElementById(
         "conversation-history"
       );
-      const fragment = document.createDocumentFragment(); // Create a DocumentFragment
+      const fragment = document.createDocumentFragment();
 
-      // Assuming createConversationEntry is a function that creates the new conversation DOM element
       const newConvoEntry = createConversationEntry(
         conversationId,
         conversationTitle
       );
 
-      fragment.appendChild(newConvoEntry); // Append the new conversation entry to the fragment
+      fragment.appendChild(newConvoEntry);
 
-      conversationHistoryDiv.appendChild(fragment); // Append the fragment to the DOM
-      chatBox.innerHTML = ""; // Clear the chat box (if this is the intended behavior)
+      conversationHistoryDiv.appendChild(fragment);
+      chatBox.innerHTML = "";
     });
   }
 
@@ -1280,7 +1413,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const formData = new FormData(event.target);
 
     submitUpdatePreferences(formData)
-      .then((data) => processUpdatePreferencesResponse(data))
+      .then((data) => {
+        processUpdatePreferencesResponse(data);
+
+        setupImageUpload();
+      })
       .catch((error) => showToast("Error: " + error.message, "error"));
   }
 

@@ -63,6 +63,7 @@ class Config(object):
     DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
 
     USER_IMAGE_DIRECTORY = os.path.join(basedir, 'static', 'temp_img')
+    CHAT_IMAGE_DIRECTORY = os.path.join(basedir, 'static', 'user_img')
 
     @classmethod
     def init_app(cls, oauth, app):
