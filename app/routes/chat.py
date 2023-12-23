@@ -5,11 +5,9 @@ from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
 
 from app import db
-from app.database import ChatPreferences, Conversation, Message, \
-    MessageImages
-from app.util.chat_util import get_user_preferences, \
-    user_history, handle_stream, handle_nonstream, \
-    allowed_file, save_image, get_image_url, retry_delete_messages
+from app.database import ChatPreferences, Conversation, Message, MessageImages
+from app.util.chat_util import get_user_preferences, user_history, handle_stream, \
+    handle_nonstream, allowed_file, save_image, get_image_url, retry_delete_messages
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
 from app.util.session_util import initialize_openai_client
@@ -20,8 +18,7 @@ from sqlalchemy.inspection import inspect
 
 
 def model_to_dict(model):
-    return {c.key: getattr(model, c.key)
-            for c in inspect(model).mapper.column_attrs}
+    return {c.key: getattr(model, c.key) for c in inspect(model).mapper.column_attrs}
 
 
 @bp.route('/', methods=['GET'])
@@ -50,23 +47,18 @@ def chat_index():
         db.session.add(preferences)
         db.session.commit()
 
-    conversation_history_data = [
-        {
-            'id': conversation.id,
-            'title': conversation.title,
-            'created_at': conversation.created_at,
-            'system_prompt': conversation.system_prompt,
-        }
-        for conversation in conversation_history
-    ]
+    conversation_history_data = [{'id': conversation.id, 'title': conversation.title,
+                                  'created_at': conversation.created_at,
+                                  'system_prompt': conversation.system_prompt, } for
+                                 conversation in
+                                 conversation_history]
     preferences_dict = model_to_dict(preferences)
     user_preferences_form = UserPreferencesForm(data=preferences_dict)
 
     if preferences.model == 'gpt-4-vision-preview':
         images_without_message_id = MessageImages.query.filter(
             MessageImages.user_id == current_user.id,
-            MessageImages.message_id.is_(None)
-        ).all()
+            MessageImages.message_id.is_(None)).all()
 
         # Convert the images to a list of URLs
         image_urls = [image.image_url for image in images_without_message_id]
@@ -90,9 +82,7 @@ def new_conversation():
         user_id = current_user.id
         # Fetch all conversations for the user that start with "Convo #"
         existing_conversations = Conversation.query.filter(
-            Conversation.user_id == user_id,
-            Conversation.title.like("Convo #%")
-        ).all()
+            Conversation.user_id == user_id, Conversation.title.like("Convo #%")).all()
 
         convo_numbers = [int(c.title.split('#')[-1]) for c in existing_conversations if
                          c.title.split('#')[-1].isdigit()]
@@ -101,24 +91,18 @@ def new_conversation():
         new_title = f"Convo #{max_number + 1}"
 
         # Create new conversation with the generated title
-        new_conversation = Conversation(
-            user_id=user_id,
-            title=new_title,
-            system_prompt=form.system_prompt.data
-        )
+        new_conversation = Conversation(user_id=user_id, title=new_title,
+                                        system_prompt=form.system_prompt.data)
         db.session.add(new_conversation)
 
         try:
             db.session.commit()
             creation_date = new_conversation.created_at.strftime('%m/%d/%y')
 
-            return jsonify({
-                'status': 'success',
-                'conversation_id': new_conversation.id,
-                'title': new_conversation.title,
-                'created_at': creation_date,
-                'system_prompt': new_conversation.system_prompt
-            })
+            return jsonify({'status': 'success', 'conversation_id': new_conversation.id,
+                            'title': new_conversation.title,
+                            'created_at': creation_date,
+                            'system_prompt': new_conversation.system_prompt})
         except Exception as e:
             db.session.rollback()
             return jsonify({'status': 'error', 'message': str(e)})
@@ -195,10 +179,8 @@ def chat_completion():
     prompt = form.prompt.data
 
     if preferences['model'] == 'gpt-4-vision-preview':
-        images = MessageImages.query.filter(
-            MessageImages.user_id == current_user.id,
-            MessageImages.message_id.is_(None)
-        ).all()
+        images = MessageImages.query.filter(MessageImages.user_id == current_user.id,
+                                            MessageImages.message_id.is_(None)).all()
         image_urls = [image.image_url for image in images]
     else:
         image_urls = []
@@ -226,14 +208,10 @@ def get_conversation_messages(conversation_id):
     conversation, conversation_history = user_history(current_user.id, conversation_id)
     if conversation:
         messages = [
-            {
-                'content': message['content'],
-                'className': message['role'] + '-message',
-                'messageId': message['id'],
-                'images': message.get('images', [])  # Include images if they exist
-            }
-            for message in conversation_history
-        ]
+            {'content': message['content'], 'className': message['role'] + '-message',
+             'messageId': message['id'], 'images': message.get('images', [])
+             # Include images if they exist
+             } for message in conversation_history]
         conversation.last_checked_time = datetime.utcnow()
         db.session.commit()
         return jsonify({'messages': messages})
@@ -249,10 +227,8 @@ def update_conversation_title(conversation_id):
 
     # Validate new_title: not None, not just whitespace, and 25 characters or fewer
     if new_title is None or not new_title.strip() or len(new_title.strip()) > 25:
-        return jsonify({
-            'status': 'error',
-            'message': 'Title must be provided, not just whitespace, and 25 characters or fewer.'
-        }), 400
+        return jsonify({'status': 'error',
+                        'message': 'Title must be provided, not just whitespace, and 25 characters or fewer.'}), 400
 
     conversation = Conversation.query.get_or_404(conversation_id)
 
@@ -278,10 +254,8 @@ def update_system_prompt(conversation_id):
     # Check if new_system_prompt is not None, not just whitespace, and its length is less than 1000 characters
     if new_system_prompt.strip() is None or not new_system_prompt.strip() or len(
             new_system_prompt.strip()) >= 1000:
-        return jsonify({
-            'status': 'error',
-            'message': 'System prompt must be provided, not just whitespace, and less than 1000 characters.'
-        }), 400
+        return jsonify({'status': 'error',
+                        'message': 'System prompt must be provided, not just whitespace, and less than 1000 characters.'}), 400
 
     conversation = Conversation.query.get_or_404(conversation_id)
 
@@ -307,10 +281,8 @@ def edit_message(message_id):
 
     # Validate new_content: not None and not just whitespace
     if new_content is None or not new_content.strip():
-        return jsonify({
-            'status': 'error',
-            'message': 'Content must be provided and not just whitespace.'
-        }), 400
+        return jsonify({'status': 'error',
+                        'message': 'Content must be provided and not just whitespace.'}), 400
 
     message = Message.query.get_or_404(message_id)
 
@@ -339,10 +311,8 @@ def check_new_messages(conversation_id):
     last_checked_time = conversation.last_checked_time
 
     # Query the database for new messages
-    new_messages = Message.query.filter(
-        Message.conversation_id == conversation_id,
-        Message.created_at > last_checked_time
-    ).all()
+    new_messages = Message.query.filter(Message.conversation_id == conversation_id,
+                                        Message.created_at > last_checked_time).all()
 
     # Convert the new messages to a list of dictionaries
     new_messages_dict = [{'id': message.id, 'content': message.content,
@@ -372,10 +342,8 @@ def retry_message(message_id):
     stream_preference = preferences.get('stream', True)
     prompt = message.content
     if message.is_vision:
-        images = MessageImages.query.filter(
-            MessageImages.user_id == current_user.id,
-            MessageImages.message_id == message.id
-        ).all()
+        images = MessageImages.query.filter(MessageImages.user_id == current_user.id,
+                                            MessageImages.message_id == message.id).all()
         image_urls = [image.image_url for image in images]
     else:
         image_urls = []
@@ -386,13 +354,12 @@ def retry_message(message_id):
     try:
         if stream_preference:
             response, full_response = handle_stream(prompt, client, user_id,
-                                                    conversation_id,
-                                                    images=image_urls)
+                                                    conversation_id, images=image_urls)
             return Response(response, content_type="text/plain",
                             headers={"X-Accel-Buffering": "no"})
         else:
-            full_response = handle_nonstream(prompt, client, user_id,
-                                             conversation_id, images=image_urls)
+            full_response = handle_nonstream(prompt, client, user_id, conversation_id,
+                                             images=image_urls)
         if full_response:
             return jsonify({'status': 'success', 'message': full_response.strip()})
         else:
@@ -432,21 +399,15 @@ def upload_image():
             webp_url = get_image_url(webp_file_name)
 
             # Save image information to the database with the conversation_id
-            new_image_entry = MessageImages(
-                image_url=webp_url,
-                uuid=image_uuid,
-                user_id=current_user.id,
-                conversation_id=conversation_id
-            )
+            new_image_entry = MessageImages(image_url=webp_url, uuid=image_uuid,
+                                            user_id=current_user.id,
+                                            conversation_id=conversation_id)
             db.session.add(new_image_entry)
             db.session.commit()
 
-            return jsonify({
-                'status': 'success',
-                'image_uuid': image_uuid,
-                'image_url': webp_url,
-                'conversation_id': conversation_id
-            }), 200
+            return jsonify(
+                {'status': 'success', 'image_uuid': image_uuid, 'image_url': webp_url,
+                 'conversation_id': conversation_id}), 200
 
         except Exception as e:
             db.session.rollback()
@@ -454,3 +415,17 @@ def upload_image():
                 {'status': 'error', 'message': f"Error processing image: {e}"}), 500
     else:
         return jsonify({'status': 'error', 'message': 'Invalid file upload'}), 400
+
+
+@bp.route('/delete-image/<string:image_uuid>', methods=['POST'])
+@login_required
+def delete_image(image_uuid):
+    image_record = MessageImages.query.filter_by(uuid=image_uuid).first()
+
+    if image_record.user_id != current_user.id:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    db.session.delete(image_record)
+    db.session.commit()
+
+    return jsonify({'status': 'success', 'message': 'Image deleted successfully'})

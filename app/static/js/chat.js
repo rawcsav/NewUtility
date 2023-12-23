@@ -240,6 +240,16 @@ function updateStreamMessageContent(isUserMessage, chunk) {
   });
 }
 
+function getUuidFromUrl(url) {
+  // Split the URL by the '/' character to get the filename
+  let filename = url.split("/").pop();
+
+  // Split the filename by the '.' character to get the UUID
+  let uuid = filename.split(".").shift();
+
+  return uuid;
+}
+
 function applySyntaxHighlighting(element) {
   element.querySelectorAll("pre code").forEach((block) => {
     hljs.highlightBlock(block);
@@ -583,6 +593,38 @@ function processNonStreamedResponse(text) {
       );
     }
   }
+}
+
+function deleteImage(imageUrl) {
+  imageUuid = getUuidFromUrl(imageUrl);
+  fetch(`/chat/delete-image/${imageUuid}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken()
+    },
+    credentials: "same-origin"
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to delete image.");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.status === "success") {
+        console.log("Image deleted successfully");
+        const imageElement = document.querySelector(`img[src="${imageUrl}"]`);
+        if (imageElement) {
+          imageElement.parentNode.remove();
+        }
+      } else {
+        console.error("Failed to delete image: " + data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting image:", error);
+    });
 }
 
 function handleChatCompletionError(error) {
@@ -1136,13 +1178,29 @@ document.addEventListener("DOMContentLoaded", function () {
   function displayThumbnail(imageUrl) {
     const thumbnailDiv = document.getElementById("thumbnail-div");
 
+    // Create a new div to hold the image and the "x" icon
+    const imageDiv = document.createElement("div");
+    imageDiv.classList.add("image-div");
+
+    // Create the image element
     const img = document.createElement("img");
-
     img.src = imageUrl;
+    img.classList.add("thumbnail");
 
-    img.className = "thumbnail";
+    // Create the "x" icon
+    const xIcon = document.createElement("i");
+    xIcon.classList.add("fas", "fa-times", "delete-icon");
+    xIcon.addEventListener("click", function () {
+      imageDiv.remove();
+      deleteImage(imageUrl);
+    });
 
-    thumbnailDiv.appendChild(img);
+    // Add the image and the "x" icon to the image div
+    imageDiv.appendChild(img);
+    imageDiv.appendChild(xIcon);
+
+    // Add the image div to the thumbnail div
+    thumbnailDiv.appendChild(imageDiv);
   }
 
   function handleDragOver(event) {

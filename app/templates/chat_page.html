@@ -270,11 +270,13 @@
           >
             <div id="thumbnail-div">
               {% for image_url in image_urls %}
-              <img
-                src="{{ image_url }}"
-                alt="Uploaded Image"
-                class="thumbnail"
-              />
+              <div class="image-div">
+                <img src="{{ image_url }}" class="thumbnail" />
+                <i
+                  class="fas fa-times delete-icon"
+                  onclick="deleteImage('{{ image_url }}')"
+                ></i>
+              </div>
               {% endfor %}
             </div>
 

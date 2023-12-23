@@ -1,30 +1,23 @@
 import base64
 import os
 import uuid
-from datetime import datetime
-from time import sleep
+
 import numpy as np
-import openai
 import tiktoken
 from PIL import Image
-from flask_login import current_user
 from flask import abort, stream_with_context, current_app, url_for
+from flask_login import current_user
+
 from app import db
 from app.database import ChatPreferences, Message, Conversation, MessageImages
 from app.util.usage_util import chat_cost, update_usage_and_costs, \
     num_tokens_from_string
 
-MODEL_TOKEN_LIMITS = {
-    'gpt-4-1106-preview': 4096,
-    'gpt-4-vision-preview': 4096,
-    'gpt-4': 8192,
-    'gpt-4-32k': 32768,
-    'gpt-4-0613': 8192,
-    'gpt-4-32k-0613': 32768,
-    'gpt-3.5-turbo-1106': 16385,
-    'gpt-3.5-turbo': 4096,
-    'gpt-3.5-turbo-16k': 4096,
-}
+MODEL_TOKEN_LIMITS = {'gpt-4-1106-preview': 4096, 'gpt-4-vision-preview': 4096,
+                      'gpt-4': 8192, 'gpt-4-32k': 32768, 'gpt-4-0613': 8192,
+                      'gpt-4-32k-0613': 32768,
+                      'gpt-3.5-turbo-1106': 16385, 'gpt-3.5-turbo': 4096,
+                      'gpt-3.5-turbo-16k': 4096, }
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
 
@@ -70,8 +63,8 @@ def get_token_count(conversation_history, encoding=ENCODING):
             for item in content:
                 if item.get('type') == 'text':
                     text_content = item.get('text', '')
-                    num_tokens += len(encoding.encode(text_content))
-        # If there are other content types that need to be handled, add them here
+                    num_tokens += len(encoding.encode(
+                        text_content))  # If there are other content types that need to be handled, add them here
     return num_tokens
 
 
@@ -103,10 +96,7 @@ def get_user_conversation(user_id, conversation_id):
         conversation_history = []
         system_prompt = conversation.system_prompt
         if system_prompt:
-            conversation_history.append({
-                "role": "system",
-                "content": system_prompt,
-            })
+            conversation_history.append({"role": "system", "content": system_prompt, })
 
         messages = Message.query.filter_by(conversation_id=conversation.id).all()
         for message in messages:
@@ -124,10 +114,9 @@ def get_user_conversation(user_id, conversation_id):
                     message_content = [{"type": "text", "text": message.content}]
                     message_content.extend(image_payloads)
 
-            conversation_history.append({
-                "role": "assistant" if message.direction == 'incoming' else "user",
-                "content": message_content,
-            })
+            conversation_history.append(
+                {"role": "assistant" if message.direction == 'incoming' else "user",
+                 "content": message_content, })
 
         return conversation, conversation_history
     else:
@@ -141,19 +130,14 @@ def user_history(user_id, conversation_id):
         conversation_history = []
         system_prompt = conversation.system_prompt
         if system_prompt:
-            conversation_history.append({
-                "role": "system",
-                "content": system_prompt,
-                "id": conversation_id,
-            })
+            conversation_history.append(
+                {"role": "system", "content": system_prompt, "id": conversation_id, })
 
         messages = Message.query.filter_by(conversation_id=conversation.id).all()
         for message in messages:
-            message_dict = {
-                "id": message.id,
-                "role": "assistant" if message.direction == 'incoming' else "user",
-                "content": message.content,
-            }
+            message_dict = {"id": message.id,
+                            "role": "assistant" if message.direction == 'incoming' else "user",
+                            "content": message.content, }
 
             # If the message has associated images, add their URLs
             if message.is_vision:
@@ -178,39 +162,24 @@ def get_user_preferences(user_id):
         # Use the preferences max_tokens if set, otherwise use the model_max_tokens
         max_tokens = preferences.max_tokens if preferences.max_tokens else model_max_tokens
 
-        return {
-            "model": model_name,
-            "temperature": preferences.temperature,
-            "max_tokens": max_tokens,
-            "frequency_penalty": preferences.frequency_penalty,
-            "presence_penalty": preferences.presence_penalty,
-            "top_p": preferences.top_p,
-            "stream": preferences.stream,
-            "truncate_limit": truncate_limit,
-        }
+        return {"model": model_name, "temperature": preferences.temperature,
+                "max_tokens": max_tokens,
+                "frequency_penalty": preferences.frequency_penalty,
+                "presence_penalty": preferences.presence_penalty,
+                "top_p": preferences.top_p, "stream": preferences.stream,
+                "truncate_limit": truncate_limit, }
     else:
-        return {
-            "model": 'gpt-3.5-turbo',
-            "temperature": 0.7,
-            "max_tokens": 2048,
-            "frequency_penalty": 0.0,
-            "presence_penalty": 0.0,
-            "top_p": 1.0,
-            "stream": True,
-            "truncate_limit": int(4096 * 0.85),
-        }
+        return {"model": 'gpt-3.5-turbo', "temperature": 0.7, "max_tokens": 2048,
+                "frequency_penalty": 0.0, "presence_penalty": 0.0, "top_p": 1.0,
+                "stream": True, "truncate_limit": int(4096 * 0.85), }
 
 
-def save_message(conversation_id, content, direction, model,
-                 is_knowledge_query=False, is_error=False, images=None):
-    message = Message(
-        conversation_id=conversation_id,
-        content=content,
-        direction=direction,
-        model=model,
-        is_knowledge_query=is_knowledge_query,
-        is_error=is_error,
-    )
+def save_message(conversation_id, content, direction, model, is_knowledge_query=False,
+                 is_error=False, images=None):
+    message = Message(conversation_id=conversation_id, content=content,
+                      direction=direction, model=model,
+                      is_knowledge_query=is_knowledge_query,
+                      is_error=is_error, )
     db.session.add(message)
     db.session.flush()
 
@@ -241,20 +210,14 @@ def get_image_payload(images):
             response = requests.get(image)
             response.raise_for_status()
             encoded_image = base64.b64encode(response.content).decode('utf-8')
-            image_payloads.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/webp;base64,{encoded_image}"
-                }
-            })
+            image_payloads.append({"type": "image_url",
+                                   "image_url": {
+                                       "url": f"data:image/webp;base64,{encoded_image}"}})
         elif os.path.isfile(image):
             encoded_image = encode_image_to_base64(image)
-            image_payloads.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/webp;base64,{encoded_image}"
-                }
-            })
+            image_payloads.append({"type": "image_url",
+                                   "image_url": {
+                                       "url": f"data:image/webp;base64,{encoded_image}"}})
         else:
             raise ValueError(f"Invalid image path or URL provided: {image}")
     return image_payloads
@@ -299,17 +262,14 @@ def chat_stream(prompt, client, user_id, conversation_id, images=None):
             truncate_conversation(conversation_history, truncate_limit)
 
         # Prepare the API request payload
-        request_payload = {
-            "model": preferences["model"],
-            "messages": conversation_history + [
-                {"role": "user", "content": user_message_content}],
-            "temperature": preferences["temperature"],
-            "max_tokens": preferences["max_tokens"],
-            "frequency_penalty": preferences["frequency_penalty"],
-            "presence_penalty": preferences["presence_penalty"],
-            "top_p": preferences["top_p"],
-            "stream": True,
-        }
+        request_payload = {"model": preferences["model"],
+                           "messages": conversation_history + [
+                               {"role": "user", "content": user_message_content}],
+                           "temperature": preferences["temperature"],
+                           "max_tokens": preferences["max_tokens"],
+                           "frequency_penalty": preferences["frequency_penalty"],
+                           "presence_penalty": preferences["presence_penalty"],
+                           "top_p": preferences["top_p"], "stream": True, }
 
         # Log the request payload for debugging
         save_message(conversation_id, prompt, 'outgoing', preferences['model'],
@@ -344,8 +304,7 @@ def chat_stream(prompt, client, user_id, conversation_id, images=None):
                              total_completion_tokens)
             update_usage_and_costs(user_id=user_id,
                                    api_key_id=current_user.selected_api_key_id,
-                                   usage_type='chat',
-                                   cost=cost)
+                                   usage_type='chat', cost=cost)
 
             # Save the response, whether full or partial
             if full_response.strip():  # Save only if there's non-empty content
@@ -382,17 +341,20 @@ def chat_nonstream(prompt, client, user_id, conversation_id, images=None):
                      images=images)
         truncate_conversation(conversation_history, truncate_limit)
         try:
-            response = client.chat.completions.create(
-                model=preferences["model"],
-                messages=conversation_history + [
-                    {"role": "user", "content": user_message_content}],
-                temperature=preferences["temperature"],
-                max_tokens=preferences["max_tokens"],
-                frequency_penalty=preferences["frequency_penalty"],
-                presence_penalty=preferences["presence_penalty"],
-                top_p=preferences["top_p"],
-                stream=False,
-            )
+            response = client.chat.completions.create(model=preferences["model"],
+                                                      messages=conversation_history + [
+                                                          {"role": "user",
+                                                           "content": user_message_content}],
+                                                      temperature=preferences[
+                                                          "temperature"],
+                                                      max_tokens=preferences[
+                                                          "max_tokens"],
+                                                      frequency_penalty=preferences[
+                                                          "frequency_penalty"],
+                                                      presence_penalty=preferences[
+                                                          "presence_penalty"],
+                                                      top_p=preferences["top_p"],
+                                                      stream=False, )
             if response:
                 full_response = response.choices[0].message.content
                 if full_response.strip():
@@ -406,8 +368,7 @@ def chat_nonstream(prompt, client, user_id, conversation_id, images=None):
                                      completion_tokens)
                     update_usage_and_costs(user_id=user_id,
                                            api_key_id=current_user.selected_api_key_id,
-                                           usage_type='chat',
-                                           cost=cost)
+                                           usage_type='chat', cost=cost)
                 return full_response
         except Exception as e:
             error_message = handle_nonstream_error(e, conversation_id,
@@ -451,10 +412,8 @@ def retry_delete_messages(conversation_id, message_id):
             raise ValueError("Message ID does not match the conversation ID.")
 
         # Delete messages that come after the specified message
-        Message.query.filter(
-            Message.conversation_id == conversation_id,
-            Message.created_at >= message_to_retry.created_at
-        ).delete()
+        Message.query.filter(Message.conversation_id == conversation_id,
+                             Message.created_at >= message_to_retry.created_at).delete()
         db.session.commit()
 
     except Exception as e:
