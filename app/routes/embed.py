@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from openai import OpenAI
 from app import db
-from app.database import Document, DocumentChunk, UserAPIKey
+from app.database import Document, DocumentChunk, UserAPIKey, ChatPreferences
 
 from app.util.embeddings_util import split_text, extract_text_from_file, \
     remove_temp_file, get_embedding_batch, store_embeddings, save_temp_file
@@ -171,3 +171,47 @@ def update_document():
     except Exception as e:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@bp.route('/update-document-selection', methods=['POST'])
+@login_required
+def update_document_selection():
+    data = request.get_json()
+    document_id = data['document_id']
+    selected = data['selected']
+
+    # Assuming you have a Document model with a selected field
+    document = Document.query.get(document_id)
+    if document.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    document.selected = selected
+    db.session.commit()
+
+    return jsonify({'status': 'success'})
+
+
+@bp.route('/update-knowledge-query-mode', methods=['POST'])
+@login_required
+def update_knowledge_query_mode():
+    data = request.get_json()
+    knowledge_query_mode = data['knowledge_query_mode']
+
+    # Assuming you have a ChatPreferences model with a knowledge_query_mode field
+    chat_preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+    chat_preferences.knowledge_query_mode = knowledge_query_mode
+    db.session.commit()
+
+    return jsonify({'status': 'success'})
+
+
+@bp.route('/update-knowledge-context-tokens', methods=['POST'])
+@login_required
+def update_knowledge_context_tokens():
+    data = request.get_json()
+    knowledge_context_tokens = float(data['knowledge_context_tokens'])
+    chat_preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+    chat_preferences.knowledge_context_tokens = knowledge_context_tokens
+    db.session.commit()
+
+    return jsonify({'status': 'success'})

@@ -5,7 +5,7 @@ from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
 
 from app import db
-from app.database import ChatPreferences, Conversation, Message, MessageImages
+from app.database import ChatPreferences, Conversation, Message, MessageImages, Document
 from app.util.chat_util import get_user_preferences, user_history, handle_stream, \
     handle_nonstream, allowed_file, save_image, get_image_url, retry_delete_messages, \
     delete_local_image_file
@@ -66,13 +66,27 @@ def chat_index():
     else:
         image_urls = []
 
+    user_documents = Document.query.filter_by(user_id=current_user.id).all()
+    knowledge_query_mode = preferences.knowledge_query_mode
+    documents_data = [
+        {
+            'id': doc.id,
+            'title': doc.title,
+            'author': doc.author,
+            'total_tokens': doc.total_tokens,
+            'chunk_count': len(doc.chunks),
+            'selected': doc.selected,
+        }
+        for doc in user_documents
+    ]
     # Pass the image URLs to the template
     return render_template('chat_page.html',
                            new_conversation_form=new_conversation_form,
                            user_preferences_form=user_preferences_form,
                            chat_completion_form=chat_completion_form,
                            conversation_history=conversation_history_data,
-                           image_urls=image_urls)
+                           image_urls=image_urls, documents=documents_data,
+                           knowledge_query_mode=knowledge_query_mode)
 
 
 @bp.route('/new-conversation', methods=['POST'])

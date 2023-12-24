@@ -1,6 +1,7 @@
 import uuid
 from flask_login import UserMixin
-from sqlalchemy import BLOB
+from sqlalchemy import BLOB, select
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql import func
 from app import db
 
@@ -73,9 +74,8 @@ class Conversation(db.Model):
     system_prompt = db.Column(db.String(2048),
                               nullable=True)  # New field for system prompts
     last_checked_time = db.Column(
-        db.DateTime(timezone=False))  # New field for last checked time
+        db.DateTime(timezone=False))
     is_interrupted = db.Column(db.Boolean, default=False)
-
     messages = db.relationship('Message', backref='conversation', lazy='dynamic',
                                cascade='all, delete-orphan')
 
@@ -97,8 +97,16 @@ class Message(db.Model):
                                      cascade='all, delete-orphan')
 
 
+class ModelContextWindow(db.Model):
+    __tablename__ = 'model_context_windows'
+    id = db.Column(db.Integer, primary_key=True)
+    model_name = db.Column(db.String(50), nullable=False, unique=True)
+    context_window_size = db.Column(db.Integer, nullable=False)
+
+
 class ChatPreferences(db.Model):
     __tablename__ = 'chat_preferences'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
     model = db.Column(db.String(50), default='gpt-3.5-turbo')
@@ -110,8 +118,21 @@ class ChatPreferences(db.Model):
     stream = db.Column(db.Boolean, default=True)
     voice_mode = db.Column(db.Boolean, default=False)
     voice_model = db.Column(db.String(50), default='alloy')
-    vision_mode = db.Column(db.Boolean, default=False)
     knowledge_query_mode = db.Column(db.Boolean, default=False)
+    knowledge_context_tokens = db.Column(db.Integer,
+                                         default=30)  # This is a percentage (0-100)
+
+    @hybrid_property
+    def max_knowledge_context_tokens(self):
+        raise NotImplementedError("This property can only be used in a query context.")
+
+    @max_knowledge_context_tokens.expression
+    def max_knowledge_context_tokens(cls):
+        context_window_size_subq = select(
+            [ModelContextWindow.context_window_size]).where(
+            ModelContextWindow.model_name == cls.model
+        ).label('context_window_size')
+        return (cls.knowledge_context_tokens / 100.0) * context_window_size_subq
 
 
 class Document(db.Model):
@@ -125,6 +146,7 @@ class Document(db.Model):
                        nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)
     pages = db.Column(db.String(25), nullable=True)
+    selected = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     chunks = db.relationship('DocumentChunk', back_populates='document',
                              order_by='DocumentChunk.chunk_index',
