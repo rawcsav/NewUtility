@@ -207,26 +207,6 @@ def deserialize_embedding(serialized_embedding):
     return pickle.loads(serialized_embedding)
 
 
-def compress_embedding(serialized_embedding):
-    return zlib.compress(serialized_embedding)
-
-
-def decompress_embedding(compressed_embedding):
-    return zlib.decompress(compressed_embedding)
-
-
-def prepare_embedding_for_storage(embedding):
-    serialized_embedding = serialize_embedding(embedding)
-    compressed_embedding = compress_embedding(serialized_embedding)
-    return compressed_embedding
-
-
-def retrieve_embedding_from_storage(compressed_embedding):
-    serialized_embedding = decompress_embedding(compressed_embedding)
-    embedding = deserialize_embedding(serialized_embedding)
-    return embedding.tolist()  # Convert back to a list, if that's the preferred format
-
-
 def store_embeddings(document_id, embeddings):
     chunks = DocumentChunk.query.filter_by(document_id=document_id).all()
     if len(chunks) != len(embeddings):

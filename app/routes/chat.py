@@ -7,7 +7,8 @@ from flask_login import login_required, current_user
 from app import db
 from app.database import ChatPreferences, Conversation, Message, MessageImages
 from app.util.chat_util import get_user_preferences, user_history, handle_stream, \
-    handle_nonstream, allowed_file, save_image, get_image_url, retry_delete_messages
+    handle_nonstream, allowed_file, save_image, get_image_url, retry_delete_messages, \
+    delete_local_image_file
 from app.util.forms_util import ChatCompletionForm, UserPreferencesForm, \
     NewConversationForm
 from app.util.session_util import initialize_openai_client
@@ -139,6 +140,7 @@ def update_preferences():
     form = UserPreferencesForm()
     if form.validate_on_submit():
         preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+        old_model = preferences.model
         preferences.model = form.model.data
         preferences.temperature = form.temperature.data
         preferences.max_tokens = form.max_tokens.data
@@ -146,6 +148,16 @@ def update_preferences():
         preferences.presence_penalty = form.presence_penalty.data
         preferences.top_p = form.top_p.data
         preferences.stream = form.stream.data
+
+        if old_model == 'gpt-4-vision-preview' and form.model.data != 'gpt-4-vision-preview':
+            # Delete all associated images for the current user
+            MessageImages.query.filter_by(user_id=current_user.id).delete()
+
+            # Set is_vision to False for all messages associated with the user's images
+            message_ids_with_images = MessageImages.query.with_entities(
+                MessageImages.message_id).filter_by(user_id=current_user.id)
+            Message.query.filter(Message.id.in_(message_ids_with_images)).update(
+                {Message.is_vision: False}, synchronize_session='fetch')
 
         try:
             db.session.commit()
@@ -354,12 +366,13 @@ def retry_message(message_id):
     try:
         if stream_preference:
             response, full_response = handle_stream(prompt, client, user_id,
-                                                    conversation_id, images=image_urls)
+                                                    conversation_id, images=image_urls,
+                                                    retry=True)
             return Response(response, content_type="text/plain",
                             headers={"X-Accel-Buffering": "no"})
         else:
             full_response = handle_nonstream(prompt, client, user_id, conversation_id,
-                                             images=image_urls)
+                                             images=image_urls, retry=True)
         if full_response:
             return jsonify({'status': 'success', 'message': full_response.strip()})
         else:
@@ -368,7 +381,6 @@ def retry_message(message_id):
         return jsonify({'status': 'error', 'message': str(e)})
 
 
-# An endpoint to signal interruption from the frontend
 @bp.route('/interrupt-stream/<int:conversation_id>', methods=['POST'])
 @login_required
 def interrupt_stream(conversation_id):
@@ -398,7 +410,6 @@ def upload_image():
             image_uuid, webp_file_name = save_image(file.stream)
             webp_url = get_image_url(webp_file_name)
 
-            # Save image information to the database with the conversation_id
             new_image_entry = MessageImages(image_url=webp_url, uuid=image_uuid,
                                             user_id=current_user.id,
                                             conversation_id=conversation_id)
@@ -424,7 +435,7 @@ def delete_image(image_uuid):
 
     if image_record.user_id != current_user.id:
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
-
+    delete_local_image_file(image_uuid)
     db.session.delete(image_record)
     db.session.commit()
 

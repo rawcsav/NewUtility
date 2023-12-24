@@ -1,6 +1,7 @@
 import base64
 import os
 import uuid
+from urllib.parse import urlparse
 
 import numpy as np
 import tiktoken
@@ -203,23 +204,26 @@ def save_message(conversation_id, content, direction, model, is_knowledge_query=
 import requests
 
 
+def is_development_url(url):
+    parsed_url = urlparse(url)
+    if parsed_url.hostname == 'localhost' or parsed_url.hostname == '127.0.0.1':
+        return True
+    if parsed_url.port == 8080:
+        return True
+    return False
+
+
 def get_image_payload(images):
     image_payloads = []
     for image in images:
-        if image.startswith(('http://', 'https://')):
+        if is_development_url(image):
             response = requests.get(image)
             response.raise_for_status()
             encoded_image = base64.b64encode(response.content).decode('utf-8')
-            image_payloads.append({"type": "image_url",
-                                   "image_url": {
-                                       "url": f"data:image/webp;base64,{encoded_image}"}})
-        elif os.path.isfile(image):
-            encoded_image = encode_image_to_base64(image)
-            image_payloads.append({"type": "image_url",
-                                   "image_url": {
-                                       "url": f"data:image/webp;base64,{encoded_image}"}})
+            image_payloads.append({"type": "image_url", "image_url": {
+                "url": f"data:image/webp;base64,{encoded_image}"}})
         else:
-            raise ValueError(f"Invalid image path or URL provided: {image}")
+            image_payloads.append({"type": "image_url", "image_url": {"url": image}})
     return image_payloads
 
 
@@ -239,7 +243,7 @@ def associate_images_with_message(message_id, image_uuids):
         raise e
 
 
-def chat_stream(prompt, client, user_id, conversation_id, images=None):
+def chat_stream(prompt, client, user_id, conversation_id, images=None, retry=False):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -270,10 +274,13 @@ def chat_stream(prompt, client, user_id, conversation_id, images=None):
                            "frequency_penalty": preferences["frequency_penalty"],
                            "presence_penalty": preferences["presence_penalty"],
                            "top_p": preferences["top_p"], "stream": True, }
-
-        # Log the request payload for debugging
-        save_message(conversation_id, prompt, 'outgoing', preferences['model'],
-                     images=images)
+        if retry:
+            # Remove the last entry if it is a user message
+            if conversation_history and conversation_history[-1]["role"] == "user":
+                conversation_history.pop()
+        else:
+            save_message(conversation_id, prompt, 'outgoing', preferences['model'],
+                         images=images)
 
         full_response = ""  # Initialize a variable to accumulate the full response
         try:
@@ -318,7 +325,7 @@ def chat_stream(prompt, client, user_id, conversation_id, images=None):
             yield error_message
 
 
-def chat_nonstream(prompt, client, user_id, conversation_id, images=None):
+def chat_nonstream(prompt, client, user_id, conversation_id, images=None, retry=False):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -337,8 +344,12 @@ def chat_nonstream(prompt, client, user_id, conversation_id, images=None):
 
         truncate_limit = preferences["truncate_limit"]
         full_response = ""
-        save_message(conversation_id, prompt, 'outgoing', preferences['model'],
-                     images=images)
+        if retry:
+            if conversation_history and conversation_history[-1]["role"] == "user":
+                conversation_history.pop()
+        else:
+            save_message(conversation_id, prompt, 'outgoing', preferences['model'],
+                         images=images)
         truncate_conversation(conversation_history, truncate_limit)
         try:
             response = client.chat.completions.create(model=preferences["model"],
@@ -376,21 +387,23 @@ def chat_nonstream(prompt, client, user_id, conversation_id, images=None):
             return error_message
 
 
-def handle_stream(prompt, client, user_id, conversation_id, images=None):
+def handle_stream(prompt, client, user_id, conversation_id, images=None, retry=False):
     full_response = ""
 
     def generate():
         nonlocal full_response
         conversation = Conversation.query.get(conversation_id)
-        for content in chat_stream(prompt, client, user_id, conversation_id, images):
+        for content in chat_stream(prompt, client, user_id, conversation_id, images,
+                                   retry):
             full_response += content
             yield content
 
     return stream_with_context(generate()), full_response
 
 
-def handle_nonstream(prompt, client, user_id, conversation_id, images=None):
-    return chat_nonstream(prompt, client, user_id, conversation_id, images)
+def handle_nonstream(prompt, client, user_id, conversation_id, images=None,
+                     retry=False):
+    return chat_nonstream(prompt, client, user_id, conversation_id, images, retry)
 
 
 def handle_stream_error(e, conversation_id, model):
@@ -413,7 +426,7 @@ def retry_delete_messages(conversation_id, message_id):
 
         # Delete messages that come after the specified message
         Message.query.filter(Message.conversation_id == conversation_id,
-                             Message.created_at >= message_to_retry.created_at).delete()
+                             Message.created_at > message_to_retry.created_at).delete()
         db.session.commit()
 
     except Exception as e:
@@ -442,3 +455,17 @@ def save_image(file_stream):
 
 def get_image_url(webp_file_name):
     return url_for('static', filename=f'user_img/{webp_file_name}', _external=True)
+
+
+def delete_local_image_file(image_uuid):
+    image_file_path = os.path.join(current_app.config['CHAT_IMAGE_DIRECTORY'],
+                                   f"{image_uuid}.webp")
+
+    # Check if the file exists
+    if os.path.isfile(image_file_path):
+        try:
+            # Delete the file
+            os.remove(image_file_path)
+            print(f"Image file {image_uuid}.webp deleted successfully")
+        except OSError as e:
+            print(f"Error: {image_file_path} : {e.strerror}")

@@ -25,10 +25,37 @@ body {
   background-size: 20px 20px;
 }
 
+.image-div {
+  position: relative;
+}
+
+.delete-icon {
+  position: absolute;
+  right: 0;
+  cursor: pointer;
+  top: 0;
+  z-index: 1;
+  padding: 0 2px;
+  border-radius: 20%;
+  background-color: #dc3545; /* A color that usually signifies 'delete' or 'danger' */
+  color: white; /* Contrast color for the icon */
+  border: 1px solid transparent; /* Optional: in case you want a border */
+  transition:
+    background-color 0.2s,
+    transform 0.2s; /* Smooth transition for hover effects */
+}
+
+.delete-icon:hover,
+.delete-icon:focus {
+  background-color: #bd2130; /* A darker shade for hover state */
+  transform: scale(1.1); /* Slightly bigger on hover for a nice effect */
+  outline: none; /* Removes the outline if the icon is focusable */
+}
+
 #toast {
   position: fixed;
   bottom: 40px;
-  left: 10%;
+  left: 15%;
   transform: translateX(-50%);
   background-color: #333;
   color: #fff;
@@ -137,6 +164,7 @@ body {
 
 .chat-container {
   padding: 20px;
+  padding-top: 0;
   display: flex;
   width: 100%;
   flex-direction: column;
@@ -305,13 +333,17 @@ output {
 }
 
 h4 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "Playfair Display", serif;
   font-size: 2em;
-  font-weight: 900;
+  font-weight: bold;
   margin: 0;
-  display: inline-block;
   top: 0;
-  color: #0069be;
+  text-align: center;
+  color: #141414;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .input-group {
@@ -331,18 +363,20 @@ pre {
 }
 
 #chat-completion-form .input-group {
-  width: 60%;
-  border: 1px solid #383737;
+  width: 50%;
+  border: 1px solid #141414;
   background-color: #f8f8f8;
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   border-radius: 8px;
   padding-top: 10px;
   padding-bottom: 10px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .top-banner {
-  text-align: center;
   padding-bottom: 20px;
+  text-align: center;
 }
 .message-input {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;

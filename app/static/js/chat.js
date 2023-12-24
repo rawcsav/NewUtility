@@ -613,13 +613,13 @@ function deleteImage(imageUrl) {
     })
     .then((data) => {
       if (data.status === "success") {
-        console.log("Image deleted successfully");
+        showToast("Image deleted successfully.", "success");
         const imageElement = document.querySelector(`img[src="${imageUrl}"]`);
         if (imageElement) {
           imageElement.parentNode.remove();
         }
       } else {
-        console.error("Failed to delete image: " + data.message);
+        showToast("Failed to delete image: " + data.message, "error");
       }
     })
     .catch((error) => {
@@ -1131,9 +1131,10 @@ document.addEventListener("DOMContentLoaded", function () {
       chatBox.removeEventListener("dragover", handleDragOver);
       chatBox.removeEventListener("drop", handleDrop);
       chatBox.removeEventListener("paste", handlePaste);
-
       imageUploadIcon.onclick = null;
       fileInput.onchange = null;
+      const thumbnailDiv = document.getElementById("thumbnail-div");
+      thumbnailDiv.innerHTML = "";
     }
   }
 

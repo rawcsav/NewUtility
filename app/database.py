@@ -99,7 +99,6 @@ class Message(db.Model):
 
 class ChatPreferences(db.Model):
     __tablename__ = 'chat_preferences'
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
     model = db.Column(db.String(50), default='gpt-3.5-turbo')
