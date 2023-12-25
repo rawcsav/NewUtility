@@ -1,3 +1,9 @@
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 document
   .getElementById("confirm-email-form")
   .addEventListener("submit", function (event) {
@@ -15,6 +21,9 @@ document
 
           fetch("/auth/confirm_email", {
             method: "POST",
+            headers: {
+              "X-CSRFToken": getCsrfToken()
+            },
             body: formData
           })
             .then((response) => response.json())

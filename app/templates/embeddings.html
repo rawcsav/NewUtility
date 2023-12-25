@@ -8,7 +8,6 @@
       content="Embeddings page of Swiss AI. Displays various embeddings."
     />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-
     <meta name="keywords" content="Embeddings, Swiss AI, Data Visualization" />
 
     <link
@@ -89,7 +88,6 @@
           method="post"
           enctype="multipart/form-data"
         >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <div class="form-group">
             <label for="file" class="file-upload-btn"
               >Choose a document to upload</label
@@ -150,11 +148,6 @@
             >
               <input
                 type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              />
-              <input
-                type="hidden"
                 name="document_id"
                 value="{{ document.id }}"
               />
@@ -182,13 +175,7 @@
             <form
               action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
               method="post"
-            >
-              <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              />
-            </form>
+            ></form>
             <div class="button-container">
               <button
                 type="button"
@@ -210,7 +197,6 @@
                 type="button"
                 class="btn-icon delete-btn"
                 data-doc-id="{{ document.id }}"
-                data-csrf-token="{{ csrf_token() }}"
                 title="Delete Document"
               >
                 <i class="fa fa-trash"></i>

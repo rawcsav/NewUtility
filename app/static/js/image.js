@@ -1,3 +1,9 @@
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 function resizeImage(image) {
   if (image.naturalWidth === 256 && image.naturalHeight === 256) {
     image.style.width = "256px";
@@ -100,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fetch("/image/generate_image", {
         method: "POST",
         headers: {
-          "X-CSRFToken": formData.get("csrf_token"),
+          "X-CSRFToken": getCsrfToken(),
           "X-Requested-With": "XMLHttpRequest"
         },
         body: formData

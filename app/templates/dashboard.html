@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Dashboard of Swiss AI. Allows users to manage their profiles and access various features."
+      content="Dashboard of Jack of all Trades. Allows users to manage their profiles and access various features."
     />
     <meta
       name="keywords"
-      content="Dashboard, Swiss AI, User Profile, Features"
+      content="Dashboard, Jack of all Trades, User Profile, Features"
     />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -43,7 +45,6 @@
       src="https://kit.fontawesome.com/5c8c7a1eba.js"
       crossorigin="anonymous"
     ></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% include 'menu.html' %}
     <link
       rel="stylesheet"
@@ -85,7 +86,6 @@
             Username <i class="fas fa-chevron-down"></i>
           </button>
           <form id="username-change-form" style="display: none">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input
               type="text"
               name="new_username"
@@ -122,11 +122,6 @@
             >
               <input
                 type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              />
-              <input
-                type="hidden"
                 name="document_id"
                 value="{{ document.id }}"
               />
@@ -154,13 +149,7 @@
             <form
               action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
               method="post"
-            >
-              <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              />
-            </form>
+            ></form>
             <div class="button-container">
               <button
                 type="button"
@@ -182,7 +171,6 @@
                 type="button"
                 class="btn-icon delete-btn"
                 data-doc-id="{{ document.id }}"
-                data-csrf-token="{{ csrf_token() }}"
                 title="Delete Document"
               >
                 <i class="fa fa-trash"></i>
@@ -207,7 +195,6 @@
             action="{{ url_for('user.upload_api_key') }}"
             style="display: none"
           >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="form-group">
               <input
                 type="text"
@@ -258,11 +245,6 @@
                 action="{{ url_for('user.retest_api_key') }}"
                 method="post"
               >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
                 <input type="hidden" name="key_id" value="{{ key.id }}" />
                 <button type="submit" class="button retest-key-button">
                   <i class="fas fa-sync-alt"></i>
@@ -274,11 +256,6 @@
                 action="{{ url_for('user.delete_api_key') }}"
                 method="post"
               >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
                 <input type="hidden" name="key_id" value="{{ key.id }}" />
                 <button type="submit" class="button delete-key-button">
                   <i class="fas fa-trash-alt"></i>
@@ -289,11 +266,6 @@
                 action="{{ url_for('user.select_api_key') }}"
                 method="post"
               >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
                 <input type="hidden" name="key_id" value="{{ key.id }}" />
                 <button type="submit" class="button select-key-button">
                   <i class="fas fa-hand-pointer"></i>

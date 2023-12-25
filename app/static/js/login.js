@@ -1,3 +1,9 @@
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 document
   .getElementById("login-form")
   .addEventListener("submit", function (event) {
@@ -18,6 +24,9 @@ document
 
           fetch("/auth/login", {
             method: "POST",
+            headers: {
+              "X-CSRFToken": getCsrfToken()
+            },
             body: formData
           })
             .then((response) => response.json())
@@ -25,9 +34,8 @@ document
               if (data.status === "success") {
                 window.location.href = data.redirect;
               } else if (data.status === "unconfirmed") {
-                document.getElementById(
-                  "message-container"
-                ).innerHTML = `Please confirm your email. <a href="${data.redirect}">Click here to confirm</a>`;
+                document.getElementById("message-container").innerHTML =
+                  `Please confirm your email. <a href="${data.redirect}">Click here to confirm</a>`;
               } else {
                 document.getElementById("message-container").innerText =
                   data.message;

@@ -120,6 +120,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
           fetch(form.action, {
             method: "POST",
+            headers: {
+              "X-CSRFToken": getCsrfToken()
+            },
             body: formData
           })
             .then((response) => {
@@ -174,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
           headers: {
             "Content-Type": "application/json",
             "X-Requested-With": "XMLHttpRequest",
-            "X-CSRF-Token": csrfToken
+            "X-CSRF-Token": getCsrfToken()
           },
           body: JSON.stringify({ document_id: documentId })
         })

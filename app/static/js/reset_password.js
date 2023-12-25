@@ -1,3 +1,9 @@
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   var passwordResetRequestForm = document.getElementById(
     "password-reset-request-form"
@@ -37,6 +43,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
           fetch(form.action, {
             method: form.method,
+            headers: {
+              "X-CSRFToken": getCsrfToken()
+            },
             body: formData
           })
             .then((response) => response.json())

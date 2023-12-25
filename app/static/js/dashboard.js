@@ -1,3 +1,9 @@
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 function updateApiKeyMessages(message, status) {
   var messageDiv = document.getElementById("api-key-messages");
   messageDiv.textContent = message;
@@ -13,7 +19,7 @@ document
     fetch("/user/change_username", {
       method: "POST",
       headers: {
-        "X-CSRFToken": formData.get("csrf_token")
+        "X-CSRFToken": getCsrfToken()
       },
       body: formData
     })
@@ -37,7 +43,7 @@ document
     fetch("/user/upload_api_key", {
       method: "POST",
       headers: {
-        "X-CSRFToken": formData.get("csrf_token")
+        "X-CSRFToken": getCsrfToken()
       },
       body: formData
     })
@@ -93,6 +99,9 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
 
     fetch(actionUrl, {
       method: "POST",
+      headers: {
+        "X-CSRFToken": getCsrfToken()
+      },
       body: formData
     })
       .then((response) => response.json())
@@ -147,6 +156,9 @@ document
 
       fetch(actionUrl, {
         method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken()
+        },
         body: formData
       })
         .then((response) => response.json())
@@ -222,6 +234,9 @@ saveButtons.forEach(function (saveButton) {
 
         fetch(form.action, {
           method: "POST",
+          headers: {
+            "X-CSRFToken": getCsrfToken()
+          },
           body: formData
         })
           .then((response) => {
@@ -273,7 +288,7 @@ document.addEventListener("click", function (event) {
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
-          "X-CSRF-Token": csrfToken
+          "X-CSRF-Token": getCsrfToken()
         },
         body: JSON.stringify({ document_id: documentId })
       })

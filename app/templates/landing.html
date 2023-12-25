@@ -8,6 +8,7 @@
       content="Landing page of Swiss AI. Offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
     />
     <meta name="keywords" content="Swiss AI, OpenAI, Developer Tools, AI" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     <link
       rel="apple-touch-icon"
@@ -36,12 +37,7 @@
     />
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
-    <title>Swiss AI</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/fonts.css') }}"
-    />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Jack of all Trades</title>
     {% include 'menu.html' %}
     <link
       rel="stylesheet"
@@ -58,7 +54,6 @@
     </a>
     <div class="shape rectangle" id="green">
       <h1>JACK</h1>
-      <h2>Of all Trades</h2>
     </div>
     <div class="shape circle" id="yellow">
       <ul class="button-list">
@@ -79,7 +74,7 @@
       </ul>
     </div>
     <div class="hand1">
-      <img alt="Hand1" src="/static/images/hand1.svg" />
+      <img alt="Hand1" src="/static/images/handle.svg" />
     </div>
     <div class="hand2">
       <img alt="Hand2" src="/static/images/hand2.svg" />
@@ -87,33 +82,32 @@
     <div class="balloon">
       <img alt="balloon" src="/static/images/balloons.svg" />
     </div>
-    <div class="balloon2">
-      <img alt="balloon2" src="/static/images/balloon2.svg" />
-    </div>
     <div class="shape rectangle" id="blue">
-      <p>
-        Jack offers users (and myself) a straightforward interface that grants
-        access to the suite of developer tools provided by OpenAI.
-        <br /><br />
-        In doing so, Jack utilizes a simple profile system to preserve user
-        preferences and manage authorizations efficiently. The Sign-Up and Login
-        pages are readily accessible above.
-        <br /><br />
-        To follow the development progress and access the source code, visit the
-        project's GitHub page.
-        <a
-          href="https://github.com/rawcsav/AIUtilsFlask"
-          target="_blank"
-          style="color: inherit"
-          >here</a
-        >.
-      </p>
+      <div class="art">
+        <img alt="balloon" src="/static/images/art.svg" />
+      </div>
+      <div class="binoculars">
+        <img alt="balloon" src="/static/images/binoculars.svg" />
+      </div>
+      <div class="data">
+        <img alt="balloon" src="/static/images/data.svg" />
+      </div>
+      <div class="document">
+        <img alt="balloon" src="/static/images/document.svg" />
+      </div>
+      <div class="jackmic">
+        <img alt="balloon" src="/static/images/jackmic.svg" />
+      </div>
+      <div class="key-chain">
+        <img alt="balloon" src="/static/images/key-chain.svg" />
+      </div>
     </div>
     <div class="shape square" id="red">
       <a class="landing-homepage" href="https://rawcsav.com">
         <img alt="Homepage" src="/static/logo/jacklogo.svg" />
       </a>
     </div>
+    <div class="shape square" id="pink"><h2>Of all Trades</h2></div>
     {% include 'footer.html' %}
   </body>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

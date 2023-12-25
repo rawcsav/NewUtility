@@ -1,3 +1,9 @@
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+}
+
 document
   .getElementById("signup-form")
   .addEventListener("submit", function (event) {
@@ -14,6 +20,9 @@ document
 
           fetch("/auth/signup", {
             method: "POST",
+            headers: {
+              "X-CSRFToken": getCsrfToken()
+            },
             body: formData
           })
             .then((response) => response.json())
