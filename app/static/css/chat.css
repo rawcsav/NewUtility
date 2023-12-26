@@ -123,7 +123,7 @@ body {
   height: 10vw;
 }
 .tall-rectangle {
-  width: 20vw;
+  width: 25vw;
   position: relative;
   flex: 1;
 }
@@ -132,6 +132,8 @@ body {
   border: 5px solid #654321;
   border-right: 2px solid #654321;
   z-index: 2;
+  width: 100%;
+  overflow-x: hidden;
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -414,9 +416,11 @@ pre {
 #update-preferences-form {
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  align-items: center;
-  justify-content: space-evenly;
+  /* padding: 20px; */
+  overflow-y: auto;
+  max-height: 100%;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 #send-button i {
@@ -695,56 +699,6 @@ h3 {
   color: #ed872d;
 }
 
-.docs-list-container {
-  max-height: 80%;
-  overflow: scroll;
-}
-
-#title-edit {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-weight: bold;
-  font-style: italic;
-  font-size: 14px;
-  background-color: transparent;
-  color: #654321;
-}
-
-#author-edit,
-#docs-settings-popup p {
-  font-size: 14px;
-  background-color: transparent;
-  color: #654321;
-  margin: 0;
-  padding: 0;
-}
-
-#docs-settings-popup {
-  height: 100%;
-}
-
-#docs-settings-popup ul {
-  list-style: none;
-  padding: 0;
-}
-
-#docs-settings-popup li {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-
-#author-edit,
-#title-edit {
-  border: none;
-  min-width: 200px;
-}
-
-#author-edit {
-  font-style: italic;
-}
-
 .options-button,
 .button-send {
   background-color: transparent;
@@ -827,4 +781,98 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+#docs-settings-popup {
+  background-color: #fefdf9; /* Background color for the entire popup */
+  height: 100%; /* Full height of the containing element */
+  overflow-y: auto; /* Enable vertical scroll if the content overflows */
+  overflow-x: hidden;
+}
+
+.docs-list-container {
+  max-height: 80%; /* Maximum height to ensure some space from the top and bottom */
+  overflow-y: auto; /* Enable vertical scroll if the content overflows */
+  width: 100%; /* Full width of the containing element */
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.docs_list {
+  list-style: none; /* Remove default list styling */
+  padding: 0; /* No padding to align items to the edges */
+  margin: 0; /* No margin to align items to the edges */
+}
+
+.docs-settings-header {
+  border-bottom: 1px solid #ddd; /* Border for separation from the list items */
+}
+
+.docs-settings-slider {
+  display: flex; /* Flex layout for horizontal alignment */
+  flex-direction: column;
+  align-items: center; /* Align items vertically */
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+.docs-settings-controls {
+  display: flex; /* Flex layout for horizontal alignment */
+  flex-direction: column;
+  gap: 15px;
+}
+
+.document-item {
+  display: flex; /* Flex layout for horizontal alignment */
+  justify-content: space-between; /* Space out the document info and the select checkbox */
+  align-items: center; /* Align items vertically */
+  margin-left: 10px; /* Padding for spacing inside each document item */
+  padding: 5px;
+  border-bottom: 1px solid #ddd; /* Border for separation between items */
+}
+
+.docs-settings-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.doc-info p,
+#title-edit,
+#author-edit {
+  font-size: 14px; /* Font size for document info text */
+  background-color: transparent; /* Transparent background for editable fields */
+  color: #654321; /* Text color for consistency */
+  margin: 0; /* No margin for compact layout */
+  padding: 0; /* No padding to align text to the edges */
+}
+
+#author-edit {
+  font-style: italic; /* Italic style for author names */
+}
+
+#title-edit {
+  font-weight: bold;
+}
+
+.doc-select input[type="checkbox"] {
+  margin-right: 5px; /* Right margin for spacing next to the label */
+}
+
+.range-value-input {
+  width: 50px; /* Fixed width for the percentage display */
+  text-align: center; /* Center the text inside the input */
+}
+
+/* Scrollbar styling (optional) */
+.docs-list-container::-webkit-scrollbar {
+  width: 6px; /* Width of the scrollbar */
+}
+
+.docs-list-container::-webkit-scrollbar-thumb {
+  background: #ccc; /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Rounded corners for the scrollbar thumb */
+}
+
+.docs-list-container::-webkit-scrollbar-track {
+  background: #efefef; /* Color of the scrollbar track */
 }

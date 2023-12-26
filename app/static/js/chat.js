@@ -2,7 +2,7 @@ var chatBox = document.getElementById("chat-box");
 let isInterrupted = false;
 
 hljs.configure({
-  ignoreUnescapedHTML: true
+  ignoreUnescapedHTML: true,
 });
 
 function debounce(func, delay) {
@@ -16,16 +16,16 @@ function debounce(func, delay) {
 }
 
 function updateKnowledgeContextTokens() {
-  var value = document.getElementById("max-tokens").value;
+  var value = document.getElementById("max-context-tokens").value;
   fetch("/embeddings/update-knowledge-context-tokens", {
     method: "POST",
     headers: {
       "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      knowledge_context_tokens: value
-    })
+      knowledge_context_tokens: value,
+    }),
   })
     .then((response) => response.json())
     .then((data) => console.log(data));
@@ -34,7 +34,7 @@ function updateKnowledgeContextTokens() {
 // Here we pass the reference to the function without invoking it
 let debounceKnowledgeContextTokens = debounce(
   updateKnowledgeContextTokens,
-  250
+  250,
 );
 
 function updateKnowledgeQueryMode() {
@@ -43,11 +43,11 @@ function updateKnowledgeQueryMode() {
     method: "POST",
     headers: {
       "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      knowledge_query_mode: isChecked
-    })
+      knowledge_query_mode: isChecked,
+    }),
   })
     .then((response) => response.json())
     .then((data) => console.log(data));
@@ -59,17 +59,45 @@ function updateDocumentSelection(documentId) {
     method: "POST",
     headers: {
       "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       document_id: documentId,
-      selected: isChecked
-    })
+      selected: isChecked,
+    }),
   })
     .then((response) => response.json())
     .then((data) => console.log(data));
 }
 
+// Get the slider and the display elements
+let slider = document.getElementById("max-context-tokens");
+let sliderValueDisplay = document.getElementById("max-context-tokens-value");
+
+// Function to update the display value with a percentage sign
+function updateDisplayValue(value) {
+  sliderValueDisplay.value = value + "%";
+}
+
+// Set the initial value of the display to match the slider with a percentage sign
+updateDisplayValue(slider.value);
+
+// Update the display value when the slider is moved
+slider.addEventListener("input", function () {
+  updateDisplayValue(this.value);
+});
+
+// Update the slider value when the display value is changed
+sliderValueDisplay.addEventListener("input", function () {
+  let value = parseInt(this.value.replace("%", ""), 10);
+  if (!isNaN(value) && value >= 0 && value <= 80) {
+    // Assuming 0 to 80 is the slider's range
+    slider.value = value;
+  }
+});
+
+slider.addEventListener("change", debounceKnowledgeContextTokens);
+sliderValueDisplay.addEventListener("change", debounceKnowledgeContextTokens);
 function showToast(message, type) {
   let toast = document.getElementById("toast");
   if (!toast) {
@@ -136,9 +164,9 @@ function interruptAIResponse() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
-    credentials: "same-origin"
+    credentials: "same-origin",
   })
     .then((response) => response.json())
     .then((data) => {
@@ -154,9 +182,9 @@ function performFetch(url, payload) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -176,10 +204,10 @@ function handleFetchResponse(response, successMessage) {
 
 function saveSystemPrompt(conversationId, newPrompt) {
   performFetch(`/chat/update-system-prompt/${conversationId}`, {
-    system_prompt: newPrompt
+    system_prompt: newPrompt,
   })
     .then((response) =>
-      handleFetchResponse(response, "System prompt updated successfully")
+      handleFetchResponse(response, "System prompt updated successfully"),
     )
     .catch((error) => {
       console.error("Failed to update system prompt: " + error.message);
@@ -197,10 +225,10 @@ function toggleEditConvoTitle() {
 
 function saveConvoTitle(conversationId, newTitle) {
   performFetch(`/chat/update-conversation-title/${conversationId}`, {
-    title: newTitle
+    title: newTitle,
   })
     .then((response) =>
-      handleFetchResponse(response, "Title updated successfully")
+      handleFetchResponse(response, "Title updated successfully"),
     )
     .then(() => updateConversationUI(conversationId, newTitle))
     .catch((error) => {
@@ -212,7 +240,7 @@ function saveConvoTitle(conversationId, newTitle) {
 function updateConversationUI(conversationId, newTitle) {
   requestAnimationFrame(() => {
     var conversationEntry = document.querySelector(
-      `.conversation-entry[data-conversation-id="${conversationId}"]`
+      `.conversation-entry[data-conversation-id="${conversationId}"]`,
     );
     if (conversationEntry) {
       let textEntryElement = conversationEntry.querySelector(".text-entry");
@@ -223,7 +251,7 @@ function updateConversationUI(conversationId, newTitle) {
 
       if (typeof conversationHistory !== "undefined") {
         let conversation = conversationHistory.find(
-          (conv) => conv.id == conversationId
+          (conv) => conv.id == conversationId,
         );
         if (conversation) {
           conversation.title = newTitle;
@@ -273,7 +301,7 @@ function createStreamMessageDiv(isUserMessage) {
   let messageDiv = document.createElement("div");
   messageDiv.classList.add(
     "message",
-    isUserMessage ? "user-message" : "assistant-message"
+    isUserMessage ? "user-message" : "assistant-message",
   );
 
   let title = document.createElement("h5");
@@ -303,7 +331,7 @@ function updateStreamMessageContent(isUserMessage, chunk) {
       window.currentStreamContentDiv.textContent += chunk;
     } else {
       window.currentStreamContentDiv.innerHTML = marked.parse(
-        window.incompleteMarkdownBuffer
+        window.incompleteMarkdownBuffer,
       );
       applySyntaxHighlighting(window.currentStreamContentDiv);
     }
@@ -347,7 +375,7 @@ function finalizeStreamedResponse(isUserMessage = false) {
         let finalDiv = appendMessageToChatBox(
           finalMessageContent,
           className,
-          messageId
+          messageId,
         );
         toggleButtonState();
         window.isWaitingForResponse = false;
@@ -445,7 +473,7 @@ function createClipboardIcon(copyTarget) {
 function removeSubsequentMessagesUI(messageId) {
   if (messageId == null) {
     console.error(
-      "removeSubsequentMessagesUI was called with an undefined or null messageId."
+      "removeSubsequentMessagesUI was called with an undefined or null messageId.",
     );
     return;
   }
@@ -524,7 +552,7 @@ function appendThumbnailsToMessageElement(messageElement, imageUrls) {
 function saveMessageContent(messageId, newContent) {
   performFetch(`/chat/edit-message/${messageId}`, { content: newContent })
     .then((response) =>
-      handleFetchResponse(response, "Message updated successfully")
+      handleFetchResponse(response, "Message updated successfully"),
     )
     .catch((error) => {
       console.error("Failed to update message: " + error.message);
@@ -607,9 +635,9 @@ function deleteImage(imageUrl) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
-    credentials: "same-origin"
+    credentials: "same-origin",
   })
     .then((response) => {
       if (!response.ok) {
@@ -671,7 +699,7 @@ function setupSystemMessageEditing(content, messageId) {
 function appendImagesToMessageById(messageId, imageUrls) {
   // Find the message element by its data-message-id attribute
   const messageElement = chatBox.querySelector(
-    `[data-message-id="${messageId}"]`
+    `[data-message-id="${messageId}"]`,
   );
   if (messageElement) {
     // Call the function to append thumbnails to the found message element
@@ -692,7 +720,7 @@ function selectConversation(conversationId) {
           message.content,
           message.className,
           message.messageId,
-          message.images || [] // Pass an empty array if no images are present
+          message.images || [], // Pass an empty array if no images are present
         );
       });
       updateCompletionConversationId(conversationId);
@@ -705,7 +733,7 @@ function selectConversation(conversationId) {
 function updateConversationTitle(conversationId) {
   requestAnimationFrame(() => {
     const conversationEntry = document.querySelector(
-      `.conversation-entry[data-conversation-id="${conversationId}"]`
+      `.conversation-entry[data-conversation-id="${conversationId}"]`,
     );
 
     if (conversationEntry && conversationEntry.dataset.conversationTitle) {
@@ -721,7 +749,7 @@ function updateConversationTitle(conversationId) {
 
 function updateCompletionConversationId(conversationId) {
   const completionConversationIdInput = document.getElementById(
-    "completion-conversation-id"
+    "completion-conversation-id",
   );
   if (completionConversationIdInput) {
     completionConversationIdInput.value = conversationId;
@@ -738,8 +766,8 @@ function fetchConversationMessages(conversationId) {
   return fetch(`/chat/conversation/${conversationId}`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   })
     .then((response) => {
       if (!response.ok) {
@@ -777,9 +805,9 @@ function performDeletion(conversationId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
-    credentials: "same-origin"
+    credentials: "same-origin",
   })
     .then((response) => {
       if (!response.ok) {
@@ -803,7 +831,7 @@ function performDeletion(conversationId) {
 function removeConversationEntry(conversationId) {
   requestAnimationFrame(() => {
     const entry = document.querySelector(
-      `.conversation-entry[data-conversation-id="${conversationId}"]`
+      `.conversation-entry[data-conversation-id="${conversationId}"]`,
     );
     if (entry) {
       entry.remove();
@@ -815,8 +843,8 @@ function checkNewMessages(conversationId) {
   return fetch(`/chat/check-new-messages/${conversationId}`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   })
     .then((response) => {
       if (!response.ok) {
@@ -831,13 +859,13 @@ function locateNewMessages(conversationId) {
   checkNewMessages(conversationId)
     .then((newMessages) => {
       let messageElements = chatBox.querySelectorAll(
-        ".message:not([data-message-id])"
+        ".message:not([data-message-id])",
       );
 
       newMessages.forEach((newMessage) => {
         let matchingElement = Array.from(messageElements).find(
           (messageElement) =>
-            messageElement.classList.contains(newMessage.className)
+            messageElement.classList.contains(newMessage.className),
         );
 
         if (matchingElement) {
@@ -861,7 +889,7 @@ const modelMaxTokens = {
   "gpt-4-32k-0314": 32768,
   "gpt-3.5-turbo-1106": 16385,
   "gpt-3.5-turbo": 4096,
-  "gpt-3.5-turbo-16k": 4096
+  "gpt-3.5-turbo-16k": 4096,
 };
 
 requestAnimationFrame(() => {
@@ -969,7 +997,7 @@ function triggerFormSubmission(formId) {
   var form = document.getElementById(formId);
   if (form) {
     form.dispatchEvent(
-      new Event("submit", { cancelable: true, bubbles: true })
+      new Event("submit", { cancelable: true, bubbles: true }),
     );
   }
 }
@@ -996,7 +1024,7 @@ function handleConversationTitleChange(element) {
   } else {
     showToast(
       "Conversation title must be between 1 and 25 characters.",
-      "error"
+      "error",
     );
     element.textContent = element.getAttribute("data-conversation-title");
   }
@@ -1042,7 +1070,7 @@ function appendAllMessagesFromHistory() {
       const messageDiv = appendMessageToChatBox(
         message.content,
         message.className,
-        message.messageId
+        message.messageId,
       );
       fragment.appendChild(messageDiv);
     });
@@ -1140,9 +1168,9 @@ function uploadImage(file, conversationId) {
     method: "POST",
     body: formData,
     headers: {
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
-    credentials: "same-origin"
+    credentials: "same-origin",
   })
     .then((response) => {
       if (!response.ok) {
@@ -1163,7 +1191,7 @@ function uploadImage(file, conversationId) {
     .catch((error) => {
       console.error(
         "There has been a problem with your fetch operation:",
-        error
+        error,
       );
       showToast(error.message, "error");
     });
@@ -1256,7 +1284,7 @@ function handleChatCompletionFormSubmission(event, form) {
 
 const throttledHandleChatCompletionFormSubmission = throttle(
   handleChatCompletionFormSubmission,
-  2000
+  2000,
 );
 
 function submitChatMessage(message, form, images = []) {
@@ -1273,10 +1301,10 @@ function fetchChatCompletionResponse(formData) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
     credentials: "same-origin",
-    body: JSON.stringify(Object.fromEntries(formData))
+    body: JSON.stringify(Object.fromEntries(formData)),
   });
 }
 
@@ -1325,7 +1353,7 @@ function readStreamedResponseChunk(reader) {
     .catch((error) => {
       appendMessageToChatBox(
         "Streaming Error: " + error.message,
-        "error-message"
+        "error-message",
       );
       console.error("Streaming error:", error);
     });
@@ -1390,10 +1418,10 @@ function submitNewConversation(formData) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
     credentials: "same-origin",
-    body: JSON.stringify(Object.fromEntries(formData))
+    body: JSON.stringify(Object.fromEntries(formData)),
   }).then((response) => {
     if (!response.ok) {
       throw new Error("Failed to start a new conversation.");
@@ -1418,20 +1446,20 @@ function addNewConversationToHistory(data) {
     id: data.conversation_id,
     title: data.title,
     created_at: data.created_at,
-    system_prompt: data.system_prompt
+    system_prompt: data.system_prompt,
   });
 }
 
 function updateConversationListUI(conversationId, conversationTitle) {
   requestAnimationFrame(() => {
     const conversationHistoryDiv = document.getElementById(
-      "conversation-history"
+      "conversation-history",
     );
     const fragment = document.createDocumentFragment();
 
     const newConvoEntry = createConversationEntry(
       conversationId,
-      conversationTitle
+      conversationTitle,
     );
 
     fragment.appendChild(newConvoEntry);
@@ -1452,7 +1480,7 @@ function createConversationEntry(conversationId, conversationTitle) {
 
 function setupUpdatePreferencesForm() {
   const updatePreferencesForm = document.getElementById(
-    "update-preferences-form"
+    "update-preferences-form",
   );
   if (!updatePreferencesForm) return;
 
@@ -1478,9 +1506,9 @@ function submitUpdatePreferences(formData) {
   return fetch("/chat/update-preferences", {
     method: "POST",
     headers: {
-      "X-CSRFToken": getCsrfToken()
+      "X-CSRFToken": getCsrfToken(),
     },
-    body: formData
+    body: formData,
   }).then((response) => {
     if (!response.ok) {
       throw new Error("Failed to update preferences.");

@@ -248,60 +248,68 @@
           </form>
         </div>
         <div id="docs-settings-popup" class="docs-settings-popup hidden">
-          <h3>Documents</h3>
+          <h3>Knowledge Retrieval</h3>
           <div class="docs-list-container">
             <ul class="docs_list">
-              <div class="docs-settings">
-                <label for="use-docs">Use docs in next query?</label>
-                {% if knowledge_query_mode %}
-                <input
-                  type="checkbox"
-                  id="use-docs"
-                  name="use-docs"
-                  onclick="updateKnowledgeQueryMode()"
-                  checked
-                />
-                {% else %}
-                <input
-                  type="checkbox"
-                  id="use-docs"
-                  name="use-docs"
-                  onclick="updateKnowledgeQueryMode()"
-                />
-                {% endif %}
-                <label for="max-tokens">% of Context Tokens:</label>
-                <input
-                  type="range"
-                  id="max-tokens"
-                  name="max-tokens"
-                  min="0"
-                  max="80"
-                  onchange="debounceKnowledgeContextTokens()"
-                />
-              </div>
+              <li class="docs-settings-header">
+                <div class="docs-settings-controls">
+                  <div class="docs-settings-check">
+                    <label for="use-docs">Knowledge Query:</label>
+                    <input
+                      type="checkbox"
+                      id="use-docs"
+                      name="use-docs"
+                      onclick="updateKnowledgeQueryMode()"
+                      {%
+                      if
+                      preferences_dict.knowledge_query_mode
+                      %}checked{%
+                      endif
+                      %}
+                    />
+                  </div>
+                  <div class="docs-settings-slider">
+                    <label for="max-context-tokens">Context %:</label>
+                    <input
+                      type="range"
+                      id="max-context-tokens"
+                      name="max-context-tokens"
+                      min="0"
+                      max="80"
+                      value="{{ preferences_dict.knowledge_context_tokens }}"
+                      oninput="document.getElementById('max-context-tokens-value').value = this.value"
+                    />
+                    <input
+                      type="text"
+                      id="max-context-tokens-value"
+                      class="range-value-input"
+                      value="{{ preferences_dict.knowledge_context_tokens }}%"
+                      oninput="document.getElementById('max-context-tokens').value = this.value"
+                    />
+                  </div>
+                </div>
+              </li>
               {% for document in documents %}
-              <li id="document-{{ document.id }}">
-                <p id="title-edit">{{ document.title }}</p>
-                <p id="author-edit">{{ document.author }}</p>
-                <p>Total Tokens: {{ document.total_tokens }}</p>
-                <p>Chunk Count: {{ document.chunk_count }}</p>
-                <label for="checkbox-{{ document.id }}"
-                  >Document {{ document.id }}</label
-                >
-                {% if document.selected %}
-                <input
-                  type="checkbox"
-                  id="checkbox-{{ document.id }}"
-                  onclick="updateDocumentSelection({{ document.id }})"
-                  checked
-                />
-                {% else %}
-                <input
-                  type="checkbox"
-                  id="checkbox-{{ document.id }}"
-                  onclick="updateDocumentSelection({{ document.id }})"
-                />
-                {% endif %}
+              <li id="document-{{ document.id }}" class="document-item">
+                <div class="doc-info">
+                  <p id="title-edit">{{ document.title }}</p>
+                  <p id="author-edit">{{ document.author }}</p>
+                  <p>Tokens: {{ document.total_tokens }}</p>
+                  <p>Chunks: {{ document.chunk_count }}</p>
+                </div>
+                <div class="doc-select">
+                  <input
+                    type="checkbox"
+                    id="checkbox-{{ document.id }}"
+                    onclick="updateDocumentSelection({{ document.id }})"
+                    {%
+                    if
+                    document.selected
+                    %}checked{%
+                    endif
+                    %}
+                  />
+                </div>
               </li>
               {% endfor %}
             </ul>

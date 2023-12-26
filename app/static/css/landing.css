@@ -34,27 +34,26 @@ body {
 .balloon {
   position: absolute;
   pointer-events: none;
-  top: 46%;
+  top: 55%;
   left: 10%;
-  rotate: -25deg;
+  rotate: -10deg;
   z-index: 3;
 }
 
 .balloon2 {
   position: absolute;
   pointer-events: none;
-  top: 56%;
-  left: 32%;
+  top: 60%;
+  left: 30%;
   rotate: 20deg;
-  z-index: 3;
 }
 
 .balloon img,
 .balloon2 img {
-  width: 155px;
+  width: 125px;
   height: auto;
   pointer-events: none;
-  z-index: 10;
+  z-index: 3;
 }
 
 .circle {
@@ -84,18 +83,18 @@ p {
 
 #yellow {
   background-color: #ffdd00;
-  top: 1vh;
-  right: 2vw;
+  top: 4vh;
+  right: 6vw;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transform: rotate(345deg);
+  transform: rotate(-345deg);
 }
 
 .square {
-  width: 16vw;
-  height: 16vw;
+  width: 14vw;
+  height: 14vw;
 }
 
 #red {
@@ -113,8 +112,8 @@ p {
   background-color: #ec9ca0;
   top: 5vh;
   height: 14vw;
-  width: 25vw;
-  right: 26vw;
+  width: 22vw;
+  right: 29vw;
   transform: rotate(5deg);
   z-index: 1;
 }
@@ -219,9 +218,9 @@ a {
 
 .hand1 {
   position: absolute;
-  left: 60%;
-  rotate: 5deg;
-  top: 19%;
+  left: 52%;
+  top: 18%;
+  transform: rotate(20deg);
 }
 
 .hand1 img,

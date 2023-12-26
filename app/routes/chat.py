@@ -86,7 +86,7 @@ def chat_index():
                            chat_completion_form=chat_completion_form,
                            conversation_history=conversation_history_data,
                            image_urls=image_urls, documents=documents_data,
-                           knowledge_query_mode=knowledge_query_mode)
+                           preferences_dict=preferences_dict)
 
 
 @bp.route('/new-conversation', methods=['POST'])

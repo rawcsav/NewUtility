@@ -1,12 +1,13 @@
 import re
 from datetime import timedelta, datetime
 from app import db
-from app.database import User, GeneratedImage, Document
+from app.database import User, GeneratedImage, Document, ChatPreferences
 from flask import Blueprint, render_template, redirect, url_for, request, jsonify, flash
 from flask_login import login_required, current_user
 from app.database import UserAPIKey
+from app.routes.chat import model_to_dict
 from app.util.forms_util import ChangeUsernameForm, UploadAPIKeyForm, DeleteAPIKeyForm, \
-    RetestAPIKeyForm, SelectAPIKeyForm
+    RetestAPIKeyForm, SelectAPIKeyForm, UserPreferencesForm
 from app.util.session_util import check_available_models, test_gpt4, \
     test_gpt3, encrypt_api_key, decrypt_api_key, hash_api_key, check_dalle3
 
@@ -32,14 +33,25 @@ def dashboard():
             'author': doc.author,
             'total_tokens': doc.total_tokens,
             'chunk_count': len(doc.chunks),
+            'selected': doc.selected,
         }
         for doc in user_documents
     ]
-    # Pass the user_images to the template
+
+    preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+    if not preferences:
+        preferences = ChatPreferences(user_id=current_user.id)
+        db.session.add(preferences)
+        db.session.commit()
+
+    preferences_dict = model_to_dict(preferences)
+    user_preferences_form = UserPreferencesForm(data=preferences_dict)
+
     return render_template('dashboard.html', user_api_keys=user_api_keys,
                            selected_api_key_id=selected_api_key_id,
                            user_images=user_images, current_user=current_user,
-                           documents=documents_data)
+                           documents=documents_data,    preferences_dict = preferences_dict,
+    user_preferences_form = UserPreferencesForm(data=preferences_dict))
 
 
 @bp.route('/change_username', methods=['POST'])
