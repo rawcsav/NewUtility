@@ -8,7 +8,7 @@ def download_and_convert_image(download_dir, image_url, image_uuid):
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 
-    file_extension = '.png'
+    file_extension = ".png"
     temp_file_name = f"{image_uuid}{file_extension}"
     temp_file_path = os.path.join(download_dir, temp_file_name)
 
@@ -16,7 +16,7 @@ def download_and_convert_image(download_dir, image_url, image_uuid):
         response = requests.get(image_url, stream=True)
         response.raise_for_status()
 
-        with open(temp_file_path, 'wb') as file:
+        with open(temp_file_path, "wb") as file:
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
 
@@ -24,12 +24,13 @@ def download_and_convert_image(download_dir, image_url, image_uuid):
         webp_file_path = os.path.join(download_dir, webp_file_name)
 
         image = Image.open(temp_file_path)
-        image.save(webp_file_path, 'WEBP')
+        image.save(webp_file_path, "WEBP")
 
         os.remove(temp_file_path)
 
-        webp_url = url_for('static', filename=f'temp_img/{webp_file_name}',
-                           _external=True)
+        webp_url = url_for(
+            "static", filename=f"temp_img/{webp_file_name}", _external=True
+        )
         return webp_url
 
     except requests.RequestException as e:

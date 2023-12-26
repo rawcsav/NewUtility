@@ -5,7 +5,6 @@ import re
 import openai
 import requests
 from cryptography.fernet import Fernet
-from flask import jsonify
 from openai import OpenAI
 
 from app import bcrypt, db
@@ -118,7 +117,7 @@ def check_available_models(api_key):
 def test_gpt4(key):
     openai.api_key = key
     try:
-        test = openai.chat.completions.create(
+        openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},

@@ -1,21 +1,21 @@
+import os
 import pickle
 import re
-import zlib
-from typing import List
+import tempfile
 import unicodedata
+from typing import List
 
-from flask_login import current_user
-from tenacity import retry, stop_after_attempt, wait_random_exponential
 import openai
-from pypdf import PdfReader
-from docx2txt import docx2txt
-from nltk.tokenize import word_tokenize, sent_tokenize
 import tiktoken
+from docx2txt import docx2txt
+from flask_login import current_user
+from nltk.tokenize import word_tokenize, sent_tokenize
+from pypdf import PdfReader
+from tenacity import retry, stop_after_attempt, wait_random_exponential
+from werkzeug.utils import secure_filename
+
 from app import db
 from app.database import DocumentChunk, DocumentEmbedding
-import os
-from werkzeug.utils import secure_filename
-import tempfile
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-ada-002"
@@ -119,7 +119,6 @@ def split_text(text_pages, max_tokens=512):
         for sentence in sentences:
             sentence_token_count = count_tokens(sentence)
             if sentence_token_count > max_tokens:
-                # Split the sentence into words and create chunks that fit within max_tokens
                 words = word_tokenize(sentence)
                 current_sentence_chunk = []
                 for word in words:
@@ -143,7 +142,6 @@ def split_text(text_pages, max_tokens=512):
                 current_chunk_token_count = 0
                 current_chunk_pages = set([page_number])
             elif current_chunk_token_count + sentence_token_count <= max_tokens:
-                # If the current chunk plus the new sentence is less than max_tokens, add it
                 current_chunk.append(sentence)
                 current_chunk_token_count += sentence_token_count
                 current_chunk_pages.add(page_number)

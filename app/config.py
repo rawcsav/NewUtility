@@ -17,17 +17,17 @@ class Config(object):
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_POOL_RECYCLE = 299
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_recycle': 299,
-        'pool_pre_ping': True,
-        'pool_timeout': 20,
-        'pool_reset_on_return': 'rollback'
+        "pool_recycle": 299,
+        "pool_pre_ping": True,
+        "pool_timeout": 20,
+        "pool_reset_on_return": "rollback",
     }
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 
     REMEMBER_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_SAMESITE = "Lax"
     REMEMBER_COOKIE_DURATION = timedelta(days=14)
 
     SQL_HOSTNAME = os.getenv("SQL_HOSTNAME")
@@ -35,7 +35,7 @@ class Config(object):
     SQL_PASSWORD = os.getenv("SQL_PASSWORD")
     SQL_DB_NAME = os.getenv("SQL_DB_NAME")
 
-    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
@@ -62,34 +62,35 @@ class Config(object):
 
     DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
 
-    USER_IMAGE_DIRECTORY = os.path.join(basedir, 'static', 'temp_img')
-    CHAT_IMAGE_DIRECTORY = os.path.join(basedir, 'static', 'user_img')
+    USER_IMAGE_DIRECTORY = os.path.join(basedir, "static", "temp_img")
+    CHAT_IMAGE_DIRECTORY = os.path.join(basedir, "static", "user_img")
 
     @classmethod
     def init_app(cls, oauth, app):
         oauth.init_app(app)
         oauth.register(
-            name='google',
+            name="google",
             client_id=cls.GOOGLE_OAUTH_CLIENT_ID,
             client_secret=cls.GOOGLE_OAUTH_CLIENT_SECRET,
-            access_token_url='https://oauth2.googleapis.com/token',
-            authorize_url='https://accounts.google.com/o/oauth2/auth',
-            api_base_url='https://www.googleapis.com/oauth2/v1/',
+            access_token_url="https://oauth2.googleapis.com/token",
+            authorize_url="https://accounts.google.com/o/oauth2/auth",
+            api_base_url="https://www.googleapis.com/oauth2/v1/",
             client_kwargs={
-                'scope': 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-                'prompt': 'consent',
-                'access_type': 'offline'
-            }
+                "scope": "https://www.googleapis.com/auth/userinfo.email "
+                         "https://www.googleapis.com/auth/userinfo.profile",
+                "prompt": "consent",
+                "access_type": "offline",
+            },
         )
 
         oauth.register(
-            name='github',
+            name="github",
             client_id=cls.GITHUB_CLIENT_ID,
             client_secret=cls.GITHUB_CLIENT_SECRET,
-            access_token_url='https://github.com/login/oauth/access_token',
-            authorize_url='https://github.com/login/oauth/authorize',
-            api_base_url='https://api.github.com/',
-            client_kwargs={'scope': 'user:email'},
+            access_token_url="https://github.com/login/oauth/access_token",
+            authorize_url="https://github.com/login/oauth/authorize",
+            api_base_url="https://api.github.com/",
+            client_kwargs={"scope": "user:email"},
         )
 
 
@@ -106,12 +107,15 @@ class DevelopmentConfig(Config):
             SSH_HOST=cls.SSH_HOST,
             SSH_USER=cls.SSH_USER,
             SSH_PASS=cls.SSH_PASS,
-            SQL_HOSTNAME=cls.SQL_HOSTNAME
+            SQL_HOSTNAME=cls.SQL_HOSTNAME,
         )
 
         # Now that the tunnel is established, set the SQLALCHEMY_DATABASE_URI
         app.config[
-            'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{os.getenv("SQL_USERNAME")}:{os.getenv("SQL_PASSWORD")}@127.0.0.1:{app.tunnel.local_bind_port}/{os.getenv("SQL_DB_NAME")}'
+            "SQLALCHEMY_DATABASE_URI"
+        ] = (f'mysql+pymysql://{os.getenv("SQL_USERNAME")}:'
+             f'{os.getenv("SQL_PASSWORD")}@127.0.0.1:'
+             f'{app.tunnel.local_bind_port}/{os.getenv("SQL_DB_NAME")}')
 
         # Configure Cloudinary
         cloudinary.config(
@@ -130,10 +134,12 @@ class ProductionConfig(Config):
         super().init_app(oauth, app)  # Call the parent init_app
         app.tunnel = None
         app.config[
-            'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{cls.SQL_USERNAME}:{cls.SQL_PASSWORD}@{cls.SQL_HOSTNAME}/{cls.SQL_DB_NAME}'
+            "SQLALCHEMY_DATABASE_URI"
+        ] = (f"mysql+pymysql://{cls.SQL_USERNAME}:"
+             f"{cls.SQL_PASSWORD}@{cls.SQL_HOSTNAME}/{cls.SQL_DB_NAME}")
         cloudinary.config(
             cloud_name=cls.CLOUD_NAME,
             api_key=cls.CLOUD_API_KEY,
             api_secret=cls.CLOUD_SECRET,
-            api_proxy="http://proxy.server:3128"  # Only if you actually need a proxy
+            api_proxy="http://proxy.server:3128",  # Only if you actually need a proxy
         )

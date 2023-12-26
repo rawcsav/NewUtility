@@ -9,7 +9,6 @@ from flask_mail import Mail
 from flask_login import LoginManager
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
-
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 mail = Mail()
