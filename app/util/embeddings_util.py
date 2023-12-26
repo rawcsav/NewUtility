@@ -7,7 +7,7 @@ import unicodedata
 from flask_login import current_user
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 import openai
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from docx2txt import docx2txt
 from nltk.tokenize import word_tokenize, sent_tokenize
 import tiktoken
@@ -18,7 +18,7 @@ from werkzeug.utils import secure_filename
 import tempfile
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
-EMBEDDING_MODEL = 'text-embedding-ada-002'
+EMBEDDING_MODEL = "text-embedding-ada-002"
 MAX_TOKENS_PER_BATCH = 8000  # Define the maximum tokens per batch
 WORDS_PER_PAGE = 500  # Define the number of words per page
 
@@ -54,8 +54,10 @@ def extract_text_from_pdf(filepath):
 
 def estimate_pages(text):
     words = word_tokenize(text)
-    pages = [(text[i:i + WORDS_PER_PAGE], i // WORDS_PER_PAGE + 1) for i in
-             range(0, len(words), WORDS_PER_PAGE)]
+    pages = [
+        (text[i : i + WORDS_PER_PAGE], i // WORDS_PER_PAGE + 1)
+        for i in range(0, len(words), WORDS_PER_PAGE)
+    ]
     return pages
 
 
@@ -67,7 +69,7 @@ def extract_text_from_file(filepath):
         if ext == ".docx":
             text = docx2txt.process(filepath)
         else:  # ext == ".txt"
-            with open(filepath, 'r', encoding='utf-8') as file:
+            with open(filepath, "r", encoding="utf-8") as file:
                 text = file.read()
         # Estimate page numbers based on word count
         return estimate_pages(text)
@@ -83,16 +85,21 @@ def preprocess_text(text):
     # Replace multiple spaces with a single space
     text = re.sub(r"\s+", " ", text)
     # Remove URLs
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    text = re.sub(r"https?://\S+|www\.\S+", "", text)
     # Remove email addresses
-    text = re.sub(r'\S*@\S*\s?', '', text)
+    text = re.sub(r"\S*@\S*\s?", "", text)
     # Remove HTML tags
-    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r"<[^>]+>", "", text)
     # Remove or replace words with accents
-    text = ''.join((c for c in unicodedata.normalize('NFD', text) if
-                    unicodedata.category(c) != 'Mn'))
+    text = "".join(
+        (
+            c
+            for c in unicodedata.normalize("NFD", text)
+            if unicodedata.category(c) != "Mn"
+        )
+    )
     # Remove punctuation
-    text = re.sub(r'[^\w\s.?!]', '', text)
+    text = re.sub(r"[^\w\s.?!]", "", text)
 
     return text.strip().lower()
 
@@ -122,14 +129,14 @@ def split_text(text_pages, max_tokens=512):
                         current_chunk_token_count += word_token_count
                     else:
                         # When the current chunk is full, save it and start a new one
-                        chunks.append(' '.join(current_sentence_chunk))
+                        chunks.append(" ".join(current_sentence_chunk))
                         chunk_pages.append(current_chunk_pages.copy())
                         current_sentence_chunk = [word]
                         current_chunk_token_count = word_token_count
                         current_chunk_pages = set([page_number])
                 if current_sentence_chunk:
                     # Add the remaining words from the long sentence as a new chunk
-                    chunks.append(' '.join(current_sentence_chunk))
+                    chunks.append(" ".join(current_sentence_chunk))
                     chunk_pages.append(current_chunk_pages.copy())
                 # Reset for a new sentence
                 current_chunk = []
@@ -142,7 +149,7 @@ def split_text(text_pages, max_tokens=512):
                 current_chunk_pages.add(page_number)
             else:
                 # If the current chunk is full, start a new chunk
-                chunks.append(' '.join(current_chunk))
+                chunks.append(" ".join(current_chunk))
                 chunk_pages.append(current_chunk_pages.copy())
                 current_chunk = [sentence]
                 current_chunk_token_count = sentence_token_count
@@ -150,7 +157,7 @@ def split_text(text_pages, max_tokens=512):
 
     # Add the last chunk if it's not empty
     if current_chunk:
-        chunks.append(' '.join(current_chunk))
+        chunks.append(" ".join(current_chunk))
         chunk_pages.append(current_chunk_pages)
 
     # Calculate the token count for each chunk
@@ -160,17 +167,17 @@ def split_text(text_pages, max_tokens=512):
 
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
-def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL,
-                  **kwargs) -> \
-        List[
-            float]:
+def get_embedding(
+    text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs
+) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
 
     return response.data[0].embedding
 
 
-def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING_MODEL,
-                        **kwargs) -> List[List[float]]:
+def get_embedding_batch(
+    texts: List[str], client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs
+) -> List[List[float]]:
     embeddings = []
     current_batch = []
     current_tokens = 0
@@ -180,8 +187,10 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
         token_estimate = count_tokens(text)
         if current_tokens + token_estimate > MAX_TOKENS_PER_BATCH:
             # Process the current batch
-            batch_embeddings = [get_embedding(single_text, client, model, **kwargs) for
-                                single_text in current_batch]
+            batch_embeddings = [
+                get_embedding(single_text, client, model, **kwargs)
+                for single_text in current_batch
+            ]
             embeddings.extend(batch_embeddings)
             # Reset for next batch
             current_batch = []
@@ -192,8 +201,10 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
 
     # Process any remaining texts in the final batch
     if current_batch:
-        batch_embeddings = [get_embedding(single_text, client, model, **kwargs) for
-                            single_text in current_batch]
+        batch_embeddings = [
+            get_embedding(single_text, client, model, **kwargs)
+            for single_text in current_batch
+        ]
         embeddings.extend(batch_embeddings)
 
     return embeddings
@@ -211,13 +222,14 @@ def store_embeddings(document_id, embeddings):
     chunks = DocumentChunk.query.filter_by(document_id=document_id).all()
     if len(chunks) != len(embeddings):
         raise ValueError(
-            "The number of embeddings does not match the number of document chunks.")
+            "The number of embeddings does not match the number of document chunks."
+        )
 
     for chunk, embedding_vector in zip(chunks, embeddings):
         embedding_model = DocumentEmbedding(
             chunk_id=chunk.id,
             embedding=serialize_embedding(embedding_vector),
             user_id=current_user.id,
-            model=EMBEDDING_MODEL
+            model=EMBEDDING_MODEL,
         )
         db.session.add(embedding_model)
