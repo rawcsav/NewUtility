@@ -689,7 +689,6 @@ output {
   max-height: 50%;
   align-items: flex-start;
   justify-content: flex-start;
-  padding-bottom: 20px;
 }
 
 #send-button i {
@@ -783,6 +782,7 @@ output {
   border-radius: 0.4em;
   cursor: pointer;
   box-shadow: 0.1em 0.1em;
+  margin-bottom: 20px;
 }
 
 #preference-submit:hover {
