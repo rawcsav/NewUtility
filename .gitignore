@@ -169,15 +169,8 @@ pyvenv.cfg
 
 #Other
 .DS_Store
-app/main_user_directory/*
-app/main_user_directory/!/.eslintrc.json
-.prettierrc
-.stylelintrc.json
-package.json
-package-lock.json
 pyproject.toml
 stylelint.config.js
-.eslintrc.json
 /app/static/fonts/
 /include/
 /app/static/temp_img/*
