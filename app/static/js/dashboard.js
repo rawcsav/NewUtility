@@ -31,28 +31,50 @@ document
   .getElementById("api-key-form")
   .addEventListener("submit", function (e) {
     e.preventDefault();
-    var formData = new FormData(this);
-    var form = this;
 
-    fetch("/user/upload_api_key", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": getCsrfToken(),
-      },
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === "success") {
-          showToast(data.message, "success");
-          form.reset();
-        } else {
-          showToast(data.message, "error");
-        }
+    // Retrieve the input values containing the API key string and nickname
+    var apiKeyInput = document.getElementById("api_key"); // ID for the API key input field
+    var nicknameInput = document.getElementById("nickname"); // ID for the nickname input field
+    var apiKeysString = apiKeyInput.value;
+    var nickname = nicknameInput.value;
+
+    // Find unique API keys within the input string
+    var apiKeys = findOpenAIKeys(apiKeysString);
+
+    // Handle each API key
+    apiKeys.forEach((apiKey, index) => {
+      var formData = new FormData();
+      formData.append("api_key", apiKey); // 'api_key' is the name expected by the server
+      formData.append("nickname", nickname + " " + (index + 1)); // Append index to nickname to make it unique
+
+      // Fetch request to submit each API key
+      fetch("/user/upload_api_key", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+          "Content-Type": "application/json", // Assuming your server expects JSON
+        },
+        body: JSON.stringify({
+          api_key: apiKey,
+          nickname: nickname + " " + (index + 1), // Send as JSON
+        }),
       })
-      .catch((error) => {
-        showToast("Error: " + error, "error");
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          // Show a toast message for each API key processed
+          showToast(
+            data.message,
+            data.status === "success" ? "success" : "error",
+          );
+        })
+        .catch((error) => {
+          showToast("Error: " + error, "error");
+        });
+    });
+
+    // Clear the form fields after submission
+    apiKeyInput.value = "";
+    nicknameInput.value = "";
   });
 
 document
@@ -317,7 +339,12 @@ function setActiveButton(activeButtonId) {
     }
   }
 }
-
+function findOpenAIKeys(inputString) {
+  const apiKeyPattern = /sk-[A-Za-z0-9]{48}/g;
+  const apiKeys = inputString.match(apiKeyPattern) || [];
+  const uniqueApiKeys = [...new Set(apiKeys)]; // Remove duplicates
+  return uniqueApiKeys;
+}
 function setupUpdatePreferencesForm() {
   const updatePreferencesForm = document.getElementById(
     "update-preferences-form",
@@ -486,6 +513,20 @@ function toggleDocPreferences() {
     document.getElementById("preference-popup").style.display = "none";
     document.getElementById("docs-settings-popup").style.display = "block";
     setActiveButton("docs-preferences-btn");
+
+    // Get the form element
+    var form = document.getElementById("docs-settings-form");
+
+    // Add a submit event listener to the form
+    form.addEventListener("submit", function (event) {
+      // Prevent the form from submitting normally
+      event.preventDefault();
+
+      // Call the function to update the preferences
+      updateDocumentSelection();
+
+      // You could also add any other functions you need to run on form submission here
+    });
   });
 }
 
@@ -533,6 +574,7 @@ function createIconLink(href, iconClass, isNewWindow) {
 
 function toggleUsageInfo(usageInfoId) {
   var usageInfoDiv = document.getElementById(usageInfoId);
+  console.log(usageInfoId);
   if (usageInfoDiv.style.display === "none") {
     usageInfoDiv.style.display = "block";
   } else {
@@ -579,8 +621,8 @@ document.querySelectorAll(".edit-btn").forEach(function (editBtn) {
 document
   .querySelectorAll(".view-usage-button")
   .forEach(function (viewUsageBtn) {
-    var keyId = viewUsageBtn.id.split("-")[2]; // Assuming the id format is "usage-info-{keyId}"
     viewUsageBtn.addEventListener("click", function () {
-      toggleUsageInfo(keyId);
+      var usageInfoId = viewUsageBtn.getAttribute("usage-div-id");
+      toggleUsageInfo(usageInfoId);
     });
   });

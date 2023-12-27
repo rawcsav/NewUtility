@@ -398,7 +398,6 @@
       <div class="key-container">
         <div class="key-edits">
           <h2>Keys</h2>
-          <div id="api-key-messages"></div>
           <button id="toggleFormButton" class="button dropdown-button">
             Upload <i class="fas fa-chevron-down"></i>
           </button>
@@ -436,6 +435,7 @@
           {% for key in user_api_keys %}
           <li
             class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
+            data-key-id="{{ key.id }}"
           >
             <div class="key-info">
               <p id="key-name">{{ key.nickname }}</p>
@@ -484,7 +484,11 @@
                   <i class="fas fa-hand-pointer"></i>
                 </button>
               </form>
-              <button class="button view-usage-button" title="See Usage Info">
+              <button
+                class="button view-usage-button"
+                title="See Usage Info"
+                usage-div-id="usage-info-{{ key.id }}"
+              >
                 <i class="fas fa-dollar-sign"></i>
               </button>
             </div>

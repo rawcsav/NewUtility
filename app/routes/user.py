@@ -118,8 +118,9 @@ def change_username():
 def upload_api_key():
     form = UploadAPIKeyForm()
     if form.validate_on_submit():
-        api_key = request.form.get("api_key").strip()
-        nickname = request.form.get("nickname")
+        data = request.get_json()  # Get data as JSON
+        api_key = data.get("api_key")
+        nickname = data.get("nickname")
         api_key_pattern = re.compile(r"sk-[A-Za-z0-9]{48}")
         if not api_key_pattern.match(api_key):
             return (
@@ -134,7 +135,7 @@ def upload_api_key():
         ).first()
         if existing_key:
             return (
-                jsonify({"status": "error", "message": "API key already exists."}),
+                jsonify({"status": "error", "message": f"{api_key} already exists."}),
                 400,
             )
         try:
@@ -182,9 +183,8 @@ def upload_api_key():
                 return (
                     jsonify(
                         {
-                            "success": False,
                             "status": "error",
-                            "message": "API key is not valid.",
+                            "message": f"{api_key} is not valid.",
                         }
                     ),
                     400,
@@ -193,11 +193,9 @@ def upload_api_key():
                 return (
                     jsonify(
                         {
-                            "success": True,
                             "status": "success",
-                            "message": f'API key "{nickname}" added successfully '
-                                       f'with access to: '
-                            + label,
+                            "message": f'{api_key}" added successfully '
+                            f"with access to: " + label,
                         }
                     ),
                     200,
@@ -205,7 +203,7 @@ def upload_api_key():
         except Exception:
             db.session.rollback()
             return (
-                jsonify({"status": "error", "message": "Failed to verify API key"}),
+                jsonify({"status": "error", "message": f"Failed to verify {api_key}"}),
                 400,
             )
 

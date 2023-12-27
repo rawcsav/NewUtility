@@ -67,17 +67,17 @@ body {
   z-index: 1000;
 }
 
-.shape {
-  position: absolute;
-  border: 5px solid #141414;
-}
-
 #toast.success {
   background-color: green;
 }
 
 #toast.error {
   background-color: red;
+}
+
+.shape {
+  position: absolute;
+  border: 5px solid #141414;
 }
 
 .thumbnail {
