@@ -288,10 +288,9 @@ h2 {
   color: #faf5e6;
   display: flex;
   flex-direction: column;
-  margin: 0;
   border-bottom: 2px solid #faf5e6;
   gap: 5px;
-  margin-bottom: 15px;
+  margin: 0 0 15px;
 }
 
 .key-forms {
@@ -582,11 +581,6 @@ a {
   align-items: center;
 }
 
-.update-form-button-container,
-.delete-form-button-container {
-  margin-right: 10px;
-}
-
 .doc-upload,
 .docs-container {
   display: flex;
@@ -714,28 +708,8 @@ output {
   margin-top: 5px;
 }
 
-.info-icon {
-  width: 14px;
-  height: auto;
-  margin-left: 5px;
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-.tooltip-container {
-  position: relative;
-  z-index: 10;
-  justify-content: space-between;
-  display: flex;
-  flex-direction: row;
-}
-
 .preference-popup {
   display: none;
-}
-
-.show {
-  display: block;
 }
 
 .success {
@@ -751,25 +725,6 @@ output {
 }
 .fa-edit:hover {
   transform: scale(1.05);
-}
-
-.tooltip-container .tooltip-text {
-  visibility: hidden;
-  transition: opacity 0.5s ease-out;
-  opacity: 0;
-  font-size: 12px;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  margin-left: -60px;
-  z-index: 10;
 }
 
 #preference-submit {
@@ -807,12 +762,6 @@ output {
 
 #options {
   margin-bottom: 5px;
-}
-#conversation-history-status,
-#preference-messages {
-  font-size: 12px;
-  margin: 15px 10px 10px;
-  font-style: italic;
 }
 
 #options-container {
@@ -892,9 +841,6 @@ h3 {
   font-size: 12px;
 }
 
-.system-message {
-  margin: 20px 0 0;
-}
 .message h5 {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 1.2rem;

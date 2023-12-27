@@ -17,7 +17,7 @@ document
     grecaptcha.ready(function () {
       grecaptcha
         .execute("6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme", {
-          action: "login"
+          action: "login",
         })
         .then(function (token) {
           formData.append("g-recaptcha-response", token);
@@ -25,9 +25,9 @@ document
           fetch("/auth/login", {
             method: "POST",
             headers: {
-              "X-CSRFToken": getCsrfToken()
+              "X-CSRFToken": getCsrfToken(),
             },
-            body: formData
+            body: formData,
           })
             .then((response) => response.json())
             .then((data) => {
@@ -49,3 +49,18 @@ document
         });
     });
   });
+
+var googleLoginButton = document.getElementById("google-login-button");
+var githubLoginButton = document.getElementById("github-login-button");
+
+if (googleLoginButton) {
+  googleLoginButton.addEventListener("click", function () {
+    window.location.href = "{{ url_for('auth.google_login') }}";
+  });
+}
+
+if (githubLoginButton) {
+  githubLoginButton.addEventListener("click", function () {
+    window.location.href = "{{ url_for('auth.github_login') }}";
+  });
+}

@@ -59,25 +59,13 @@
         <div id="options-container">
           <h3>Options</h3>
           <div id="options">
-            <button
-              id="show-history-btn"
-              onclick="toggleHistory()"
-              class="options-button"
-            >
+            <button id="show-history-btn" class="options-button">
               <i class="fas fa-history"></i>
             </button>
-            <button
-              id="show-preferences-btn"
-              onclick="togglePreferences()"
-              class="options-button"
-            >
+            <button id="show-preferences-btn" class="options-button">
               <i class="fas fa-cog"></i>
             </button>
-            <button
-              id="docs-preferences-btn"
-              onclick="toggleDocPreferences()"
-              class="options-button"
-            >
+            <button id="docs-preferences-btn" class="options-button">
               <i class="fa-regular fa-file-lines"></i>
             </button>
             <form
@@ -101,12 +89,11 @@
               class="conversation-entry"
               data-conversation-id="{{ conversation.id }}"
               data-conversation-title="{{ conversation.title }}"
-              onclick="selectConversation({{ conversation.id }})"
             >
               <p class="text-entry">{{ conversation.title }}</p>
               <span
                 class="delete-conversation"
-                onclick="deleteConversation({{ conversation.id }})"
+                data-conversation-id="{{ conversation.id }}"
               >
                 <i class="fas fa-trash-alt"></i>
               </span>
@@ -128,7 +115,6 @@
             </div>
             <div class="form-group">
               {{ user_preferences_form.temperature.label }}
-
               <input
                 type="range"
                 id="temperature"
@@ -259,7 +245,6 @@
                       type="checkbox"
                       id="use-docs"
                       name="use-docs"
-                      onclick="updateKnowledgeQueryMode()"
                       {%
                       if
                       preferences_dict.knowledge_query_mode
@@ -301,7 +286,6 @@
                   <input
                     type="checkbox"
                     id="checkbox-{{ document.id }}"
-                    onclick="updateDocumentSelection({{ document.id }})"
                     {%
                     if
                     document.selected
@@ -337,11 +321,8 @@
             <div id="thumbnail-div">
               {% for image_url in image_urls %}
               <div class="image-div">
-                <img src="{{ image_url }}" class="thumbnail" />
-                <i
-                  class="fas fa-times delete-icon"
-                  onclick="deleteImage('{{ image_url }}')"
-                ></i>
+                <img src="{{ image_url }}" class="thumbnail" alt="thumbnail" />
+                <i class="fas fa-times delete-icon"></i>
               </div>
               {% endfor %}
             </div>
@@ -389,11 +370,13 @@
     </div>
     {% include 'footer.html' %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="../static/css/solarized.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/solarized.css') }}"
+    />
     <script type="text/javascript">
-      var conversationHistory = {{ conversation_history|tojson|safe }};
+      let conversationHistory = {{ conversation_history|tojson|safe }};
     </script>
-
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
     <script>
       hljs.highlightAll();

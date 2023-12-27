@@ -58,30 +58,28 @@
   <body>
     <h1>Dashboard</h1>
     <a class="homepage-link" href="https://rawcsav.com">
-      <img alt="Homepage" src="/static/logo/blacklogo.svg" />
+      <img
+        alt="Homepage"
+        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
+      />
     </a>
     <div class="key">
-      <img alt="key" src="/static/images/key.svg" />
+      <img alt="key" src="{{ url_for('static', filename='images/key.svg') }}" />
     </div>
     <div class="painter">
-      <img alt="Hand painting" src="/static/images/painter.svg" />
+      <img
+        alt="Hand painting"
+        src="{{ url_for('static', filename='images/painter.svg') }}"
+      />
     </div>
     <div class="shape tall-rectangle" id="brown">
       <div id="options-container">
         <h2>Utility Settings</h2>
         <div id="options">
-          <button
-            id="show-preferences-btn"
-            onclick="togglePreferences()"
-            class="options-button"
-          >
+          <button id="show-preferences-btn" class="options-button">
             <i class="fas fa-comment"></i>
           </button>
-          <button
-            id="docs-preferences-btn"
-            onclick="toggleDocPreferences()"
-            class="options-button"
-          >
+          <button id="docs-preferences-btn" class="options-button">
             <i class="fa-regular fa-file-lines"></i>
           </button>
         </div>
@@ -227,7 +225,6 @@
                     type="checkbox"
                     id="use-docs"
                     name="use-docs"
-                    onclick="updateKnowledgeQueryMode()"
                     {%
                     if
                     preferences_dict.knowledge_query_mode
@@ -269,7 +266,6 @@
                 <input
                   type="checkbox"
                   id="checkbox-{{ document.id }}"
-                  onclick="updateDocumentSelection({{ document.id }})"
                   {%
                   if
                   document.selected
@@ -372,7 +368,6 @@
               <button
                 type="button"
                 class="btn-icon edit-btn"
-                onclick="enableEditing(this)"
                 title="Edit Document"
               >
                 <i class="fa fa-edit"></i>
@@ -489,11 +484,7 @@
                   <i class="fas fa-hand-pointer"></i>
                 </button>
               </form>
-              <button
-                onclick="toggleUsageInfo('usage-info-{{ key.id }}')"
-                class="button view-usage-button"
-                title="See Usage Info"
-              >
+              <button class="button view-usage-button" title="See Usage Info">
                 <i class="fas fa-dollar-sign"></i>
               </button>
             </div>

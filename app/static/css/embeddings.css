@@ -98,13 +98,6 @@ h3 {
   font-size: 18px;
   color: #0069be;
 }
-.homepage-dash {
-  width: 90%;
-  height: 90%;
-  display: flex;
-  justify-content: center;
-  cursor: pointer;
-}
 
 .homepage-dash a {
   text-decoration: none;
@@ -178,10 +171,7 @@ a {
   height: auto;
   rotate: 25deg;
 }
-.small-square {
-  width: 14vw;
-  height: 14vw;
-}
+
 .rectangle {
   width: 30vw;
   height: 25vh;

@@ -194,7 +194,7 @@ a {
 
 .line {
   height: 1px;
-  flex: 1 1 0%;
+  flex: 1 1 0;
   background-color: #faf5e6;
 }
 
@@ -359,7 +359,7 @@ p {
 #orange {
   background-color: #ed872d;
   top: 16vh;
-  align-text: center;
+  text-align: center;
   right: 32vw;
   display: flex;
   flex-direction: column;

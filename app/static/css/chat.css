@@ -118,10 +118,7 @@ body {
   padding: 10px;
   transform: rotate(10deg);
 }
-.small-square {
-  width: 10vw;
-  height: 10vw;
-}
+
 .tall-rectangle {
   width: 25vw;
   position: relative;
@@ -141,13 +138,6 @@ body {
   gap: 10px;
   overflow-y: auto;
 }
-.homepage-dash {
-  width: 80%;
-  height: 80%;
-  display: flex;
-  justify-content: center;
-  cursor: pointer;
-}
 
 .homepage-dash a {
   text-decoration: none;
@@ -159,9 +149,6 @@ body {
 .container {
   display: flex;
   height: calc(100vh - 30px);
-}
-
-.sidebar {
 }
 
 .chat-container {
@@ -217,17 +204,22 @@ body {
   align-content: space-around;
   align-items: center;
 }
+
+/*noinspection CssUnusedSymbol*/
 .system-message {
   text-align: left;
   font-style: italic;
   border-bottom: 1px solid #9b5de5;
   margin-bottom: 10px;
 }
+
+/*noinspection CssUnusedSymbol*/
 .fa-clipboard,
 .retry-icon {
   cursor: pointer;
 }
 
+/*noinspection CssUnusedSymbol*/
 .fa-clipboard:hover,
 .retry-icon:hover {
   transform: scale(1.1);
@@ -253,6 +245,7 @@ body {
   margin-right: 10px;
 }
 
+/*noinspection CssUnusedSymbol*/
 #new-convo-icon {
   cursor: pointer;
   font-size: 1.5em;
@@ -356,6 +349,7 @@ pre {
   position: relative;
 }
 
+/*noinspection CssUnusedSymbol*/
 .code-clipboard-icon {
   position: absolute;
   top: 5px;
@@ -401,11 +395,13 @@ pre {
   outline: none;
 }
 
+/*noinspection CssUnusedSymbol*/
 #send-button {
   margin: 0;
   border: none;
 }
 
+/*noinspection CssUnusedSymbol*/
 .message-header {
   display: flex;
   justify-content: flex-end;
@@ -446,26 +442,11 @@ pre {
   margin-top: 5px;
 }
 
-.info-icon {
-  width: 14px;
-  height: auto;
-  margin-left: 5px;
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-.tooltip-container {
-  position: relative;
-  z-index: 10;
-  justify-content: space-between;
-  display: flex;
-  flex-direction: row;
-}
-
 .preference-popup {
   display: none;
 }
 
+/*noinspection CssUnusedSymbol*/
 .show {
   display: block;
 }
@@ -483,25 +464,6 @@ pre {
 }
 .fa-edit:hover {
   transform: scale(1.05);
-}
-
-.tooltip-container .tooltip-text {
-  visibility: hidden;
-  transition: opacity 0.5s ease-out;
-  opacity: 0;
-  font-size: 12px;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  margin-left: -60px;
-  z-index: 10;
 }
 
 #preference-submit {
@@ -663,12 +625,6 @@ pre {
 #options {
   margin-bottom: 5px;
 }
-#conversation-history-status,
-#preference-messages {
-  font-size: 12px;
-  margin: 15px 10px 10px;
-  font-style: italic;
-}
 
 #options-container {
   border-bottom: 1px solid #654321;
@@ -747,6 +703,7 @@ h3 {
   font-size: 12px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .system-message {
   margin: 20px 0 0;
 }

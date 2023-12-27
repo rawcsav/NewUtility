@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Landing page of Swiss AI. Offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
+      content="Landing page of Jack of all Trades. Offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
     />
-    <meta name="keywords" content="Swiss AI, OpenAI, Developer Tools, AI" />
+    <meta
+      name="keywords"
+      content="Jack of all Trades, OpenAI, Developer Tools, AI"
+    />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     <link
@@ -50,7 +53,10 @@
   </head>
   <body>
     <a class="homepage-link" href="https://rawcsav.com">
-      <img alt="Homepage" src="/static/logo/blacklogo.svg" />
+      <img
+        alt="Homepage"
+        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
+      />
     </a>
     <div class="shape rectangle" id="green">
       <h1>JACK</h1>
@@ -75,37 +81,67 @@
       </ul>
     </div>
     <div class="hand1">
-      <img alt="Hand1" src="/static/images/hand1.svg" />
+      <img
+        alt="Hand1"
+        src="{{ url_for('static', filename='images/hand1.svg') }}"
+      />
     </div>
     <div class="hand2">
-      <img alt="Hand2" src="/static/images/hand2.svg" />
+      <img
+        alt="Hand2"
+        src="{{ url_for('static', filename='images/hand2.svg') }}"
+      />
     </div>
     <div class="balloon">
-      <img alt="balloon" src="/static/images/balloons.svg" />
+      <img
+        alt="balloon"
+        src="{{ url_for('static', filename='images/balloons.svg') }}"
+      />
     </div>
     <div class="shape rectangle" id="blue">
       <div class="art">
-        <img alt="balloon" src="/static/images/art.svg" />
+        <img
+          alt="Art"
+          src="{{ url_for('static', filename='images/art.svg') }}"
+        />
       </div>
       <div class="binoculars">
-        <img alt="balloon" src="/static/images/binoculars.svg" />
+        <img
+          alt="Binoculars"
+          src="{{ url_for('static', filename='images/binoculars.svg') }}"
+        />
       </div>
       <div class="data">
-        <img alt="balloon" src="/static/images/data.svg" />
+        <img
+          alt="Data"
+          src="{{ url_for('static', filename='images/data.svg') }}"
+        />
       </div>
       <div class="document">
-        <img alt="balloon" src="/static/images/document.svg" />
+        <img
+          alt="Document"
+          src="{{ url_for('static', filename='images/document.svg') }}"
+        />
       </div>
       <div class="jackmic">
-        <img alt="balloon" src="/static/images/jackmic.svg" />
+        <img
+          alt="Jackmic"
+          src="{{ url_for('static', filename='images/jackmic.svg') }}"
+        />
       </div>
       <div class="key-chain">
-        <img alt="balloon" src="/static/images/key-chain.svg" />
+        <img
+          alt="Key-chain"
+          src="{{ url_for('static', filename='images/key-chain.svg') }}"
+        />
       </div>
     </div>
     <div class="shape square" id="red">
       <a class="landing-homepage" href="https://rawcsav.com">
-        <img alt="Homepage" src="/static/logo/jacklogo.svg" />
+        <img
+          alt="Homepage"
+          src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
+        />
       </a>
     </div>
     {% include 'footer.html' %}

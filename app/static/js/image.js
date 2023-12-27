@@ -4,6 +4,28 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function showToast(message, type) {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.className = type;
+
+  toast.style.display = "block";
+  toast.style.opacity = "1";
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 600);
+  }, 3000);
+}
+
 function resizeImage(image) {
   if (image.naturalWidth === 256 && image.naturalHeight === 256) {
     image.style.width = "256px";
@@ -16,9 +38,9 @@ function resizeImage(image) {
 
 function showLoader() {
   const imageContainer = document.getElementById("generated-images");
-  const loaderTemplate = document.getElementById("loader-template").innerHTML;
 
-  imageContainer.innerHTML = loaderTemplate;
+  imageContainer.innerHTML =
+    document.getElementById("loader-template").innerHTML;
 
   const loader = imageContainer.querySelector(".loader");
   if (loader) {
@@ -35,15 +57,9 @@ function hideLoader() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  function updateImageGenerationMessages(message, status) {
-    var messageDiv = document.getElementById("image-generation-messages");
-    messageDiv.textContent = message;
-    messageDiv.className = status;
-  }
-
   function toggleModelOptions(model) {
     const numberOfImagesContainer = document.getElementById(
-      "number-of-images-container"
+      "number-of-images-container",
     );
     const dallE3Options = document.getElementById("dall-e-3-options");
 
@@ -107,9 +123,9 @@ document.addEventListener("DOMContentLoaded", function () {
         method: "POST",
         headers: {
           "X-CSRFToken": getCsrfToken(),
-          "X-Requested-With": "XMLHttpRequest"
+          "X-Requested-With": "XMLHttpRequest",
         },
-        body: formData
+        body: formData,
       })
         .then((response) => {
           if (!response.ok) {
@@ -121,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (data.error_message) {
             hideLoader();
             console.error("Server error:", data.error_message);
-            updateImageGenerationMessages(data.error_message, "error");
+            showToast(data.error_message, "error");
           } else {
             hideLoader();
             var imageContainer = document.getElementById("generated-images");
@@ -155,25 +171,22 @@ document.addEventListener("DOMContentLoaded", function () {
             img.alt = "Generated Image";
             imageContainer.appendChild(img);
 
-            updateImageGenerationMessages(
-              "Image generated successfully!",
-              "success"
-            );
+            showToast("Image generated successfully!", "success");
             loadImageHistory();
           }
         })
         .catch((error) => {
           hideLoader();
           console.error("Error:", error);
-          updateImageGenerationMessages("Error: " + error.message, "error");
+          showToast("Error: " + error.message, "error");
         });
     });
   function loadImageHistory() {
     fetch("/image/history", {
       method: "GET",
       headers: {
-        "X-Requested-With": "XMLHttpRequest"
-      }
+        "X-Requested-With": "XMLHttpRequest",
+      },
     })
       .then((response) => response.json())
       .then((data) => {
@@ -228,24 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
     openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
     openLink.className = "image-icon open-icon";
     iconsContainer.appendChild(openLink);
-  }
-
-  function moveCarousel(step) {
-    const carouselInner = document.getElementById("carousel-inner");
-    const thumbnails = carouselInner.getElementsByClassName("thumbnail");
-    const totalThumbnails = thumbnails.length;
-    const maxVisibleThumbnails = Math.floor(
-      carouselInner.offsetWidth / thumbnails[0].offsetWidth
-    );
-    const maxIndex = totalThumbnails - maxVisibleThumbnails;
-
-    currentSlideIndex = Math.min(
-      maxIndex,
-      Math.max(0, currentSlideIndex + step)
-    );
-
-    const newLeft = -(thumbnails[0].offsetWidth * currentSlideIndex);
-    carouselInner.style.left = `${newLeft}px`;
   }
 
   function initializeLazyLoading() {

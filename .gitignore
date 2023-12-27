@@ -172,7 +172,7 @@ pyvenv.cfg
 app/main_user_directory/*
 app/main_user_directory/!/.eslintrc.json
 .prettierrc
-.stylelintrc
+.stylelintrc.json
 package.json
 package-lock.json
 pyproject.toml

@@ -74,20 +74,6 @@ document
     this.classList.toggle("active");
   });
 
-function startSpinningIcon(form) {
-  const submitButton = form.querySelector(".retest-key-button i");
-  if (submitButton) {
-    submitButton.classList.add("spinning");
-  }
-}
-
-function stopSpinningIcon(form) {
-  const submitButton = form.querySelector(".retest-key-button i");
-  if (submitButton) {
-    submitButton.classList.remove("spinning");
-  }
-}
-
 document.querySelectorAll(".retest-api-key-form").forEach((form) => {
   form.addEventListener("submit", function (event) {
     event.preventDefault();
@@ -185,12 +171,6 @@ document
     });
   });
 
-function updateUploadMessages(message, status) {
-  var messageDiv = document.getElementById("docsStatus");
-  messageDiv.innerHTML = message.replace(/\n/g, "<br>");
-  messageDiv.className = status;
-}
-
 function enableEditing(editButton) {
   var listItem = editButton.closest("li");
   var form = listItem.querySelector("form.edit-document-form");
@@ -215,55 +195,48 @@ function enableEditing(editButton) {
   });
 }
 
-var saveButtons = document.querySelectorAll(".save-btn");
+const saveButtons = document.querySelectorAll(".save-btn");
 
 saveButtons.forEach(function (saveButton) {
-  document.addEventListener("click", function (event) {
-    if (
-      event.target.matches(".save-btn") ||
-      event.target.closest(".save-btn")
-    ) {
-      var saveButton = event.target;
-      var listItem = saveButton.closest("li");
-      var form = listItem.querySelector("form.edit-document-form");
+  saveButton.addEventListener("click", function (event) {
+    var listItem = saveButton.closest("li");
+    var form = listItem.querySelector("form.edit-document-form");
 
-      if (form) {
-        event.preventDefault();
-        var formData = new FormData(form);
+    if (form) {
+      event.preventDefault();
+      var formData = new FormData(form);
 
-        fetch(form.action, {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": getCsrfToken(),
-          },
-          body: formData,
+      fetch(form.action, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+        },
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Server returned an error response");
+          }
+          return response.json();
         })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Server returned an error response");
-            }
-            return response.json();
-          })
-          .then((data) => {
-            if (data.error) {
-              alert("Error updating document: " + data.error);
-            } else {
-              showToast("Updated successfully!", "success");
-              saveButton.style.display = "none";
-              listItem.querySelector(".edit-btn").style.display =
-                "inline-block";
-              Array.from(listItem.querySelectorAll(".editable")).forEach(
-                (input) => {
-                  input.setAttribute("readonly", "readonly");
-                },
-              );
-            }
-          })
-          .catch((error) => {
-            alert("An error occurred: " + error);
-            showToast("Error updating document: " + error.message, "error");
-          });
-      }
+        .then((data) => {
+          if (data.error) {
+            alert("Error updating document: " + data.error);
+          } else {
+            showToast("Updated successfully!", "success");
+            saveButton.style.display = "none";
+            listItem.querySelector(".edit-btn").style.display = "inline-block";
+            Array.from(listItem.querySelectorAll(".editable")).forEach(
+              (input) => {
+                input.setAttribute("readonly", "readonly");
+              },
+            );
+          }
+        })
+        .catch((error) => {
+          alert("An error occurred: " + error);
+          showToast("Error updating document: " + error.message, "error");
+        });
     }
   });
 });
@@ -506,21 +479,6 @@ function showToast(message, type) {
   }, 3000);
 }
 
-function setupWindowClick() {
-  window.addEventListener("click", function (event) {
-    closePreferencePopupOnClick(event);
-  });
-}
-
-function closePreferencePopupOnClick(event) {
-  requestAnimationFrame(() => {
-    const popup = document.getElementById("preference-popup");
-    if (popup && event.target === popup) {
-      popup.classList.remove("show");
-    }
-  });
-}
-
 setupUpdatePreferencesForm();
 
 function toggleDocPreferences() {
@@ -581,3 +539,48 @@ function toggleUsageInfo(usageInfoId) {
     usageInfoDiv.style.display = "none";
   }
 }
+
+// Event listener for 'Show Preferences' button
+var showPreferencesBtn = document.getElementById("show-preferences-btn");
+if (showPreferencesBtn) {
+  showPreferencesBtn.addEventListener("click", togglePreferences);
+}
+
+// Event listener for 'Documents Preferences' button
+var docsPreferencesBtn = document.getElementById("docs-preferences-btn");
+if (docsPreferencesBtn) {
+  docsPreferencesBtn.addEventListener("click", toggleDocPreferences);
+}
+
+// Event listener for 'Use Documents' checkbox
+var useDocsCheckbox = document.getElementById("use-docs");
+if (useDocsCheckbox) {
+  useDocsCheckbox.addEventListener("click", updateKnowledgeQueryMode);
+}
+
+// Event listeners for document selection checkboxes
+document
+  .querySelectorAll('input[type="checkbox"][id^="checkbox-"]')
+  .forEach(function (checkbox) {
+    var documentId = checkbox.id.split("-")[1];
+    checkbox.addEventListener("click", function () {
+      updateDocumentSelection(documentId);
+    });
+  });
+
+// Event listener for 'Edit Document' buttons
+document.querySelectorAll(".edit-btn").forEach(function (editBtn) {
+  editBtn.addEventListener("click", function () {
+    enableEditing(this.closest("li"));
+  });
+});
+
+// Event listener for 'View Usage Info' buttons
+document
+  .querySelectorAll(".view-usage-button")
+  .forEach(function (viewUsageBtn) {
+    var keyId = viewUsageBtn.id.split("-")[2]; // Assuming the id format is "usage-info-{keyId}"
+    viewUsageBtn.addEventListener("click", function () {
+      toggleUsageInfo(keyId);
+    });
+  });

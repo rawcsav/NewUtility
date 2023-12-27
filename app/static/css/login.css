@@ -382,7 +382,7 @@ p {
 #orange {
   background-color: #ed872d;
   top: 16vh;
-  align-text: center;
+  text-align: center;
   right: 32vw;
   display: flex;
   flex-direction: column;

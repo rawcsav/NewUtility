@@ -6,7 +6,7 @@ function getCsrfToken() {
 
 document.addEventListener("DOMContentLoaded", function () {
   var passwordResetRequestForm = document.getElementById(
-    "password-reset-request-form"
+    "password-reset-request-form",
   );
   var passwordResetForm = document.getElementById("password-reset-form");
 
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault();
       submitFormWithRecaptcha(
         passwordResetRequestForm,
-        "password-reset-request-message"
+        "password-reset-request-message",
       );
     });
   }
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
       submitFormWithRecaptcha(
         passwordResetForm,
         "password-reset-message",
-        true
+        true,
       );
     });
   }
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     grecaptcha.ready(function () {
       grecaptcha
         .execute("6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme", {
-          action: "submit"
+          action: "submit",
         })
         .then(function (captcha_token) {
           var formData = new FormData(form);
@@ -44,13 +44,13 @@ document.addEventListener("DOMContentLoaded", function () {
           fetch(form.action, {
             method: form.method,
             headers: {
-              "X-CSRFToken": getCsrfToken()
+              "X-CSRFToken": getCsrfToken(),
             },
-            body: formData
+            body: formData,
           })
             .then((response) => response.json())
             .then((data) =>
-              handleResponse(data, messageContainerId, shouldRedirect)
+              handleResponse(data, messageContainerId, shouldRedirect),
             )
             .catch((error) => handleError(error, messageContainerId));
         });
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
     messageContainer.textContent = data.message;
     messageContainer.classList.remove("success", "error");
     messageContainer.classList.add(
-      data.status === "success" ? "success" : "error"
+      data.status === "success" ? "success" : "error",
     );
 
     if (data.status === "success" && shouldRedirect) {

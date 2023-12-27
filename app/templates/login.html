@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Image page of Swiss AI. Displays various images."
+      content="Image page of Jack. Displays various images."
     />
-    <meta name="keywords" content="Image, Swiss AI, Media Display" />
+    <meta name="keywords" content="Image, Jack of all Trades, Media Display" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     <link
@@ -47,7 +47,6 @@
       href="{{ url_for('static', filename='css/fonts.css') }}"
     />
     <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {% include 'menu.html' %}
 
     <link
@@ -57,13 +56,22 @@
   </head>
   <body>
     <a class="homepage-link" href="https://rawcsav.com">
-      <img alt="Homepage" src="/static/logo/blacklogo.svg" />
+      <img
+        alt="Homepage"
+        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
+      />
     </a>
     <div class="hand1">
-      <img alt="Hand1" src="/static/images/hand1.svg" />
+      <img
+        alt="Hand1"
+        src="{{ url_for('static', filename='images/hand1.svg') }}"
+      />
     </div>
     <div class="wave">
-      <img alt="Wave" src="/static/images/wave.svg" />
+      <img
+        alt="Wave"
+        src="{{ url_for('static', filename='images/wave.svg') }}"
+      />
     </div>
     <div class="shape rectangle" id="green">
       <h1>JACK</h1>
@@ -71,14 +79,23 @@
     </div>
     <div class="shape circle" id="yellow"></div>
     <div class="balloon">
-      <img alt="balloon" src="/static/images/balloons.svg" />
+      <img
+        alt="balloon"
+        src="{{ url_for('static', filename='images/balloons.svg') }}"
+      />
     </div>
     <div class="balloon2">
-      <img alt="balloon2" src="/static/images/balloon2.svg" />
+      <img
+        alt="balloon2"
+        src="{{ url_for('static', filename='images/balloon2.svg') }}"
+      />
     </div>
     <div class="shape square" id="red">
       <a class="landing-homepage" href="https://rawcsav.com">
-        <img alt="Homepage" src="/static/logo/jacklogo.svg" />
+        <img
+          alt="Homepage"
+          src="{{ url_for('static', filename='logo/jacklogo.svg') }}"
+        />
       </a>
     </div>
     <div class="shape rectangle" id="blue">
@@ -166,15 +183,5 @@
     </div>
     {% include 'footer.html' %}
   </body>
-  <script>
-    $(document).ready(function () {
-      $("#google-login-button").on("click", function () {
-        window.location.href = "{{ url_for('auth.google_login') }}";
-      });
-      $("#github-login-button").on("click", function () {
-        window.location.href = "{{ url_for('auth.github_login') }}";
-      });
-    });
-  </script>
   <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </html>

@@ -14,7 +14,7 @@ document
     grecaptcha.ready(function () {
       grecaptcha
         .execute("6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme", {
-          action: "confirm_email"
+          action: "confirm_email",
         })
         .then(function (token) {
           formData.append("g-recaptcha-response", token);
@@ -22,9 +22,9 @@ document
           fetch("/auth/confirm_email", {
             method: "POST",
             headers: {
-              "X-CSRFToken": getCsrfToken()
+              "X-CSRFToken": getCsrfToken(),
             },
-            body: formData
+            body: formData,
           })
             .then((response) => response.json())
             .then((data) => {

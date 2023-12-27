@@ -1,4 +1,4 @@
-var chatBox = document.getElementById("chat-box");
+const chatBox = document.getElementById("chat-box");
 let isInterrupted = false;
 
 hljs.configure({
@@ -16,7 +16,7 @@ function debounce(func, delay) {
 }
 
 function updateKnowledgeContextTokens() {
-  var value = document.getElementById("max-context-tokens").value;
+  let value = document.getElementById("max-context-tokens").value;
   fetch("/embeddings/update-knowledge-context-tokens", {
     method: "POST",
     headers: {
@@ -38,7 +38,7 @@ let debounceKnowledgeContextTokens = debounce(
 );
 
 function updateKnowledgeQueryMode() {
-  var isChecked = document.getElementById("use-docs").checked;
+  let isChecked = document.getElementById("use-docs").checked;
   fetch("/embeddings/update-knowledge-query-mode", {
     method: "POST",
     headers: {
@@ -54,7 +54,7 @@ function updateKnowledgeQueryMode() {
 }
 
 function updateDocumentSelection(documentId) {
-  var isChecked = document.getElementById("checkbox-" + documentId).checked;
+  let isChecked = document.getElementById("checkbox-" + documentId).checked;
   fetch("/embeddings/update-document-selection", {
     method: "POST",
     headers: {
@@ -156,7 +156,7 @@ function toggleButtonState() {
 }
 
 function interruptAIResponse() {
-  var conversationId = document
+  let conversationId = document
     .getElementById("convo-title")
     .getAttribute("data-conversation-id");
 
@@ -215,14 +215,6 @@ function saveSystemPrompt(conversationId, newPrompt) {
     });
 }
 
-function toggleEditConvoTitle() {
-  var titleInput = document.getElementById("editable-convo-title");
-  titleInput.readOnly = !titleInput.readOnly;
-  if (!titleInput.readOnly) {
-    titleInput.focus();
-  }
-}
-
 function saveConvoTitle(conversationId, newTitle) {
   performFetch(`/chat/update-conversation-title/${conversationId}`, {
     title: newTitle,
@@ -239,7 +231,7 @@ function saveConvoTitle(conversationId, newTitle) {
 
 function updateConversationUI(conversationId, newTitle) {
   requestAnimationFrame(() => {
-    var conversationEntry = document.querySelector(
+    let conversationEntry = document.querySelector(
       `.conversation-entry[data-conversation-id="${conversationId}"]`,
     );
     if (conversationEntry) {
@@ -251,7 +243,7 @@ function updateConversationUI(conversationId, newTitle) {
 
       if (typeof conversationHistory !== "undefined") {
         let conversation = conversationHistory.find(
-          (conv) => conv.id == conversationId,
+          (conv) => conv.id === conversationId,
         );
         if (conversation) {
           conversation.title = newTitle;
@@ -267,7 +259,7 @@ function setActiveButton(activeButtonId) {
   });
 
   if (activeButtonId) {
-    var activeButton = document.getElementById(activeButtonId);
+    let activeButton = document.getElementById(activeButtonId);
     if (activeButton) {
       activeButton.classList.add("active");
     }
@@ -343,9 +335,7 @@ function getUuidFromUrl(url) {
   let filename = url.split("/").pop();
 
   // Split the filename by the '.' character to get the UUID
-  let uuid = filename.split(".").shift();
-
-  return uuid;
+  return filename.split(".").shift();
 }
 
 function applySyntaxHighlighting(element) {
@@ -406,13 +396,6 @@ function togglePreferences() {
   });
 }
 
-function togglePreferencePopup() {
-  requestAnimationFrame(() => {
-    var popup = document.getElementById("preference-popup");
-    popup.classList.toggle("show");
-  });
-}
-
 function appendMessageToChatBox(message, className, messageId, images = []) {
   let messageDiv = createMessageDiv(message, className, messageId);
   if (images.length > 0) {
@@ -438,10 +421,6 @@ function createMessageDiv(message, className, messageId) {
 
   let messageContent = createMessageContent(message, className);
   messageDiv.appendChild(messageContent);
-
-  if (className !== "system-message") {
-    let editIcon = messageHeader.querySelector(".fa-edit");
-  }
   return messageDiv;
 }
 
@@ -563,7 +542,7 @@ function saveMessageContent(messageId, newContent) {
 function createMessageHeader(className, messageId) {
   let header = document.createElement("div");
   header.classList.add("message-header");
-  messageContent = document.querySelector(".message-content");
+  let messageContent = document.querySelector(".message-content");
   let title = document.createElement("h5");
   title.textContent = getTitleBasedOnClassName(className);
   header.appendChild(title);
@@ -630,7 +609,7 @@ function createEditIcon() {
 }
 
 function deleteImage(imageUrl) {
-  imageUuid = getUuidFromUrl(imageUrl);
+  let imageUuid = getUuidFromUrl(imageUrl);
   fetch(`/chat/delete-image/${imageUuid}`, {
     method: "POST",
     headers: {
@@ -683,9 +662,8 @@ function createMessageContent(message, className) {
 
 function setupSystemMessageEditing(content, messageId) {
   content.addEventListener("blur", function () {
-    this.contentEditable = "false";
-    let conversationId = messageId;
-    saveSystemPrompt(conversationId, this.textContent);
+    content.contentEditable = "false";
+    saveSystemPrompt(messageId, this.textContent);
   });
 
   content.addEventListener("keydown", function (event) {
@@ -694,17 +672,6 @@ function setupSystemMessageEditing(content, messageId) {
       this.blur();
     }
   });
-}
-
-function appendImagesToMessageById(messageId, imageUrls) {
-  // Find the message element by its data-message-id attribute
-  const messageElement = chatBox.querySelector(
-    `[data-message-id="${messageId}"]`,
-  );
-  if (messageElement) {
-    // Call the function to append thumbnails to the found message element
-    appendThumbnailsToMessageElement(messageElement, imageUrls);
-  }
 }
 
 function selectConversation(conversationId) {
@@ -923,7 +890,6 @@ conversationHistoryDiv.addEventListener("click", function (event) {
   const conversationEntry = event.target.closest(".conversation-entry");
   if (conversationEntry) {
     event.stopPropagation();
-    const conversationId = conversationEntry.dataset.conversationId;
   }
 });
 
@@ -937,6 +903,7 @@ function initializeToggleButton() {
     const currentState = this.getAttribute("data-state");
 
     if (currentState === "send") {
+      /* empty */
     } else {
       event.preventDefault();
       interruptAIResponse();
@@ -955,7 +922,7 @@ function toggleHistory() {
 }
 
 function setupMessageInput() {
-  var messageInput = document.getElementById("message-input");
+  let messageInput = document.getElementById("message-input");
   if (!messageInput) return;
 
   messageInput.addEventListener("input", function () {
@@ -994,7 +961,7 @@ function handleSubmitOnEnter(event, textarea) {
 }
 
 function triggerFormSubmission(formId) {
-  var form = document.getElementById(formId);
+  let form = document.getElementById(formId);
   if (form) {
     form.dispatchEvent(
       new Event("submit", { cancelable: true, bubbles: true }),
@@ -1003,7 +970,7 @@ function triggerFormSubmission(formId) {
 }
 
 function setupConversationTitleEditing() {
-  var convoTitleElement = document.getElementById("convo-title");
+  let convoTitleElement = document.getElementById("convo-title");
   if (!convoTitleElement) return;
 
   convoTitleElement.addEventListener("blur", function () {
@@ -1016,8 +983,8 @@ function setupConversationTitleEditing() {
 }
 
 function handleConversationTitleChange(element) {
-  var conversationId = element.getAttribute("data-conversation-id");
-  var newTitle = element.textContent.trim();
+  let conversationId = element.getAttribute("data-conversation-id");
+  let newTitle = element.textContent.trim();
 
   if (newTitle.length >= 1 && newTitle.length <= 25) {
     saveConvoTitle(conversationId, newTitle);
@@ -1240,7 +1207,7 @@ function handleDrop(event) {
 function handlePaste(event) {
   const items = (event.clipboardData || event.originalEvent.clipboardData)
     .items;
-  for (index in items) {
+  for (let index in items) {
     const item = items[index];
     if (item.kind === "file") {
       const blob = item.getAsFile();
@@ -1330,7 +1297,7 @@ function readStreamedResponseChunk(reader) {
   if (isInterrupted) {
     console.log("Response processing was interrupted.");
     finalizeStreamedResponse();
-    var conversationId = document
+    let conversationId = document
       .getElementById("convo-title")
       .getAttribute("data-conversation-id");
     locateNewMessages(conversationId);
@@ -1341,7 +1308,7 @@ function readStreamedResponseChunk(reader) {
     .then(({ done, value }) => {
       if (done) {
         finalizeStreamedResponse();
-        var conversationId = document
+        let conversationId = document
           .getElementById("convo-title")
           .getAttribute("data-conversation-id");
         locateNewMessages(conversationId);
@@ -1351,10 +1318,7 @@ function readStreamedResponseChunk(reader) {
       readStreamedResponseChunk(reader);
     })
     .catch((error) => {
-      appendMessageToChatBox(
-        "Streaming Error: " + error.message,
-        "error-message",
-      );
+      showToast("Streaming Error: " + error.message, "error");
       console.error("Streaming error:", error);
     });
 }
@@ -1362,7 +1326,7 @@ function readStreamedResponseChunk(reader) {
 function handleResponseChunk(value) {
   const chunk = new TextDecoder().decode(value);
   if (chunk.startsWith("An error occurred:")) {
-    appendMessageToChatBox(chunk, "error");
+    showToast(chunk, "error");
   } else {
     appendStreamedResponse(chunk, chatBox);
   }
@@ -1371,12 +1335,12 @@ function handleResponseChunk(value) {
 function processNonStreamedResponse(text) {
   requestAnimationFrame(() => {
     if (text.includes("An error occurred:")) {
-      appendMessageToChatBox(text, "error");
+      showToast(text, "error");
     } else {
       try {
         const data = JSON.parse(text);
-        appendMessageToChatBox(data.message, "assistant-message");
-        var conversationId = document
+        appendMessageToChatBox(data.message, "assistant-message", null);
+        let conversationId = document
           .getElementById("convo-title")
           .getAttribute("data-conversation-id");
         locateNewMessages(conversationId);
@@ -1535,8 +1499,82 @@ function setupWindowClick() {
 function closePreferencePopupOnClick(event) {
   requestAnimationFrame(() => {
     const popup = document.getElementById("preference-popup");
-    if (popup && event.target == popup) {
+    if (popup && event.target === popup) {
       popup.classList.remove("show");
     }
   });
 }
+
+// Handle for 'Show History' button
+const showHistoryBtn = document.getElementById("show-history-btn");
+if (showHistoryBtn) {
+  showHistoryBtn.addEventListener("click", toggleHistory);
+}
+
+// Handle for 'Show Preferences' button
+const showPreferencesBtn = document.getElementById("show-preferences-btn");
+if (showPreferencesBtn) {
+  showPreferencesBtn.addEventListener("click", togglePreferences);
+}
+
+// Handle for 'Docs Preferences' button
+const docsPreferencesBtn = document.getElementById("docs-preferences-btn");
+if (docsPreferencesBtn) {
+  docsPreferencesBtn.addEventListener("click", toggleDocPreferences);
+}
+
+// Handles for 'Delete Conversation' buttons
+const deleteButtons = document.querySelectorAll(".delete-conversation");
+deleteButtons.forEach(function (button) {
+  button.addEventListener("click", function (event) {
+    let conversationId = button.getAttribute("data-conversation-id");
+    deleteConversation(conversationId);
+    event.stopPropagation(); // Prevent triggering parent click events
+  });
+});
+
+// Handles for 'Select Conversation' entries
+const conversationEntries = document.querySelectorAll(".conversation-entry");
+conversationEntries.forEach(function (entry) {
+  entry.addEventListener("click", function () {
+    let conversationId = entry.getAttribute("data-conversation-id");
+    selectConversation(conversationId);
+  });
+});
+
+// Handle for 'Use Docs' checkbox in Knowledge Retrieval
+const useDocsCheckbox = document.getElementById("use-docs");
+if (useDocsCheckbox) {
+  useDocsCheckbox.addEventListener("click", updateKnowledgeQueryMode);
+}
+
+// Handles for document selection checkboxes
+const docCheckboxes = document.querySelectorAll(
+  ".doc-select input[type=checkbox]",
+);
+docCheckboxes.forEach(function (checkbox) {
+  checkbox.addEventListener("click", function () {
+    let documentId = checkbox.id.replace("checkbox-", "");
+    updateDocumentSelection(documentId);
+  });
+});
+
+// Handle for image upload icon
+const imageUploadIcon = document.getElementById("image-upload-icon");
+if (imageUploadIcon) {
+  imageUploadIcon.addEventListener("click", function () {
+    const imageUploadInput = document.getElementById("image-upload");
+    if (imageUploadInput) {
+      imageUploadInput.click(); // Trigger the file input click event
+    }
+  });
+}
+
+// Handle for delete image icons
+const deleteImageIcons = document.querySelectorAll(".delete-icon");
+deleteImageIcons.forEach(function (icon) {
+  icon.addEventListener("click", function () {
+    let imageUrl = icon.getAttribute("data-image-url");
+    deleteImage(imageUrl);
+  });
+});
