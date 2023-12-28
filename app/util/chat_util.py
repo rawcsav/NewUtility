@@ -11,7 +11,13 @@ from flask import abort, stream_with_context, current_app, url_for
 from flask_login import current_user
 
 from app import db
-from app.database import ChatPreferences, Message, Conversation, MessageImages
+from app.database import (
+    ChatPreferences,
+    Message,
+    Conversation,
+    MessageImages,
+    MessageChunkAssociation,
+)
 from app.util.usage_util import (
     chat_cost,
     update_usage_and_costs,
@@ -226,6 +232,8 @@ def save_message(
     is_knowledge_query=False,
     is_error=False,
     images=None,
+    chunk_ids=None,  # Optional parameter for multiple chunk IDs (list)
+    similarity_ranks=None,  # Optional parameter for multiple similarity rankings (list)
 ):
     message = Message(
         conversation_id=conversation_id,
@@ -248,6 +256,16 @@ def save_message(
                     image_record.message_id = message.id
                     message.is_vision = True
                     db.session.add(image_record)
+
+        # Check if chunk_ids and similarity_ranks are provided and have the same length
+        if chunk_ids and similarity_ranks and (len(chunk_ids) == len(similarity_ranks)):
+            for chunk_id, similarity_rank in zip(chunk_ids, similarity_ranks):
+                chunk_association = MessageChunkAssociation(
+                    message_id=message.id,
+                    chunk_id=chunk_id,
+                    similarity_rank=similarity_rank,
+                )
+                db.session.add(chunk_association)
 
         db.session.commit()
     except Exception as e:
@@ -298,7 +316,16 @@ def associate_images_with_message(message_id, image_uuids):
         raise e
 
 
-def chat_stream(prompt, client, user_id, conversation_id, images=None, retry=False):
+def chat_stream(
+    raw_prompt,
+    prompt,
+    client,
+    user_id,
+    conversation_id,
+    images=None,
+    retry=False,
+    chunk_associations=None,
+):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -332,13 +359,22 @@ def chat_stream(prompt, client, user_id, conversation_id, images=None, retry=Fal
             "top_p": preferences["top_p"],
             "stream": True,
         }
+        print("Raw Prompt" + raw_prompt)
+        print(user_message_content)
+        print(prompt)
         if retry:
             # Remove the last entry if it is a user message
             if conversation_history and conversation_history[-1]["role"] == "user":
                 conversation_history.pop()
         else:
             save_message(
-                conversation_id, prompt, "outgoing", preferences["model"], images=images
+                conversation_id,
+                raw_prompt,
+                "outgoing",
+                preferences["model"],
+                images=images,
+                chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
+                similarity_ranks=[rank for _, rank in chunk_associations],
             )
 
         full_response = ""  # Initialize a variable to accumulate the full response
@@ -391,7 +427,16 @@ def chat_stream(prompt, client, user_id, conversation_id, images=None, retry=Fal
             yield error_message
 
 
-def chat_nonstream(prompt, client, user_id, conversation_id, images=None, retry=False):
+def chat_nonstream(
+    raw_prompt,
+    prompt,
+    client,
+    user_id,
+    conversation_id,
+    images=None,
+    retry=False,
+    chunk_associations=None,
+):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         print("No conversation found for user.")
@@ -415,7 +460,13 @@ def chat_nonstream(prompt, client, user_id, conversation_id, images=None, retry=
                 conversation_history.pop()
         else:
             save_message(
-                conversation_id, prompt, "outgoing", preferences["model"], images=images
+                conversation_id,
+                raw_prompt,
+                "outgoing",
+                preferences["model"],
+                images=images,
+                chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
+                similarity_ranks=[rank for _, rank in chunk_associations],
             )
         truncate_conversation(conversation_history, truncate_limit)
         try:
@@ -457,13 +508,29 @@ def chat_nonstream(prompt, client, user_id, conversation_id, images=None, retry=
             return error_message
 
 
-def handle_stream(prompt, client, user_id, conversation_id, images=None, retry=False):
+def handle_stream(
+    raw_prompt,
+    prompt,
+    client,
+    user_id,
+    conversation_id,
+    images=None,
+    retry=False,
+    chunk_associations=None,
+):
     full_response = ""
 
     def generate():
         nonlocal full_response
         for content in chat_stream(
-            prompt, client, user_id, conversation_id, images, retry
+            raw_prompt,
+            prompt,
+            client,
+            user_id,
+            conversation_id,
+            images,
+            retry,
+            chunk_associations,
         ):
             full_response += content
             yield content
@@ -472,9 +539,25 @@ def handle_stream(prompt, client, user_id, conversation_id, images=None, retry=F
 
 
 def handle_nonstream(
-    prompt, client, user_id, conversation_id, images=None, retry=False
+    raw_prompt,
+    prompt,
+    client,
+    user_id,
+    conversation_id,
+    images=None,
+    retry=False,
+    chunk_associations=None,
 ):
-    return chat_nonstream(prompt, client, user_id, conversation_id, images, retry)
+    return chat_nonstream(
+        raw_prompt,
+        prompt,
+        client,
+        user_id,
+        conversation_id,
+        images,
+        retry,
+        chunk_associations,
+    )
 
 
 def handle_stream_error(e, conversation_id, model):

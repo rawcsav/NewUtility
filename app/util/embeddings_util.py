@@ -5,6 +5,7 @@ import tempfile
 import unicodedata
 from typing import List
 
+import numpy as np
 import openai
 import tiktoken
 from docx2txt import docx2txt
@@ -15,7 +16,13 @@ from tenacity import retry, stop_after_attempt, wait_random_exponential
 from werkzeug.utils import secure_filename
 
 from app import db
-from app.database import DocumentChunk, DocumentEmbedding
+from app.database import (
+    DocumentChunk,
+    DocumentEmbedding,
+    ChatPreferences,
+    ModelContextWindow,
+    Document,
+)
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-ada-002"
@@ -231,3 +238,131 @@ def store_embeddings(document_id, embeddings):
             model=EMBEDDING_MODEL,
         )
         db.session.add(embedding_model)
+
+
+def cosine_similarity(vec_a, vec_b):
+    return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b))
+
+
+def find_relevant_sections(user_id, query_embedding, user_preferences):
+    context_window_size = (
+        db.session.query(ModelContextWindow.context_window_size)
+        .filter_by(model_name=user_preferences.model)
+        .scalar()
+    )
+    max_knowledge_context_tokens = (
+        user_preferences.knowledge_context_tokens / 100.0
+    ) * context_window_size
+
+    # Fetch the document chunks, their embeddings, and additional details for the user
+    document_chunks_with_details = (
+        db.session.query(
+            DocumentChunk.id,
+            Document.title,
+            Document.author,
+            DocumentChunk.pages,
+            DocumentChunk.content,  # Include the chunk content
+            DocumentChunk.tokens,
+            DocumentEmbedding.embedding,
+        )
+        .join(Document)
+        .join(DocumentEmbedding, DocumentChunk.id == DocumentEmbedding.chunk_id)
+        .filter(Document.user_id == user_id)
+        .all()
+    )
+
+    # Deserialize embeddings once and calculate similarities
+    # Deserialize embeddings once and calculate similarities
+    deserialized_embeddings = [
+        (
+            chunk_id,
+            title,
+            author,
+            pages,
+            chunk_content,
+            chunk_tokens,
+            deserialize_embedding(embedding),
+        )
+        for chunk_id, title, author, pages, chunk_content, chunk_tokens, embedding in document_chunks_with_details
+    ]
+    similarities = [
+        (
+            chunk_id,
+            title,
+            author,
+            pages,
+            chunk_content,
+            chunk_tokens,
+            cosine_similarity(query_embedding, embedding),
+        )
+        for chunk_id, title, author, pages, chunk_content, chunk_tokens, embedding in deserialized_embeddings
+    ]
+    similarities.sort(key=lambda x: x[4], reverse=True)  # Sort by similarity score
+
+    selected_chunks = []
+    current_tokens = 0
+    for rank, (
+        chunk_id,
+        title,
+        author,
+        pages,
+        chunk_content,
+        chunk_tokens,
+        similarity,
+    ) in enumerate(similarities, start=1):
+        if current_tokens + chunk_tokens <= max_knowledge_context_tokens:
+            selected_chunks.append(
+                (chunk_id, title, author, pages, chunk_content, similarity, rank)
+            )
+            current_tokens += chunk_tokens
+        else:
+            break
+
+    return selected_chunks
+
+
+def append_knowledge_context(user_query, user_id, client):
+    # Fetch user's chat preferences
+    user_preferences = (
+        db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
+    )
+
+    # Check if knowledge retrieval is enabled
+    if not user_preferences.knowledge_query_mode:
+        return user_query
+
+    # Embed the user query
+    query_embedding = get_embedding(user_query, client)
+
+    # Find relevant sections
+    relevant_sections = find_relevant_sections(
+        user_id, query_embedding, user_preferences
+    )  # Ensure find_relevant_sections is implemented
+
+    # Format the context with title, author, and page number
+    context = ""
+    chunk_associations = []
+    for (
+        chunk_id,
+        title,
+        author,
+        pages,
+        chunk_content,
+        similarity,
+        rank,
+    ) in relevant_sections:
+        context_parts = []
+        if title:
+            context_parts.append(f"Title: {title}")
+        if author:
+            context_parts.append(f"Author: {author}")
+        if pages:
+            context_parts.append(f"Page: {pages}")
+        context_parts.append(f"Content: {chunk_content}")  # Include the chunk content
+
+        context += "\n".join(context_parts) + "\n\n"
+
+        chunk_associations.append((chunk_id, rank))
+
+    modified_query = context + user_query
+    return modified_query, chunk_associations

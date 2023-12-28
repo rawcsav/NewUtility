@@ -12,6 +12,19 @@ def generate_default_nickname():
     return f"User{next_number}"
 
 
+class MessageChunkAssociation(db.Model):
+    __tablename__ = "message_chunk_association"
+
+    message_id = db.Column(db.Integer, db.ForeignKey("messages.id"), primary_key=True)
+    chunk_id = db.Column(
+        db.Integer, db.ForeignKey("document_chunks.id"), primary_key=True
+    )
+    similarity_rank = db.Column(db.Integer, nullable=False)  # Store the ranking here
+
+    message = db.relationship("Message", back_populates="chunk_associations")
+    chunk = db.relationship("DocumentChunk", back_populates="message_associations")
+
+
 class UserAPIKey(db.Model):
     __tablename__ = "user_api_keys"
     id = db.Column(db.Integer, primary_key=True)
@@ -103,6 +116,11 @@ class Message(db.Model):
     message_images = db.relationship(
         "MessageImages", backref="message", lazy="joined", cascade="all, delete-orphan"
     )
+    chunk_associations = db.relationship(
+        "MessageChunkAssociation",
+        back_populates="message",
+        cascade="all, delete-orphan",
+    )
 
 
 class ModelContextWindow(db.Model):
@@ -130,19 +148,6 @@ class ChatPreferences(db.Model):
     knowledge_context_tokens = db.Column(
         db.Integer, default=30
     )  # This is a percentage (0-100)
-
-    @hybrid_property
-    def max_knowledge_context_tokens(self):
-        raise NotImplementedError("This property can only be used in a query context.")
-
-    @max_knowledge_context_tokens.expression
-    def max_knowledge_context_tokens(cls):
-        context_window_size_subq = (
-            select([ModelContextWindow.context_window_size])
-            .where(ModelContextWindow.model_name == cls.model)
-            .label("context_window_size")
-        )
-        return (cls.knowledge_context_tokens / 100.0) * context_window_size_subq
 
 
 class Document(db.Model):
@@ -178,6 +183,9 @@ class DocumentChunk(db.Model):
         "DocumentEmbedding",
         back_populates="chunk",
         cascade="all, delete, delete-orphan",
+    )
+    message_associations = db.relationship(
+        "MessageChunkAssociation", back_populates="chunk", cascade="all, delete-orphan"
     )
     __table_args__ = (
         db.Index(

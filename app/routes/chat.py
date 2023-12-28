@@ -17,6 +17,7 @@ from app.util.chat_util import (
     retry_delete_messages,
     delete_local_image_file,
 )
+from app.util.embeddings_util import append_knowledge_context
 from app.util.forms_util import (
     ChatCompletionForm,
     UserPreferencesForm,
@@ -239,7 +240,8 @@ def chat_completion():
 
     preferences = get_user_preferences(user_id)
     stream_preference = preferences.get("stream", True)
-    prompt = form.prompt.data
+    raw_prompt = form.prompt.data
+    prompt, chunk_associations = append_knowledge_context(raw_prompt, user_id, client)
 
     if preferences["model"] == "gpt-4-vision-preview":
         images = MessageImages.query.filter(
@@ -251,14 +253,26 @@ def chat_completion():
     try:
         if stream_preference:
             response, _ = handle_stream(
-                prompt, client, user_id, conversation_id, image_urls
+                raw_prompt,
+                prompt,
+                client,
+                user_id,
+                conversation_id,
+                image_urls,
+                chunk_associations=chunk_associations,
             )
             return Response(
                 response, content_type="text/plain", headers={"X-Accel-Buffering": "no"}
             )
         else:
             full_response = handle_nonstream(
-                prompt, client, user_id, conversation_id, image_urls
+                raw_prompt,
+                prompt,
+                client,
+                user_id,
+                conversation_id,
+                image_urls,
+                chunk_associations=chunk_associations,
             )
             if full_response:
                 return jsonify({"status": "success", "message": full_response.strip()})
@@ -341,7 +355,7 @@ def update_system_prompt(conversation_id):
                 {
                     "status": "error",
                     "message": "System prompt must be provided. "
-                               "(Less than 1000 characters).",
+                    "(Less than 1000 characters).",
                 }
             ),
             400,
