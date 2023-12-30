@@ -11,7 +11,6 @@ from app.util.forms_util import (
 from app.util.session_util import (
     decrypt_api_key,
     generate_confirmation_code,
-    verify_recaptcha,
     get_or_create_user,
     generate_unique_username,
 )
@@ -49,14 +48,7 @@ def login():
     if form.validate_on_submit():
         login_credential = request.form.get("username")
         password = request.form.get("password")
-        recaptcha_response = request.form.get("g-recaptcha-response")
-        recaptcha_error = verify_recaptcha(
-            current_app.config["GOOGLE_SECRET_KEY"], recaptcha_response
-        )
         remember = request.form.get("remember") == "true"
-
-        if recaptcha_error:
-            return jsonify(*recaptcha_error)
 
         user = User.query.filter(
             or_(User.username == login_credential, User.email == login_credential)
@@ -112,8 +104,8 @@ def login():
                         {
                             "status": "error",
                             "message": "Invalid login credential or password. "
-                                       "Your account has been locked."
-                                       "Please try again in 5 minutes.",
+                            "Your account has been locked."
+                            "Please try again in 5 minutes.",
                         }
                     )
                 else:
@@ -121,7 +113,7 @@ def login():
                         {
                             "status": "error",
                             "message": f"Invalid login credential or password. "
-                                       f"You have {remaining_attempts} more attempts.",
+                            f"You have {remaining_attempts} more attempts.",
                         }
                     )
 
@@ -140,13 +132,6 @@ def signup():
         email = request.form.get("email")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
-
-        recaptcha_response = request.form.get("g-recaptcha-response")
-        recaptcha_error = verify_recaptcha(
-            current_app.config["GOOGLE_SECRET_KEY"], recaptcha_response
-        )
-        if recaptcha_error:
-            return jsonify(*recaptcha_error)
 
         if not username or not email or not password:
             return (
@@ -169,8 +154,8 @@ def signup():
                     {
                         "status": "error",
                         "message": "Password must be at least 8 characters long "
-                                   "and include one number, one lowercase, "
-                                   "and one uppercase letter.",
+                        "and include one number, one lowercase, "
+                        "and one uppercase letter.",
                     }
                 ),
                 400,
@@ -231,14 +216,6 @@ def confirm_email():
     form = ConfirmEmailForm()
     if form.validate_on_submit():
         code = request.form.get("code")
-        recaptcha_response = request.form.get("g-recaptcha-response")
-        recaptcha_error = verify_recaptcha(
-            current_app.config["GOOGLE_SECRET_KEY"], recaptcha_response
-        )
-
-        if recaptcha_error:
-            return jsonify(*recaptcha_error)
-
         user = User.query.filter_by(confirmation_code=code).first()
         if user:
             user.email_confirmed = True
@@ -287,14 +264,6 @@ def reset_password_request():
     s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
-        recaptcha_response = request.form.get("g-recaptcha-response")
-        recaptcha_error = verify_recaptcha(
-            current_app.config["GOOGLE_SECRET_KEY"], recaptcha_response
-        )
-
-        if recaptcha_error:
-            return jsonify(*recaptcha_error)
-
         email = form.email.data
         user = User.query.filter_by(email=email).first()
 
@@ -323,8 +292,10 @@ def reset_password_request():
             recipients=[email],
         )
         reset_link = url_for("auth.reset_password", token=token, _external=True)
-        msg.body = (f"Please click on the link to reset your password: {reset_link}. "
-                    f"It resets in 5 minutes.")
+        msg.body = (
+            f"Please click on the link to reset your password: {reset_link}. "
+            f"It resets in 5 minutes."
+        )
         mail.send(msg)
 
         return (
@@ -358,14 +329,6 @@ def reset_password(token):
         return redirect(url_for("auth.reset_password_request"))
 
     if form.validate_on_submit():
-        recaptcha_response = request.form.get("g-recaptcha-response")
-        recaptcha_error = verify_recaptcha(
-            current_app.config["GOOGLE_SECRET_KEY"], recaptcha_response
-        )
-
-        if recaptcha_error:
-            return jsonify(*recaptcha_error)
-
         password = form.password.data
         confirm_password = form.confirm_password.data
 
@@ -386,9 +349,9 @@ def reset_password(token):
                     {
                         "status": "error",
                         "message": "Password must be at least 8 characters long and "
-                                   "include one number, "
-                                   "one lowercase, "
-                                   "and one uppercase letter.",
+                        "include one number, "
+                        "one lowercase, "
+                        "and one uppercase letter.",
                     }
                 ),
                 400,

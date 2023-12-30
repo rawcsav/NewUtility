@@ -40,7 +40,6 @@
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#ffffff" />
     <title>Sign Up</title>
-    <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
     <script
       src="https://kit.fontawesome.com/5c8c7a1eba.js"
       crossorigin="anonymous"
@@ -147,7 +146,12 @@
           action="{{ url_for('auth.signup') }}"
           method="post"
         >
-          {{ form.hidden_tag() }}
+          <input
+            type="text"
+            name="middle-name"
+            id="middle-name"
+            style="display: none"
+          />
           <div class="input-group">
             <input
               type="text"

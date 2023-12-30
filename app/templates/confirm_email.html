@@ -44,7 +44,6 @@
       src="https://kit.fontawesome.com/5c8c7a1eba.js"
       crossorigin="anonymous"
     ></script>
-    <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
     {% include 'menu.html' %}
     <link
       rel="stylesheet"
@@ -109,7 +108,12 @@
         class="form"
         method="post"
       >
-        {{ form.hidden_tag() }}
+        <input
+          type="text"
+          name="middle-name"
+          id="middle-name"
+          style="display: none"
+        />
         <div class="input-group">
           <input
             type="text"

@@ -32,29 +32,23 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function submitFormWithRecaptcha(form, messageContainerId, shouldRedirect) {
-    grecaptcha.ready(function () {
-      grecaptcha
-        .execute("6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme", {
-          action: "submit",
-        })
-        .then(function (captcha_token) {
-          var formData = new FormData(form);
-          formData.append("g-recaptcha-response", captcha_token);
+    if (document.getElementById("middle-name").value) {
+      console.error("Bot submission detected.");
+      return;
+    }
 
-          fetch(form.action, {
-            method: form.method,
-            headers: {
-              "X-CSRFToken": getCsrfToken(),
-            },
-            body: formData,
-          })
-            .then((response) => response.json())
-            .then((data) =>
-              handleResponse(data, messageContainerId, shouldRedirect),
-            )
-            .catch((error) => handleError(error, messageContainerId));
-        });
-    });
+    var formData = new FormData(this);
+
+    fetch(form.action, {
+      method: form.method,
+      headers: {
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => handleResponse(data, messageContainerId, shouldRedirect))
+      .catch((error) => handleError(error, messageContainerId));
   }
 
   function handleResponse(data, messageContainerId, shouldRedirect) {

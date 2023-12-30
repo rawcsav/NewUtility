@@ -42,7 +42,6 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/fonts.css') }}"
     />
-    <script src="https://www.google.com/recaptcha/api.js?render=6LfilA0pAAAAAGjtNjRkGcgJqCNKTjs9xoPRNTme"></script>
     <script
       src="https://kit.fontawesome.com/5c8c7a1eba.js"
       crossorigin="anonymous"
@@ -142,8 +141,12 @@
     <div class="shape form-rectangle" id="purple">
       <div class="form-container" id="login-container">
         <form class="form" id="login-form" method="post">
-          {{ form.hidden_tag() }}
-
+          <input
+            type="text"
+            name="middle-name"
+            id="middle-name"
+            style="display: none"
+          />
           <div class="input-group">
             <input
               type="text"
