@@ -13,6 +13,7 @@ from wtforms import (
     DecimalField,
     SelectField,
 )
+from wtforms.fields.numeric import FloatField
 from wtforms.validators import (
     DataRequired,
     Length,
@@ -217,7 +218,6 @@ class UserPreferencesForm(FlaskForm):
 
 
 class NewConversationForm(FlaskForm):
-    # Dynamically generate the default system prompt with the current date
     default_prompt = (
         "You are Jack, a large language model trained by OpenAI, "
         "based on the GPT-4 architecture. You are chatting with the user "
@@ -229,3 +229,16 @@ class NewConversationForm(FlaskForm):
 
     system_prompt = StringField("System Prompt", default=default_prompt)
     submit = SubmitField("Start Conversation")
+
+
+class UpdateDocPreferencesForm(FlaskForm):
+    document_id = StringField("Document ID", validators=[Optional()])
+    selected = BooleanField("Selected", validators=[Optional()])
+    knowledge_query_mode = BooleanField("Knowledge Query Mode", validators=[Optional()])
+    knowledge_context_tokens = FloatField(
+        "% Context",
+        validators=[
+            Optional(),
+            NumberRange(min=1, max=80, message="Value must be between 1 and 80"),
+        ],
+    )

@@ -126,8 +126,8 @@ body {
 }
 #brown {
   background-color: #fefdf9;
-  border: 5px solid #654321;
-  border-right: 2px solid #654321;
+  border: 2px solid #654321;
+  border-right: 1px solid #654321;
   z-index: 2;
   width: 100%;
   overflow-x: hidden;
@@ -157,7 +157,7 @@ body {
   width: 100%;
   flex-direction: column;
   background-color: #fefdf9;
-  border: 5px solid #654321;
+  border: 2px solid #654321;
   border-left: none;
   overflow-y: auto;
   flex: 5;
@@ -740,12 +740,164 @@ h3 {
   gap: 10px;
 }
 
-#docs-settings-popup {
-  background-color: #fefdf9; /* Background color for the entire popup */
-  height: 100%; /* Full height of the containing element */
-  overflow-y: auto; /* Enable vertical scroll if the content overflows */
-  overflow-x: hidden;
+.form-group {
+  margin-bottom: 25px;
 }
+
+label {
+  display: block;
+  font-size: 12px;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+}
+
+#title-edit {
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 18px;
+  background-color: transparent;
+  color: #654321;
+}
+
+#author-edit,
+.editable-container p {
+  font-size: 14px;
+  background-color: transparent;
+  color: #654321;
+  margin: 0;
+  padding: 0;
+}
+
+#chat-checkbox {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10%;
+}
+
+#chat-checkbox label {
+  margin-bottom: 0;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 80%;
+  height: 3px;
+  border-radius: 5px;
+  background: #ddd;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #333;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #111;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 50%;
+  background: #333;
+  cursor: pointer;
+}
+
+input[type="range"]::-ms-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #333;
+}
+
+output {
+  display: inline-block;
+  padding: 0 5px;
+  font-size: 0.9em;
+  line-height: 1.5em;
+  height: 1.5em;
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-left: 10px;
+}
+
+#update-preferences-form,
+#docs-preferences-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+#send-button i {
+  font-size: 1rem;
+}
+
+.range-value-input {
+  border: none;
+  background-color: #faf5e6;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 12px;
+  width: 20%;
+  display: inline-block;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+}
+
+.range-value-input:focus {
+  outline: none;
+}
+
+#model {
+  margin-top: 5px;
+}
+
+#preference-submit,
+#docs-preferences-submit {
+  margin-left: auto;
+  margin-right: auto;
+  background: #ec9ca0;
+  font-family: inherit;
+  padding: 0.6em 1.3em;
+  font-weight: 900;
+  font-size: 12px;
+  border: 3px solid black;
+  border-radius: 0.4em;
+  cursor: pointer;
+  box-shadow: 0.1em 0.1em;
+  margin-bottom: 20px;
+}
+
+#preference-submit:hover {
+  transform: translate(-0.05em, -0.05em);
+  box-shadow: 0.15em 0.15em;
+}
+
+#preference-submit:active {
+  transform: translate(0.05em, 0.05em);
+  box-shadow: 0.05em 0.05em;
+}
+
+#conversation-history {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 15px;
+}
+
+
+
 
 .docs-list-container {
   max-height: 80%; /* Maximum height to ensure some space from the top and bottom */
@@ -758,7 +910,18 @@ h3 {
 .docs_list {
   list-style: none; /* Remove default list styling */
   padding: 0; /* No padding to align items to the edges */
-  margin: 0; /* No margin to align items to the edges */
+  margin: 10px 0 0;
+}
+
+.docs_list li {
+  border-bottom: 1px solid #ddd; /* Border for separation between items */,
+padding:5px;
+
+}
+
+#docs-preferences-form ul {
+  padding: 0;
+  margin: 0 0 25px;
 }
 
 .docs-settings-header {
@@ -778,12 +941,17 @@ h3 {
   flex-direction: column;
   gap: 15px;
 }
+.knowledge-select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10px;
+}
 
 .document-item {
   display: flex; /* Flex layout for horizontal alignment */
   justify-content: space-between; /* Space out the document info and the select checkbox */
-  align-items: center; /* Align items vertically */
-  margin-left: 10px; /* Padding for spacing inside each document item */
+  align-items: center;
   padding: 5px;
   border-bottom: 1px solid #ddd; /* Border for separation between items */
 }

@@ -39,23 +39,6 @@ MODEL_TOKEN_LIMITS = {
 ENCODING = tiktoken.get_encoding("cl100k_base")
 
 
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-
-# Function to determine the image quality
-def get_image_quality(image_path):
-    with Image.open(image_path) as img:
-        width, height = img.size
-        return "high" if max(width, height) > 512 else "low"
-
-
-# Function to encode a local image to base64
-def encode_image_to_base64(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
-
-
 def get_truncate_limit(model_name):
     model_max_tokens = MODEL_TOKEN_LIMITS.get(model_name)
     if model_max_tokens:
@@ -93,19 +76,6 @@ def truncate_conversation(conversation_history, truncate_limit):
             conversation_history.pop(1)
         else:
             break
-
-
-def save_system_prompt(user_id, conversation_id, system_prompt):
-    conversation = Conversation.query.filter_by(
-        user_id=user_id, id=conversation_id
-    ).first()
-    if conversation:
-        conversation.system_prompt = system_prompt
-        try:
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            raise e
 
 
 def get_user_conversation(user_id, conversation_id):
@@ -257,7 +227,6 @@ def save_message(
                     message.is_vision = True
                     db.session.add(image_record)
 
-        # Check if chunk_ids and similarity_ranks are provided and have the same length
         if chunk_ids and similarity_ranks and (len(chunk_ids) == len(similarity_ranks)):
             for chunk_id, similarity_rank in zip(chunk_ids, similarity_ranks):
                 chunk_association = MessageChunkAssociation(
@@ -298,22 +267,6 @@ def get_image_payload(images):
         else:
             image_payloads.append({"type": "image_url", "image_url": {"url": image}})
     return image_payloads
-
-
-def associate_images_with_message(message_id, image_uuids):
-    for image_uuid in image_uuids:
-        # Find the image record by UUID
-        image_record = MessageImages.query.filter_by(uuid=image_uuid).first()
-        if image_record:
-            # Update the image record with the message_id
-            image_record.message_id = message_id
-            db.session.add(image_record)
-
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        raise e
 
 
 def chat_stream(
@@ -421,9 +374,7 @@ def chat_stream(
                 )
 
         except Exception as e:
-            error_message = handle_stream_error(
-                e, conversation_id, preferences["model"]
-            )
+            error_message = f"An error occurred: {e}"
             yield error_message
 
 
@@ -502,9 +453,7 @@ def chat_nonstream(
                     )
                 return full_response
         except Exception as e:
-            error_message = handle_nonstream_error(
-                e, conversation_id, preferences["model"]
-            )
+            error_message = f"An error occurred: {e}"
             return error_message
 
 
@@ -560,17 +509,6 @@ def handle_nonstream(
     )
 
 
-def handle_stream_error(e, conversation_id, model):
-    error_message = f"An error occurred: {e}"
-    return error_message
-
-
-def handle_nonstream_error(e, conversation_id, model):
-    error_message = f"An error occurred: {e}"
-    return error_message
-
-
-# Utility function to delete messages after a specified message ID.
 def retry_delete_messages(conversation_id, message_id):
     try:
         # Find the message to use as a reference point for deletion
@@ -602,8 +540,6 @@ def save_image(file_stream):
     webp_file_path = os.path.join(
         current_app.config["CHAT_IMAGE_DIRECTORY"], webp_file_name
     )
-
-    # Convert the image to WEBP and save it
     image = Image.open(file_stream).convert("RGB")
     image.save(webp_file_path, "WEBP")
 
@@ -618,8 +554,6 @@ def delete_local_image_file(image_uuid):
     image_file_path = os.path.join(
         current_app.config["CHAT_IMAGE_DIRECTORY"], f"{image_uuid}.webp"
     )
-
-    # Check if the file exists
     if os.path.isfile(image_file_path):
         try:
             # Delete the file

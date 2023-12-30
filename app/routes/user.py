@@ -13,6 +13,7 @@ from app.util.forms_util import (
     RetestAPIKeyForm,
     SelectAPIKeyForm,
     UserPreferencesForm,
+    UpdateDocPreferencesForm,
 )
 from app.util.session_util import (
     check_available_models,
@@ -42,9 +43,8 @@ def dashboard():
         .order_by(GeneratedImage.id.desc())
         .limit(15)
         .all()
-    )  # Adjust the number as needed
+    )
     user_documents = Document.query.filter_by(user_id=current_user.id).all()
-    # Prepare document data for the template
     documents_data = [
         {
             "id": doc.id,
@@ -74,6 +74,7 @@ def dashboard():
         documents=documents_data,
         preferences_dict=preferences_dict,
         user_preferences_form=UserPreferencesForm(data=preferences_dict),
+        doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
     )
 
 
@@ -118,7 +119,7 @@ def change_username():
 def upload_api_key():
     form = UploadAPIKeyForm()
     if form.validate_on_submit():
-        data = request.get_json()  # Get data as JSON
+        data = request.get_json()
         api_key = data.get("api_key")
         nickname = data.get("nickname")
         api_key_pattern = re.compile(r"sk-[A-Za-z0-9]{48}")

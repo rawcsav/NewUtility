@@ -153,7 +153,6 @@ h2 {
 .painter {
   top: 10vh;
   position: absolute;
-
   right: 0;
   z-index: 2;
 }
@@ -585,7 +584,6 @@ a {
   background: none;
   cursor: pointer;
   padding: 5px;
-  margin-left: 5px;
 }
 
 .edit-btn i,
@@ -600,27 +598,23 @@ a {
 
 .button-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 5px;
 }
 
 .doc-upload,
 .docs-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
-
-.docs-container {
-  overflow-y: auto;
-  max-height: 100%;
-  height: 60%;
-}
+.docs-container{
+align-items: center;}
 
 #author-edit,
 #title-edit {
   border: none;
-  min-width: 200px;
 }
 
 .form-group {
@@ -698,12 +692,10 @@ output {
   margin-left: 10px;
 }
 
-#update-preferences-form {
+#update-preferences-form,
+#docs-preferences-form {
   display: flex;
   flex-direction: column;
-  /* padding: 20px; */
-  overflow-y: auto;
-  max-height: 50%;
   align-items: flex-start;
   justify-content: flex-start;
 }
@@ -750,7 +742,10 @@ output {
   transform: scale(1.05);
 }
 
-#preference-submit {
+#preference-submit,
+#docs-preferences-submit {
+  margin-left: auto;
+  margin-right: auto;
   background: #ec9ca0;
   font-family: inherit;
   padding: 0.6em 1.3em;
@@ -773,7 +768,8 @@ output {
   box-shadow: 0.05em 0.05em;
 }
 
-#preference-popup {
+#preference-popup,
+#docs-settings-popup {
   display: none;
 }
 
@@ -811,9 +807,21 @@ h3 {
 
 #conversation-container h3,
 #preference-popup h3,
-#docs-settings-popup h3 {
+#docs-settings-popup h3,
+#docs-edit-popup h3 {
   font-size: 18px;
   color: #ed872d;
+}
+
+#preference-popup,
+#docs-settings-popup,
+#docs-edit-popup {
+  max-height: 70%;
+  overflow-y: auto;
+}
+
+#docs-edit-popup {
+  width: 100%;
 }
 
 .options-button,
@@ -854,28 +862,12 @@ h3 {
   color: #555;
 }
 
-#show-history-btn.active i,
+#docs-edit-btn.active i,
 #show-preferences-btn.active i,
 #docs-preferences-btn.active i {
   color: #cd2000;
 }
 
-.system-message p {
-  font-size: 12px;
-}
-
-.message h5 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 1.2rem;
-  margin-right: auto;
-}
-
-#docs-settings-popup {
-  background-color: #fefdf9; /* Background color for the entire popup */
-  height: 100%; /* Full height of the containing element */
-  overflow-y: auto; /* Enable vertical scroll if the content overflows */
-  overflow-x: hidden;
-}
 
 .docs-list-container {
   max-height: 80%; /* Maximum height to ensure some space from the top and bottom */
@@ -888,7 +880,18 @@ h3 {
 .docs_list {
   list-style: none; /* Remove default list styling */
   padding: 0; /* No padding to align items to the edges */
-  margin: 0; /* No margin to align items to the edges */
+  margin: 10px 0 0;
+}
+
+.docs_list li {
+  border-bottom: 1px solid #ddd; /* Border for separation between items */,
+padding:5px;
+
+}
+
+#docs-preferences-form ul {
+  padding: 0;
+  margin: 0 0 25px;
 }
 
 .docs-settings-header {
@@ -908,12 +911,17 @@ h3 {
   flex-direction: column;
   gap: 15px;
 }
+.knowledge-select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10px;
+}
 
 .document-item {
   display: flex; /* Flex layout for horizontal alignment */
   justify-content: space-between; /* Space out the document info and the select checkbox */
-  align-items: center; /* Align items vertically */
-  margin-left: 10px; /* Padding for spacing inside each document item */
+  align-items: center;
   padding: 5px;
   border-bottom: 1px solid #ddd; /* Border for separation between items */
 }

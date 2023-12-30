@@ -5,99 +5,12 @@ hljs.configure({
   ignoreUnescapedHTML: true,
 });
 
-function debounce(func, delay) {
-  let debounceTimer;
-  return function () {
-    const context = this;
-    const args = arguments;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => func.apply(context, args), delay);
-  };
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
 }
 
-function updateKnowledgeContextTokens() {
-  let value = document.getElementById("max-context-tokens").value;
-  fetch("/embeddings/update-knowledge-context-tokens", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      knowledge_context_tokens: value,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-}
-
-// Here we pass the reference to the function without invoking it
-let debounceKnowledgeContextTokens = debounce(
-  updateKnowledgeContextTokens,
-  250,
-);
-
-function updateKnowledgeQueryMode() {
-  let isChecked = document.getElementById("use-docs").checked;
-  fetch("/embeddings/update-knowledge-query-mode", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      knowledge_query_mode: isChecked,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-}
-
-function updateDocumentSelection(documentId) {
-  let isChecked = document.getElementById("checkbox-" + documentId).checked;
-  fetch("/embeddings/update-document-selection", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      document_id: documentId,
-      selected: isChecked,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-}
-
-// Get the slider and the display elements
-let slider = document.getElementById("max-context-tokens");
-let sliderValueDisplay = document.getElementById("max-context-tokens-value");
-
-// Function to update the display value with a percentage sign
-function updateDisplayValue(value) {
-  sliderValueDisplay.value = value + "%";
-}
-
-// Set the initial value of the display to match the slider with a percentage sign
-updateDisplayValue(slider.value);
-
-// Update the display value when the slider is moved
-slider.addEventListener("input", function () {
-  updateDisplayValue(this.value);
-});
-
-// Update the slider value when the display value is changed
-sliderValueDisplay.addEventListener("input", function () {
-  let value = parseInt(this.value.replace("%", ""), 10);
-  if (!isNaN(value) && value >= 0 && value <= 80) {
-    // Assuming 0 to 80 is the slider's range
-    slider.value = value;
-  }
-});
-
-slider.addEventListener("change", debounceKnowledgeContextTokens);
-sliderValueDisplay.addEventListener("change", debounceKnowledgeContextTokens);
 function showToast(message, type) {
   let toast = document.getElementById("toast");
   if (!toast) {
@@ -136,6 +49,115 @@ function throttle(func, limit) {
 function scrollToBottom(chatBox) {
   requestAnimationFrame(() => {
     chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+function setActiveButton(activeButtonId) {
+  document.querySelectorAll(".options-button").forEach(function (button) {
+    button.classList.remove("active");
+  });
+
+  if (activeButtonId) {
+    var activeButton = document.getElementById(activeButtonId);
+    if (activeButton) {
+      activeButton.classList.add("active");
+    }
+  }
+}
+
+function setupFormSubmission(
+  formId,
+  submitUrl,
+  successCallback,
+  errorCallback,
+) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
+    submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
+  });
+}
+
+function submitForm(formData, submitUrl) {
+  return fetch(submitUrl, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCsrfToken(),
+    },
+    body: formData,
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Failed to update preferences.");
+    }
+    return response.json();
+  });
+}
+
+function handleResponse(data) {
+  if (data.status === "success") {
+    showToast(data.message, "success");
+  } else {
+    showToast(data.message, "error");
+    console.error(data.errors);
+  }
+}
+
+setupFormSubmission(
+  "update-preferences-form",
+  "/chat/update-preferences",
+  handleResponse,
+  (error) => showToast("Error: " + error.message, "error"),
+);
+
+setupFormSubmission(
+  "docs-preferences-form",
+  "/embeddings/update-doc-preferences",
+  handleResponse,
+  (error) => showToast("Error: " + error.message, "error"),
+);
+
+function togglePopup(activePopupId, activeButtonId) {
+  requestAnimationFrame(() => {
+    // Define all popup elements and their corresponding buttons
+    const popups = {
+      "preference-popup": "show-preferences-btn",
+      "docs-settings-popup": "docs-preferences-btn",
+      "conversation-container": "show-history-btn",
+    };
+
+    // Iterate through the popups to show/hide them as necessary
+    Object.keys(popups).forEach((popupId) => {
+      document.getElementById(popupId).style.display =
+        popupId === activePopupId ? "block" : "none";
+    });
+
+    // Set the active button
+    setActiveButton(activeButtonId);
+  });
+}
+
+var showPreferencesBtn = document.getElementById("show-preferences-btn");
+if (showPreferencesBtn) {
+  showPreferencesBtn.addEventListener("click", function () {
+    togglePopup("preference-popup", "show-preferences-btn");
+  });
+}
+
+var docsPreferencesBtn = document.getElementById("docs-preferences-btn");
+if (docsPreferencesBtn) {
+  docsPreferencesBtn.addEventListener("click", function () {
+    togglePopup("docs-settings-popup", "docs-preferences-btn");
+  });
+}
+
+var conversationHistoryBtn = document.getElementById("show-history-btn");
+if (conversationHistoryBtn) {
+  conversationHistoryBtn.addEventListener("click", function () {
+    togglePopup("conversation-container", "show-history-btn");
   });
 }
 
@@ -253,25 +275,6 @@ function updateConversationUI(conversationId, newTitle) {
   });
 }
 
-function setActiveButton(activeButtonId) {
-  document.querySelectorAll(".options-button").forEach(function (button) {
-    button.classList.remove("active");
-  });
-
-  if (activeButtonId) {
-    let activeButton = document.getElementById(activeButtonId);
-    if (activeButton) {
-      activeButton.classList.add("active");
-    }
-  }
-}
-
-function getCsrfToken() {
-  return document
-    .querySelector('meta[name="csrf-token"]')
-    .getAttribute("content");
-}
-
 function appendStreamedResponse(chunk, chatBox, isUserMessage = false) {
   requestAnimationFrame(() => {
     if (!window.currentStreamMessageDiv) {
@@ -306,15 +309,6 @@ function createStreamMessageDiv(isUserMessage) {
 
   window.incompleteMarkdownBuffer = "";
   return messageDiv;
-}
-
-function toggleDocPreferences() {
-  requestAnimationFrame(() => {
-    document.getElementById("conversation-container").style.display = "none";
-    document.getElementById("preference-popup").style.display = "none";
-    document.getElementById("docs-settings-popup").style.display = "block";
-    setActiveButton("docs-preferences-btn");
-  });
 }
 
 function updateStreamMessageContent(isUserMessage, chunk) {
@@ -385,15 +379,6 @@ function finalizeStreamedResponse(isUserMessage = false) {
 function resetStreamMessageGlobals() {
   window.currentStreamMessageDiv = null;
   window.incompleteMarkdownBuffer = "";
-}
-
-function togglePreferences() {
-  requestAnimationFrame(() => {
-    document.getElementById("conversation-container").style.display = "none";
-    document.getElementById("preference-popup").style.display = "block";
-    document.getElementById("docs-settings-popup").style.display = "none";
-    setActiveButton("show-preferences-btn");
-  });
 }
 
 function appendMessageToChatBox(message, className, messageId, images = []) {
@@ -866,9 +851,6 @@ requestAnimationFrame(() => {
   setupModelChangeListener();
   setupChatCompletionForm();
   setupNewConversationForm();
-  setupUpdatePreferencesForm();
-  setupWindowClick();
-  toggleHistory();
   checkConversationHistory();
   setupImageUpload();
 });
@@ -909,15 +891,6 @@ function initializeToggleButton() {
       interruptAIResponse();
       toggleButtonState();
     }
-  });
-}
-
-function toggleHistory() {
-  requestAnimationFrame(() => {
-    document.getElementById("conversation-container").style.display = "block";
-    document.getElementById("preference-popup").style.display = "none";
-    document.getElementById("docs-settings-popup").style.display = "none";
-    setActiveButton("show-history-btn");
   });
 }
 
@@ -1442,87 +1415,6 @@ function createConversationEntry(conversationId, conversationTitle) {
   return newConvoEntry;
 }
 
-function setupUpdatePreferencesForm() {
-  const updatePreferencesForm = document.getElementById(
-    "update-preferences-form",
-  );
-  if (!updatePreferencesForm) return;
-
-  updatePreferencesForm.addEventListener("submit", function (event) {
-    handleUpdatePreferencesFormSubmission(event);
-  });
-}
-
-function handleUpdatePreferencesFormSubmission(event) {
-  event.preventDefault();
-  const formData = new FormData(event.target);
-
-  submitUpdatePreferences(formData)
-    .then((data) => {
-      processUpdatePreferencesResponse(data);
-
-      setupImageUpload();
-    })
-    .catch((error) => showToast("Error: " + error.message, "error"));
-}
-
-function submitUpdatePreferences(formData) {
-  return fetch("/chat/update-preferences", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-    },
-    body: formData,
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("Failed to update preferences.");
-    }
-    return response.json();
-  });
-}
-
-function processUpdatePreferencesResponse(data) {
-  if (data.status === "success") {
-    showToast(data.message, "success");
-  } else {
-    showToast(data.message, "error");
-    console.error(data.errors);
-  }
-}
-
-function setupWindowClick() {
-  window.addEventListener("click", function (event) {
-    closePreferencePopupOnClick(event);
-  });
-}
-
-function closePreferencePopupOnClick(event) {
-  requestAnimationFrame(() => {
-    const popup = document.getElementById("preference-popup");
-    if (popup && event.target === popup) {
-      popup.classList.remove("show");
-    }
-  });
-}
-
-// Handle for 'Show History' button
-const showHistoryBtn = document.getElementById("show-history-btn");
-if (showHistoryBtn) {
-  showHistoryBtn.addEventListener("click", toggleHistory);
-}
-
-// Handle for 'Show Preferences' button
-const showPreferencesBtn = document.getElementById("show-preferences-btn");
-if (showPreferencesBtn) {
-  showPreferencesBtn.addEventListener("click", togglePreferences);
-}
-
-// Handle for 'Docs Preferences' button
-const docsPreferencesBtn = document.getElementById("docs-preferences-btn");
-if (docsPreferencesBtn) {
-  docsPreferencesBtn.addEventListener("click", toggleDocPreferences);
-}
-
 // Handles for 'Delete Conversation' buttons
 const deleteButtons = document.querySelectorAll(".delete-conversation");
 deleteButtons.forEach(function (button) {
@@ -1539,23 +1431,6 @@ conversationEntries.forEach(function (entry) {
   entry.addEventListener("click", function () {
     let conversationId = entry.getAttribute("data-conversation-id");
     selectConversation(conversationId);
-  });
-});
-
-// Handle for 'Use Docs' checkbox in Knowledge Retrieval
-const useDocsCheckbox = document.getElementById("use-docs");
-if (useDocsCheckbox) {
-  useDocsCheckbox.addEventListener("click", updateKnowledgeQueryMode);
-}
-
-// Handles for document selection checkboxes
-const docCheckboxes = document.querySelectorAll(
-  ".doc-select input[type=checkbox]",
-);
-docCheckboxes.forEach(function (checkbox) {
-  checkbox.addEventListener("click", function () {
-    let documentId = checkbox.id.replace("checkbox-", "");
-    updateDocumentSelection(documentId);
   });
 });
 

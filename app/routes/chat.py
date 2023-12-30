@@ -22,6 +22,7 @@ from app.util.forms_util import (
     ChatCompletionForm,
     UserPreferencesForm,
     NewConversationForm,
+    UpdateDocPreferencesForm,
 )
 from app.util.session_util import initialize_openai_client
 from sqlalchemy.inspection import inspect
@@ -105,6 +106,7 @@ def chat_index():
         image_urls=image_urls,
         documents=documents_data,
         preferences_dict=preferences_dict,
+        doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
     )
 
 
@@ -199,10 +201,8 @@ def update_preferences():
             old_model == "gpt-4-vision-preview"
             and form.model.data != "gpt-4-vision-preview"
         ):
-            # Delete all associated images for the current user
             MessageImages.query.filter_by(user_id=current_user.id).delete()
 
-            # Set is_vision to False for all messages associated with the user's images
             message_ids_with_images = MessageImages.query.with_entities(
                 MessageImages.message_id
             ).filter_by(user_id=current_user.id)

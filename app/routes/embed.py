@@ -14,7 +14,12 @@ from app.util.embeddings_util import (
     store_embeddings,
     save_temp_file,
 )
-from app.util.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm
+from app.util.forms_util import (
+    DocumentUploadForm,
+    EditDocumentForm,
+    DeleteDocumentForm,
+    UpdateDocPreferencesForm,
+)
 from app.util.session_util import decrypt_api_key
 from app.util.usage_util import embedding_cost, update_usage_and_costs
 
@@ -51,11 +56,9 @@ def upload_document():
         return jsonify({"error": "Invalid form submission"}), 400
 
     files = request.files.getlist("file")
-    titles = request.form.get("title", "").split(",") if "title" in request.form \
-        else []
+    titles = request.form.get("title", "").split(",") if "title" in request.form else []
     authors = (
-        request.form.get("author", "").split(",") if "author" in request.form
-        else []
+        request.form.get("author", "").split(",") if "author" in request.form else []
     )
 
     for i, file in enumerate(files):
@@ -134,7 +137,7 @@ def upload_document():
                 {
                     "status": "success",
                     "message": "File uploaded and embedded successfully. "
-                               "Please refresh to see changes",
+                    "Please refresh to see changes",
                 }
             ),
             200,
@@ -163,7 +166,7 @@ def delete_document(document_id):
                 {
                     "status": "success",
                     "message": "Document deleted successfully."
-                               "\nPlease refresh to see changes",
+                    "\nPlease refresh to see changes",
                 }
             ),
             200,
@@ -199,7 +202,7 @@ def update_document():
                 {
                     "status": "success",
                     "message": "Document updated successfully."
-                               "\nPlease refresh to see changes",
+                    "\nPlease refresh to see changes",
                 }
             ),
             200,
@@ -251,3 +254,37 @@ def update_knowledge_context_tokens():
     db.session.commit()
 
     return jsonify({"status": "success"})
+
+
+@bp.route("/update-doc-preferences", methods=["POST"])
+@login_required
+def update_docs_preferences():
+    form = UpdateDocPreferencesForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        chat_preferences = ChatPreferences.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        chat_preferences.knowledge_query_mode = "knowledge_query_mode" in form_data
+        chat_preferences.knowledge_context_tokens = int(
+            form_data.get("knowledge_context_tokens", 0)
+        )
+
+        Document.query.filter_by(user_id=current_user.id).update({"selected": False})
+
+        for key in form_data.keys():
+            if key.startswith("document_selection_"):
+                doc_id = key.split("_")[-1]
+                document = Document.query.get(doc_id)
+                if document and document.user_id == current_user.id:
+                    document.selected = True
+
+        # Commit the changes to the database
+        try:
+            db.session.commit()
+            return jsonify(
+                {"status": "success", "message": "Preferences updated successfully."}
+            )
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": str(e)})

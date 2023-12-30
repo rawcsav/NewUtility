@@ -79,8 +79,11 @@
           <button id="show-preferences-btn" class="options-button">
             <i class="fas fa-comment"></i>
           </button>
+          <button id="docs-edit-btn" class="options-button">
+            <i class="fas fa-file-signature"></i>
+          </button>
           <button id="docs-preferences-btn" class="options-button">
-            <i class="fa-regular fa-file-lines"></i>
+            <i class="fas fa-file-lines"></i>
           </button>
         </div>
       </div>
@@ -213,47 +216,105 @@
           />
         </form>
       </div>
-      <div id="docs-settings-popup" class="docs-settings-popup hidden">
-        <h3>Knowledge Retrieval</h3>
-        <div class="docs-list-container">
+      <div id="docs-edit-popup" class="docs-edit-popup hidden">
+        <h3>Documents</h3>
+        <div class="docs-container">
           <ul class="docs_list">
-            <li class="docs-settings-header">
-              <div class="docs-settings-controls">
-                <div class="docs-settings-check">
-                  <label for="use-docs">Knowledge Query:</label>
+            {% for document in documents %}
+            <li id="document-{{ document.id }}">
+              <form
+                class="edit-document-form"
+                action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
+                method="post"
+              >
+                <input
+                  type="hidden"
+                  name="document_id"
+                  value="{{ document.id }}"
+                />
+                <div class="editable-container">
                   <input
-                    type="checkbox"
-                    id="use-docs"
-                    name="use-docs"
-                    {%
-                    if
-                    preferences_dict.knowledge_query_mode
-                    %}checked{%
-                    endif
-                    %}
-                  />
-                </div>
-                <div class="docs-settings-slider">
-                  <label for="max-context-tokens">Context %:</label>
-                  <input
-                    type="range"
-                    id="max-context-tokens"
-                    name="max-context-tokens"
-                    min="0"
-                    max="80"
-                    value="{{ preferences_dict.knowledge_context_tokens }}"
-                    oninput="document.getElementById('max-context-tokens-value').value = this.value"
-                  />
-                  <input
+                    class="editable"
                     type="text"
-                    id="max-context-tokens-value"
-                    class="range-value-input"
-                    value="{{ preferences_dict.knowledge_context_tokens }}%"
-                    oninput="document.getElementById('max-context-tokens').value = this.value"
+                    id="title-edit"
+                    name="title"
+                    value="{{ document.title }}"
+                    readonly
                   />
+                  <input
+                    class="editable"
+                    type="text"
+                    id="author-edit"
+                    name="author"
+                    value="Author: {{ document.author }}"
+                    readonly
+                  />
+                  <p>Total Tokens: {{ document.total_tokens }}</p>
+                  <p>Chunk Count: {{ document.chunk_count }}</p>
                 </div>
+              </form>
+              <form
+                action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
+                method="post"
+              ></form>
+              <div class="button-container">
+                <button
+                  type="button"
+                  class="btn-icon edit-btn"
+                  title="Edit Document"
+                >
+                  <i class="fa fa-edit"></i>
+                </button>
+                <button
+                  type="button"
+                  class="btn-icon save-btn"
+                  title="Save Changes"
+                  style="display: none"
+                >
+                  <i class="fa fa-save"></i>
+                </button>
+                <button
+                  type="button"
+                  class="btn-icon delete-btn"
+                  data-doc-id="{{ document.id }}"
+                  title="Delete Document"
+                >
+                  <i class="fa fa-trash"></i>
+                </button>
               </div>
             </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div id="docs-settings-popup" class="docs-settings-popup hidden">
+        <h3>Knowledge Retrieval</h3>
+        <form id="docs-preferences-form">
+          {{ doc_preferences_form.hidden_tag() }}
+          <div class="knowledge-select form-group">
+            {{ doc_preferences_form.knowledge_query_mode.label }} {{
+            doc_preferences_form.knowledge_query_mode() }}
+          </div>
+          <div class="form-group">
+            {{ doc_preferences_form.knowledge_context_tokens.label }}
+            <input
+              type="range"
+              id="knowledge_context_tokens"
+              name="knowledge_context_tokens"
+              min="1"
+              max="80"
+              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
+              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value + '%'"
+            />
+            <input
+              type="text"
+              id="knowledge_context_tokens_value"
+              class="range-value-input"
+              value="{{ doc_preferences_form.knowledge_context_tokens.data }}%"
+              oninput="document.getElementById('knowledge_context_tokens').value = this.value.replace('%', '')"
+            />
+          </div>
+          <ul class="docs-preference-list">
             {% for document in documents %}
             <li id="document-{{ document.id }}" class="document-item">
               <div class="doc-info">
@@ -266,6 +327,7 @@
                 <input
                   type="checkbox"
                   id="checkbox-{{ document.id }}"
+                  name="document_selection_{{ document.id }}"
                   {%
                   if
                   document.selected
@@ -277,7 +339,13 @@
             </li>
             {% endfor %}
           </ul>
-        </div>
+          <input
+            type="submit"
+            value="Save Preferences"
+            id="docs-preferences-submit"
+            class="button-send"
+          />
+        </form>
       </div>
     </div>
     <div class="shape info-square" id="orange">
@@ -293,7 +361,6 @@
         </p>
       </div>
       <h2>Change Info</h2>
-
       <div class="change-info">
         <div class="user-change">
           <button id="toggleUserButton" class="button dropdown-button">
@@ -322,78 +389,7 @@
         </div>
       </div>
     </div>
-    <div class="shape circle" id="yellow">
-      <h2>Documents</h2>
-      <div id="docsStatus"></div>
-      <div class="docs-container">
-        <ul class="docs_list">
-          {% for document in documents %}
-          <li id="document-{{ document.id }}">
-            <form
-              class="edit-document-form"
-              action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
-              method="post"
-            >
-              <input
-                type="hidden"
-                name="document_id"
-                value="{{ document.id }}"
-              />
-              <div class="editable-container">
-                <input
-                  class="editable"
-                  type="text"
-                  id="title-edit"
-                  name="title"
-                  value="{{ document.title }}"
-                  readonly
-                />
-                <input
-                  class="editable"
-                  type="text"
-                  id="author-edit"
-                  name="author"
-                  value="Author: {{ document.author }}"
-                  readonly
-                />
-                <p>Total Tokens: {{ document.total_tokens }}</p>
-                <p>Chunk Count: {{ document.chunk_count }}</p>
-              </div>
-            </form>
-            <form
-              action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
-              method="post"
-            ></form>
-            <div class="button-container">
-              <button
-                type="button"
-                class="btn-icon edit-btn"
-                title="Edit Document"
-              >
-                <i class="fa fa-edit"></i>
-              </button>
-              <button
-                type="button"
-                class="btn-icon save-btn"
-                title="Save Changes"
-                style="display: none"
-              >
-                <i class="fa fa-save"></i>
-              </button>
-              <button
-                type="button"
-                class="btn-icon delete-btn"
-                data-doc-id="{{ document.id }}"
-                title="Delete Document"
-              >
-                <i class="fa fa-trash"></i>
-              </button>
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
+    <div class="shape circle" id="yellow"></div>
     <div class="shape key-rectangle" id="red">
       <div class="key-container">
         <div class="key-edits">
@@ -425,7 +421,6 @@
                 maxlength="25"
               />
             </div>
-
             <button type="submit" class="button save-api-key-button">
               <i class="fas fa-save"></i> Save
             </button>

@@ -4,6 +4,28 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function showToast(message, type) {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.className = type;
+
+  toast.style.display = "block";
+  toast.style.opacity = "1";
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 600);
+  }, 3000);
+}
+
 document
   .getElementById("username-change-form")
   .addEventListener("submit", function (event) {
@@ -342,33 +364,28 @@ function setActiveButton(activeButtonId) {
 function findOpenAIKeys(inputString) {
   const apiKeyPattern = /sk-[A-Za-z0-9]{48}/g;
   const apiKeys = inputString.match(apiKeyPattern) || [];
-  const uniqueApiKeys = [...new Set(apiKeys)]; // Remove duplicates
-  return uniqueApiKeys;
+  return [...new Set(apiKeys)];
 }
-function setupUpdatePreferencesForm() {
-  const updatePreferencesForm = document.getElementById(
-    "update-preferences-form",
-  );
-  if (!updatePreferencesForm) return;
 
-  updatePreferencesForm.addEventListener("submit", function (event) {
-    handleUpdatePreferencesFormSubmission(event);
+function setupFormSubmission(
+  formId,
+  submitUrl,
+  successCallback,
+  errorCallback,
+) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
+    submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
   });
 }
 
-function handleUpdatePreferencesFormSubmission(event) {
-  event.preventDefault();
-  const formData = new FormData(event.target);
-
-  submitUpdatePreferences(formData)
-    .then((data) => {
-      processUpdatePreferencesResponse(data);
-    })
-    .catch((error) => showToast("Error: " + error.message, "error"));
-}
-
-function submitUpdatePreferences(formData) {
-  return fetch("/chat/update-preferences", {
+function submitForm(formData, submitUrl) {
+  return fetch(submitUrl, {
     method: "POST",
     headers: {
       "X-CSRFToken": getCsrfToken(),
@@ -382,7 +399,7 @@ function submitUpdatePreferences(formData) {
   });
 }
 
-function processUpdatePreferencesResponse(data) {
+function handleResponse(data) {
   if (data.status === "success") {
     showToast(data.message, "success");
   } else {
@@ -391,150 +408,51 @@ function processUpdatePreferencesResponse(data) {
   }
 }
 
-function debounce(func, delay) {
-  let debounceTimer;
-  return function () {
-    const context = this;
-    const args = arguments;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => func.apply(context, args), delay);
-  };
-}
-
-function updateKnowledgeContextTokens() {
-  var value = document.getElementById("max-context-tokens").value;
-  fetch("/embeddings/update-knowledge-context-tokens", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      knowledge_context_tokens: value,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-}
-
-// Here we pass the reference to the function without invoking it
-let debounceKnowledgeContextTokens = debounce(
-  updateKnowledgeContextTokens,
-  250,
+setupFormSubmission(
+  "update-preferences-form",
+  "/chat/update-preferences",
+  handleResponse,
+  (error) => showToast("Error: " + error.message, "error"),
 );
 
-function updateKnowledgeQueryMode() {
-  var isChecked = document.getElementById("use-docs").checked;
-  fetch("/embeddings/update-knowledge-query-mode", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      knowledge_query_mode: isChecked,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-}
+setupFormSubmission(
+  "docs-preferences-form",
+  "/embeddings/update-doc-preferences",
+  handleResponse,
+  (error) => showToast("Error: " + error.message, "error"),
+);
 
-function updateDocumentSelection(documentId) {
-  var isChecked = document.getElementById("checkbox-" + documentId).checked;
-  fetch("/embeddings/update-document-selection", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      document_id: documentId,
-      selected: isChecked,
-    }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-}
-
-// Get the slider and the display elements
-let slider = document.getElementById("max-context-tokens");
-let sliderValueDisplay = document.getElementById("max-context-tokens-value");
-
-// Function to update the display value with a percentage sign
-function updateDisplayValue(value) {
-  sliderValueDisplay.value = value + "%";
-}
-
-// Set the initial value of the display to match the slider with a percentage sign
-updateDisplayValue(slider.value);
-
-// Update the display value when the slider is moved
-slider.addEventListener("input", function () {
-  updateDisplayValue(this.value);
-});
-
-// Update the slider value when the display value is changed
-sliderValueDisplay.addEventListener("input", function () {
-  let value = parseInt(this.value.replace("%", ""), 10);
-  if (!isNaN(value) && value >= 0 && value <= 80) {
-    // Assuming 0 to 80 is the slider's range
-    slider.value = value;
-  }
-});
-
-slider.addEventListener("change", debounceKnowledgeContextTokens);
-sliderValueDisplay.addEventListener("change", debounceKnowledgeContextTokens);
-function showToast(message, type) {
-  let toast = document.getElementById("toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    document.body.appendChild(toast);
-  }
-
-  toast.textContent = message;
-  toast.className = type;
-
-  toast.style.display = "block";
-  toast.style.opacity = "1";
-
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => {
-      toast.style.display = "none";
-    }, 600);
-  }, 3000);
-}
-
-setupUpdatePreferencesForm();
-
-function toggleDocPreferences() {
+function togglePopup(activePopupId, activeButtonId) {
   requestAnimationFrame(() => {
-    document.getElementById("preference-popup").style.display = "none";
-    document.getElementById("docs-settings-popup").style.display = "block";
-    setActiveButton("docs-preferences-btn");
+    // Define all popup elements and their corresponding buttons
+    const popups = {
+      "preference-popup": "show-preferences-btn",
+      "docs-settings-popup": "docs-preferences-btn",
+      "docs-edit-popup": "docs-edit-btn",
+    };
 
-    // Get the form element
-    var form = document.getElementById("docs-settings-form");
-
-    // Add a submit event listener to the form
-    form.addEventListener("submit", function (event) {
-      // Prevent the form from submitting normally
-      event.preventDefault();
-
-      // Call the function to update the preferences
-      updateDocumentSelection();
-
-      // You could also add any other functions you need to run on form submission here
+    // Iterate through the popups to show/hide them as necessary
+    Object.keys(popups).forEach((popupId) => {
+      document.getElementById(popupId).style.display =
+        popupId === activePopupId ? "block" : "none";
     });
+
+    // Set the active button
+    setActiveButton(activeButtonId);
   });
 }
 
-function togglePreferences() {
-  requestAnimationFrame(() => {
-    document.getElementById("preference-popup").style.display = "block";
-    document.getElementById("docs-settings-popup").style.display = "none";
-    setActiveButton("show-preferences-btn");
+var showPreferencesBtn = document.getElementById("show-preferences-btn");
+if (showPreferencesBtn) {
+  showPreferencesBtn.addEventListener("click", function () {
+    togglePopup("preference-popup", "show-preferences-btn");
+  });
+}
+
+var docsPreferencesBtn = document.getElementById("docs-preferences-btn");
+if (docsPreferencesBtn) {
+  docsPreferencesBtn.addEventListener("click", function () {
+    togglePopup("docs-settings-popup", "docs-preferences-btn");
   });
 }
 
@@ -582,42 +500,19 @@ function toggleUsageInfo(usageInfoId) {
   }
 }
 
-// Event listener for 'Show Preferences' button
-var showPreferencesBtn = document.getElementById("show-preferences-btn");
-if (showPreferencesBtn) {
-  showPreferencesBtn.addEventListener("click", togglePreferences);
-}
-
-// Event listener for 'Documents Preferences' button
-var docsPreferencesBtn = document.getElementById("docs-preferences-btn");
-if (docsPreferencesBtn) {
-  docsPreferencesBtn.addEventListener("click", toggleDocPreferences);
-}
-
-// Event listener for 'Use Documents' checkbox
-var useDocsCheckbox = document.getElementById("use-docs");
-if (useDocsCheckbox) {
-  useDocsCheckbox.addEventListener("click", updateKnowledgeQueryMode);
-}
-
-// Event listeners for document selection checkboxes
-document
-  .querySelectorAll('input[type="checkbox"][id^="checkbox-"]')
-  .forEach(function (checkbox) {
-    var documentId = checkbox.id.split("-")[1];
-    checkbox.addEventListener("click", function () {
-      updateDocumentSelection(documentId);
-    });
+var docsEditBtn = document.getElementById("docs-edit-btn");
+if (docsEditBtn) {
+  docsEditBtn.addEventListener("click", function () {
+    togglePopup("docs-edit-popup", "docs-edit-btn");
   });
+}
 
-// Event listener for 'Edit Document' buttons
 document.querySelectorAll(".edit-btn").forEach(function (editBtn) {
   editBtn.addEventListener("click", function () {
-    enableEditing(this.closest("li"));
+    enableEditing(editBtn);
   });
 });
 
-// Event listener for 'View Usage Info' buttons
 document
   .querySelectorAll(".view-usage-button")
   .forEach(function (viewUsageBtn) {

@@ -235,45 +235,32 @@
         </div>
         <div id="docs-settings-popup" class="docs-settings-popup hidden">
           <h3>Knowledge Retrieval</h3>
-          <div class="docs-list-container">
-            <ul class="docs_list">
-              <li class="docs-settings-header">
-                <div class="docs-settings-controls">
-                  <div class="docs-settings-check">
-                    <label for="use-docs">Knowledge Query:</label>
-                    <input
-                      type="checkbox"
-                      id="use-docs"
-                      name="use-docs"
-                      {%
-                      if
-                      preferences_dict.knowledge_query_mode
-                      %}checked{%
-                      endif
-                      %}
-                    />
-                  </div>
-                  <div class="docs-settings-slider">
-                    <label for="max-context-tokens">Context %:</label>
-                    <input
-                      type="range"
-                      id="max-context-tokens"
-                      name="max-context-tokens"
-                      min="0"
-                      max="80"
-                      value="{{ preferences_dict.knowledge_context_tokens }}"
-                      oninput="document.getElementById('max-context-tokens-value').value = this.value"
-                    />
-                    <input
-                      type="text"
-                      id="max-context-tokens-value"
-                      class="range-value-input"
-                      value="{{ preferences_dict.knowledge_context_tokens }}%"
-                      oninput="document.getElementById('max-context-tokens').value = this.value"
-                    />
-                  </div>
-                </div>
-              </li>
+          <form id="docs-preferences-form">
+            {{ doc_preferences_form.hidden_tag() }}
+            <div class="knowledge-select form-group">
+              {{ doc_preferences_form.knowledge_query_mode.label }} {{
+              doc_preferences_form.knowledge_query_mode() }}
+            </div>
+            <div class="form-group">
+              {{ doc_preferences_form.knowledge_context_tokens.label }}
+              <input
+                type="range"
+                id="knowledge_context_tokens"
+                name="knowledge_context_tokens"
+                min="1"
+                max="80"
+                value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
+                oninput="document.getElementById('knowledge_context_tokens_value').value = this.value + '%'"
+              />
+              <input
+                type="text"
+                id="knowledge_context_tokens_value"
+                class="range-value-input"
+                value="{{ doc_preferences_form.knowledge_context_tokens.data }}%"
+                oninput="document.getElementById('knowledge_context_tokens').value = this.value.replace('%', '')"
+              />
+            </div>
+            <ul class="docs-preference-list">
               {% for document in documents %}
               <li id="document-{{ document.id }}" class="document-item">
                 <div class="doc-info">
@@ -286,6 +273,7 @@
                   <input
                     type="checkbox"
                     id="checkbox-{{ document.id }}"
+                    name="document_selection_{{ document.id }}"
                     {%
                     if
                     document.selected
@@ -297,7 +285,13 @@
               </li>
               {% endfor %}
             </ul>
-          </div>
+            <input
+              type="submit"
+              value="Save Preferences"
+              id="docs-preferences-submit"
+              class="button-send"
+            />
+          </form>
         </div>
       </div>
       <div class="chat-container">

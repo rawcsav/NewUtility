@@ -191,20 +191,17 @@ def get_embedding_batch(
         text = text.replace("\n", " ")
         token_estimate = count_tokens(text)
         if current_tokens + token_estimate > MAX_TOKENS_PER_BATCH:
-            # Process the current batch
             batch_embeddings = [
                 get_embedding(single_text, client, model, **kwargs)
                 for single_text in current_batch
             ]
             embeddings.extend(batch_embeddings)
-            # Reset for next batch
             current_batch = []
             current_tokens = 0
 
         current_batch.append(text)
         current_tokens += token_estimate
 
-    # Process any remaining texts in the final batch
     if current_batch:
         batch_embeddings = [
             get_embedding(single_text, client, model, **kwargs)

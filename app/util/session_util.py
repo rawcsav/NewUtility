@@ -18,7 +18,7 @@ def generate_confirmation_code():
 
 
 def load_encryption_key():
-    return os.environ['CRYPT_KEY'].encode()
+    return os.environ["CRYPT_KEY"].encode()
 
 
 def encrypt_api_key(api_key):
@@ -29,38 +29,12 @@ def encrypt_api_key(api_key):
 
 def decrypt_api_key(encrypted_api_key):
     cipher_suite = Fernet(load_encryption_key())
-    decrypted_api_key = cipher_suite.decrypt(
-        encrypted_api_key)
+    decrypted_api_key = cipher_suite.decrypt(encrypted_api_key)
     return decrypted_api_key.decode()
 
 
 def hash_api_key(api_key):
-    return hashlib.sha256(api_key.encode('utf-8')).hexdigest()
-
-
-def is_api_key_valid(api_key):
-    openai.api_key = api_key
-    try:
-        openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello!"}
-            ],
-            max_tokens=5,
-            temperature=0,
-        )
-    except openai.APIConnectionError as e:
-        print(f"Invalid request: {e}")
-        return False
-    except openai.APIStatusError as e:
-        print(f"OpenAI error: {e}")
-        return False
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return False
-    else:
-        return True
+    return hashlib.sha256(api_key.encode("utf-8")).hexdigest()
 
 
 def check_dalle3(api_key):
@@ -76,7 +50,8 @@ def check_dalle3(api_key):
             size="1024x1024",
             quality="standard",
             style="vivid",
-            n=1)
+            n=1,
+        )
 
     except openai.APIConnectionError as e:
         print(f"Invalid request: {e}")
@@ -89,18 +64,6 @@ def check_dalle3(api_key):
         return False
     else:
         return True
-
-
-def get_openai_client():
-    if current_user.is_authenticated:
-        encrypted_api_key = current_user.selected_api_key.encrypted_api_key
-        decrypted_api_key = decrypt_api_key(
-            encrypted_api_key)
-
-        client = openai.OpenAI(api_key=decrypted_api_key)
-        return client
-    else:
-        raise Exception("No authenticated user")
 
 
 def check_available_models(api_key):
@@ -121,9 +84,9 @@ def test_gpt4(key):
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello!"}
+                {"role": "user", "content": "Hello!"},
             ],
-            max_tokens=10,
+            max_tokens=1,
             temperature=0,
         )
     except openai.APIConnectionError as e:
@@ -146,9 +109,9 @@ def test_gpt3(key):
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello!"}
+                {"role": "user", "content": "Hello!"},
             ],
-            max_tokens=10,
+            max_tokens=1,
             temperature=0,
         )
         if test.choices[0].message.content:
@@ -159,22 +122,27 @@ def test_gpt3(key):
 
 def random_string(length=5):
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(length))
+    return "".join(random.choice(letters) for i in range(length))
 
 
 def verify_recaptcha(recaptcha_secret, recaptcha_response):
     if not recaptcha_response:
-        return {'status': 'error',
-                'message': 'reCAPTCHA verification failed. Please try again.'}, 400
+        return {
+            "status": "error",
+            "message": "reCAPTCHA verification failed. Please try again.",
+        }, 400
 
-    recaptcha_data = {'secret': recaptcha_secret, 'response': recaptcha_response}
-    recaptcha_request = requests.post('https://www.google.com/recaptcha/api/siteverify',
-                                      data=recaptcha_data)
+    recaptcha_data = {"secret": recaptcha_secret, "response": recaptcha_response}
+    recaptcha_request = requests.post(
+        "https://www.google.com/recaptcha/api/siteverify", data=recaptcha_data
+    )
     recaptcha_result = recaptcha_request.json()
 
-    if not recaptcha_result.get('success'):
-        return {'status': 'error',
-                'message': 'reCAPTCHA verification failed. Please try again.'}, 400
+    if not recaptcha_result.get("success"):
+        return {
+            "status": "error",
+            "message": "reCAPTCHA verification failed. Please try again.",
+        }, 400
 
     return None
 
@@ -187,10 +155,11 @@ def get_or_create_user(email, username, login_method, default_user_password):
         user = User(
             email=email,
             username=username,
-            email_confirmed=True,
+            email_confirmed=False,
             password_hash=bcrypt.generate_password_hash(default_user_password).decode(
-                'utf-8'),
-            login_method=login_method
+                "utf-8"
+            ),
+            login_method=login_method,
         )
         db.session.add(user)
         db.session.commit()
@@ -205,7 +174,7 @@ def initialize_openai_client(user_id):
     user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
 
     if not user_api_key:
-        return None, 'API Key not found.'
+        return None, "API Key not found."
 
     api_key = decrypt_api_key(user_api_key.encrypted_api_key)
     client = OpenAI(api_key=api_key)
@@ -213,7 +182,7 @@ def initialize_openai_client(user_id):
 
 
 def generate_unique_username(base_username):
-    sanitized_username = re.sub(r'\W+', '', base_username)
+    sanitized_username = re.sub(r"\W+", "", base_username)
 
     new_username = sanitized_username
     counter = 1
