@@ -23,6 +23,7 @@ from app.database import (
     ModelContextWindow,
     Document,
 )
+from app.util.vector_cache import VectorCache
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-ada-002"
@@ -216,8 +217,7 @@ def serialize_embedding(embedding_list):
     return pickle.dumps(embedding_list)
 
 
-def deserialize_embedding(serialized_embedding):
-    return pickle.loads(serialized_embedding)
+
 
 
 def store_embeddings(document_id, embeddings):
@@ -235,10 +235,19 @@ def store_embeddings(document_id, embeddings):
             model=EMBEDDING_MODEL,
         )
         db.session.add(embedding_model)
-
+        db.session.commit()
+        VectorCache.load_user_vectors(current_user.id)
 
 def cosine_similarity(vec_a, vec_b):
-    return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b))
+    return np.dot(vec_a, vec_b)
+
+
+def get_associated_text(id):
+    embedding = DocumentEmbedding.query.filter_by(chunk_id=id).first()
+    if embedding:
+        chunk = DocumentChunk.query.filter_by(id=embedding.chunk_id).first()
+        return chunk.content if chunk else None
+    return None
 
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
@@ -251,7 +260,7 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
         user_preferences.knowledge_context_tokens / 100.0
     ) * context_window_size
 
-    # Fetch the document chunks, their embeddings, and additional details for the user
+    # Fetch the document chunks and additional details for the user
     document_chunks_with_details = (
         db.session.query(
             DocumentChunk.id,
@@ -260,58 +269,37 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
             DocumentChunk.pages,
             DocumentChunk.content,  # Include the chunk content
             DocumentChunk.tokens,
-            DocumentEmbedding.embedding,
         )
         .join(Document)
-        .join(DocumentEmbedding, DocumentChunk.id == DocumentEmbedding.chunk_id)
-        .filter(Document.user_id == user_id)
+        .filter(Document.user_id == user_id, Document.selected == 1)
         .all()
     )
+    print(document_chunks_with_details)
 
-    # Deserialize embeddings once and calculate similarities
-    # Deserialize embeddings once and calculate similarities
-    deserialized_embeddings = [
-        (
-            chunk_id,
-            title,
-            author,
-            pages,
-            chunk_content,
-            chunk_tokens,
-            deserialize_embedding(embedding),
-        )
-        for chunk_id, title, author, pages, chunk_content, chunk_tokens, embedding in document_chunks_with_details
-    ]
-    similarities = [
-        (
-            chunk_id,
-            title,
-            author,
-            pages,
-            chunk_content,
-            chunk_tokens,
-            cosine_similarity(query_embedding, embedding),
-        )
-        for chunk_id, title, author, pages, chunk_content, chunk_tokens, embedding in deserialized_embeddings
-    ]
-    similarities.sort(key=lambda x: x[4], reverse=True)  # Sort by similarity score
+    # Get the IDs of the chunks for the current user's documents
+    subset_ids = [str(chunk.id) for chunk in document_chunks_with_details]
 
+    # Get a descending list of similarities for the subset using the MIPS naive method
+    similarities = VectorCache.mips_naive(query_embedding, subset_ids)
+
+    # Select chunks that fit within the max_knowledge_context_tokens limit
     selected_chunks = []
     current_tokens = 0
-    for rank, (
-        chunk_id,
-        title,
-        author,
-        pages,
-        chunk_content,
-        chunk_tokens,
-        similarity,
-    ) in enumerate(similarities, start=1):
-        if current_tokens + chunk_tokens <= max_knowledge_context_tokens:
+    for chunk_id, similarity in similarities:
+        chunk = next((c for c in document_chunks_with_details if str(c.id) == chunk_id), None)
+        if chunk and current_tokens + chunk.tokens <= max_knowledge_context_tokens:
             selected_chunks.append(
-                (chunk_id, title, author, pages, chunk_content, similarity, rank)
+                (
+                    chunk.id,
+                    chunk.title,
+                    chunk.author,
+                    chunk.pages,
+                    chunk.content,
+                    chunk.tokens,
+                    similarity,
+                )
             )
-            current_tokens += chunk_tokens
+            current_tokens += chunk.tokens
         else:
             break
 

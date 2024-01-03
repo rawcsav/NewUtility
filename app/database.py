@@ -28,7 +28,7 @@ class MessageChunkAssociation(db.Model):
 class UserAPIKey(db.Model):
     __tablename__ = "user_api_keys"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
     nickname = db.Column(
         db.String(25), nullable=False, default=generate_default_nickname
     )
@@ -87,7 +87,7 @@ class Conversation(db.Model):
     __tablename__ = "conversations"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=True, default="New Conversation")
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     system_prompt = db.Column(
         db.String(2048), nullable=True
@@ -103,7 +103,7 @@ class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(
-        db.Integer, db.ForeignKey("conversations.id", ondelete="CASCADE")
+        db.Integer, db.ForeignKey("conversations.id", ondelete="CASCADE"), index=True
     )
     content = db.Column(db.Text, nullable=False)
     direction = db.Column(db.Enum("incoming", "outgoing"), nullable=False)
@@ -112,7 +112,7 @@ class Message(db.Model):
     is_voice = db.Column(db.Boolean, default=False)
     is_vision = db.Column(db.Boolean, default=False)
     is_error = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now(), index=True)
     message_images = db.relationship(
         "MessageImages", backref="message", lazy="joined", cascade="all, delete-orphan"
     )
@@ -134,7 +134,7 @@ class ChatPreferences(db.Model):
     __tablename__ = "chat_preferences"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), unique=True, index=True)
     model = db.Column(db.String(50), default="gpt-3.5-turbo")
     temperature = db.Column(db.Float, default=0.7)
     max_tokens = db.Column(db.Integer, default=2000)
@@ -153,7 +153,7 @@ class ChatPreferences(db.Model):
 class Document(db.Model):
     __tablename__ = "documents"
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title = db.Column(db.String(255), nullable=False)
     author = db.Column(db.String(255), nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)
@@ -172,9 +172,9 @@ class DocumentChunk(db.Model):
     __tablename__ = "document_chunks"
     id = db.Column(db.Integer, primary_key=True)
     document_id = db.Column(
-        db.Integer, db.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False
+        db.Integer, db.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    chunk_index = db.Column(db.Integer, nullable=False)
+    chunk_index = db.Column(db.Integer, nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     tokens = db.Column(db.Integer, nullable=False)
     pages = db.Column(db.Integer, nullable=True)
@@ -236,12 +236,12 @@ class MessageImages(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(255), nullable=False, unique=True)
     image_url = db.Column(db.String(255), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
     conversation_id = db.Column(
         db.Integer, db.ForeignKey("conversations.id", ondelete="CASCADE")
     )
     message_id = db.Column(
-        db.Integer, db.ForeignKey("messages.id", ondelete="CASCADE"), nullable=True
+        db.Integer, db.ForeignKey("messages.id", ondelete="CASCADE"), nullable=True, index=True
     )
     user = db.relationship("User", backref="message_images", lazy="joined")
     conversation = db.relationship(

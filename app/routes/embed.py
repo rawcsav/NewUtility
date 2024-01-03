@@ -115,7 +115,7 @@ def upload_document():
                 pages=pages_str,  # Store the serialized page numbers
             )
             db.session.add(chunk)
-
+        db.session.commit()
         embeddings = get_embedding_batch(chunks, client)
 
         # Calculate the cost for embedding generation
@@ -131,7 +131,6 @@ def upload_document():
         # Now store the embeddings in the database
         store_embeddings(new_document.id, embeddings)
 
-        db.session.commit()
         return (
             jsonify(
                 {

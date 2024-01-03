@@ -31,6 +31,8 @@ from sqlalchemy import or_
 from datetime import datetime, timedelta
 from flask_login import fresh_login_required
 
+from app.util.vector_cache import VectorCache
+
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
@@ -84,6 +86,7 @@ def login():
                     user.last_attempt_time = None
                     db.session.commit()
                     login_user(user, remember=remember)
+                    VectorCache.load_user_vectors(user.id)
                     return jsonify(
                         {"status": "success", "redirect": url_for("user.dashboard")}
                     )
@@ -241,6 +244,7 @@ def confirm_email():
 @login_required
 def logout():
     logout_user()
+    VectorCache.clear_cache()
     return redirect(url_for(".login"))
 
 

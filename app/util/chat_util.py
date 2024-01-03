@@ -397,7 +397,6 @@ def chat_nonstream(
 ):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
-        print("No conversation found for user.")
         return
     if conversation.user_id != current_user.id:
         abort(403)
