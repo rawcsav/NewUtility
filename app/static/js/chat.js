@@ -11,19 +11,44 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
-function showToast(message, type) {
-  let toast = document.getElementById("toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    document.body.appendChild(toast);
+// Function to display the loading template
+function showLoading() {
+  console.log("showLoading called");
+  const loadingTemplate = document.getElementById("loader-template");
+  if (loadingTemplate) {
+    loadingTemplate.style.display = "block";
   }
+}
 
+// Function to hide the loading template
+function hideLoading() {
+  console.log("hideLoading called");
+  const loadingTemplate = document.getElementById("loader-template");
+  if (loadingTemplate) {
+    loadingTemplate.style.display = "none";
+  }
+}
+
+// Refactored showToast function using modern JavaScript features:
+function showToast(message, type) {
+  let toast = document.getElementById("toast") || createToastElement();
   toast.textContent = message;
   toast.className = type;
+  showAndHideToast(toast);
+}
 
-  toast.style.display = "block";
-  toast.style.opacity = "1";
+function createToastElement() {
+  const toast = document.createElement("div");
+  toast.id = "toast";
+  document.body.appendChild(toast);
+  return toast;
+}
+
+function showAndHideToast(toast) {
+  Object.assign(toast.style, {
+    display: "block",
+    opacity: "1",
+  });
 
   setTimeout(() => {
     toast.style.opacity = "0";
@@ -52,16 +77,18 @@ function scrollToBottom(chatBox) {
   });
 }
 
-function setActiveButton(activeButtonId) {
-  document.querySelectorAll(".options-button").forEach(function (button) {
+function removeActiveClassFromButtons() {
+  document.querySelectorAll(".options-button").forEach((button) => {
     button.classList.remove("active");
   });
+}
 
-  if (activeButtonId) {
-    var activeButton = document.getElementById(activeButtonId);
-    if (activeButton) {
-      activeButton.classList.add("active");
-    }
+function setActiveButton(activeButtonId) {
+  removeActiveClassFromButtons();
+
+  const activeButton = document.getElementById(activeButtonId);
+  if (activeButton) {
+    activeButton.classList.add("active");
   }
 }
 
@@ -82,19 +109,20 @@ function setupFormSubmission(
   });
 }
 
-function submitForm(formData, submitUrl) {
-  return fetch(submitUrl, {
+async function submitForm(formData, submitUrl) {
+  const response = await fetch(submitUrl, {
     method: "POST",
     headers: {
       "X-CSRFToken": getCsrfToken(),
     },
     body: formData,
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("Failed to update preferences.");
-    }
-    return response.json();
   });
+
+  if (!response.ok) {
+    throw new Error("Failed to update preferences.");
+  }
+
+  return response.json();
 }
 
 function handleResponse(data) {
@@ -140,26 +168,17 @@ function togglePopup(activePopupId, activeButtonId) {
   });
 }
 
-var showPreferencesBtn = document.getElementById("show-preferences-btn");
-if (showPreferencesBtn) {
-  showPreferencesBtn.addEventListener("click", function () {
-    togglePopup("preference-popup", "show-preferences-btn");
-  });
+// After refactoring
+function setupButtonListener(buttonId, popupId) {
+  const button = document.getElementById(buttonId);
+  if (button) {
+    button.addEventListener("click", () => togglePopup(popupId, buttonId));
+  }
 }
 
-var docsPreferencesBtn = document.getElementById("docs-preferences-btn");
-if (docsPreferencesBtn) {
-  docsPreferencesBtn.addEventListener("click", function () {
-    togglePopup("docs-settings-popup", "docs-preferences-btn");
-  });
-}
-
-var conversationHistoryBtn = document.getElementById("show-history-btn");
-if (conversationHistoryBtn) {
-  conversationHistoryBtn.addEventListener("click", function () {
-    togglePopup("conversation-container", "show-history-btn");
-  });
-}
+setupButtonListener("show-preferences-btn", "preference-popup");
+setupButtonListener("docs-preferences-btn", "docs-settings-popup");
+setupButtonListener("show-history-btn", "conversation-container");
 
 function toggleButtonState() {
   const button = document.getElementById("toggle-button");
@@ -1229,6 +1248,7 @@ const throttledHandleChatCompletionFormSubmission = throttle(
 
 function submitChatMessage(message, form, images = []) {
   appendMessageToChatBox(message, "user-message", null, images);
+  showLoading();
   const formData = new FormData(form);
   formData.append("prompt", message);
   fetchChatCompletionResponse(formData)
@@ -1251,6 +1271,7 @@ function fetchChatCompletionResponse(formData) {
 function processChatCompletionResponse(response) {
   const contentType = response.headers.get("Content-Type");
   if (contentType && contentType.includes("text/plain")) {
+    hideLoading(); // Hide the loader when the response is processed
     toggleButtonState();
     processStreamedResponse(response);
   } else {
@@ -1327,6 +1348,7 @@ function processNonStreamedResponse(text) {
 
 function handleChatCompletionError(error) {
   requestAnimationFrame(() => {
+    hideLoading(); // Hide the loader when the response is processed
     showToast("Fetch Error: " + error.message, "error");
     console.error("Fetch error:", error);
   });

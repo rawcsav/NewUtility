@@ -61,13 +61,13 @@
         src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
       />
     </a>
-    <div class="hand1">
+    <div class="hand1 animatable">
       <img
         alt="Hand1"
         src="{{ url_for('static', filename='images/hand1.svg') }}"
       />
     </div>
-    <div class="hand2">
+    <div class="hand2 animatable">
       <img
         alt="Hand2"
         src="{{ url_for('static', filename='images/hand2.svg') }}"
@@ -101,7 +101,7 @@
     <div class="shape rectangle" id="blue">
       <h3>Please enter the confirmation code sent to your email.</h3>
     </div>
-    <div class="shape form-rectangle" id="purple">
+    <div class="shape form-rectangle animatable" id="purple">
       <form
         action="{{ url_for('auth.confirm_email') }}"
         id="confirm-email-form"
@@ -127,7 +127,7 @@
         <div id="message-container"></div>
       </form>
     </div>
-    <div class="shape square" id="orange">
+    <div class="shape square" id="orange animatable">
       <h2 id="confirm-title">Confirm Email</h2>
     </div>
     {% include 'footer.html' %}

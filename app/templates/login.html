@@ -60,13 +60,13 @@
         src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
       />
     </a>
-    <div class="hand1">
+    <div class="hand1 animatable">
       <img
         alt="Hand1"
         src="{{ url_for('static', filename='images/hand1.svg') }}"
       />
     </div>
-    <div class="wave">
+    <div class="wave animatable">
       <img
         alt="Wave"
         src="{{ url_for('static', filename='images/wave.svg') }}"
@@ -138,7 +138,7 @@
         </div>
       </div>
     </div>
-    <div class="shape form-rectangle" id="purple">
+    <div class="shape form-rectangle animatable" id="purple">
       <div class="form-container" id="login-container">
         <form class="form" id="login-form" method="post">
           <input
@@ -181,10 +181,27 @@
         </form>
       </div>
     </div>
-    <div class="shape square" id="orange">
+    <div class="shape square animatable" id="orange">
       <h2 id="login-title">Welcome Back!</h2>
     </div>
     {% include 'footer.html' %}
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var googleLoginButton = document.getElementById("google-login-button");
+        if (googleLoginButton) {
+          googleLoginButton.addEventListener("click", function () {
+            window.location.href = "{{ url_for('auth.google_login') }}";
+          });
+        }
+
+        var githubLoginButton = document.getElementById("github-login-button");
+        if (githubLoginButton) {
+          githubLoginButton.addEventListener("click", function () {
+            window.location.href = "{{ url_for('auth.github_login') }}";
+          });
+        }
+      });
+    </script>
   </body>
   <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </html>

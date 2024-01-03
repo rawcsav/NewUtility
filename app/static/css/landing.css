@@ -21,14 +21,6 @@ html {
   z-index: 1000;
 }
 
-#toast.success {
-  background-color: green;
-}
-
-#toast.error {
-  background-color: red;
-}
-
 body {
   margin: 0;
   padding: 0;
@@ -63,16 +55,7 @@ body {
   z-index: 3;
 }
 
-.balloon2 {
-  position: absolute;
-  pointer-events: none;
-  top: 60%;
-  left: 30%;
-  rotate: 20deg;
-}
-
-.balloon img,
-.balloon2 img {
+.balloon img {
   width: 125px;
   height: auto;
   pointer-events: none;
@@ -130,15 +113,6 @@ p {
   justify-content: center;
   transform: rotate(-30deg);
   z-index: 5;
-}
-#pink {
-  background-color: #ec9ca0;
-  top: 5vh;
-  height: 14vw;
-  width: 22vw;
-  right: 29vw;
-  transform: rotate(5deg);
-  z-index: 1;
 }
 
 #blue {

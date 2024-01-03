@@ -316,21 +316,28 @@ def chat_stream(
         print(user_message_content)
         print(prompt)
         if retry:
-            # Remove the last entry if it is a user message
             if conversation_history and conversation_history[-1]["role"] == "user":
                 conversation_history.pop()
         else:
-            save_message(
-                conversation_id,
-                raw_prompt,
-                "outgoing",
-                preferences["model"],
-                images=images,
-                chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
-                similarity_ranks=[rank for _, rank in chunk_associations],
-            )
-
-        full_response = ""  # Initialize a variable to accumulate the full response
+            if chunk_associations is not None:
+                save_message(
+                    conversation_id,
+                    raw_prompt,
+                    "outgoing",
+                    preferences["model"],
+                    images=images,
+                    chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
+                    similarity_ranks=[rank for _, rank in chunk_associations],
+                )
+            else:
+                save_message(
+                    conversation_id,
+                    raw_prompt,
+                    "outgoing",
+                    preferences["model"],
+                    images=images,
+                )
+        full_response = ""
         try:
             response = client.chat.completions.create(**request_payload)
 
@@ -410,15 +417,24 @@ def chat_nonstream(
             if conversation_history and conversation_history[-1]["role"] == "user":
                 conversation_history.pop()
         else:
-            save_message(
-                conversation_id,
-                raw_prompt,
-                "outgoing",
-                preferences["model"],
-                images=images,
-                chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
-                similarity_ranks=[rank for _, rank in chunk_associations],
-            )
+            if chunk_associations is not None:
+                save_message(
+                    conversation_id,
+                    raw_prompt,
+                    "outgoing",
+                    preferences["model"],
+                    images=images,
+                    chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
+                    similarity_ranks=[rank for _, rank in chunk_associations],
+                )
+            else:
+                save_message(
+                    conversation_id,
+                    raw_prompt,
+                    "outgoing",
+                    preferences["model"],
+                    images=images,
+                )
         truncate_conversation(conversation_history, truncate_limit)
         try:
             response = client.chat.completions.create(
