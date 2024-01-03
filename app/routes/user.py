@@ -1,9 +1,11 @@
 import re
 from datetime import timedelta, datetime
-from app import db
-from app.database import User, GeneratedImage, Document, ChatPreferences
+
 from flask import Blueprint, render_template, redirect, url_for, request, jsonify
 from flask_login import login_required, current_user
+
+from app import db
+from app.database import User, GeneratedImage, Document, ChatPreferences
 from app.database import UserAPIKey
 from app.routes.chat import model_to_dict
 from app.util.forms_util import (
@@ -32,19 +34,19 @@ bp = Blueprint("user", __name__, url_prefix="/user")
 @login_required
 def dashboard():
     user_api_keys = (
-        UserAPIKey.query.filter_by(user_id=current_user.id)
+        UserAPIKey.query.filter_by(user_id=current_user.id, delete=False)
         .filter(UserAPIKey.label != "Error")
         .all()
     )
     selected_api_key_id = current_user.selected_api_key_id
     # Retrieve the user's images from the database ordered by 'id' descending
     user_images = (
-        GeneratedImage.query.filter_by(user_id=current_user.id)
+        GeneratedImage.query.filter_by(user_id=current_user.id, delete=False)
         .order_by(GeneratedImage.id.desc())
         .limit(15)
         .all()
     )
-    user_documents = Document.query.filter_by(user_id=current_user.id).all()
+    user_documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
     documents_data = [
         {
             "id": doc.id,
@@ -291,7 +293,7 @@ def delete_api_key():
         user_id=current_user.id, id=key_id
         ).first()
         if user_api_key:
-            user_api_key.to_delete = True  # Mark the API key as deleted
+            user_api_key.delete = True  # Mark the API key as deleted
             db.session.commit()
             return (
                 jsonify(

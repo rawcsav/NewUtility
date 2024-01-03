@@ -93,7 +93,11 @@ def get_user_conversation(user_id, conversation_id):
                 }
             )
 
-        messages = Message.query.filter_by(conversation_id=conversation.id).all()
+        messages = (
+            Message.query.filter_by(conversation_id=conversation_id)
+            .order_by(Message.created_at.asc())
+            .all()
+        )
         for message in messages:
             message_content = message.content
 
@@ -138,7 +142,11 @@ def user_history(user_id, conversation_id):
                 }
             )
 
-        messages = Message.query.filter_by(conversation_id=conversation.id).all()
+        messages = (
+            Message.query.filter_by(conversation_id=conversation_id)
+            .order_by(Message.created_at.asc())
+            .all()
+        )
         for message in messages:
             message_dict = {
                 "id": message.id,

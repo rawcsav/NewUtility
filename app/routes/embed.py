@@ -13,6 +13,7 @@ from app.util.embeddings_util import (
     get_embedding_batch,
     store_embeddings,
     save_temp_file,
+    delete_all_documents,
 )
 from app.util.forms_util import (
     DocumentUploadForm,
@@ -31,8 +32,9 @@ bp = Blueprint("embeddings", __name__, url_prefix="/embeddings")
 @login_required
 def embeddings_center():
     # Query the database for the current user's documents
-    user_documents = Document.query.filter_by(user_id=current_user.id).all()
-
+    user_documents = Document.query.filter_by(
+        user_id=current_user.id, delete=False
+    ).all()
     # Prepare document data for the template
     documents_data = [
         {
@@ -115,7 +117,7 @@ def upload_document():
                 pages=pages_str,  # Store the serialized page numbers
             )
             db.session.add(chunk)
-        db.session.commit()
+
         embeddings = get_embedding_batch(chunks, client)
 
         # Calculate the cost for embedding generation
@@ -131,6 +133,7 @@ def upload_document():
         # Now store the embeddings in the database
         store_embeddings(new_document.id, embeddings)
 
+        db.session.commit()
         return (
             jsonify(
                 {
@@ -149,7 +152,7 @@ def upload_document():
         remove_temp_file(temp_path)
 
 
-@bp.route("/delete/<int:document_id>", methods=["POST"])
+@bp.route("/delete/<string:document_id>", methods=["POST"])
 @login_required
 def delete_document(document_id):
     form = DeleteDocumentForm()
@@ -158,7 +161,7 @@ def delete_document(document_id):
         return jsonify({"error": "Unauthorized or invalid form submission"}), 403
 
     try:
-        db.session.delete(document)
+        document.delete = True
         db.session.commit()
         return (
             jsonify(

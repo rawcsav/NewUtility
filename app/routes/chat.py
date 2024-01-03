@@ -84,7 +84,7 @@ def chat_index():
     else:
         image_urls = []
 
-    user_documents = Document.query.filter_by(user_id=current_user.id).all()
+    user_documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
     documents_data = [
         {
             "id": doc.id,
@@ -156,7 +156,7 @@ def new_conversation():
         return jsonify({"status": "error", "errors": form.errors})
 
 
-@bp.route("/delete-conversation/<int:conversation_id>", methods=["POST"])
+@bp.route("/delete-conversation/<string:conversation_id>", methods=["POST"])
 @login_required
 def delete_conversation(conversation_id):
     conversation_to_delete = Conversation.query.get_or_404(conversation_id)
@@ -306,7 +306,7 @@ def chat_completion():
         return jsonify({"status": "error", "message": str(e)})
 
 
-@bp.route("/conversation/<int:conversation_id>", methods=["GET"])
+@bp.route("/conversation/<string:conversation_id>", methods=["GET"])
 @login_required
 def get_conversation_messages(conversation_id):
     conversation, conversation_history = user_history(current_user.id, conversation_id)
@@ -327,7 +327,7 @@ def get_conversation_messages(conversation_id):
         return jsonify({"error": "Conversation not found"}), 404
 
 
-@bp.route("/update-conversation-title/<int:conversation_id>", methods=["POST"])
+@bp.route("/update-conversation-title/<string:conversation_id>", methods=["POST"])
 @login_required
 def update_conversation_title(conversation_id):
     data = request.get_json()
@@ -359,7 +359,7 @@ def update_conversation_title(conversation_id):
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)})
 
-@bp.route("/conversation/<int:conversation_id>/messages", methods=["GET"])
+@bp.route("/conversation/<string:conversation_id>/messages", methods=["GET"])
 @login_required
 def get_paginated_messages(conversation_id):
     page = request.args.get('page', 1, type=int)
@@ -378,7 +378,6 @@ def get_paginated_messages(conversation_id):
             "id": message.id,
             "content": message.content,
             "created_at": message.created_at.isoformat(),
-            # Include any other relevant fields
         }
         for message in paginated_messages.items
     ]
@@ -389,7 +388,7 @@ def get_paginated_messages(conversation_id):
         "next_page": paginated_messages.next_num
     })
 
-@bp.route("/update-system-prompt/<int:conversation_id>", methods=["POST"])
+@bp.route("/update-system-prompt/<string:conversation_id>", methods=["POST"])
 @login_required
 def update_system_prompt(conversation_id):
     data = request.get_json()
@@ -427,7 +426,7 @@ def update_system_prompt(conversation_id):
         return jsonify({"status": "error", "message": str(e)})
 
 
-@bp.route("/edit-message/<int:message_id>", methods=["POST"])
+@bp.route("/edit-message/<string:message_id>", methods=["POST"])
 @login_required
 def edit_message(message_id):
     data = request.get_json()
@@ -463,7 +462,7 @@ def edit_message(message_id):
         return jsonify({"status": "error", "message": str(e)})
 
 
-@bp.route("/check-new-messages/<int:conversation_id>", methods=["GET"])
+@bp.route("/check-new-messages/<string:conversation_id>", methods=["GET"])
 @login_required
 def check_new_messages(conversation_id):
     # Get the conversation from the database
@@ -494,7 +493,7 @@ def check_new_messages(conversation_id):
     return jsonify({"status": "success", "new_messages": new_messages_dict})
 
 
-@bp.route("/retry-message/<int:message_id>", methods=["POST"])
+@bp.route("/retry-message/<string:message_id>", methods=["POST"])
 @login_required
 def retry_message(message_id):
     message = Message.query.get_or_404(message_id)
@@ -544,7 +543,7 @@ def retry_message(message_id):
         return jsonify({"status": "error", "message": str(e)})
 
 
-@bp.route("/interrupt-stream/<int:conversation_id>", methods=["POST"])
+@bp.route("/interrupt-stream/<string:conversation_id>", methods=["POST"])
 @login_required
 def interrupt_stream(conversation_id):
     conversation = Conversation.query.get_or_404(conversation_id)

@@ -172,13 +172,19 @@ def split_text(text_pages, max_tokens=512):
     return chunks, chunk_pages, total_tokens, chunk_token_counts
 
 
+# Ensure the embedding returned by the OpenAI API has the correct dimension
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
 def get_embedding(
     text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs
 ) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
-
-    return response.data[0].embedding
+    embedding = response.data[0].embedding
+    # Check the dimension of the embedding
+    if len(embedding) != 1536:
+        raise ValueError(
+            f"Expected embedding dimension to be 1536, but got {len(embedding)}"
+        )
+    return embedding
 
 
 def get_embedding_batch(
@@ -210,14 +216,31 @@ def get_embedding_batch(
         ]
         embeddings.extend(batch_embeddings)
 
+        for batch_embedding in batch_embeddings:
+            if len(batch_embedding) != 1536:
+                raise ValueError(
+                    f"Expected embedding dimension to be 1536, but got {len(batch_embedding)}"
+                )
+
     return embeddings
 
 
-def serialize_embedding(embedding_list):
-    return pickle.dumps(embedding_list)
+def serialize_embedding(embedding_array):
+    # Ensure the embedding is a numpy array with the expected shape and dtype
+    if not isinstance(embedding_array, np.ndarray):
+        embedding_array = np.array(embedding_array, dtype=np.float32)
 
+    if embedding_array.dtype != np.float32:
+        raise ValueError(
+            "Unexpected embedding array dtype: {}".format(embedding_array.dtype)
+        )
+    if embedding_array.shape != (1536,):
+        raise ValueError(
+            "Unexpected embedding array shape: {}".format(embedding_array.shape)
+        )
 
-
+    # Serialize the numpy array using pickle
+    return pickle.dumps(embedding_array, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def store_embeddings(document_id, embeddings):
@@ -227,16 +250,24 @@ def store_embeddings(document_id, embeddings):
             "The number of embeddings does not match the number of document chunks."
         )
 
+    embedding_models = []
     for chunk, embedding_vector in zip(chunks, embeddings):
+        embedding_bytes = np.array(embedding_vector, dtype=np.float32).tobytes()
         embedding_model = DocumentEmbedding(
             chunk_id=chunk.id,
-            embedding=serialize_embedding(embedding_vector),
+            embedding=embedding_bytes,  # Store as binary data
             user_id=current_user.id,
             model=EMBEDDING_MODEL,
         )
-        db.session.add(embedding_model)
-        db.session.commit()
-        VectorCache.load_user_vectors(current_user.id)
+        embedding_models.append(embedding_model)
+
+    # Bulk add to the session and commit once
+    db.session.bulk_save_objects(embedding_models)
+    db.session.commit()
+
+    # Update the cache (consider if this needs to be done each time)
+    VectorCache.load_user_vectors(current_user.id)
+
 
 def cosine_similarity(vec_a, vec_b):
     return np.dot(vec_a, vec_b)
@@ -285,7 +316,9 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     selected_chunks = []
     current_tokens = 0
     for chunk_id, similarity in similarities:
-        chunk = next((c for c in document_chunks_with_details if str(c.id) == chunk_id), None)
+        chunk = next(
+            (c for c in document_chunks_with_details if str(c.id) == chunk_id), None
+        )
         if chunk and current_tokens + chunk.tokens <= max_knowledge_context_tokens:
             selected_chunks.append(
                 (
@@ -317,12 +350,10 @@ def append_knowledge_context(user_query, user_id, client):
 
     # Embed the user query
     query_embedding = get_embedding(user_query, client)
+    query_vector = np.array(query_embedding, dtype=np.float32)
 
     # Find relevant sections
-    relevant_sections = find_relevant_sections(
-        user_id, query_embedding, user_preferences
-    )  # Ensure find_relevant_sections is implemented
-
+    relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences)
     # Format the context with title, author, and page number
     context = ""
     chunk_associations = []
@@ -350,3 +381,22 @@ def append_knowledge_context(user_query, user_id, client):
 
     modified_query = context + user_query
     return modified_query, chunk_associations
+
+
+
+def delete_all_documents():
+    try:
+        # Query all documents
+        all_documents = Document.query.all()
+
+        # Delete each document
+        for document in all_documents:
+            print("Deleting:" + document.title)
+            db.session.delete(document)
+
+        # Commit the transaction
+        db.session.commit()
+        print("All documents have been deleted.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"An error occurred: {e}")
