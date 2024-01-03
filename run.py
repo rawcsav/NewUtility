@@ -14,5 +14,5 @@ if __name__ == '__main__':
         port=8080,
         host='localhost',
         static_files={
-            '/static': '/Users/gavinmason/PycharmProjects/SwissAI/app/static'},
+            '/static': '/Users/gavin/PycharmProjects/Jack/app/static'},
     )

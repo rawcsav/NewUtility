@@ -38,7 +38,7 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.get(user_id)
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -384,7 +384,6 @@ def reset_password(token):
 @bp.route("/login/google")
 def google_login():
     redirect_uri = current_app.config["GOOGLE_CALLBACK_URI"]
-    print(redirect_uri)
     return oauth.google.authorize_redirect(redirect_uri)
 
 

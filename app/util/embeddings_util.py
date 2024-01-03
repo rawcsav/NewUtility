@@ -274,7 +274,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
         .filter(Document.user_id == user_id, Document.selected == 1)
         .all()
     )
-    print(document_chunks_with_details)
 
     # Get the IDs of the chunks for the current user's documents
     subset_ids = [str(chunk.id) for chunk in document_chunks_with_details]

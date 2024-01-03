@@ -287,34 +287,33 @@ def delete_api_key():
     form = DeleteAPIKeyForm()
     if form.validate_on_submit():
         key_id = form.key_id.data
-    user_api_key = UserAPIKey.query.filter_by(
+        user_api_key = UserAPIKey.query.filter_by(
         user_id=current_user.id, id=key_id
-    ).first()
-    if user_api_key:
-        nickname = user_api_key.nickname
-        db.session.delete(user_api_key)
-        db.session.commit()
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "status": "success",
-                    "message": f'API key "{nickname}" deleted successfully',
-                }
-            ),
-            200,
-        )
-    else:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "status": "error",
-                    "message": "Failed to delete API key",
-                }
-            ),
-            400,
-        )
+        ).first()
+        if user_api_key:
+            user_api_key.to_delete = True  # Mark the API key as deleted
+            db.session.commit()
+            return (
+                jsonify(
+                    {
+                        "success": True,
+                        "status": "success",
+                        "message": f'API key "{user_api_key.nickname}" marked for deletion successfully',
+                    }
+                ),
+                    200,
+            )
+        else:
+            return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "status": "error",
+                            "message": "API key not found or already marked for deletion",
+                        }
+                    ),
+                    400,
+                )
     return redirect(url_for("user.dashboard"))
 
 
