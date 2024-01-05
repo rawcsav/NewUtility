@@ -1,154 +1,83 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Landing page of Jack of all Trades. Offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
+{% extends 'base.html' %} {% block head %}
+<title>Jack of all Trades</title>
+{% endblock %} {% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/landing.css') }}"
+/>
+{% endblock %} {% block body %}
+<div class="shape rectangle" id="green">
+  <h1>JACK</h1>
+  <h2>Of all Trades</h2>
+</div>
+<div class="shape circle" id="yellow">
+  <ul class="button-list">
+    <li>
+      <button class="button">
+        <a href="{{ url_for('auth.signup') }}" class="button-link">Sign Up</a>
+      </button>
+    </li>
+    <li>
+      <button class="button">
+        <a href="{{ url_for('user.dashboard') }}" class="button-link"
+          >Login →</a
+        >
+      </button>
+    </li>
+  </ul>
+</div>
+<div class="hand1">
+  <img alt="Hand1" src="{{ url_for('static', filename='images/hand1.svg') }}" />
+</div>
+<div class="hand2">
+  <img alt="Hand2" src="{{ url_for('static', filename='images/hand2.svg') }}" />
+</div>
+<div class="balloon">
+  <img
+    alt="balloon"
+    src="{{ url_for('static', filename='images/balloons.svg') }}"
+  />
+</div>
+<div class="shape rectangle" id="blue">
+  <div class="art">
+    <img alt="Art" src="{{ url_for('static', filename='images/art.svg') }}" />
+  </div>
+  <div class="binoculars">
+    <img
+      alt="Binoculars"
+      src="{{ url_for('static', filename='images/binoculars.svg') }}"
     />
-    <meta
-      name="keywords"
-      content="Jack of all Trades, OpenAI, Developer Tools, AI"
+  </div>
+  <div class="data">
+    <img alt="Data" src="{{ url_for('static', filename='images/data.svg') }}" />
+  </div>
+  <div class="document">
+    <img
+      alt="Document"
+      src="{{ url_for('static', filename='images/document.svg') }}"
     />
-    <meta name="csrf-token" content="{{ csrf_token() }}" />
-
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
+  </div>
+  <div class="jackmic">
+    <img
+      alt="Jackmic"
+      src="{{ url_for('static', filename='images/jackmic.svg') }}"
     />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
+  </div>
+  <div class="key-chain">
+    <img
+      alt="Key-chain"
+      src="{{ url_for('static', filename='images/key-chain.svg') }}"
     />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
+  </div>
+</div>
+<div class="shape square" id="red">
+  <a class="landing-homepage" href="https://rawcsav.com">
+    <img
+      alt="Homepage"
+      src="{{ url_for('static', filename='logo/jacklogo.svg') }}"
     />
-    <link
-      rel="manifest"
-      href="{{ url_for('static', filename='favicon/manifest.json') }}"
-    />
-    <link
-      rel="mask-icon"
-      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
-    />
-    <meta name="msapplication-TileColor" content="#da532c" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>Jack of all Trades</title>
-    <script
-      src="https://kit.fontawesome.com/5c8c7a1eba.js"
-      crossorigin="anonymous"
-    ></script>
-    {% include 'menu.html' %}
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/fonts.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/landing.css') }}"
-    />
-  </head>
-  <body>
-    <a class="homepage-link" href="https://rawcsav.com">
-      <img
-        alt="Homepage"
-        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
-      />
-    </a>
-    <div class="shape rectangle" id="green">
-      <h1>JACK</h1>
-      <h2>Of all Trades</h2>
-    </div>
-    <div class="shape circle" id="yellow">
-      <ul class="button-list">
-        <li>
-          <button class="button">
-            <a href="{{ url_for('auth.signup') }}" class="button-link"
-              >Sign Up</a
-            >
-          </button>
-        </li>
-        <li>
-          <button class="button">
-            <a href="{{ url_for('user.dashboard') }}" class="button-link"
-              >Login →</a
-            >
-          </button>
-        </li>
-      </ul>
-    </div>
-    <div class="hand1">
-      <img
-        alt="Hand1"
-        src="{{ url_for('static', filename='images/hand1.svg') }}"
-      />
-    </div>
-    <div class="hand2">
-      <img
-        alt="Hand2"
-        src="{{ url_for('static', filename='images/hand2.svg') }}"
-      />
-    </div>
-    <div class="balloon">
-      <img
-        alt="balloon"
-        src="{{ url_for('static', filename='images/balloons.svg') }}"
-      />
-    </div>
-    <div class="shape rectangle" id="blue">
-      <div class="art">
-        <img
-          alt="Art"
-          src="{{ url_for('static', filename='images/art.svg') }}"
-        />
-      </div>
-      <div class="binoculars">
-        <img
-          alt="Binoculars"
-          src="{{ url_for('static', filename='images/binoculars.svg') }}"
-        />
-      </div>
-      <div class="data">
-        <img
-          alt="Data"
-          src="{{ url_for('static', filename='images/data.svg') }}"
-        />
-      </div>
-      <div class="document">
-        <img
-          alt="Document"
-          src="{{ url_for('static', filename='images/document.svg') }}"
-        />
-      </div>
-      <div class="jackmic">
-        <img
-          alt="Jackmic"
-          src="{{ url_for('static', filename='images/jackmic.svg') }}"
-        />
-      </div>
-      <div class="key-chain">
-        <img
-          alt="Key-chain"
-          src="{{ url_for('static', filename='images/key-chain.svg') }}"
-        />
-      </div>
-    </div>
-    <div class="shape square" id="red">
-      <a class="landing-homepage" href="https://rawcsav.com">
-        <img
-          alt="Homepage"
-          src="{{ url_for('static', filename='logo/jacklogo.svg') }}"
-        />
-      </a>
-    </div>
-    {% include 'footer.html' %}
-  </body>
-  <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-</html>
+  </a>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+{% endblock %}

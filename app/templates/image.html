@@ -1,146 +1,85 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Image page of Jack of all Trades. Displays various images."
-    />
-    <meta name="keywords" content="Image, Jack of all Trades, Media Display" />
-    <meta name="csrf-token" content="{{ csrf_token() }}" />
-
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
-    />
-    <link
-      rel="manifest"
-      href="{{ url_for('static', filename='favicon/manifest.json') }}"
-    />
-    <link
-      rel="mask-icon"
-      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
-    />
-    <meta name="msapplication-TileColor" content="#da532c" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>DALL-E</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/fonts.css') }}"
-    />
-    <script
-      src="https://kit.fontawesome.com/5c8c7a1eba.js"
-      crossorigin="anonymous"
-    ></script>
-
-    {% include 'menu.html' %}
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/image.css') }}"
-    />
-  </head>
-  <body>
-    <a class="homepage-link" href="https://rawcsav.com">
-      <img
-        alt="Homepage"
-        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
-      />
-    </a>
-    <div class="dalle-svg">
-      <img
-        alt="dalle"
-        src="{{ url_for('static', filename='images/dalle.svg') }}"
-      />
-    </div>
-    <div class="hand1">
-      <img
-        alt="Hand1"
-        src="{{ url_for('static', filename='images/hand1.svg') }}"
-      />
-    </div>
-    <div class="shape rectangle" id="pink">
-      <h1>JACK</h1>
-      <h2>Image Gen</h2>
-    </div>
-    <div class="main-row">
-      <div class="messages-inc">
-        <div class="img_with_form">
-          <form id="image-generation-form" class="flex-form">
-            {{ form.hidden_tag() }}
-            <div class="input-row">
-              <div class="input-group">
-                <label for="model">Model:</label>
-                <select id="model" name="model">
-                  <option value="dall-e-3">DALL-E 3</option>
-                  <option value="dall-e-2">DALL-E 2</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label for="size">Size:</label>
-                <select id="size" name="size"></select>
-              </div>
-            </div>
-            <div
-              class="input-group"
-              id="number-of-images-container"
-              style="display: none"
-            >
-              <label for="n">#:</label>
-              <input type="number" id="n" name="n" value="1" min="1" max="3" />
-            </div>
-            <div id="dall-e-3-options" style="display: none">
-              <div class="input-group">
-                <label for="quality">Quality:</label>
-                <select id="quality" name="quality">
-                  <option value="standard">Standard</option>
-                  <option value="hd">HD</option>
-                </select>
-              </div>
-
-              <div class="input-group">
-                <label for="style">Style:</label>
-                <select id="style" name="style">
-                  <option value="vivid">Vivid</option>
-                  <option value="natural">Natural</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="prompt-submit-container">
-              <input
-                type="text"
-                id="prompt"
-                name="prompt"
-                placeholder="Enter your prompt here"
-              />
-              <button type="submit">Generate</button>
-            </div>
-          </form>
-          <div id="image-generation-messages"></div>
-          <div id="icons-container"></div>
-          <div id="image-history-carousel" class="carousel"></div>
+{{% extends 'base.html' %} {% block head %}
+<title>Jack - Images</title>
+{% endblock %} {% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/image.css') }}"
+/>
+{% endblock %} {% block body %}
+<div class="dalle-svg">
+  <img alt="dalle" src="{{ url_for('static', filename='images/dalle.svg') }}" />
+</div>
+<div class="hand1">
+  <img alt="Hand1" src="{{ url_for('static', filename='images/hand1.svg') }}" />
+</div>
+<div class="shape rectangle" id="pink">
+  <h1>JACK</h1>
+  <h2>Image Gen</h2>
+</div>
+<div class="main-row">
+  <div class="messages-inc">
+    <div class="img_with_form">
+      <form id="image-generation-form" class="flex-form">
+        {{ form.hidden_tag() }}
+        <div class="input-row">
+          <div class="input-group">
+            <label for="model">Model:</label>
+            <select id="model" name="model">
+              <option value="dall-e-3">DALL-E 3</option>
+              <option value="dall-e-2">DALL-E 2</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="size">Size:</label>
+            <select id="size" name="size"></select>
+          </div>
         </div>
-      </div>
-      <div id="generated-images"></div>
-      <div id="loader-template" style="display: none">
-        {% include 'image_loading.html' %}
-      </div>
+        <div
+          class="input-group"
+          id="number-of-images-container"
+          style="display: none"
+        >
+          <label for="n">#:</label>
+          <input type="number" id="n" name="n" value="1" min="1" max="3" />
+        </div>
+        <div id="dall-e-3-options" style="display: none">
+          <div class="input-group">
+            <label for="quality">Quality:</label>
+            <select id="quality" name="quality">
+              <option value="standard">Standard</option>
+              <option value="hd">HD</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="style">Style:</label>
+            <select id="style" name="style">
+              <option value="vivid">Vivid</option>
+              <option value="natural">Natural</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="prompt-submit-container">
+          <input
+            type="text"
+            id="prompt"
+            name="prompt"
+            placeholder="Enter your prompt here"
+          />
+          <button type="submit">Generate</button>
+        </div>
+      </form>
+      <div id="image-generation-messages"></div>
+      <div id="icons-container"></div>
+      <div id="image-history-carousel" class="carousel"></div>
     </div>
-    {% include 'footer.html' %}
-    <script src="{{ url_for('static', filename='js/image.js') }}"></script>
-  </body>
-</html>
+  </div>
+  <div id="generated-images"></div>
+  <div id="loader-template" style="display: none">
+    {% include 'image_loading.html' %}
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/image.js') }}"></script>
+{% endblock %}

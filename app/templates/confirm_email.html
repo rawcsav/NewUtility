@@ -1,136 +1,74 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Signup page of Jack of all Trades. Allows new users to create an account."
+{% extends 'base.html' %} {% block head %}
+<title>Jack - Confirm Email</title>
+{% endblock %} {% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/confirm_email.css') }}"
+/>
+{% endblock %} {% block body %}
+<div class="hand1 animatable">
+  <img alt="Hand1" src="{{ url_for('static', filename='images/hand1.svg') }}" />
+</div>
+<div class="hand2 animatable">
+  <img alt="Hand2" src="{{ url_for('static', filename='images/hand2.svg') }}" />
+</div>
+<div class="shape rectangle" id="green">
+  <h1>JACK</h1>
+  <h2>Of all Trades</h2>
+</div>
+<div class="shape circle" id="yellow"></div>
+<div class="balloon">
+  <img
+    alt="balloon"
+    src="{{ url_for('static', filename='images/balloons.svg') }}"
+  />
+</div>
+<div class="balloon2">
+  <img
+    alt="balloon2"
+    src="{{ url_for('static', filename='images/balloon2.svg') }}"
+  />
+</div>
+<div class="shape square" id="red">
+  <a class="landing-homepage" href="https://rawcsav.com">
+    <img
+      alt="Homepage"
+      src="{{ url_for('static', filename='logo/jacklogo.svg') }}"
     />
-    <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <meta
-      name="keywords"
-      content="Signup, Jack of all Trades, User Registration"
+  </a>
+</div>
+<div class="shape rectangle" id="blue">
+  <h3>Please enter the confirmation code sent to your email.</h3>
+</div>
+<div class="shape form-rectangle animatable" id="purple">
+  <form
+    action="{{ url_for('auth.confirm_email') }}"
+    id="confirm-email-form"
+    class="form"
+    method="post"
+  >
+    <input
+      type="text"
+      name="middle-name"
+      id="middle-name"
+      style="display: none"
     />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}"
-    />
-    <link
-      rel="manifest"
-      href="{{ url_for('static', filename='favicon/manifest.json') }}"
-    />
-    <link
-      rel="mask-icon"
-      href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}"
-    />
-    <meta name="msapplication-TileColor" content="#da532c" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>Confirm Email</title>
-    <script
-      src="https://kit.fontawesome.com/5c8c7a1eba.js"
-      crossorigin="anonymous"
-    ></script>
-    {% include 'menu.html' %}
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/fonts.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/confirm_email.css') }}"
-    />
-  </head>
-  <body>
-    <a class="homepage-link" href="https://rawcsav.com">
-      <img
-        alt="Homepage"
-        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
-      />
-    </a>
-    <div class="hand1 animatable">
-      <img
-        alt="Hand1"
-        src="{{ url_for('static', filename='images/hand1.svg') }}"
+    <div class="input-group">
+      <input
+        type="text"
+        id="code"
+        name="code"
+        required
+        placeholder="Confirmation Code"
       />
     </div>
-    <div class="hand2 animatable">
-      <img
-        alt="Hand2"
-        src="{{ url_for('static', filename='images/hand2.svg') }}"
-      />
-    </div>
-    <div class="shape rectangle" id="green">
-      <h1>JACK</h1>
-      <h2>Of all Trades</h2>
-    </div>
-    <div class="shape circle" id="yellow"></div>
-    <div class="balloon">
-      <img
-        alt="balloon"
-        src="{{ url_for('static', filename='images/balloons.svg') }}"
-      />
-    </div>
-    <div class="balloon2">
-      <img
-        alt="balloon2"
-        src="{{ url_for('static', filename='images/balloon2.svg') }}"
-      />
-    </div>
-    <div class="shape square" id="red">
-      <a class="landing-homepage" href="https://rawcsav.com">
-        <img
-          alt="Homepage"
-          src="{{ url_for('static', filename='logo/jacklogo.svg') }}"
-        />
-      </a>
-    </div>
-    <div class="shape rectangle" id="blue">
-      <h3>Please enter the confirmation code sent to your email.</h3>
-    </div>
-    <div class="shape form-rectangle animatable" id="purple">
-      <form
-        action="{{ url_for('auth.confirm_email') }}"
-        id="confirm-email-form"
-        class="form"
-        method="post"
-      >
-        <input
-          type="text"
-          name="middle-name"
-          id="middle-name"
-          style="display: none"
-        />
-        <div class="input-group">
-          <input
-            type="text"
-            id="code"
-            name="code"
-            required
-            placeholder="Confirmation Code"
-          />
-        </div>
-        <button type="submit" class="submit">Confirm</button>
-        <div id="message-container"></div>
-      </form>
-    </div>
-    <div class="shape square" id="orange animatable">
-      <h2 id="confirm-title">Confirm Email</h2>
-    </div>
-    {% include 'footer.html' %}
-  </body>
-  <script src="{{ url_for('static', filename='js/confirm_email.js') }}"></script>
-</html>
+    <button type="submit" class="submit">Confirm</button>
+    <div id="message-container"></div>
+  </form>
+</div>
+<div class="shape square" id="orange animatable">
+  <h2 id="confirm-title">Confirm Email</h2>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/confirm_email.js') }}"></script>
+{% endblock %}
