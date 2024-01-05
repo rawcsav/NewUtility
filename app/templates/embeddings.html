@@ -33,7 +33,7 @@
     >
       <div class="form-group">
         <label for="file" class="file-upload-btn"
-          >Choose a document to upload</label
+          >Choose documents to upload</label
         >
         <input
           type="file"
@@ -45,36 +45,13 @@
         />
       </div>
       <p id="file-name-display"></p>
-
-      <div class="form-group">
-        <label for="title">Document Title (optional):</label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          placeholder="Enter document title"
-        />
+      <div id="document-forms-container"></div>
+      <div id="pagination-controls">
+        <button type="button" id="prev-button">Previous</button>
+        <span id="current-page">1</span> / <span id="total-pages">1</span>
+        <button type="button" id="next-button">Next</button>
       </div>
-      <div class="form-group">
-        <label for="author">Author Name (optional):</label>
-        <input
-          type="text"
-          id="author"
-          name="author"
-          placeholder="Enter author's name"
-        />
-      </div>
-      <div class="form-group">
-        <label for="chunk_size">Max Tokens per Chunk (default is 512):</label>
-        <input
-          type="number"
-          id="chunk_size"
-          name="chunk_size"
-          min="1"
-          value="512"
-        />
-      </div>
-      <button type="submit">Upload Document</button>
+      <button type="submit">Upload Documents</button>
       <div id="uploadStatus"></div>
     </form>
   </div>

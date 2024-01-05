@@ -316,6 +316,7 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     selected_chunks = []
     current_tokens = 0
     for chunk_id, similarity in similarities:
+        print(similarity)
         chunk = next(
             (c for c in document_chunks_with_details if str(c.id) == chunk_id), None
         )

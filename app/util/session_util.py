@@ -181,6 +181,8 @@ def initialize_openai_client(user_id):
     return client, None
 
 
+
+
 def generate_unique_username(base_username):
     sanitized_username = re.sub(r"\W+", "", base_username)
 

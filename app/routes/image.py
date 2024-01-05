@@ -9,15 +9,15 @@ from flask import (
     url_for,
     current_app,
 )
-import openai
 import os
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound
 from app import db
-from app.database import GeneratedImage, UserAPIKey
+import openai
+from app.database import GeneratedImage
 from app.util.forms_util import GenerateImageForm
 from app.util.image_util import download_and_convert_image
-from app.util.session_util import decrypt_api_key
+from app.util.session_util import initialize_openai_client
 from app.util.usage_util import dalle_cost, update_usage_and_costs
 
 bp = Blueprint("image", __name__, url_prefix="/image")
@@ -37,13 +37,10 @@ def generate_image():
             model = form.model.data or "dall-e-3"
             n = form.n.data or 1
             size = form.size.data or "1024x1024"
-            key_id = current_user.selected_api_key_id
-            user_api_key = UserAPIKey.query.filter_by(
-                user_id=current_user.id, id=key_id
-            ).first()
-            api_key = decrypt_api_key(user_api_key.encrypted_api_key)
 
-            openai.api_key = api_key
+            client, error = initialize_openai_client(current_user.id)
+            if error:
+                return jsonify({"status": "error", "message": error})
 
             request_params = {"model": model, "prompt": prompt, "n": n, "size": size}
 
@@ -59,7 +56,7 @@ def generate_image():
                 quality = None
                 style = None
 
-            response = openai.images.generate(**request_params)
+            response = client.images.generate(**request_params)
             # Check if the response is successful
             if response is not None and hasattr(response, "data"):
                 cost = dalle_cost(
@@ -69,7 +66,7 @@ def generate_image():
                 # Update the API key and APIUsage with the new cost
                 update_usage_and_costs(
                     user_id=current_user.id,
-                    api_key_id=key_id,
+                    api_key_id=current_user.selected_api_key_id,
                     usage_type="image_gen",
                     cost=cost,
                 )
@@ -132,7 +129,6 @@ def download_image(image_uuid):
 @bp.route("/history")
 @login_required
 def image_history():
-    # Retrieve the user's images from the database ordered by 'id' descending
     user_images = (
         GeneratedImage.query.filter_by(user_id=current_user.id)
         .order_by(GeneratedImage.id.desc())

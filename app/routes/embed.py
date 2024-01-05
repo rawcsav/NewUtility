@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, session
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from openai import OpenAI
@@ -21,7 +21,7 @@ from app.util.forms_util import (
     DeleteDocumentForm,
     UpdateDocPreferencesForm,
 )
-from app.util.session_util import decrypt_api_key
+from app.util.session_util import initialize_openai_client
 from app.util.usage_util import embedding_cost, update_usage_and_costs
 
 # Initialize the blueprint
@@ -58,98 +58,125 @@ def upload_document():
         return jsonify({"error": "Invalid form submission"}), 400
 
     files = request.files.getlist("file")
+    if not files:
+        return jsonify({"error": "No files provided"}), 400
+
     titles = request.form.get("title", "").split(",") if "title" in request.form else []
     authors = (
         request.form.get("author", "").split(",") if "author" in request.form else []
     )
 
+    uploaded_files_info = []
+
     for i, file in enumerate(files):
-        # Use the filename as the default title if no title is provided
         title = (
             titles[i]
             if i < len(titles) and titles[i].strip()
             else secure_filename(file.filename)
         )
-        # Use None as the default author if no author is provided
         author = authors[i].strip() if i < len(authors) and authors[i].strip() else None
+        temp_path = save_temp_file(file)
+        uploaded_files_info.append(
+            {
+                "temp_path": temp_path,
+                "title": title,
+                "author": author,
+                "chunk_size": form.chunk_size.data or 512,
+            }
+        )
 
-    chunk_size = form.chunk_size.data or 512
-    key_id = current_user.selected_api_key_id
-    user_api_key = UserAPIKey.query.filter_by(
-        user_id=current_user.id, id=key_id
-    ).first()
-    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-    client = OpenAI(api_key=api_key)
-    if not file:
-        return jsonify({"error": "No file provided"}), 400
+    session["uploaded_files_info"] = uploaded_files_info
 
-    temp_path = save_temp_file(file)
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "message": "Files uploaded successfully. Please proceed to processing.",
+            }
+        ),
+        200,
+    )
+
+
+@bp.route("/process", methods=["POST"])
+@login_required
+def process_document():
+    # Retrieve uploaded files info from the session
+    uploaded_files_info = session.get("uploaded_files_info", [])
+    if not uploaded_files_info:
+        return jsonify({"error": "No uploaded files to process"}), 400
 
     try:
-        text_pages = extract_text_from_file(
-            temp_path
-        )  # This should return a list of (text, page_number) tuples
-        chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(
-            text_pages, chunk_size
-        )
-
-        new_document = Document(
-            user_id=current_user.id,
-            title=title,
-            author=author,
-            total_tokens=total_tokens,
-            created_at=datetime.utcnow(),
-        )
-        db.session.add(new_document)
-        db.session.flush()  # Flush the session to get the new ID
-
-        # Create and store chunks in the database, including page number information
-        for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
-            pages_str = ",".join(
-                map(str, pages)
-            )  # Convert the set of page numbers to a comma-separated string
-
-            chunk = DocumentChunk(
-                document_id=new_document.id,
-                chunk_index=i,
-                content=chunk_content,
-                tokens=chunk_token_counts[i],
-                pages=pages_str,  # Store the serialized page numbers
+        for file_info in uploaded_files_info:
+            temp_path = file_info["temp_path"]
+            title = file_info["title"]
+            author = file_info["author"]
+            chunk_size = file_info["chunk_size"]
+            print(title)
+            print(author)
+            print(chunk_size)
+            text_pages = extract_text_from_file(temp_path)
+            chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(
+                text_pages, chunk_size
             )
-            db.session.add(chunk)
 
-        embeddings = get_embedding_batch(chunks, client)
+            new_document = Document(
+                user_id=current_user.id,
+                title=title,
+                author=author,
+                total_tokens=total_tokens,
+                created_at=datetime.utcnow(),
+            )
+            db.session.add(new_document)
+            db.session.flush()  # Flush the session to get the new ID
 
-        # Calculate the cost for embedding generation
-        cost = embedding_cost(total_tokens)
-        # Update the API key and APIUsage with the new cost
-        update_usage_and_costs(
-            user_id=current_user.id,
-            api_key_id=key_id,
-            usage_type="embedding",
-            cost=cost,
-        )
+            for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
+                pages_str = ",".join(map(str, pages))
+                chunk = DocumentChunk(
+                    document_id=new_document.id,
+                    chunk_index=i,
+                    content=chunk_content,
+                    tokens=chunk_token_counts[i],
+                    pages=pages_str,
+                )
+                db.session.add(chunk)
 
-        # Now store the embeddings in the database
-        store_embeddings(new_document.id, embeddings)
+            client, error = initialize_openai_client(current_user.id)
+            if error:
+                return jsonify({"status": "error", "message": error})
 
-        db.session.commit()
+            embeddings = get_embedding_batch(chunks, client)
+
+            cost = embedding_cost(total_tokens)
+            update_usage_and_costs(
+                user_id=current_user.id,
+                api_key_id=current_user.selected_api_key_id,
+                usage_type="embedding",
+                cost=cost,
+            )
+
+            store_embeddings(new_document.id, embeddings)
+            db.session.commit()
+
+        session.pop("uploaded_files_info", None)
+
         return (
             jsonify(
                 {
                     "status": "success",
-                    "message": "File uploaded and embedded successfully. "
-                    "Please refresh to see changes",
+                    "message": "Documents processed and embedded successfully.",
                 }
             ),
             200,
         )
+
     except Exception as e:
-        # If anything goes wrong, roll back the session
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
+
     finally:
-        remove_temp_file(temp_path)
+        for file_info in uploaded_files_info:
+            remove_temp_file(file_info["temp_path"])
 
 
 @bp.route("/delete/<string:document_id>", methods=["POST"])
