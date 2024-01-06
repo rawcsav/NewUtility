@@ -334,7 +334,6 @@
   font-style: italic;
 }
 
-/* Helvetica Neue Medium */
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
@@ -345,7 +344,6 @@
   font-display: swap;
 }
 
-/* Helvetica Neue Ultralight */
 @font-face {
   font-family: "Helvetica Neue";
   font-style: normal;
@@ -356,7 +354,6 @@
   font-display: swap;
 }
 
-/* Helvetica Neue Regular Italic */
 @font-face {
   font-family: "Helvetica Neue";
   font-style: italic;
@@ -404,5 +401,85 @@
   src:
     url("../fonts/HelveticaNeue-Regular.woff2") format("woff2"),
     url("../fonts/HelveticaNeue-Regular.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-Regular.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-Medium.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-Light.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-Italic.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-Italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-MediumItalic.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-MediumItalic.woff") format("woff");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-BoldItalic.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-BoldItalic.woff") format("woff");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-LightItalic.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-LightItalic.woff") format("woff");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../fonts/NeueMontreal-Bold.woff2") format("woff2"),
+    url("../fonts/NeueMontreal-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }

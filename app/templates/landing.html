@@ -6,77 +6,64 @@
   href="{{ url_for('static', filename='css/landing.css') }}"
 />
 {% endblock %} {% block body %}
-<div class="shape rectangle" id="green">
-  <h1>JACK</h1>
-  <h2>Of all Trades</h2>
-</div>
-<div class="shape circle" id="yellow">
-  <ul class="button-list">
-    <li>
-      <button class="button">
-        <a href="{{ url_for('auth.signup') }}" class="button-link">Sign Up</a>
-      </button>
-    </li>
-    <li>
-      <button class="button">
-        <a href="{{ url_for('user.dashboard') }}" class="button-link"
-          >Login →</a
-        >
-      </button>
-    </li>
-  </ul>
-</div>
-<div class="hand1">
-  <img alt="Hand1" src="{{ url_for('static', filename='images/hand1.svg') }}" />
-</div>
-<div class="hand2">
-  <img alt="Hand2" src="{{ url_for('static', filename='images/hand2.svg') }}" />
-</div>
-<div class="balloon">
-  <img
-    alt="balloon"
-    src="{{ url_for('static', filename='images/balloons.svg') }}"
-  />
-</div>
-<div class="shape rectangle" id="blue">
-  <div class="art">
-    <img alt="Art" src="{{ url_for('static', filename='images/art.svg') }}" />
+<div id="full-container">
+  <div id="left-column">
+    <div id="title-container">
+      <h1>New Utility</h1>
+      <h1>Nouvelle Utilité</h1>
+      <h1>Neue Nützlichkeit</h1>
+      <h1>Nuova Utilità</h1>
+    </div>
+    <ul class="button-list">
+      <li>
+        <button class="button">
+          <a href="{{ url_for('auth.signup') }}" class="button-link">Sign Up</a>
+        </button>
+      </li>
+      <li>
+        <button class="button">
+          <a href="{{ url_for('user.dashboard') }}" class="button-link"
+            >Login →</a
+          >
+        </button>
+      </li>
+    </ul>
   </div>
-  <div class="binoculars">
-    <img
-      alt="Binoculars"
-      src="{{ url_for('static', filename='images/binoculars.svg') }}"
-    />
+  <div id="icons-container">
+    <div class="art">
+      <img alt="Art" src="{{ url_for('static', filename='images/art.svg') }}" />
+    </div>
+    <div class="binoculars">
+      <img
+        alt="Binoculars"
+        src="{{ url_for('static', filename='images/binoculars.svg') }}"
+      />
+    </div>
+    <div class="data">
+      <img
+        alt="Data"
+        src="{{ url_for('static', filename='images/data.svg') }}"
+      />
+    </div>
+    <div class="document">
+      <img
+        alt="Document"
+        src="{{ url_for('static', filename='images/document.svg') }}"
+      />
+    </div>
+    <div class="jackmic">
+      <img
+        alt="Jackmic"
+        src="{{ url_for('static', filename='images/jackmic.svg') }}"
+      />
+    </div>
+    <div class="key-chain">
+      <img
+        alt="Key-chain"
+        src="{{ url_for('static', filename='images/key-chain.svg') }}"
+      />
+    </div>
   </div>
-  <div class="data">
-    <img alt="Data" src="{{ url_for('static', filename='images/data.svg') }}" />
-  </div>
-  <div class="document">
-    <img
-      alt="Document"
-      src="{{ url_for('static', filename='images/document.svg') }}"
-    />
-  </div>
-  <div class="jackmic">
-    <img
-      alt="Jackmic"
-      src="{{ url_for('static', filename='images/jackmic.svg') }}"
-    />
-  </div>
-  <div class="key-chain">
-    <img
-      alt="Key-chain"
-      src="{{ url_for('static', filename='images/key-chain.svg') }}"
-    />
-  </div>
-</div>
-<div class="shape square" id="red">
-  <a class="landing-homepage" href="https://rawcsav.com">
-    <img
-      alt="Homepage"
-      src="{{ url_for('static', filename='logo/jacklogo.svg') }}"
-    />
-  </a>
 </div>
 {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

@@ -263,7 +263,6 @@ def get_api_keys():
 
 
 @bp.route("/reset_password_request", methods=["GET", "POST"])
-@fresh_login_required
 def reset_password_request():
     s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     form = ResetPasswordRequestForm()

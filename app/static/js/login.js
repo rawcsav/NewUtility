@@ -31,7 +31,7 @@ document
           window.location.href = data.redirect;
         } else if (data.status === "unconfirmed") {
           document.getElementById("message-container").innerHTML =
-            `Please confirm your email. <a href="${data.redirect}">Click here to confirm</a>`;
+            `<p>Please confirm your email. <a href="${data.redirect}">Click here to confirm</a></p>`;
         } else {
           document.getElementById("message-container").innerText = data.message;
         }
@@ -42,28 +42,3 @@ document
           "An error occurred while trying to log in.";
       });
   });
-
-// This code would go in the global scope so that it runs on every page load
-window.addEventListener("load", () => {
-  const elementsToAnimateIn = document.querySelectorAll(".animatable");
-  elementsToAnimateIn.forEach((el) => {
-    el.classList.add("slide-in");
-  });
-});
-
-// Add event listeners to links for the "slide out" animations
-document.querySelectorAll("a").forEach((link) => {
-  link.addEventListener("click", (e) => {
-    e.preventDefault();
-    const href = link.href;
-    const elementsToAnimateOut = document.querySelectorAll(".animatable");
-    elementsToAnimateOut.forEach((el) => {
-      el.classList.add("slide-out");
-    });
-
-    // Delay the navigation until after the animations have time to play
-    setTimeout(() => {
-      window.location.href = href;
-    }, 500); // 500ms for the animation to complete
-  });
-});
