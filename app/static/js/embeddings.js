@@ -58,6 +58,37 @@ function enableEditing(editButton) {
   });
 }
 
+function pollDocumentStatus() {
+  fetch("/status", {
+    method: "GET",
+    headers: {
+      "X-CSRFToken": getCsrfToken(),
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        updateUploadMessages("Error: " + data.error, "error");
+      } else if (data.length === 0) {
+        // Stop polling if there are no documents
+        updateUploadMessages("No documents to process.", "success");
+      } else {
+        // Update status and continue polling
+        let statusMessage = data
+          .map((doc) => `${doc.title}: ${doc.status}`)
+          .join("<br>");
+        updateUploadMessages(statusMessage, "success");
+        setTimeout(pollDocumentStatus, 5000); // Continue polling every 5 seconds
+      }
+    })
+    .catch((error) => {
+      console.error("Error during status update:", error);
+      updateUploadMessages(
+        "Error during status update: " + error.message,
+        "error",
+      );
+    });
+}
 function updateFileList() {
   const fileList = fileInput.files;
   totalPages = fileList.length;
@@ -136,10 +167,10 @@ function startProcessing() {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        updateUploadMessages("Processing Successful!", "success");
-        // Optionally, redirect to a new page or update the UI to show processing results
+        // Start polling for status updates when processing starts
+        pollDocumentStatus();
       } else {
-        updateUploadMessages("Processing Failed.", "success");
+        updateUploadMessages("Processing Failed.", "error");
         console.error("Processing failed:", data.message);
       }
     })
@@ -288,4 +319,23 @@ editButtons.forEach(function (button) {
   button.addEventListener("click", function () {
     enableEditing(this);
   });
+});
+
+const submitButton = document.querySelector(".doc-submit-btn");
+const paginationControls = document.getElementById("pagination-controls");
+
+submitButton.disabled = true;
+paginationControls.style.display = "none"; // Hide pagination controls
+
+// Event listener to enable submit button and show pagination controls when files are selected
+fileInput.addEventListener("change", function () {
+  if (fileInput.files.length > 0) {
+    submitButton.disabled = false; // Enable submit button
+    // Show pagination controls only if more than one file is uploaded
+    paginationControls.style.display =
+      fileInput.files.length > 1 ? "block" : "none";
+  } else {
+    submitButton.disabled = true; // Keep submit button disabled
+    paginationControls.style.display = "none"; // Hide pagination controls
+  }
 });

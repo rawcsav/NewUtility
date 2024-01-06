@@ -1283,24 +1283,13 @@ function processStreamedResponse(response) {
   requestAnimationFrame(() => {
     isInterrupted = false;
     const reader = response.body.getReader();
-    readStreamedResponseChunk(reader);
-  });
-}
+    const chunks = [];
+    const updateInterval = 100; // Update the DOM every 100ms or adjust as needed
+    let lastUpdateTime = Date.now();
 
-function readStreamedResponseChunk(reader) {
-  if (isInterrupted) {
-    console.log("Response processing was interrupted.");
-    finalizeStreamedResponse();
-    let conversationId = document
-      .getElementById("convo-title")
-      .getAttribute("data-conversation-id");
-    locateNewMessages(conversationId);
-    return;
-  }
-  reader
-    .read()
-    .then(({ done, value }) => {
-      if (done) {
+    function readStreamedResponseChunk(reader) {
+      if (isInterrupted) {
+        console.log("Response processing was interrupted.");
         finalizeStreamedResponse();
         let conversationId = document
           .getElementById("convo-title")
@@ -1308,22 +1297,42 @@ function readStreamedResponseChunk(reader) {
         locateNewMessages(conversationId);
         return;
       }
-      handleResponseChunk(value);
-      readStreamedResponseChunk(reader);
-    })
-    .catch((error) => {
-      showToast("Streaming Error: " + error.message, "error");
-      console.error("Streaming error:", error);
-    });
-}
 
-function handleResponseChunk(value) {
-  const chunk = new TextDecoder().decode(value);
-  if (chunk.startsWith("An error occurred:")) {
-    showToast(chunk, "error");
-  } else {
-    appendStreamedResponse(chunk, chatBox);
-  }
+      reader
+        .read()
+        .then(({ done, value }) => {
+          if (done) {
+            if (chunks.length) {
+              appendStreamedResponse(chunks.join(""), chatBox);
+            }
+            finalizeStreamedResponse();
+            let conversationId = document
+              .getElementById("convo-title")
+              .getAttribute("data-conversation-id");
+            locateNewMessages(conversationId);
+            return;
+          }
+
+          const chunk = new TextDecoder().decode(value);
+          chunks.push(chunk);
+
+          const now = Date.now();
+          if (now - lastUpdateTime > updateInterval) {
+            appendStreamedResponse(chunks.join(""), chatBox);
+            chunks.length = 0; // Clear the chunks array
+            lastUpdateTime = now;
+          }
+
+          readStreamedResponseChunk(reader);
+        })
+        .catch((error) => {
+          showToast("Streaming Error: " + error.message, "error");
+          console.error("Streaming error:", error);
+        });
+    }
+
+    readStreamedResponseChunk(reader);
+  });
 }
 
 function processNonStreamedResponse(text) {

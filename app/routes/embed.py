@@ -112,9 +112,8 @@ def process_document():
             title = file_info["title"]
             author = file_info["author"]
             chunk_size = file_info["chunk_size"]
-            print(title)
-            print(author)
-            print(chunk_size)
+            file_info['status'] = 'splitting'
+            session.modified = True
             text_pages = extract_text_from_file(temp_path)
             chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(
                 text_pages, chunk_size
@@ -144,7 +143,8 @@ def process_document():
             client, error = initialize_openai_client(current_user.id)
             if error:
                 return jsonify({"status": "error", "message": error})
-
+            file_info['status'] = 'embedding'
+            session.modified = True
             embeddings = get_embedding_batch(chunks, client)
 
             cost = embedding_cost(total_tokens)
@@ -157,7 +157,8 @@ def process_document():
 
             store_embeddings(new_document.id, embeddings)
             db.session.commit()
-
+            file_info['status'] = 'complete'
+            session.modified = True
         session.pop("uploaded_files_info", None)
 
         return (
@@ -171,6 +172,7 @@ def process_document():
         )
 
     except Exception as e:
+        session.pop("uploaded_files_info", None)
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -178,6 +180,16 @@ def process_document():
         for file_info in uploaded_files_info:
             remove_temp_file(file_info["temp_path"])
 
+@bp.route("/status", methods=["GET"])
+@login_required
+def get_processing_status():
+    uploaded_files_info = session.get("uploaded_files_info", [])
+    if not uploaded_files_info:
+        return jsonify({"error": "No documents found"}), 404
+
+    # Extracting only relevant data for the frontend
+    status_info = [{"title": f["title"], "status": f["status"]} for f in uploaded_files_info]
+    return jsonify(status_info)
 
 @bp.route("/delete/<string:document_id>", methods=["POST"])
 @login_required

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import jsonify, Response, abort
+from flask import jsonify, Response, abort, session
 from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
 
@@ -16,6 +16,7 @@ from app.util.chat_util import (
     get_image_url,
     retry_delete_messages,
     delete_local_image_file,
+    set_interruption_flag,
 )
 from app.util.embeddings_util import append_knowledge_context
 from app.util.forms_util import (
@@ -84,7 +85,9 @@ def chat_index():
     else:
         image_urls = []
 
-    user_documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
+    user_documents = Document.query.filter_by(
+        user_id=current_user.id, delete=False
+    ).all()
     documents_data = [
         {
             "id": doc.id,
@@ -264,6 +267,7 @@ def chat_completion():
 
     except ValueError as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    session["interruption"] = None
 
     if preferences["model"] == "gpt-4-vision-preview":
         images = MessageImages.query.filter(
@@ -359,19 +363,24 @@ def update_conversation_title(conversation_id):
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)})
 
+
 @bp.route("/conversation/<string:conversation_id>/messages", methods=["GET"])
 @login_required
 def get_paginated_messages(conversation_id):
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)  # Adjust the per_page as needed
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get(
+        "per_page", 10, type=int
+    )  # Adjust the per_page as needed
 
     conversation = Conversation.query.get_or_404(conversation_id)
     if conversation.user_id != current_user.id:
         return jsonify({"error": "Unauthorized access"}), 403
 
-    paginated_messages = Message.query.filter_by(conversation_id=conversation_id)\
-                                      .order_by(Message.created_at.desc())\
-                                      .paginate(page=page, per_page=per_page)
+    paginated_messages = (
+        Message.query.filter_by(conversation_id=conversation_id)
+        .order_by(Message.created_at.desc())
+        .paginate(page=page, per_page=per_page)
+    )
 
     messages = [
         {
@@ -382,11 +391,14 @@ def get_paginated_messages(conversation_id):
         for message in paginated_messages.items
     ]
 
-    return jsonify({
-        "messages": messages,
-        "has_next": paginated_messages.has_next,
-        "next_page": paginated_messages.next_num
-    })
+    return jsonify(
+        {
+            "messages": messages,
+            "has_next": paginated_messages.has_next,
+            "next_page": paginated_messages.next_num,
+        }
+    )
+
 
 @bp.route("/update-system-prompt/<string:conversation_id>", methods=["POST"])
 @login_required
@@ -550,14 +562,8 @@ def interrupt_stream(conversation_id):
     if conversation.user_id != current_user.id:
         abort(403)  # HTTP 403 Forbidden
 
-    # Log the current state before setting the flag
-    print(f"Before setting interrupt: {conversation.is_interrupted}")
-
-    conversation.is_interrupted = True
-    db.session.commit()
-
-    # Log the state after setting the flag
-    print(f"After setting interrupt: {conversation.is_interrupted}")
+    set_interruption_flag(conversation_id)
+    print(f"Interruption flag set in session for conversation {conversation_id}")
 
     return jsonify({"status": "success", "message": "Interruption signal received."})
 

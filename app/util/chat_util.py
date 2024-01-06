@@ -7,7 +7,7 @@ import requests
 import numpy as np
 import tiktoken
 from PIL import Image
-from flask import abort, stream_with_context, current_app, url_for
+from flask import abort, stream_with_context, current_app, url_for, session
 from flask_login import current_user
 
 from app import db
@@ -277,6 +277,22 @@ def get_image_payload(images):
     return image_payloads
 
 
+# Global dictionary to track interruptions, keyed by conversation_id
+interruption_flags = {}
+
+
+def set_interruption_flag(conversation_id):
+    interruption_flags[conversation_id] = True
+
+
+def clear_interruption_flag(conversation_id):
+    interruption_flags[conversation_id] = False
+
+
+def check_interruption_flag(conversation_id):
+    return interruption_flags.get(conversation_id, False)
+
+
 def chat_stream(
     raw_prompt,
     prompt,
@@ -294,8 +310,7 @@ def chat_stream(
     if conversation.user_id != current_user.id:
         abort(403)
     else:
-        conversation.is_interrupted = False
-        db.session.commit()
+        clear_interruption_flag(conversation_id)
         preferences = get_user_preferences(user_id)
 
         if preferences["model"] == "gpt-4-vision-preview" and images:
@@ -320,9 +335,6 @@ def chat_stream(
             "top_p": preferences["top_p"],
             "stream": True,
         }
-        print("Raw Prompt" + raw_prompt)
-        print(user_message_content)
-        print(prompt)
         if retry:
             if conversation_history and conversation_history[-1]["role"] == "user":
                 conversation_history.pop()
@@ -350,15 +362,8 @@ def chat_stream(
             response = client.chat.completions.create(**request_payload)
 
             for part in response:
-                db.session.commit()
-                conversation = Conversation.query.get(
-                    conversation_id
-                )  # Re-fetch the conversation object
-                db.session.refresh(conversation)
-                if conversation.is_interrupted:
-                    print("Conversation has been interrupted.")
-                    conversation.is_interrupted = False
-                    db.session.commit()
+                if check_interruption_flag(conversation_id):
+                    clear_interruption_flag(conversation_id)
                     break
 
                 content = part.choices[0].delta.content
@@ -382,7 +387,6 @@ def chat_stream(
                 cost=cost,
             )
 
-            # Save the response, whether full or partial
             if full_response.strip():  # Save only if there's non-empty content
                 save_message(
                     conversation_id, full_response, "incoming", preferences["model"]

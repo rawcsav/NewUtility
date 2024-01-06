@@ -77,7 +77,7 @@ h2 {
 label {
   color: #0069be;
   white-space: nowrap;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 #uploadStatus {
@@ -103,12 +103,13 @@ label {
 .form-group {
   display: flex;
   flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .upload-container {
   display: flex;
   height: 100%;
-  max-height: 50%;
+  max-height: 70%;
   flex-direction: row;
   justify-content: center; /* Aligns children vertically to the top */
   align-items: stretch;
@@ -189,6 +190,7 @@ a {
   width: 300px;
   height: auto;
 }
+
 .doc img {
   width: 300px;
   height: auto;
@@ -199,6 +201,7 @@ a {
   width: 30vw;
   height: 25vh;
 }
+
 .shape {
   border: 5px solid #141414;
 }
@@ -212,17 +215,20 @@ ul {
 
 input {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   color: #00a86b;
   padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 #title-edit {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   background-color: transparent;
   color: #0069be;
 }
+
 #author-edit {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 16px;
@@ -269,6 +275,10 @@ ul li {
   flex-direction: column;
 }
 
+.docs-container li {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
 .button-container {
   display: flex;
   justify-content: flex-start;
@@ -292,7 +302,9 @@ ul li {
   max-height: 100%;
   background-color: #faf5e6;
   padding: 10px;
+  min-width: 200px;
   margin: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .doc-upload {
@@ -302,6 +314,7 @@ ul li {
   padding: 10px;
   margin: 10px;
 }
+
 #author-edit,
 #title-edit {
   padding: 0;
@@ -318,62 +331,14 @@ ul li {
   flex-direction: column;
   max-height: 100%; /* Adjust this value as needed */
 }
-.doc-upload button[type="submit"] {
-  padding: 10px 15px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #fff;
-  background-color: #5c6bc0;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.doc-upload button[type="submit"]:hover {
-  background-color: #3949ab;
-}
-
-.doc-upload button[type="submit"]:active {
-  background-color: #303f9f;
-}
-
-.doc-upload button[type="submit"]:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(92, 107, 192, 0.5);
-}
-
-.doc-upload button[type="submit"]:disabled {
-  background-color: #b0bec5;
-  cursor: not-allowed;
-}
-.file-upload-btn {
-  display: inline-block;
-  padding: 10px 20px;
-  cursor: pointer;
-  background-color: #5c6bc0;
-  color: #fff;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.file-upload-btn:hover {
-  background-color: #3949ab;
-}
 
 #file-name-display {
   font-size: 14px;
   color: #654321;
   margin: 0;
   padding: 0;
-}
-
-.file-upload-btn:focus,
-.file-upload-btn:active {
-  background-color: #303f9f;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(92, 107, 192, 0.5);
+  text-align: center;
+  font-style: italic;
 }
 
 #info-list,
@@ -399,6 +364,7 @@ ul li {
   display: inline-block;
   margin-right: 10px;
 }
+
 #blue h3 {
   color: #faf5e6;
 }
@@ -410,4 +376,81 @@ ul li {
   display: inline-block;
   width: 20px;
   margin-left: -20px;
+}
+
+/* File Upload Button */
+.file-upload-btn {
+  display: inline-block;
+  font-size: 16px;
+  padding: 10px 15px;
+  background-color: #5c6bc0;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.file-upload-btn:hover,
+.file-upload-btn:focus {
+  background-color: #3949ab;
+}
+
+/* Submit Button */
+.doc-submit-btn {
+  padding: 10px 15px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.doc-submit-btn:hover {
+  background-color: #43a047;
+}
+
+/* Pagination Controls */
+#pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#pagination-controls button {
+  padding: 5px 10px;
+  margin: 0 10px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+#pagination-controls button:hover {
+  background-color: #e0e0e0;
+}
+
+.doc-submit-btn:disabled,
+.file-upload-btn:disabled {
+  background-color: #b0bec5;
+  cursor: not-allowed;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 105, 190, 0.5);
+}
+
+input:focus {
+  border-color: #0069be;
+  box-shadow: 0 0 0 2px rgba(0, 105, 190, 0.2);
 }
