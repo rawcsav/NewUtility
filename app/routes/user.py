@@ -41,11 +41,14 @@ def dashboard():
     selected_api_key_id = current_user.selected_api_key_id
     # Retrieve the user's images from the database ordered by 'id' descending
     user_images = (
-        GeneratedImage.query.filter_by(user_id=current_user.id, delete=False)
-        .order_by(GeneratedImage.id.desc())
+        GeneratedImage.query.filter_by(
+            user_id=current_user.id, delete=False
+        )  # Add delete=False to the filter
+        .order_by(GeneratedImage.created_at.desc())
         .limit(15)
         .all()
     )
+
     user_documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
     documents_data = [
         {

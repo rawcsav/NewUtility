@@ -140,37 +140,21 @@ document.addEventListener("DOMContentLoaded", function () {
             showToast(data.error_message, "error");
           } else {
             hideLoader();
-            var imageContainer = document.getElementById("generated-images");
-            var iconsContainer = document.getElementById("icons-container");
 
-            imageContainer.innerHTML = "";
-            iconsContainer.innerHTML = "";
-
+            var lastImageMetadata =
+              data.image_metadata[data.image_metadata.length - 1];
             var lastImageUrl = data.image_urls[data.image_urls.length - 1];
 
-            var imageUuid = lastImageUrl.split("/").pop().split(".")[0];
-
-            var downloadLink = document.createElement("a");
-            downloadLink.href = `/image/download_image/${imageUuid}`;
-            downloadLink.innerHTML = '<i class="fas fa-download"></i>';
-            downloadLink.className = "image-icon download-icon";
-            iconsContainer.appendChild(downloadLink);
-
-            var openLink = document.createElement("a");
-            openLink.href = lastImageUrl;
-            openLink.target = "_blank";
-            openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
-            openLink.className = "image-icon open-icon";
-            iconsContainer.appendChild(openLink);
-
-            var img = document.createElement("img");
-            img.onload = function () {
-              resizeImage(img);
+            var imageId = lastImageMetadata.id; // The ID of the newly generated image
+            var displayMetadata = {
+              Prompt: lastImageMetadata.prompt,
+              Model: lastImageMetadata.model,
+              Size: lastImageMetadata.size,
+              Quality: lastImageMetadata.quality,
+              Style: lastImageMetadata.style,
+              Created_at: lastImageMetadata.created_at,
             };
-            img.src = lastImageUrl;
-            img.alt = "Generated Image";
-            imageContainer.appendChild(img);
-
+            displayImage(imageId, lastImageUrl, displayMetadata);
             showToast("Image generated successfully!", "success");
             loadImageHistory();
           }
@@ -197,9 +181,18 @@ document.addEventListener("DOMContentLoaded", function () {
         limitedData.forEach((item, index) => {
           const imgThumbnail = document.createElement("img");
           imgThumbnail.dataset.src = item.url;
+          imgThumbnail.dataset.id = item.id; // Add this line
           imgThumbnail.className = "thumbnail lazy";
           imgThumbnail.alt = `Image History ${index + 1}`;
-          imgThumbnail.onclick = () => displayImage(item.uuid, item.url);
+          imgThumbnail.onclick = () =>
+            displayImage(item.id, item.url, {
+              Prompt: item.prompt,
+              Model: item.model,
+              Size: item.size,
+              Quality: item.quality,
+              Style: item.style,
+              Created_at: item.created_at,
+            });
           carousel.appendChild(imgThumbnail);
         });
 
@@ -210,11 +203,13 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  function displayImage(uuid, imageUrl) {
+  function displayImage(id, imageUrl, metadata) {
     const imageContainer = document.getElementById("generated-images");
-    const iconsContainer = document.getElementById("icons-container");
+    const infoContainer = document.getElementById("img-info-container");
+    var iconsContainer = document.getElementById("icons-container");
 
     imageContainer.innerHTML = "";
+    infoContainer.innerHTML = "";
     iconsContainer.innerHTML = "";
 
     const img = document.createElement("img");
@@ -224,23 +219,103 @@ document.addEventListener("DOMContentLoaded", function () {
     img.src = imageUrl;
     img.alt = "Generated Image";
     imageContainer.appendChild(img);
-
-    addDownloadAndOpenIcons(uuid, iconsContainer);
+    iconsContainer.innerHTML = "";
+    addDownloadAndOpenIcons(id, iconsContainer);
+    addMetadataToInfoContainer(metadata, infoContainer);
   }
 
-  function addDownloadAndOpenIcons(uuid, iconsContainer) {
+  function addDownloadAndOpenIcons(id, container) {
     var downloadLink = document.createElement("a");
-    downloadLink.href = `/image/download_image/${uuid}`;
+    downloadLink.href = `/image/download_image/${id}`;
     downloadLink.innerHTML = '<i class="fas fa-download"></i>';
     downloadLink.className = "image-icon download-icon";
-    iconsContainer.appendChild(downloadLink);
+    container.appendChild(downloadLink);
 
     var openLink = document.createElement("a");
-    openLink.href = `/static/temp_img/${uuid}.webp`;
+    openLink.href = `/static/temp_img/${id}.webp`;
     openLink.target = "_blank";
     openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
     openLink.className = "image-icon open-icon";
-    iconsContainer.appendChild(openLink);
+    container.appendChild(openLink);
+
+    var deleteLink = document.createElement("a");
+    deleteLink.href = "#"; // Prevent navigation
+    deleteLink.innerHTML = '<i class="fas fa-trash"></i>'; // Use appropriate trash icon class
+    deleteLink.className = "image-icon delete-icon";
+    deleteLink.addEventListener("click", function (event) {
+      event.preventDefault(); // Prevent the default anchor behavior
+      markImageAsDeleted(id); // Call the function to mark the image as deleted
+    });
+    container.appendChild(deleteLink);
+  }
+
+  function markImageAsDeleted(imageId) {
+    fetch(`/image/mark_delete/${imageId}`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCsrfToken(),
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ delete: true }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.status === "success") {
+          showToast("Image marked for deletion", "success");
+          // Remove the image from the history carousel
+          const thumbnailToRemove = document.querySelector(
+            `img[data-id="${imageId}"]`,
+          );
+          if (thumbnailToRemove) {
+            thumbnailToRemove.remove();
+          }
+          const displayedImage = document
+            .getElementById("generated-images")
+            .querySelector("img");
+          if (displayedImage && displayedImage.src.includes(imageId)) {
+            document.getElementById("generated-images").innerHTML = "";
+            document.getElementById("icons-container").innerHTML = "";
+            document.getElementById("img-info-container").innerHTML = "";
+          }
+        } else {
+          showToast("Failed to mark image for deletion", "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showToast("Error: " + error.message, "error");
+      });
+  }
+
+  function addMetadataToInfoContainer(metadata, container) {
+    const metadataList = document.createElement("ul");
+    metadataList.className = "image-metadata";
+
+    Object.entries(metadata).forEach(([key, value]) => {
+      const listItem = document.createElement("li");
+
+      // Create a span for the key with the 'metadata-key' class
+      const keySpan = document.createElement("span");
+      keySpan.textContent = `${key}: `;
+      keySpan.className = "metadata-key";
+      listItem.appendChild(keySpan);
+
+      // Create a span for the value and apply the 'metadata-value' class
+      const valueSpan = document.createElement("span");
+      valueSpan.textContent = value;
+      valueSpan.className = "metadata-value"; // Apply the CSS class
+      listItem.appendChild(valueSpan); // Append the value span to the list item
+
+      metadataList.appendChild(listItem);
+    });
+
+    container.appendChild(metadataList);
   }
 
   function initializeLazyLoading() {

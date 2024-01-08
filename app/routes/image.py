@@ -1,5 +1,6 @@
-import uuid
+import os
 from datetime import datetime
+
 from flask import (
     request,
     jsonify,
@@ -9,27 +10,31 @@ from flask import (
     url_for,
     current_app,
 )
-import os
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound
+
 from app import db
-import openai
 from app.database import GeneratedImage
 from app.util.forms_util import GenerateImageForm
-from app.util.image_util import download_and_convert_image
+from app.util.image_util import (
+    generate_images,
+    save_image_to_db,
+    download_and_store_image,
+)
 from app.util.session_util import initialize_openai_client
-from app.util.usage_util import dalle_cost, update_usage_and_costs
 
 bp = Blueprint("image", __name__, url_prefix="/image")
+
+date_format = "%b %d, %Y at %I:%M %p"
 
 
 @bp.route("/generate_image", methods=["GET", "POST"])
 @login_required
 def generate_image():
     form = GenerateImageForm()
-    uuids = []
-    error_message = None
     image_urls = []
+    image_metadata = []  # List to hold metadata for each image
+    error_message = None
 
     if form.validate_on_submit():
         try:
@@ -37,87 +42,83 @@ def generate_image():
             model = form.model.data or "dall-e-3"
             n = form.n.data or 1
             size = form.size.data or "1024x1024"
+            quality = form.quality.data if model.startswith("dall-e-3") else None
+            style = form.style.data if model.startswith("dall-e-3") else None
+            request_params = {
+                "model": model,
+                "prompt": prompt,
+                "n": n,
+                "size": size,
+                "quality": quality,
+                "style": style,
+            }
 
             client, error = initialize_openai_client(current_user.id)
-            if error:
-                return jsonify({"status": "error", "message": error})
+            image_data = generate_images(
+                client,
+                request_params,
+                current_user.id,
+                current_user.selected_api_key_id,
+            )
 
-            request_params = {"model": model, "prompt": prompt, "n": n, "size": size}
-
-            if model.startswith("dall-e-3"):
-                quality = form.quality.data
-                style = form.style.data
-
-                if quality:
-                    request_params["quality"] = quality
-                if style:
-                    request_params["style"] = style
-            else:
-                quality = None
-                style = None
-
-            response = client.images.generate(**request_params)
-            # Check if the response is successful
-            if response is not None and hasattr(response, "data"):
-                cost = dalle_cost(
-                    model_name=model, resolution=size, num_images=n, quality=quality
-                )
-
-                # Update the API key and APIUsage with the new cost
-                update_usage_and_costs(
-                    user_id=current_user.id,
-                    api_key_id=current_user.selected_api_key_id,
-                    usage_type="image_gen",
-                    cost=cost,
-                )
-
-            for image_response in response.data:
+            download_dir = current_app.config["USER_IMAGE_DIRECTORY"]
+            for image_response in image_data:
                 image_url = image_response.url
-                temp_uuid = str(uuid.uuid4())
-                uuids.append(temp_uuid)
-
-                new_image = GeneratedImage(
-                    user_id=current_user.id,
-                    prompt=prompt,
-                    model=model,
-                    uuid=temp_uuid,
-                    created_at=datetime.utcnow(),
+                image_id = save_image_to_db(
+                    current_user.id, prompt, model, size, quality, style
                 )
-                db.session.add(new_image)
-                db.session.commit()
-                download_dir = current_app.config["USER_IMAGE_DIRECTORY"]
-                local_image_url = download_and_convert_image(
-                    download_dir, image_url, temp_uuid
+                local_image_url = download_and_store_image(
+                    download_dir, image_url, image_id
                 )
                 image_urls.append(local_image_url)
 
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return jsonify({"image_urls": image_urls, "status": "success"})
+                # Create and append metadata dictionary for each image
+                image_metadata.append(
+                    {
+                        "id": image_id,
+                        "prompt": prompt,
+                        "model": model,
+                        "size": size,
+                        "quality": quality,
+                        "style": style,
+                        "created_at": datetime.utcnow().strftime(date_format),
+                    }
+                )
 
         except Exception as e:
             error_message = str(e)
             db.session.rollback()
             print(f"Error generating image: {error_message}")
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return jsonify({"error_message": error_message, "status": "error"})
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        if error_message:
+            return jsonify({"error_message": error_message, "status": "error"})
+        # Return both image URLs and metadata in the response
+        return jsonify(
+            {
+                "image_urls": image_urls,
+                "image_metadata": image_metadata,
+                "status": "success",
+            }
+        )
 
     return render_template(
         "image.html", form=form, image_urls=image_urls, error_message=error_message
     )
 
 
-@bp.route("/download_image/<uuid:image_uuid>")
+@bp.route("/download_image/<uuid:image_id>")
 @login_required
-def download_image(image_uuid):
+def download_image(image_id):
     image_record = GeneratedImage.query.filter_by(
-        user_id=current_user.id, uuid=str(image_uuid)
+        user_id=current_user.id, id=str(image_id), delete=False
     ).first()
 
     if not image_record:
         raise NotFound("Image not found or does not belong to the current user")
 
     download_dir = current_app.config["USER_IMAGE_DIRECTORY"]
-    webp_file_name = f"{image_uuid}.webp"
+    webp_file_name = f"{image_id}.webp"
     webp_file_path = os.path.join(download_dir, webp_file_name)
 
     if not os.path.exists(webp_file_path):
@@ -130,21 +131,47 @@ def download_image(image_uuid):
 @login_required
 def image_history():
     user_images = (
-        GeneratedImage.query.filter_by(user_id=current_user.id)
-        .order_by(GeneratedImage.id.desc())
+        GeneratedImage.query.filter_by(
+            user_id=current_user.id, delete=False
+        )  # Add delete=False to the filter
+        .order_by(GeneratedImage.created_at.desc())
         .limit(15)
         .all()
     )
 
-    # Create a list of image URLs and UUIDs
     image_data = [
         {
             "url": url_for(
-                "static", filename=f"temp_img/{img.uuid}.webp", _external=True
+                "static", filename=f"temp_img/{img.id}.webp", _external=True
             ),
-            "uuid": img.uuid,
+            "id": img.id,
+            "prompt": img.prompt,
+            "model": img.model,
+            "size": img.size,
+            "quality": img.quality,
+            "style": img.style,
+            "created_at": img.created_at.strftime(date_format),  # Format the datetime
         }
         for img in user_images
     ]
 
     return jsonify(image_data)
+
+
+@bp.route("/mark_delete/<uuid:image_id>", methods=["POST"])
+@login_required
+def mark_delete(image_id):
+    image_record = GeneratedImage.query.filter_by(
+        user_id=current_user.id, id=str(image_id)
+    ).first()
+
+    if not image_record:
+        return jsonify({"status": "error", "message": "Image not found"}), 404
+
+    try:
+        image_record.delete = True
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Image marked for deletion"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500

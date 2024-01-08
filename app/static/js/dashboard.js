@@ -27,29 +27,6 @@ function showToast(message, type) {
 }
 
 document
-  .getElementById("username-change-form")
-  .addEventListener("submit", function (event) {
-    event.preventDefault();
-    var formData = new FormData(this);
-
-    fetch("/user/change_username", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": getCsrfToken(),
-      },
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        document.getElementById("username-change-message").textContent =
-          data.message;
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  });
-
-document
   .getElementById("api-key-form")
   .addEventListener("submit", function (e) {
     e.preventDefault();
@@ -97,25 +74,6 @@ document
     // Clear the form fields after submission
     apiKeyInput.value = "";
     nicknameInput.value = "";
-  });
-
-document
-  .querySelector("#toggleFormButton")
-  .addEventListener("click", function () {
-    let apiKeyForm = document.querySelector("#api-key-form");
-    apiKeyForm.style.display =
-      apiKeyForm.style.display === "none" ? "block" : "none";
-    this.classList.toggle("active");
-  });
-
-// Replace $("#toggleUserButton").on("click", function () {...});
-document
-  .querySelector("#toggleUserButton")
-  .addEventListener("click", function () {
-    let usernameChangeForm = document.querySelector("#username-change-form");
-    usernameChangeForm.style.display =
-      usernameChangeForm.style.display === "none" ? "block" : "none";
-    this.classList.toggle("active");
   });
 
 document.querySelectorAll(".retest-api-key-form").forEach((form) => {
@@ -332,12 +290,12 @@ document.addEventListener("click", function (event) {
 const thumbnails = document.querySelectorAll(".image-history-item img");
 thumbnails.forEach((thumbnail) => {
   thumbnail.addEventListener("click", function () {
-    const uuid = this.getAttribute("src").split("/").pop().split(".")[0];
-    toggleIcons(uuid, this);
+    const imageId = this.getAttribute("data-id");
+    toggleIcons(imageId, this);
   });
 });
 
-function toggleIcons(uuid, imageElement) {
+function toggleIcons(id, imageElement) {
   const imageItem = imageElement.closest(".image-history-item");
   const iconsContainer = imageItem.querySelector(".icons-container");
 
@@ -345,22 +303,10 @@ function toggleIcons(uuid, imageElement) {
     iconsContainer.style.display =
       iconsContainer.style.display === "none" ? "block" : "none";
   } else {
-    addIconsToImage(uuid, iconsContainer);
+    addIconsToImage(id, iconsContainer);
   }
 }
 
-function setActiveButton(activeButtonId) {
-  document.querySelectorAll(".options-button").forEach(function (button) {
-    button.classList.remove("active");
-  });
-
-  if (activeButtonId) {
-    var activeButton = document.getElementById(activeButtonId);
-    if (activeButton) {
-      activeButton.classList.add("active");
-    }
-  }
-}
 function findOpenAIKeys(inputString) {
   const apiKeyPattern = /sk-[A-Za-z0-9]{48}/g;
   const apiKeys = inputString.match(apiKeyPattern) || [];
@@ -422,72 +368,69 @@ setupFormSubmission(
   (error) => showToast("Error: " + error.message, "error"),
 );
 
-function togglePopup(activePopupId, activeButtonId) {
-  requestAnimationFrame(() => {
-    // Define all popup elements and their corresponding buttons
-    const popups = {
-      "preference-popup": "show-preferences-btn",
-      "docs-settings-popup": "docs-preferences-btn",
-      "docs-edit-popup": "docs-edit-btn",
-    };
+function addIconsToImage(id, container) {
+  if (container) {
+    container.innerHTML = "";
+    var downloadLink = document.createElement("a");
+    downloadLink.href = `/image/download_image/${id}`;
+    downloadLink.innerHTML = '<i class="fas fa-download"></i>';
+    downloadLink.className = "image-icon download-icon";
+    container.appendChild(downloadLink);
 
-    // Iterate through the popups to show/hide them as necessary
-    Object.keys(popups).forEach((popupId) => {
-      document.getElementById(popupId).style.display =
-        popupId === activePopupId ? "block" : "none";
+    var openLink = document.createElement("a");
+    openLink.href = `/static/temp_img/${id}.webp`;
+    openLink.target = "_blank";
+    openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+    openLink.className = "image-icon open-icon";
+    container.appendChild(openLink);
+
+    var deleteLink = document.createElement("a");
+    deleteLink.href = "#"; // Prevent navigation
+    deleteLink.innerHTML = '<i class="fas fa-trash"></i>'; // Use appropriate trash icon class
+    deleteLink.className = "image-icon delete-icon";
+    deleteLink.addEventListener("click", function (event) {
+      event.preventDefault(); // Prevent the default anchor behavior
+      markImageAsDeleted(id); // Call the function to mark the image as deleted
     });
-
-    // Set the active button
-    setActiveButton(activeButtonId);
-  });
-}
-
-var showPreferencesBtn = document.getElementById("show-preferences-btn");
-if (showPreferencesBtn) {
-  showPreferencesBtn.addEventListener("click", function () {
-    togglePopup("preference-popup", "show-preferences-btn");
-  });
-}
-
-var docsPreferencesBtn = document.getElementById("docs-preferences-btn");
-if (docsPreferencesBtn) {
-  docsPreferencesBtn.addEventListener("click", function () {
-    togglePopup("docs-settings-popup", "docs-preferences-btn");
-  });
-}
-
-function addIconsToImage(uuid, iconsContainer) {
-  if (iconsContainer) {
-    iconsContainer.innerHTML = "";
-
-    iconsContainer.appendChild(
-      createIconLink(`/image/download_image/${uuid}`, "fa-download"),
-    );
-    iconsContainer.appendChild(
-      createIconLink(
-        `/static/temp_img/${uuid}.webp`,
-        "fa-external-link-alt",
-        true,
-      ),
-    );
-
-    iconsContainer.style.display = "block";
-  } else {
-    console.error("Icons container not found for image UUID:", uuid);
+    container.appendChild(deleteLink);
   }
+  container.style.display = "block";
 }
 
-function createIconLink(href, iconClass, isNewWindow) {
-  const icon = document.createElement("i");
-  icon.className = `fas ${iconClass}`;
-  const link = document.createElement("a");
-  link.href = href;
-  link.className = "image-icon";
-  if (isNewWindow) {
-    link.target = "_blank";
-  }
-  link.appendChild(icon);
-  return link;
+function markImageAsDeleted(imageId) {
+  fetch(`/image/mark_delete/${imageId}`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCsrfToken(),
+      "X-Requested-With": "XMLHttpRequest",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ delete: true }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.status === "success") {
+        showToast("Image marked for deletion", "success");
+        // Remove the entire image-history-item element
+        const imageHistoryItemToRemove = document
+          .querySelector(`.image-history-item img[data-id="${imageId}"]`)
+          ?.closest(".image-history-item"); // Use optional chaining and closest to find the parent
+        if (imageHistoryItemToRemove) {
+          imageHistoryItemToRemove.remove();
+        }
+      } else {
+        showToast("Failed to mark image for deletion", "error");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      showToast("Error: " + error.message, "error");
+    });
 }
 
 function toggleUsageInfo(usageInfoId) {
@@ -498,13 +441,6 @@ function toggleUsageInfo(usageInfoId) {
   } else {
     usageInfoDiv.style.display = "none";
   }
-}
-
-var docsEditBtn = document.getElementById("docs-edit-btn");
-if (docsEditBtn) {
-  docsEditBtn.addEventListener("click", function () {
-    togglePopup("docs-edit-popup", "docs-edit-btn");
-  });
 }
 
 document.querySelectorAll(".edit-btn").forEach(function (editBtn) {
@@ -521,3 +457,145 @@ document
       toggleUsageInfo(usageInfoId);
     });
   });
+
+// Function to toggle between two sections using buttons
+function toggleKeySection(activeButtonId) {
+  // Define the button-section pairs
+  const sections = {
+    "keyslist-btn": "key-list",
+    "keyedits-btn": "key-edits",
+  };
+
+  // Iterate over the sections to show/hide and activate/deactivate buttons
+  Object.keys(sections).forEach((buttonId) => {
+    const button = document.getElementById(buttonId);
+    const section = document.getElementById(sections[buttonId]);
+
+    if (buttonId === activeButtonId) {
+      button.classList.add("active");
+      section.style.display = "block";
+    } else {
+      button.classList.remove("active");
+      section.style.display = "none";
+    }
+  });
+}
+
+// Event listeners for key management buttons
+document.getElementById("keyslist-btn").addEventListener("click", function () {
+  toggleKeySection("keyslist-btn");
+});
+
+document.getElementById("keyedits-btn").addEventListener("click", function () {
+  toggleKeySection("keyedits-btn");
+});
+
+// Initialize the key management section to show the first section by default
+toggleKeySection("keyslist-btn");
+
+// Function to toggle between user info and user change sections
+function toggleProfileSection(activeButtonId) {
+  // Define the button-section pairs
+  const sections = {
+    "userinfo-btn": "user-info",
+    "userchange-btn": "user-change",
+  };
+
+  // Iterate over the sections to show/hide and activate/deactivate buttons
+  Object.keys(sections).forEach((buttonId) => {
+    const button = document.getElementById(buttonId);
+    const section = document.getElementById(sections[buttonId]);
+
+    if (buttonId === activeButtonId) {
+      button.classList.add("active");
+      section.style.display = "block";
+    } else {
+      button.classList.remove("active");
+      section.style.display = "none";
+    }
+  });
+}
+
+// Event listeners for profile management buttons
+document.getElementById("userinfo-btn").addEventListener("click", function () {
+  toggleProfileSection("userinfo-btn");
+});
+
+document
+  .getElementById("userchange-btn")
+  .addEventListener("click", function () {
+    toggleProfileSection("userchange-btn");
+  });
+
+// Initialize the profile management section to show the first section by default
+toggleProfileSection("userinfo-btn");
+
+document
+  .getElementById("username-change-form")
+  .addEventListener("submit", function (event) {
+    event.preventDefault();
+    var formData = new FormData(this);
+
+    fetch("/user/change_username", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        showToast(
+          data.message,
+          data.status === "success" ? "success" : "error",
+        );
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showToast("An error occurred while processing your request.", "error");
+      });
+  });
+
+// Function to toggle between utility settings sections
+function toggleUtilitySection(activeButtonId) {
+  // Define the button-section pairs
+  const sections = {
+    "show-preferences-btn": "preference-popup",
+    "docs-edit-btn": "docs-edit-popup",
+    "docs-preferences-btn": "docs-settings-popup",
+  };
+
+  // Iterate over the sections to show/hide and activate/deactivate buttons
+  Object.keys(sections).forEach((buttonId) => {
+    const button = document.getElementById(buttonId);
+    const section = document.getElementById(sections[buttonId]);
+
+    if (buttonId === activeButtonId) {
+      button.classList.add("active");
+      section.style.display = "block";
+    } else {
+      button.classList.remove("active");
+      section.style.display = "none";
+    }
+  });
+}
+
+// Event listeners for utility settings buttons
+document
+  .getElementById("show-preferences-btn")
+  .addEventListener("click", function () {
+    toggleUtilitySection("show-preferences-btn");
+  });
+
+document.getElementById("docs-edit-btn").addEventListener("click", function () {
+  toggleUtilitySection("docs-edit-btn");
+});
+
+document
+  .getElementById("docs-preferences-btn")
+  .addEventListener("click", function () {
+    toggleUtilitySection("docs-preferences-btn");
+  });
+
+// Initialize the utility settings section to show the first section by default
+toggleUtilitySection("show-preferences-btn");

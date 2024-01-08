@@ -15,9 +15,11 @@ def generate_default_nickname():
 class MessageChunkAssociation(db.Model):
     __tablename__ = "message_chunk_association"
 
-    message_id = db.Column(db.String(36), db.ForeignKey("messages.id"), primary_key=True)
+    message_id = db.Column(
+        db.String(36), db.ForeignKey("messages.id"), primary_key=True
+    )
     chunk_id = db.Column(
-        db.String(36), db.ForeignKey("document_chunks.id"), primary_key=True
+        db.String(36), db.ForeignKey("document_chunks.id", ondelete='CASCADE'), primary_key=True
     )
     similarity_rank = db.Column(db.Integer, nullable=False)  # Store the ranking here
 
@@ -28,7 +30,9 @@ class MessageChunkAssociation(db.Model):
 class UserAPIKey(db.Model):
     __tablename__ = "user_api_keys"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     nickname = db.Column(
         db.String(25), nullable=False, default=generate_default_nickname
     )
@@ -63,7 +67,9 @@ class User(UserMixin, db.Model):
     color_mode = db.Column(db.String(10), nullable=False, default="dark")
 
     selected_api_key_id = db.Column(
-        db.String(36), db.ForeignKey("user_api_keys.id", ondelete="CASCADE"), nullable=True
+        db.String(36),
+        db.ForeignKey("user_api_keys.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     conversations = db.relationship("Conversation", backref="user", lazy="dynamic")
@@ -88,7 +94,9 @@ class Conversation(db.Model):
     __tablename__ = "conversations"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = db.Column(db.String(255), nullable=True, default="New Conversation")
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     system_prompt = db.Column(
         db.String(2048), nullable=True
@@ -99,7 +107,6 @@ class Conversation(db.Model):
         "Message", backref="conversation", lazy="dynamic", cascade="all, delete-orphan"
     )
     delete = db.Column(db.Boolean, default=False, nullable=False)
-
 
 
 class Message(db.Model):
@@ -115,7 +122,9 @@ class Message(db.Model):
     is_voice = db.Column(db.Boolean, default=False)
     is_vision = db.Column(db.Boolean, default=False)
     is_error = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now(), index=True)
+    created_at = db.Column(
+        db.DateTime(timezone=False), server_default=func.now(), index=True
+    )
     message_images = db.relationship(
         "MessageImages", backref="message", lazy="joined", cascade="all, delete-orphan"
     )
@@ -125,7 +134,6 @@ class Message(db.Model):
         cascade="all, delete-orphan",
     )
     delete = db.Column(db.Boolean, default=False, nullable=False)
-
 
 
 class ModelContextWindow(db.Model):
@@ -139,7 +147,9 @@ class ChatPreferences(db.Model):
     __tablename__ = "chat_preferences"
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), unique=True, index=True)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id"), unique=True, index=True
+    )
     model = db.Column(db.String(50), default="gpt-3.5-turbo")
     temperature = db.Column(db.Float, default=0.7)
     max_tokens = db.Column(db.Integer, default=2000)
@@ -158,7 +168,9 @@ class ChatPreferences(db.Model):
 class Document(db.Model):
     __tablename__ = "documents"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     title = db.Column(db.String(255), nullable=False)
     author = db.Column(db.String(255), nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)
@@ -174,12 +186,14 @@ class Document(db.Model):
     delete = db.Column(db.Boolean, default=False, nullable=False)
 
 
-
 class DocumentChunk(db.Model):
     __tablename__ = "document_chunks"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     document_id = db.Column(
-        db.String(36), db.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36),
+        db.ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     chunk_index = db.Column(db.Integer, nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
@@ -228,13 +242,21 @@ class APIUsage(db.Model):
 
 class GeneratedImage(db.Model):
     __tablename__ = "generated_images"
+
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
-    uuid = db.Column(db.String(255), nullable=False, unique=True)
     delete = db.Column(db.Boolean, default=False, nullable=False)
+
+    # New columns
+    size = db.Column(
+        db.String(50), nullable=False
+    )  # Assuming size is a string like "1024x1024"
+    quality = db.Column(db.String(50), nullable=True)  # Quality can be nullable
+    style = db.Column(db.String(50), nullable=True)  # Style can be nullable
+
     user = db.relationship("User", back_populates="generated_images")
 
 
@@ -243,16 +265,20 @@ class MessageImages(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     uuid = db.Column(db.String(255), nullable=False, unique=True)
     image_url = db.Column(db.String(255), nullable=False)
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     conversation_id = db.Column(
         db.String(36), db.ForeignKey("conversations.id", ondelete="CASCADE")
     )
     message_id = db.Column(
-        db.String(36), db.ForeignKey("messages.id", ondelete="CASCADE"), nullable=True, index=True
+        db.String(36),
+        db.ForeignKey("messages.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
     user = db.relationship("User", backref="message_images", lazy="joined")
     conversation = db.relationship(
         "Conversation", backref="message_images", lazy="joined"
     )
     delete = db.Column(db.Boolean, default=False, nullable=False)
-
