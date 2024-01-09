@@ -58,37 +58,6 @@ function enableEditing(editButton) {
   });
 }
 
-function pollDocumentStatus() {
-  fetch("/status", {
-    method: "GET",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.error) {
-        updateUploadMessages("Error: " + data.error, "error");
-      } else if (data.length === 0) {
-        // Stop polling if there are no documents
-        updateUploadMessages("No documents to process.", "success");
-      } else {
-        // Update status and continue polling
-        let statusMessage = data
-          .map((doc) => `${doc.title}: ${doc.status}`)
-          .join("<br>");
-        updateUploadMessages(statusMessage, "success");
-        setTimeout(pollDocumentStatus, 5000); // Continue polling every 5 seconds
-      }
-    })
-    .catch((error) => {
-      console.error("Error during status update:", error);
-      updateUploadMessages(
-        "Error during status update: " + error.message,
-        "error",
-      );
-    });
-}
 function updateFileList() {
   const fileList = fileInput.files;
   totalPages = fileList.length;
@@ -120,19 +89,18 @@ function createDocumentForms(fileList) {
 
 function onSubmit(event) {
   event.preventDefault();
-  updateUploadMessages("Uploading...", "success");
+  saveFormData(currentPage - 1); // Save data for the current document before submitting
 
-  documentForms.forEach((formHtml, index) => {
-    if (index !== currentPage - 1) {
-      const div = document.createElement("div");
-      div.innerHTML = formHtml;
-      div.style.display = "none";
-      uploadForm.appendChild(div);
-    }
+  const formData = new FormData();
+  Object.keys(documentData).forEach((index) => {
+    const data = documentData[index];
+    formData.append("file", data.file);
+    formData.append("title", data.title);
+    formData.append("author", data.author || ""); // Use empty string if author is not provided
+    formData.append("chunk_size", data.chunk_size);
   });
 
   // Use FormData to capture all form inputs for the AJAX request
-  const formData = new FormData(uploadForm);
 
   // Send the AJAX request to the upload endpoint
   fetch(uploadForm.action, {
@@ -167,8 +135,6 @@ function startProcessing() {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        // Start polling for status updates when processing starts
-        pollDocumentStatus();
       } else {
         updateUploadMessages("Processing Failed.", "error");
         console.error("Processing failed:", data.message);
@@ -195,14 +161,38 @@ function displayCurrentForm() {
   }
 }
 
-function navigate(step) {
-  currentPage += step;
-  if (currentPage < 1) {
-    currentPage = 1;
-  } else if (currentPage > totalPages) {
-    currentPage = totalPages;
+let documentData = {}; // Object to store form data for each document
+
+function saveFormData(index) {
+  // Save form data for the current document
+  const formData = new FormData(document.querySelector("form"));
+  documentData[index] = {
+    file: fileInput.files[index],
+    title: formData.get("title"),
+    author: formData.get("author"),
+    chunk_size: formData.get("chunk_size"),
+  };
+}
+
+function restoreFormData(index) {
+  // Restore form data for the given document
+  const data = documentData[index];
+  if (data) {
+    const form = document.querySelector("form");
+    form.querySelector('input[name="title"]').value = data.title || "";
+    form.querySelector('input[name="author"]').value = data.author || ""; // Use empty string if author is not provided
+    form.querySelector('input[name="chunk_size"]').value = data.chunk_size;
   }
-  displayCurrentForm();
+}
+
+function navigate(step) {
+  const newIndex = currentPage + step;
+  if (newIndex >= 1 && newIndex <= totalPages) {
+    saveFormData(currentPage - 1); // Save data for the current document
+    currentPage = newIndex;
+    displayCurrentForm(); // Display the new current form
+    restoreFormData(currentPage - 1); // Restore data for the new current document
+  }
 }
 
 let currentPage = 1;
@@ -333,7 +323,7 @@ fileInput.addEventListener("change", function () {
     submitButton.disabled = false; // Enable submit button
     // Show pagination controls only if more than one file is uploaded
     paginationControls.style.display =
-      fileInput.files.length > 1 ? "block" : "none";
+      fileInput.files.length > 1 ? "flex" : "none";
   } else {
     submitButton.disabled = true; // Keep submit button disabled
     paginationControls.style.display = "none"; // Hide pagination controls

@@ -6,34 +6,39 @@
   href="{{ url_for('static', filename='css/embeddings.css') }}"
 />
 {% endblock %} {% block body %}
-<div class="upload-container">
-  <h1 id="embed-title">Embeddings</h1>
-  <div class="shape" id="blue">
-    <h3>Max Token Limits by Model:</h3>
-    <ul id="token-limits-list">
-      <li><strong>gpt-4-1106-preview:</strong> 128,000 tokens</li>
-      <li><strong>gpt-4-vision-preview:</strong> 128,000 tokens</li>
-      <li><strong>gpt-4:</strong> 8,192 tokens</li>
-      <li><strong>gpt-4-32k:</strong> 32,768 tokens</li>
-      <li><strong>gpt-4-0613:</strong> 8,192 tokens</li>
-      <li><strong>gpt-4-32k-0613:</strong> 32,768 tokens</li>
-      <li><strong>gpt-4-0314:</strong> 8,192 tokens</li>
-      <li><strong>gpt-4-32k-0314:</strong> 32,768 tokens</li>
-      <li><strong>gpt-3.5-turbo-1106:</strong> 16,385 tokens</li>
-      <li><strong>gpt-3.5-turbo:</strong> 4,096 tokens</li>
-      <li><strong>gpt-3.5-turbo-16k:</strong> 16,385 tokens</li>
-    </ul>
+<div id="left-column">
+  <div id="title-container">
+    <h1>New Utility</h1>
   </div>
-  <div class="doc-upload">
-    <form
-      id="uploadForm"
-      action="{{ url_for('embeddings.upload_document') }}"
-      method="post"
-      enctype="multipart/form-data"
-    >
-      <div class="form-group">
+  <div class="upload-container">
+    <div class="section-title-div">
+      <h2 id="section-title">Embeddings</h2>
+    </div>
+    <div class="token-limits">
+      <h3>Model Context Size</h3>
+      <ul id="token-limits-list">
+        <li><strong>gpt-4-1106-preview:</strong> 128,000 tokens</li>
+        <li><strong>gpt-4-vision-preview:</strong> 128,000 tokens</li>
+        <li><strong>gpt-4:</strong> 8,192 tokens</li>
+        <li><strong>gpt-4-32k:</strong> 32,768 tokens</li>
+        <li><strong>gpt-4-0613:</strong> 8,192 tokens</li>
+        <li><strong>gpt-4-32k-0613:</strong> 32,768 tokens</li>
+        <li><strong>gpt-4-0314:</strong> 8,192 tokens</li>
+        <li><strong>gpt-4-32k-0314:</strong> 32,768 tokens</li>
+        <li><strong>gpt-3.5-turbo-1106:</strong> 16,385 tokens</li>
+        <li><strong>gpt-3.5-turbo:</strong> 4,096 tokens</li>
+        <li><strong>gpt-3.5-turbo-16k:</strong> 16,385 tokens</li>
+      </ul>
+    </div>
+    <div class="doc-upload">
+      <form
+        id="uploadForm"
+        action="{{ url_for('embeddings.upload_document') }}"
+        method="post"
+        enctype="multipart/form-data"
+      >
         <label for="file" class="file-upload-btn"
-          >Choose documents to upload</label
+          ><i class="fa-solid fa-cloud-arrow-up"></i>Upload</label
         >
         <input
           type="file"
@@ -43,82 +48,86 @@
           style="display: none"
           multiple
         />
-      </div>
-      <p id="file-name-display"></p>
-      <div id="document-forms-container"></div>
-      <div id="pagination-controls">
-        <button type="button" id="prev-button">Previous</button>
-        <span id="current-page">1</span> / <span id="total-pages">1</span>
-        <button type="button" id="next-button">Next</button>
-      </div>
-      <button type="submit" class="doc-submit-btn">Upload Documents</button>
-      <div id="uploadStatus"></div>
-    </form>
-  </div>
-  <div class="docs-container">
-    <ul class="docs_list">
-      {% for document in documents %}
-      <li id="document-{{ document.id }}">
-        <form
-          class="edit-document-form"
-          action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
-          method="post"
-        >
-          <input type="hidden" name="document_id" value="{{ document.id }}" />
-          <div class="editable-container">
-            <input
-              class="editable"
-              type="text"
-              id="title-edit"
-              name="title"
-              value="{{ document.title }}"
-              readonly
-            />
-            <input
-              class="editable"
-              type="text"
-              id="author-edit"
-              name="author"
-              value="{{ document.author }}"
-              readonly
-            />
-            <p>Total Tokens: {{ document.total_tokens }}</p>
-            <p>Chunk Count: {{ document.chunk_count }}</p>
-          </div>
-        </form>
-        <form
-          action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
-          method="post"
-        ></form>
-        <div class="button-container">
-          <button
-            type="button"
-            class="btn-icon edit-btn"
-            onclick="enableEditing(this)"
-            title="Edit Document"
-          >
-            <i class="fa fa-edit"></i>
+        <p id="file-name-display"></p>
+        <div id="document-forms-container"></div>
+        <div id="pagination-controls">
+          <button type="button" id="prev-button" aria-label="Previous page">
+            <i class="fas fa-arrow-left"></i>
           </button>
-          <button
-            type="button"
-            class="btn-icon save-btn"
-            title="Save Changes"
-            style="display: none"
-          >
-            <i class="fa fa-edit"></i>
-          </button>
-          <button
-            type="button"
-            class="btn-icon delete-btn"
-            data-doc-id="{{ document.id }}"
-            title="Delete Document"
-          >
-            <i class="fa fa-trash"></i>
+          <span id="current-page">1</span> / <span id="total-pages">1</span>
+          <button type="button" id="next-button" aria-label="Next page">
+            <i class="fas fa-arrow-right"></i>
           </button>
         </div>
-      </li>
-      {% endfor %}
-    </ul>
+        <button type="submit" class="doc-submit-btn">Upload Documents</button>
+        <div id="uploadStatus"></div>
+      </form>
+    </div>
+    <div class="docs-container">
+      <ul class="docs_list">
+        {% for document in documents %}
+        <li id="document-{{ document.id }}">
+          <form
+            class="edit-document-form"
+            action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
+            method="post"
+          >
+            <input type="hidden" name="document_id" value="{{ document.id }}" />
+            <div class="editable-container">
+              <input
+                class="editable"
+                type="text"
+                id="title-edit"
+                name="title"
+                value="{{ document.title }}"
+                readonly
+              />
+              <input
+                class="editable"
+                type="text"
+                id="author-edit"
+                name="author"
+                value="{{ document.author }}"
+                readonly
+              />
+              <p>Total Tokens: {{ document.total_tokens }}</p>
+              <p>Chunk Count: {{ document.chunk_count }}</p>
+            </div>
+          </form>
+          <form
+            action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
+            method="post"
+          ></form>
+          <div class="button-container">
+            <button
+              type="button"
+              class="btn-icon edit-btn"
+              onclick="enableEditing(this)"
+              title="Edit Document"
+            >
+              <i class="fa fa-edit"></i>
+            </button>
+            <button
+              type="button"
+              class="btn-icon save-btn"
+              title="Save Changes"
+              style="display: none"
+            >
+              <i class="fa fa-edit"></i>
+            </button>
+            <button
+              type="button"
+              class="btn-icon delete-btn"
+              data-doc-id="{{ document.id }}"
+              title="Delete Document"
+            >
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 </div>
 {% endblock %} {% block scripts %}

@@ -11,8 +11,8 @@
     <h1>New Utility</h1>
   </div>
   <div class="lower-row">
-    <div class="dashboard-title-div">
-      <h2 id="dashboard-title">Dashboard</h2>
+    <div class="section-title-div">
+      <h2 id="section-title">Dashboard</h2>
     </div>
     <div class="profile-column">
       <div class="user-container">
@@ -60,7 +60,7 @@
         </div>
       </div>
       <div class="key-container">
-        <h3>Key Management</h3>
+        <h3 id="key-title">Key Management</h3>
         <div id="key-options">
           <button id="keyslist-btn" class="options-button">
             <i class="fas fa-key"></i>
@@ -118,10 +118,10 @@
               class="key-usage"
               style="display: none"
             >
-              <p>Image Gen Usage: {{ key.usage_image_gen }}</p>
-              <p>Chat Usage: {{ key.usage_chat }}</p>
-              <p>Embedding Usage: {{ key.usage_embedding }}</p>
-              <p>Audio Usage: {{ key.usage_audio }}</p>
+              <p>Images: {{ '%0.2f'|format(key.usage_image_gen) }}</p>
+              <p>GPT: {{ '%0.2f'|format(key.usage_chat) }}</p>
+              <p>Embeddings: {{ '%0.2f'|format(key.usage_embedding) }}</p>
+              <p>Audio: {{ '%0.2f'|format(key.usage_audio) }}</p>
             </div>
             <div class="key-forms">
               <form

@@ -61,42 +61,31 @@ def upload_document():
     if not files:
         return jsonify({"error": "No files provided"}), 400
 
-    titles = request.form.get("title", "").split(",") if "title" in request.form else []
-    authors = (
-        request.form.get("author", "").split(",") if "author" in request.form else []
-    )
+    # Get titles, authors, and chunk_sizes for all documents
+    titles = request.form.getlist("title")
+    authors = request.form.getlist("author")
+    chunk_sizes = request.form.getlist("chunk_size")
 
     uploaded_files_info = []
-
     for i, file in enumerate(files):
-        title = (
-            titles[i]
-            if i < len(titles) and titles[i].strip()
-            else secure_filename(file.filename)
-        )
-        author = authors[i].strip() if i < len(authors) and authors[i].strip() else None
+        title = titles[i] if i < len(titles) else secure_filename(file.filename)
+        author = authors[i] if i < len(authors) else ""
+        chunk_size = int(chunk_sizes[i]) if i < len(chunk_sizes) else 512
+
         temp_path = save_temp_file(file)
-        uploaded_files_info.append(
-            {
-                "temp_path": temp_path,
-                "title": title,
-                "author": author,
-                "chunk_size": form.chunk_size.data or 512,
-            }
-        )
+        uploaded_files_info.append({
+            "temp_path": temp_path,
+            "title": title,
+            "author": author,
+            "chunk_size": chunk_size,
+        })
 
     session["uploaded_files_info"] = uploaded_files_info
 
-    return (
-        jsonify(
-            {
-                "status": "success",
-                "message": "Files uploaded successfully. Please proceed to processing.",
-            }
-        ),
-        200,
-    )
-
+    return jsonify({
+        "status": "success",
+        "message": "Files uploaded successfully. Please proceed to processing.",
+    }), 200
 
 @bp.route("/process", methods=["POST"])
 @login_required
@@ -112,8 +101,6 @@ def process_document():
             title = file_info["title"]
             author = file_info["author"]
             chunk_size = file_info["chunk_size"]
-            file_info['status'] = 'splitting'
-            session.modified = True
             text_pages = extract_text_from_file(temp_path)
             chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(
                 text_pages, chunk_size
@@ -143,8 +130,6 @@ def process_document():
             client, error = initialize_openai_client(current_user.id)
             if error:
                 return jsonify({"status": "error", "message": error})
-            file_info['status'] = 'embedding'
-            session.modified = True
             embeddings = get_embedding_batch(chunks, client)
 
             cost = embedding_cost(total_tokens)
@@ -157,8 +142,6 @@ def process_document():
 
             store_embeddings(new_document.id, embeddings)
             db.session.commit()
-            file_info['status'] = 'complete'
-            session.modified = True
         session.pop("uploaded_files_info", None)
 
         return (
@@ -179,17 +162,6 @@ def process_document():
     finally:
         for file_info in uploaded_files_info:
             remove_temp_file(file_info["temp_path"])
-
-@bp.route("/status", methods=["GET"])
-@login_required
-def get_processing_status():
-    uploaded_files_info = session.get("uploaded_files_info", [])
-    if not uploaded_files_info:
-        return jsonify({"error": "No documents found"}), 404
-
-    # Extracting only relevant data for the frontend
-    status_info = [{"title": f["title"], "status": f["status"]} for f in uploaded_files_info]
-    return jsonify(status_info)
 
 @bp.route("/delete/<string:document_id>", methods=["POST"])
 @login_required

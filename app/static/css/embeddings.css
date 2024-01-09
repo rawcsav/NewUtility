@@ -7,6 +7,16 @@ html {
   overflow: hidden;
 }
 
+body {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  min-height: 100vh;
+  max-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+}
+
 #toast {
   position: fixed;
   bottom: 40px;
@@ -30,52 +40,103 @@ html {
   background-color: red;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  background-color: #faf5e6;
-  background-image: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.2) 1px,
-      transparent 1px
-    ),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
-  background-size: 20px 20px;
+.hamburger-menu {
+  color: #ff7900;
 }
 
 h1 {
-  font-family: "Playfair Display", serif;
-  font-size: 5em;
-  font-weight: 900;
+  font-family: "NeueMontreal", sans-serif;
+  font-size: 3em;
+  font-weight: 700;
   margin: 0;
   top: 0;
   text-align: center;
-  color: #141414;
+  color: #ff7900;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 
+#left-column {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  width: 100%;
+}
+
+#title-container {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  border-bottom: 3px solid black;
+  margin-left: 10px;
+  width: fit-content;
+}
+
 h2 {
-  font-family: "", serif;
-  font-weight: 500;
+  writing-mode: vertical-lr; /* Make the text vertical */
+  font-family: "NeueMontreal", sans-serif;
   font-size: 3em;
+  font-weight: 700;
   margin: 0;
   top: 0;
   text-align: center;
-  color: #faf5e6;
+  color: #f42f25;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+h3 {
+  font-family: "NeueMontreal", sans-serif;
+  font-size: 1em;
+  font-weight: 700;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #000000;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.homepage-link {
+  display: none;
+}
+h4 {
+  font-family: "NeueMontreal", sans-serif;
+  font-size: 1em;
+  font-weight: 700;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #000000;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+#section-title {
+  rotate: 180deg;
+}
+
+.section-title-div {
+  margin: 0;
+  border-right: 3px solid black;
+  display: flex;
+  height: fit-content;
+  align-items: flex-start;
+  margin-right: auto;
 }
 
 label {
-  color: #0069be;
+  color: #4682b4;
+  font-family: "Helvetica Neue", sans-serif;
+  font-weight: 500;
   white-space: nowrap;
   font-size: 16px;
 }
@@ -109,64 +170,18 @@ label {
 .upload-container {
   display: flex;
   height: 100%;
-  max-height: 70%;
+  max-height: 80%;
   flex-direction: row;
   justify-content: center; /* Aligns children vertically to the top */
   align-items: stretch;
-}
-
-h3 {
-  margin: 0;
-  padding: 0;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 18px;
-  color: #0069be;
-}
-
-.homepage-dash a {
-  text-decoration: none;
-  color: #faf5e6;
-  pointer-events: visible;
-  z-index: 10;
+  gap: 60px;
 }
 
 p {
   margin: 0;
   padding: 0;
   font-size: 12px;
-  color: #654321;
-}
-
-#green {
-  background-color: #2bae66;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-
-#purple {
-  background-color: #9b5de5;
-  padding: 10px;
-  left: 15vw;
-  margin: 10px;
-}
-
-#blue {
-  background-color: #0069be;
-  padding: 10px;
-  margin: 10px;
-  display: flex;
-  flex-direction: column;
-  z-index: 5;
-}
-
-.hand1 {
-  position: absolute;
-  bottom: 15vh;
-  left: 35vw;
-  rotate: -15deg;
+  color: #000000;
 }
 
 ul {
@@ -186,26 +201,6 @@ a {
   z-index: -1;
 }
 
-.hand1 img {
-  width: 300px;
-  height: auto;
-}
-
-.doc img {
-  width: 300px;
-  height: auto;
-  rotate: 25deg;
-}
-
-.rectangle {
-  width: 30vw;
-  height: 25vh;
-}
-
-.shape {
-  border: 5px solid #141414;
-}
-
 ul {
   margin: 0;
   padding: 0;
@@ -214,32 +209,33 @@ ul {
 }
 
 input {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   font-size: 16px;
-  color: #00a86b;
+  color: #000000;
   padding: 5px 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 #title-edit {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-weight: 700;
+  font-family: "NeueMontreal", sans-serif;
   font-size: 16px;
   background-color: transparent;
-  color: #0069be;
+  color: #ff7900;
 }
 
 #author-edit {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "NeueMontreal", sans-serif;
   font-size: 16px;
   background-color: transparent;
-  color: #00a86b;
+  color: #f42f25;
+  font-weight: 700;
 }
 
 .editable-container p {
   font-size: 14px;
   background-color: transparent;
-  color: #654321;
+  color: #000000;
   margin: 0;
   padding: 0;
 }
@@ -260,7 +256,7 @@ input {
 
 .edit-btn i,
 .btn-icon i {
-  color: #555;
+  color: #69995d;
 }
 
 .editable-container {
@@ -297,22 +293,16 @@ ul li {
 }
 
 .docs-container {
-  border: 5px solid #654321;
   overflow-y: auto;
   max-height: 100%;
-  background-color: #faf5e6;
-  padding: 10px;
   min-width: 200px;
-  margin: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  margin-right: auto;
 }
 
 .doc-upload {
-  border: 5px solid #654321;
-  background-color: #faf5e6;
-  border-radius: 5px;
   padding: 10px;
-  margin: 10px;
+  margin-top: 20px;
 }
 
 #author-edit,
@@ -334,20 +324,19 @@ ul li {
 
 #file-name-display {
   font-size: 14px;
-  color: #654321;
   margin: 0;
   padding: 0;
   text-align: center;
   font-style: italic;
+  margin-bottom: 15px;
 }
 
 #info-list,
 #token-limits-list,
 #info-list li,
 #token-limits-list li {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "Helvetica Neue", sans-serif;
   font-size: 14px;
-  color: #faf5e6;
   list-style: none;
   padding-left: 0;
 }
@@ -358,15 +347,11 @@ ul li {
 }
 
 #token-limits-list li strong {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-weight: 900;
+  font-family: "NeueMontreal", sans-serif;
+  font-weight: 700;
   font-style: italic;
   display: inline-block;
   margin-right: 10px;
-}
-
-#blue h3 {
-  color: #faf5e6;
 }
 
 #info-list li::before,
@@ -380,10 +365,9 @@ ul li {
 
 /* File Upload Button */
 .file-upload-btn {
-  display: inline-block;
-  font-size: 16px;
+  display: flex;
   padding: 10px 15px;
-  background-color: #5c6bc0;
+  background-color: #4682b4;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -391,6 +375,13 @@ ul li {
   transition: background-color 0.2s;
   text-align: center;
   margin: 0 auto;
+  gap: 15px;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: "Helvetica Neue", sans-serif;
+  justify-content: center;
+  width: fit-content;
 }
 
 .file-upload-btn:hover,
@@ -453,4 +444,60 @@ button:focus {
 input:focus {
   border-color: #0069be;
   box-shadow: 0 0 0 2px rgba(0, 105, 190, 0.2);
+}
+
+.token-limits {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.token-limits,
+.doc-upload,
+.docs-container {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 5px;
+  --font-color: #000000;
+  --bg-color: #ffffff;
+  --main-color: #000000;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
+}
+
+#pagination-controls button {
+  padding: 10px; /* Adjust padding if necessary */
+  background-color: #4682b4;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
+  font-size: 16px; /* Adjust icon size if necessary */
+}
+
+#pagination-controls button:hover,
+#pagination-controls button:focus {
+  background-color: #3949ab;
+  color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#pagination-controls .current-page {
+  background-color: #3949ab;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+#pagination-controls button:disabled {
+  background-color: #555555;
+  cursor: not-allowed;
+}
+
+/* Ensure the icons are vertically centered */
+#pagination-controls i {
+  vertical-align: middle;
 }
