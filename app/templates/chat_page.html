@@ -44,6 +44,11 @@
         >
           <p class="text-entry">{{ conversation.title }}</p>
           <span
+            class="edit-conversation-title"
+            data-conversation-id="{{ conversation.id }}"
+            ><i class="fas fa-edit"></i
+          ></span>
+          <span
             class="delete-conversation"
             data-conversation-id="{{ conversation.id }}"
           >
@@ -248,11 +253,7 @@
   </div>
   <div class="chat-container">
     <div class="top-banner">
-      <h4
-        id="convo-title"
-        contenteditable="true"
-        data-conversation-id="{{ conversation_id }}"
-      >
+      <h4 id="convo-title" data-conversation-id="{{ conversation_id }}">
         {{ conversation_title }}
       </h4>
     </div>

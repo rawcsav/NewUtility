@@ -1437,23 +1437,121 @@ function updateConversationListUI(conversationId, conversationTitle) {
   });
 }
 
+// Modify the createConversationEntry function to attach event listeners programmatically
 function createConversationEntry(conversationId, conversationTitle) {
   const newConvoEntry = document.createElement("div");
   newConvoEntry.classList.add("conversation-entry");
   newConvoEntry.setAttribute("data-conversation-id", conversationId);
   newConvoEntry.setAttribute("data-conversation-title", conversationTitle);
-  newConvoEntry.innerHTML = `<p class="text-entry">${conversationTitle}</p> <span class="delete-conversation" onclick="deleteConversation(${conversationId})"><i class="fas fa-trash-alt"></i></span>`;
+
+  // Create the text entry element
+  const textEntry = document.createElement("p");
+  textEntry.classList.add("text-entry");
+  textEntry.textContent = conversationTitle;
+  newConvoEntry.appendChild(textEntry);
+
+  // Create the edit icon span and append it to the conversation entry
+  const editSpan = document.createElement("span");
+  editSpan.classList.add("edit-conversation-title");
+  editSpan.setAttribute("data-conversation-id", conversationId);
+  const editIcon = document.createElement("i");
+  editIcon.classList.add("fas", "fa-edit");
+  editSpan.appendChild(editIcon);
+
+  // Append the edit icon span to the conversation entry
+  newConvoEntry.appendChild(editSpan);
+
+  // Attach an event listener to the edit icon
+  editSpan.addEventListener("click", function (event) {
+    event.stopPropagation(); // Prevent selecting the conversation
+    textEntry.contentEditable = "true";
+    textEntry.focus();
+    textEntry.setAttribute("data-conversation-title", conversationTitle);
+
+    // Event listener for the Enter key to save the new title
+    textEntry.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation(); // Prevent selecting the conversation
+        saveConvoTitle(conversationId, textEntry.textContent.trim());
+        textEntry.contentEditable = "false";
+      }
+    });
+  });
+
+  // Create the delete icon span and append it to the conversation entry
+  const deleteSpan = document.createElement("span");
+  deleteSpan.classList.add("delete-conversation");
+  deleteSpan.setAttribute("data-conversation-id", conversationId);
+  const deleteIcon = document.createElement("i");
+  deleteIcon.classList.add("fas", "fa-trash-alt");
+  deleteSpan.appendChild(deleteIcon);
+
+  // Append the delete icon span to the conversation entry
+  newConvoEntry.appendChild(deleteSpan);
+
+  // Attach an event listener to the delete icon
+  deleteSpan.addEventListener("click", function (event) {
+    event.stopPropagation(); // Prevent selecting the conversation
+    deleteConversation(conversationId);
+  });
+
+  // Return the modified conversation entry
   return newConvoEntry;
 }
 
-// Handles for 'Delete Conversation' buttons
-const deleteButtons = document.querySelectorAll(".delete-conversation");
-deleteButtons.forEach(function (button) {
-  button.addEventListener("click", function (event) {
-    let conversationId = button.getAttribute("data-conversation-id");
-    deleteConversation(conversationId);
-    event.stopPropagation(); // Prevent triggering parent click events
+function applyEditListenersToAllConversations() {
+  const conversationEntries = document.querySelectorAll(".conversation-entry");
+  conversationEntries.forEach((entry) => {
+    const conversationId = entry.getAttribute("data-conversation-id");
+    const textEntry = entry.querySelector(".text-entry");
+    const editSpan = entry.querySelector(".edit-conversation-title");
+    const deleteSpan = entry.querySelector(".delete-conversation");
+
+    if (editSpan) {
+      editSpan.addEventListener("click", function (event) {
+        event.stopPropagation(); // Prevent selecting the conversation
+        textEntry.contentEditable = "true";
+        textEntry.focus();
+        textEntry.setAttribute(
+          "data-conversation-title",
+          textEntry.textContent,
+        );
+
+        textEntry.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.stopPropagation(); // Prevent selecting the conversation
+            saveConvoTitle(conversationId, textEntry.textContent.trim());
+            textEntry.contentEditable = "false";
+          }
+        });
+      });
+    }
+
+    if (deleteSpan) {
+      deleteSpan.addEventListener("click", function (event) {
+        event.stopPropagation(); // Prevent selecting the conversation
+        deleteConversation(conversationId);
+      });
+    }
   });
+}
+
+applyEditListenersToAllConversations();
+
+// Update the event listeners for dynamically added conversation entries
+document.addEventListener("click", function (event) {
+  if (event.target.matches(".delete-conversation, .delete-conversation *")) {
+    // Check if the click is on the delete icon or its children
+    const conversationEntry = event.target.closest(".conversation-entry");
+    if (conversationEntry) {
+      const conversationId = conversationEntry.getAttribute(
+        "data-conversation-id",
+      );
+      deleteConversation(conversationId);
+    }
+  }
 });
 
 // Handles for 'Select Conversation' entries

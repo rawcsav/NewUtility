@@ -35,7 +35,7 @@ body {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #fafafa;
 }
 
 h1 {
@@ -62,7 +62,7 @@ h1 {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  border-bottom: 3px solid black;
+  border-bottom: 3px solid #2a2a2a;
   margin-left: 10px;
   width: fit-content;
 }
@@ -88,7 +88,7 @@ h2 {
 
 .section-title-div {
   margin: 0;
-  border-right: 3px solid black;
+  border-right: 3px solid #2a2a2a;
   display: flex;
   height: fit-content;
   align-items: flex-start;
@@ -127,7 +127,7 @@ h2 {
 }
 
 .input-group label {
-  color: #000000;
+  color: #2a2a2a;
   font-weight: 500;
   font-family: "Helvetica Neue", sans-serif;
   white-space: nowrap;
@@ -171,12 +171,17 @@ a {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  border: 1px solid #000000;
-  border-radius: 10px;
   gap: 10px;
   flex-direction: column;
   height: 50%;
   padding: 20px;
+  background-color: #fafafa;
+  border-radius: 5px;
+  --font-color: #2a2a2a;
+  --bg-color: #fafafa;
+  --main-color: #2a2a2a;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
 }
 
 #number-of-images-container {
@@ -205,10 +210,14 @@ a {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  border: 1px solid #000000;
-  background-color: #ffffff;
-  border-radius: 10px;
+  background-color: #fafafa;
   margin-right: auto;
+  border-radius: 5px;
+  --font-color: #2a2a2a;
+  --bg-color: #fafafa;
+  --main-color: #2a2a2a;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
 }
 
 .image-wrapper {
@@ -227,7 +236,7 @@ a {
   margin-bottom: auto;
   width: auto;
   height: auto;
-  border: 1px solid #000000;
+  border: 1px solid #2a2a2a;
   border-radius: 5px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.75);
 }
@@ -311,14 +320,19 @@ select {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  border: 1px solid #000000;
-  border-radius: 10px;
   gap: 10px;
   flex-direction: column;
   height: 45%;
   max-height: 45%;
   overflow-y: scroll;
   padding: 20px;
+  background-color: #fafafa;
+  border-radius: 5px;
+  --font-color: #2a2a2a;
+  --bg-color: #fafafa;
+  --main-color: #2a2a2a;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
 }
 
 .img-mng-container {

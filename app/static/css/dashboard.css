@@ -13,7 +13,7 @@ body {
   position: relative;
   min-height: 100vh;
   max-height: 100vh;
-  background-color: #ffffff;
+  background-color: #fafafa;
   display: flex;
 }
 
@@ -45,7 +45,7 @@ h1 {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  border-bottom: 3px solid black;
+  border-bottom: 3px solid #2a2a2a;
   margin-left: 10px;
   width: fit-content;
 }
@@ -76,7 +76,7 @@ h3 {
   margin: 0;
   top: 0;
   text-align: center;
-  color: #000000;
+  color: #2a2a2a;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -93,7 +93,7 @@ h4 {
   margin: 0;
   top: 0;
   text-align: center;
-  color: #000000;
+  color: #2a2a2a;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -145,7 +145,7 @@ h4 {
 .select-key-button,
 .view-usage-button {
   background: transparent;
-  color: #69995d;
+  color: #4f9d69;
   border: none;
   cursor: pointer;
 }
@@ -154,12 +154,12 @@ h4 {
 .delete-key-button:hover,
 .select-key-button:hover,
 .view-usage-button:hover {
-  color: #cd2000;
+  color: #ff4500;
   transform: scale(1.1);
 }
 
 .key-list {
-  color: #000000;
+  color: #2a2a2a;
   display: flex;
   flex-direction: column;
   border-bottom: 2px solid #33312e;
@@ -198,7 +198,7 @@ h4 {
 }
 
 .dropdown-button {
-  color: #faf5e6;
+  color: #fafafa;
   background-color: #0069be;
   padding: 5px 10px;
   border-radius: 5px;
@@ -220,7 +220,7 @@ h4 {
 
 .save-api-key-button {
   background-color: #4caf50;
-  color: #faf5e6;
+  color: #fafafa;
   cursor: pointer;
   transition: background-color 0.3s ease;
   font-family: "NeueMontreal", sans-serif;
@@ -295,14 +295,14 @@ h4 {
 .user-info p {
   margin: 5px;
   font-size: 0.9em;
-  color: #000000;
+  color: #2a2a2a;
   font-family: "Helvetica Neue", sans-serif;
 }
 
 a {
   text-decoration: none;
-  color: unset;
   font-size: 0.8em;
+  color: #333333;
 }
 .btn {
   background-color: #da291c;
@@ -310,7 +310,7 @@ a {
 
 .submit-user {
   background-color: #4caf50;
-  color: #faf5e6;
+  color: #fafafa;
   border: none;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
@@ -357,15 +357,10 @@ ul {
   list-style: none;
 }
 
-a {
-  color: #333333;
-  text-decoration: none;
-}
-
 .redirect-links ul li a {
   max-width: 100%;
   white-space: nowrap;
-  color: #69995d;
+  color: #4f9d69;
   font-size: 1em;
   font-family: "Helvetica Neue", sans-serif;
   font-weight: 500;
@@ -425,7 +420,7 @@ a {
 .icons-container .image-icon {
   margin: 5px 10px;
   text-decoration: none;
-  color: #69995d;
+  color: #4f9d69;
   font-size: 18px;
 }
 
@@ -444,7 +439,7 @@ a {
 .key-info p {
   margin: 0;
   font-size: 1em;
-  color: #000000;
+  color: #2a2a2a;
   font-family: "Helvetica Neue", sans-serif;
 }
 
@@ -459,6 +454,9 @@ a {
 }
 
 .utility-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   height: 30%;
 }
 
@@ -471,7 +469,7 @@ a {
   font-size: 0.8em;
 }
 #key .selected-key p {
-  color: #000000;
+  color: #2a2a2a;
   font-family: "Helvetica Neue", sans-serif;
 }
 
@@ -491,14 +489,14 @@ a {
 
 .editable-container p {
   background-color: transparent;
-  color: #000000;
+  color: #2a2a2a;
   margin: 0;
   padding: 0;
   font-size: 12px;
 }
 
 #author-edit {
-  color: #f42f25;
+  color: #ff4500;
 }
 
 .is-editing {
@@ -516,7 +514,7 @@ a {
 
 .edit-btn i,
 .btn-icon i {
-  color: #69995d;
+  color: #4f9d69;
 }
 
 .editable-container {
@@ -587,13 +585,13 @@ input[type="range"]::-webkit-slider-thumb {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #000000;
+  background: #2a2a2a;
   cursor: pointer;
   transition: background 0.3s ease-in-out;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  background: #000000;
+  background: #2a2a2a;
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -601,7 +599,7 @@ input[type="range"]::-moz-range-thumb {
   height: 10px;
   border: none;
   border-radius: 50%;
-  background: #000000;
+  background: #2a2a2a;
   cursor: pointer;
 }
 
@@ -644,11 +642,11 @@ output {
   background-color: #ff7900;
   color: #ffffff;
   border-radius: 10px;
-  text-align: center;
   font-size: 12px;
-  width: 20%;
   display: inline-block;
   font-family: "Helvetica Neue", sans-serif;
+  width: 50px; /* Fixed width for the percentage display */
+  text-align: center; /* Center the text inside the input */
 }
 
 .range-value-input:focus {
@@ -692,7 +690,7 @@ output {
   background-color: var(--bg-color);
   box-shadow: -4px 4px var(--main-color);
   --bg-color: #ffffff;
-  --main-color: #000000;
+  --main-color: #2a2a2a;
   font-family: "Helvetica Neue", sans-serif;
 }
 
@@ -720,7 +718,7 @@ output {
 #options,
 #key-options,
 #user-options {
-  border-bottom: 1px solid #000000;
+  border-bottom: 1px solid #2a2a2a;
   display: flex;
   flex-direction: row;
   text-align: center;
@@ -750,6 +748,9 @@ output {
 .options-button i,
 .button-send i {
   font-size: 1.2em;
+  transition:
+    color 0.2s,
+    transform 0.2s;
 }
 
 .button-send:hover {
@@ -760,13 +761,6 @@ output {
 #options {
   display: flex;
   justify-content: center;
-}
-
-.options-button i,
-.button-send i {
-  transition:
-    color 0.2s,
-    transform 0.2s;
 }
 
 .options-button:hover i {
@@ -864,11 +858,6 @@ output {
   margin-right: 5px;
 }
 
-.range-value-input {
-  width: 50px; /* Fixed width for the percentage display */
-  text-align: center; /* Center the text inside the input */
-}
-
 /* Scrollbar styling (optional) */
 .docs-list-container::-webkit-scrollbar {
   width: 6px; /* Width of the scrollbar */
@@ -888,6 +877,7 @@ output {
   flex-direction: column;
   align-items: center;
   padding-top: 20px;
+  height: 50%;
 }
 
 .utility-settings {
@@ -900,12 +890,6 @@ output {
   overflow-y: hidden;
   width: 20%;
   margin-top: 20px;
-}
-
-.utility-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .lower-row {
@@ -939,11 +923,11 @@ output {
 .utility-container,
 .key-container {
   padding: 20px;
-  background-color: #ffffff;
+  background-color: #fafafa;
   border-radius: 5px;
-  --font-color: #000000;
+  --font-color: #2a2a2a;
   --bg-color: #ffffff;
-  --main-color: #000000;
+  --main-color: #2a2a2a;
   border: 2px solid var(--main-color);
   box-shadow: 4px 4px var(--main-color);
 }
@@ -967,17 +951,13 @@ output {
   justify-content: flex-start;
 }
 
-.image-container {
-  height: 50%;
-}
-
 #section-title {
   rotate: 180deg;
 }
 
 .section-title-div {
   margin: 0;
-  border-right: 3px solid black;
+  border-right: 3px solid #2a2a2a;
   display: flex;
   height: fit-content;
   align-items: flex-start;

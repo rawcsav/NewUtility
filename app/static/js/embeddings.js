@@ -124,9 +124,18 @@ function onSubmit(event) {
     });
 }
 
-function startProcessing() {
-  updateUploadMessages("Processing & Embedding...", "success");
-  fetch("/embeddings/process", {
+function processDocumentAtIndex(index, totalDocuments) {
+  if (index >= totalDocuments) {
+    showToast("All documents processed.", "success");
+    return; // Stop the processing once all documents are processed
+  }
+
+  updateUploadMessages(
+    `Processing document ${index + 1} of ${totalDocuments}...`,
+    "info",
+  );
+
+  fetch(`/embeddings/process/${index}`, {
     method: "POST",
     headers: {
       "X-CSRFToken": getCsrfToken(),
@@ -135,6 +144,7 @@ function startProcessing() {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
+        processDocumentAtIndex(index + 1, totalDocuments); // Process next document
       } else {
         updateUploadMessages("Processing Failed.", "error");
         console.error("Processing failed:", data.message);
@@ -142,7 +152,16 @@ function startProcessing() {
     })
     .catch((error) => {
       console.error("Error during processing:", error);
+      updateUploadMessages(
+        "Error during processing: " + error.message,
+        "error",
+      );
     });
+}
+
+function startProcessing() {
+  let totalDocuments = Object.keys(documentData).length;
+  processDocumentAtIndex(0, totalDocuments); // Start processing from the first document
 }
 
 function displayCurrentForm() {
@@ -317,7 +336,6 @@ const paginationControls = document.getElementById("pagination-controls");
 submitButton.disabled = true;
 paginationControls.style.display = "none"; // Hide pagination controls
 
-// Event listener to enable submit button and show pagination controls when files are selected
 fileInput.addEventListener("change", function () {
   if (fileInput.files.length > 0) {
     submitButton.disabled = false; // Enable submit button
@@ -327,5 +345,27 @@ fileInput.addEventListener("change", function () {
   } else {
     submitButton.disabled = true; // Keep submit button disabled
     paginationControls.style.display = "none"; // Hide pagination controls
+  }
+});
+
+// Function to hide the upload prompt
+
+document.getElementById("file").addEventListener("change", function () {
+  var fileInput = this;
+  var fileNameDisplay = document.getElementById("file-name-display");
+  var submitButton = document.querySelector(".doc-submit-btn");
+  const uploadPrompt = document.getElementById("upload-prompt");
+  const typesList = document.getElementById("file-types-list");
+
+  if (fileInput.files.length > 0) {
+    fileNameDisplay.textContent = "Selected file: " + fileInput.files[0].name;
+    submitButton.style.display = "flex";
+    uploadPrompt.style.display = "none";
+    typesList.style.display = "none";
+  } else {
+    uploadPrompt.style.display = "flex";
+    typesList.style.display = "flex";
+    fileNameDisplay.textContent = "";
+    submitButton.style.display = "none";
   }
 });

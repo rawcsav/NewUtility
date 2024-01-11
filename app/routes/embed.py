@@ -87,81 +87,96 @@ def upload_document():
         "message": "Files uploaded successfully. Please proceed to processing.",
     }), 200
 
-@bp.route("/process", methods=["POST"])
+@bp.route("/process/<int:doc_index>", methods=["POST"])
 @login_required
-def process_document():
+def process_individual_document(doc_index):
     # Retrieve uploaded files info from the session
     uploaded_files_info = session.get("uploaded_files_info", [])
-    if not uploaded_files_info:
-        return jsonify({"error": "No uploaded files to process"}), 400
+
+    # Validate document index
+    if doc_index < 0 or doc_index >= len(uploaded_files_info):
+        return jsonify({"error": "Invalid document index"}), 400
+
+    file_info = uploaded_files_info[doc_index]
 
     try:
-        for file_info in uploaded_files_info:
-            temp_path = file_info["temp_path"]
-            title = file_info["title"]
-            author = file_info["author"]
-            chunk_size = file_info["chunk_size"]
-            text_pages = extract_text_from_file(temp_path)
-            chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(
-                text_pages, chunk_size
-            )
+        temp_path = file_info["temp_path"]
+        title = file_info["title"]
+        author = file_info["author"]
+        chunk_size = file_info["chunk_size"]
 
-            new_document = Document(
-                user_id=current_user.id,
-                title=title,
-                author=author,
-                total_tokens=total_tokens,
-                created_at=datetime.utcnow(),
-            )
-            db.session.add(new_document)
-            db.session.flush()  # Flush the session to get the new ID
+        file_info['status'] = 'Processing'
+        session.modified = True
 
-            for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
-                pages_str = ",".join(map(str, pages))
-                chunk = DocumentChunk(
-                    document_id=new_document.id,
-                    chunk_index=i,
-                    content=chunk_content,
-                    tokens=chunk_token_counts[i],
-                    pages=pages_str,
-                )
-                db.session.add(chunk)
-
-            client, error = initialize_openai_client(current_user.id)
-            if error:
-                return jsonify({"status": "error", "message": error})
-            embeddings = get_embedding_batch(chunks, client)
-
-            cost = embedding_cost(total_tokens)
-            update_usage_and_costs(
-                user_id=current_user.id,
-                api_key_id=current_user.selected_api_key_id,
-                usage_type="embedding",
-                cost=cost,
-            )
-
-            store_embeddings(new_document.id, embeddings)
-            db.session.commit()
-        session.pop("uploaded_files_info", None)
-
-        return (
-            jsonify(
-                {
-                    "status": "success",
-                    "message": "Documents processed and embedded successfully.",
-                }
-            ),
-            200,
+        # Processing steps for the individual document
+        text_pages = extract_text_from_file(temp_path)
+        chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(
+            text_pages, chunk_size
         )
 
+        new_document = Document(
+            user_id=current_user.id,
+            title=title,
+            author=author,
+            total_tokens=total_tokens,
+            created_at=datetime.utcnow(),
+        )
+        db.session.add(new_document)
+        db.session.flush()
+
+        for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
+            pages_str = ",".join(map(str, pages))
+            chunk = DocumentChunk(
+                document_id=new_document.id,
+                chunk_index=i,
+                content=chunk_content,
+                tokens=chunk_token_counts[i],
+                pages=pages_str,
+            )
+            db.session.add(chunk)
+
+        # Assuming the existence of the following functions
+        client, error = initialize_openai_client(current_user.id)
+        if error:
+            return jsonify({"status": "error", "message": error})
+
+        embeddings = get_embedding_batch(chunks, client)
+
+        cost = embedding_cost(total_tokens)
+        update_usage_and_costs(
+            user_id=current_user.id,
+            api_key_id=current_user.selected_api_key_id,
+            usage_type="embedding",
+            cost=cost,
+        )
+
+        store_embeddings(new_document.id, embeddings)
+        db.session.commit()
+
+        file_info['status'] = 'Complete'
+        session.modified = True
+        return jsonify({"status": "success", "message": "Document processed successfully."}), 200
+
     except Exception as e:
-        session.pop("uploaded_files_info", None)
         db.session.rollback()
+        file_info['status'] = 'Error'
+        session.modified = True
         return jsonify({"status": "error", "message": str(e)}), 500
 
     finally:
-        for file_info in uploaded_files_info:
-            remove_temp_file(file_info["temp_path"])
+        remove_temp_file(file_info["temp_path"])
+
+
+@bp.route("/status", methods=["GET"])
+@login_required
+def get_processing_status():
+    uploaded_files_info = session.get("uploaded_files_info", [])
+    if not uploaded_files_info:
+        return jsonify({"error": "No documents found"}), 404
+
+    # Extracting only relevant data for the frontend
+    status_info = [{"title": f["title"], "status": f["status"]} for f in uploaded_files_info]
+    return jsonify(status_info)
 
 @bp.route("/delete/<string:document_id>", methods=["POST"])
 @login_required

@@ -13,7 +13,7 @@ body {
   position: relative;
   min-height: 100vh;
   max-height: 100vh;
-  background-color: #ffffff;
+  background-color: #fafafa;
   display: flex;
 }
 
@@ -82,7 +82,7 @@ h2 {
   margin: 0;
   top: 0;
   text-align: center;
-  color: #f42f25;
+  color: #ff4500;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -106,6 +106,7 @@ h3 {
 .homepage-link {
   display: none;
 }
+
 h4 {
   font-family: "NeueMontreal", sans-serif;
   font-size: 1em;
@@ -125,12 +126,11 @@ h4 {
 }
 
 .section-title-div {
-  margin: 0;
   border-right: 3px solid black;
   display: flex;
   height: fit-content;
   align-items: flex-start;
-  margin-right: auto;
+  margin: 0 auto 0 0;
 }
 
 label {
@@ -143,7 +143,7 @@ label {
 
 #uploadStatus {
   font-size: 16px;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  margin-top: 10px;
 }
 
 .success {
@@ -159,6 +159,7 @@ label {
   flex-direction: column;
   gap: 10px;
   justify-content: flex-start;
+  align-items: center;
 }
 
 .form-group {
@@ -186,6 +187,10 @@ p {
 
 ul {
   list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 90%;
+  overflow-y: auto;
 }
 
 a {
@@ -199,13 +204,6 @@ a {
   right: 15vw;
   rotate: -75deg;
   z-index: -1;
-}
-
-ul {
-  margin: 0;
-  padding: 0;
-  max-height: 90%;
-  overflow-y: auto;
 }
 
 input {
@@ -228,7 +226,7 @@ input {
   font-family: "NeueMontreal", sans-serif;
   font-size: 16px;
   background-color: transparent;
-  color: #f42f25;
+  color: #ff4500;
   font-weight: 700;
 }
 
@@ -275,6 +273,7 @@ ul li {
   padding: 10px;
   border-bottom: 1px solid #ccc;
 }
+
 .button-container {
   display: flex;
   justify-content: flex-start;
@@ -295,14 +294,25 @@ ul li {
 .docs-container {
   overflow-y: auto;
   max-height: 100%;
-  min-width: 200px;
+  width: 15%;
   margin-top: 20px;
   margin-right: auto;
 }
 
 .doc-upload {
-  padding: 10px;
-  margin-top: 20px;
+  padding: 20px;
+  width: 30%; /* Adjust width as necessary, or use max-width for responsiveness */
+  margin: 20px 0;
+  border: 2px dashed #d0d0d0;
+  border-radius: 10px;
+  text-align: center;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #author-edit,
@@ -324,11 +334,10 @@ ul li {
 
 #file-name-display {
   font-size: 14px;
-  margin: 0;
   padding: 0;
   text-align: center;
   font-style: italic;
-  margin-bottom: 15px;
+  margin: 0 0 15px;
 }
 
 #info-list,
@@ -357,7 +366,7 @@ ul li {
 #info-list li::before,
 #token-limits-list li::before {
   content: "•";
-  color: #4caf50;
+  color: #4f9d69;
   display: inline-block;
   width: 20px;
   margin-left: -20px;
@@ -366,15 +375,10 @@ ul li {
 /* File Upload Button */
 .file-upload-btn {
   display: flex;
-  padding: 10px 15px;
-  background-color: #4682b4;
-  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.2s;
   text-align: center;
-  margin: 0 auto;
   gap: 15px;
   align-items: center;
   font-size: 16px;
@@ -382,6 +386,11 @@ ul li {
   font-family: "Helvetica Neue", sans-serif;
   justify-content: center;
   width: fit-content;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  margin: 10px 0;
+  transition: background-color 0.3s ease;
 }
 
 .file-upload-btn:hover,
@@ -391,19 +400,23 @@ ul li {
 
 /* Submit Button */
 .doc-submit-btn {
-  padding: 10px 15px;
-  background-color: #4caf50;
-  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.2s;
   font-size: 16px;
   font-weight: bold;
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  margin: 20px 0;
+  transition: background-color 0.3s ease;
+  display: none; /* Hide button initially */
+  gap: 15px;
+  align-items: center;
 }
 
 .doc-submit-btn:hover {
-  background-color: #43a047;
+  background-color: #218838;
 }
 
 /* Pagination Controls */
@@ -414,20 +427,16 @@ ul li {
 }
 
 #pagination-controls button {
-  padding: 5px 10px;
-  margin: 0 10px;
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ccc;
+  margin: 0 30px;
+  color: #2081c3;
+  border: none;
+  background: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  min-width: 40px;
-  min-height: 40px;
-}
-
-#pagination-controls button:hover {
-  background-color: #e0e0e0;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
+  font-size: 16px; /* Adjust icon size if necessary */
 }
 
 .doc-submit-btn:disabled,
@@ -451,53 +460,67 @@ input:focus {
   flex-direction: column;
   align-items: center;
   margin-top: 20px;
+  width: 15%;
 }
 
 .token-limits,
-.doc-upload,
 .docs-container {
   padding: 20px;
-  background-color: #ffffff;
+  background-color: #fafafa;
   border-radius: 5px;
   --font-color: #000000;
-  --bg-color: #ffffff;
+  --bg-color: #fafafa;
   --main-color: #000000;
   border: 2px solid var(--main-color);
   box-shadow: 4px 4px var(--main-color);
 }
 
-#pagination-controls button {
-  padding: 10px; /* Adjust padding if necessary */
-  background-color: #4682b4;
-  color: #ffffff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s,
-    box-shadow 0.2s;
-  font-size: 16px; /* Adjust icon size if necessary */
-}
-
 #pagination-controls button:hover,
 #pagination-controls button:focus {
-  background-color: #3949ab;
-  color: #ffffff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-#pagination-controls .current-page {
-  background-color: #3949ab;
-  color: #ffffff;
-  pointer-events: none;
-}
-
-#pagination-controls button:disabled {
-  background-color: #555555;
-  cursor: not-allowed;
+  color: #3949ab;
+  transform: scale(1.05);
 }
 
 /* Ensure the icons are vertically centered */
 #pagination-controls i {
   vertical-align: middle;
+}
+
+.doc-upload:hover {
+  border-color: #a0a0a0; /* Change border color on hover */
+}
+
+#upload-prompt {
+  font-size: 24px; /* Larger font size for visibility */
+  color: #333; /* Dark color for contrast */
+  margin: 20px 0; /* Space around the text */
+  padding: 20px; /* Padding inside the text block */
+  width: 80%; /* Take up more space in the div */
+  max-width: 600px; /* Maximum width for larger screens */
+  transition: opacity 0.3s ease; /* Smooth transition for hiding */
+}
+
+/* Style for the file types list */
+#file-types-list {
+  color: #333; /* Dark color for the text */
+  font-size: 14px; /* Font size for the list */
+  margin-top: 10px; /* Space above the list */
+}
+
+/* Style for individual file types */
+.file-type {
+  background-color: #e9ecef; /* Light background for file type tags */
+  border-radius: 3px; /* Rounded corners for tags */
+  padding: 3px 6px; /* Padding inside tags */
+  font-family: monospace; /* Monospace font for file extensions */
+  margin-right: 5px; /* Space between tags */
+  display: inline-block; /* Align tags inline */
+}
+
+/* Enhance the upload button hover effect */
+.file-upload-btn:hover,
+.file-upload-btn:focus {
+  background-color: #0056b3; /* Darker blue on hover/focus */
+  transform: scale(1.05); /* Slightly enlarge on hover/focus */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
 }

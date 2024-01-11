@@ -15,14 +15,6 @@ body {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  background-color: #faf5e6;
-  background-image: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.2) 1px,
-      transparent 1px
-    ),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
-  background-size: 20px 20px;
 }
 
 .image-div {
@@ -75,11 +67,6 @@ body {
   background-color: red;
 }
 
-.shape {
-  position: absolute;
-  border: 5px solid #141414;
-}
-
 .thumbnail {
   width: 50px; /* Or any other size */
   height: 50px;
@@ -87,35 +74,10 @@ body {
   border-radius: 8px;
 }
 
-.rectangle h1 {
-  font-size: 4em;
-}
-.rectangle h2 {
-  font-family: "Playfair Display", serif;
-  font-size: 3em;
-}
-
-#purple {
-  background-color: #9b5de5;
-  top: 4vh;
-  left: 11vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 25px;
-  padding: 10px;
-  transform: rotate(10deg);
-}
-
-.tall-rectangle {
-  width: 25vw;
+#brown {
   position: relative;
   flex: 1;
-}
-#brown {
-  background-color: #fefdf9;
-  border: 2px solid #654321;
-  border-right: 1px solid #654321;
+  background-color: #e8e8e8;
   z-index: 2;
   width: 100%;
   overflow-x: hidden;
@@ -125,13 +87,6 @@ body {
   align-items: center;
   gap: 10px;
   overflow-y: auto;
-}
-
-.homepage-dash a {
-  text-decoration: none;
-  color: #faf5e6;
-  pointer-events: visible;
-  z-index: 10;
 }
 
 .container {
@@ -144,8 +99,7 @@ body {
   display: flex;
   width: 100%;
   flex-direction: column;
-  background-color: #fefdf9;
-  border: 2px solid #654321;
+  background-color: #fafafa;
   border-left: none;
   overflow-y: auto;
   flex: 5;
@@ -171,7 +125,7 @@ body {
 
 .messages {
   flex-grow: 1;
-  background-color: #fefdf9;
+  background-color: #fafafa;
   border-radius: 8px;
   overflow-y: auto;
   margin-right: 125px;
@@ -191,8 +145,8 @@ body {
 .system-message {
   text-align: left;
   font-style: italic;
-  border-bottom: 1px solid #9b5de5;
-  margin-bottom: 10px;
+  border-bottom: 1px solid #f3b61f;
+  margin: 20px 0 0;
 }
 
 /*noinspection CssUnusedSymbol*/
@@ -235,12 +189,6 @@ body {
 
 .form-group {
   margin-bottom: 25px;
-}
-
-label {
-  display: block;
-  font-size: 12px;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
 }
 
 #chat-checkbox {
@@ -296,26 +244,15 @@ input[type="range"]::-ms-thumb {
   background: #333;
 }
 
-output {
-  display: inline-block;
-  padding: 0 5px;
-  font-size: 0.9em;
-  line-height: 1.5em;
-  height: 1.5em;
-  background-color: #f8f8f8;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  margin-left: 10px;
-}
-
 h4 {
-  font-family: "Playfair Display", serif;
+  width: fit-content;
+  font-family: "NeueMontreal", serif;
   font-size: 2em;
   font-weight: bold;
   margin: 0;
   top: 0;
   text-align: center;
-  color: #141414;
+  color: #2a2a2a;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -343,7 +280,7 @@ pre {
   width: 50%;
   border: 1px solid #141414;
   background-color: #f8f8f8;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "Helvetica Neue", sans-serif;
   border-radius: 8px;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -351,12 +288,18 @@ pre {
   margin-right: auto;
 }
 
+.hamburger-menu {
+  color: #ff7900;
+}
+
 .top-banner {
+  display: flex;
+  justify-content: center;
   padding-bottom: 20px;
   text-align: center;
 }
 .message-input {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "Helvetica Neue", sans-serif;
   height: auto;
   resize: none;
   overflow-y: auto;
@@ -405,17 +348,6 @@ pre {
   font-size: 1rem;
 }
 
-.range-value-input {
-  border: none;
-  background-color: #faf5e6;
-  border-radius: 10px;
-  text-align: center;
-  font-size: 12px;
-  width: 20%;
-  display: inline-block;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-}
-
 .range-value-input:focus {
   outline: none;
 }
@@ -448,36 +380,14 @@ pre {
   transform: scale(1.05);
 }
 
-#preference-submit {
-  background: #ec9ca0;
-  font-family: inherit;
-  padding: 0.6em 1.3em;
-  font-weight: 900;
-  font-size: 12px;
-  border: 3px solid black;
-  border-radius: 0.4em;
-  cursor: pointer;
-  box-shadow: 0.1em 0.1em;
-}
-
-#preference-submit:hover {
-  transform: translate(-0.05em, -0.05em);
-  box-shadow: 0.15em 0.15em;
-}
-
-#preference-submit:active {
-  transform: translate(0.05em, 0.05em);
-  box-shadow: 0.05em 0.05em;
-}
-
 #preference-popup {
   display: none;
 }
 
 .message {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "Helvetica Neue", sans-serif;
   color: #383737;
-  background-color: #fefdf9;
+  background-color: #fafafa;
   font-size: 1.1rem;
   margin-top: 40px;
 }
@@ -494,11 +404,7 @@ pre {
 .message h4 {
   font-size: 1.4em;
 }
-.message h5 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  font-size: 1.1em;
-  margin-right: auto;
-}
+
 .message h6 {
   font-size: 1em;
 }
@@ -508,17 +414,11 @@ pre {
 .message h3,
 .message h4,
 .message h6 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "NeueMontreal", sans-serif;
   color: #654321;
   outline: none;
   margin-top: 10px;
   margin-bottom: 10px;
-}
-
-.message p {
-  margin-top: 5px;
-  font-size: 1.1rem;
-  margin-bottom: 5px;
 }
 
 .message a {
@@ -550,7 +450,7 @@ pre {
   padding-left: 15px;
   margin: 10px 0;
   font-style: italic;
-  background-color: #faf5e6;
+  background-color: #fafafa;
 }
 
 .message code,
@@ -579,17 +479,17 @@ pre {
 
 .assistant-message h5 {
   margin: 0;
-  color: #00a86b;
+  color: #ff4500;
 }
 
 .user-message h5 {
   margin: 0;
-  color: #0069be;
+  color: #ff7900;
 }
 
 .system-message h5 {
   margin: 0;
-  color: #9b5de5;
+  color: #f3b61f;
 }
 #conversation-container {
   height: 90%;
@@ -606,6 +506,8 @@ pre {
 
 #options {
   margin-bottom: 5px;
+  display: flex;
+  justify-content: center;
 }
 
 #options-container {
@@ -617,7 +519,7 @@ pre {
 }
 
 h3 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "NeueMontreal", sans-serif;
   font-size: 1.5em;
   font-weight: 900;
   margin: 0 0 10px;
@@ -627,14 +529,16 @@ h3 {
 
 #options-container h3 {
   font-size: 18px;
-  color: #cd2000;
+}
+
+#options-container i {
+  color: #4f9d69;
 }
 
 #conversation-container h3,
 #preference-popup h3,
 #docs-settings-popup h3 {
   font-size: 18px;
-  color: #ed872d;
 }
 
 .options-button,
@@ -652,23 +556,14 @@ h3 {
 .options-button i,
 .button-send i {
   font-size: 1.2em;
+  transition:
+    color 0.2s,
+    transform 0.2s;
 }
 
 .button-send:hover {
   transform: scale(1.1);
   color: #45a049;
-}
-
-#options {
-  display: flex;
-  justify-content: center;
-}
-
-.options-button i,
-.button-send i {
-  transition:
-    color 0.2s,
-    transform 0.2s;
 }
 
 .options-button:hover i {
@@ -678,33 +573,33 @@ h3 {
 #show-history-btn.active i,
 #show-preferences-btn.active i,
 #docs-preferences-btn.active i {
-  color: #cd2000;
+  color: #ff4500;
 }
 
 .system-message p {
   font-size: 12px;
 }
 
-/*noinspection CssUnusedSymbol*/
-.system-message {
-  margin: 20px 0 0;
-}
 .message h5 {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "NeueMontreal", sans-serif;
   font-size: 1.2rem;
   margin-right: auto;
 }
 
 .user-message i {
-  color: #0069be;
+  color: #ff7900;
 }
 
 .assistant-message i {
-  color: #00a86b;
+  color: #ff4500;
 }
 
 .system-message i {
-  color: #9b5de5;
+  color: #f3b61f;
+}
+
+.message-content p {
+  margin: 0;
 }
 
 .message i {
@@ -722,18 +617,14 @@ h3 {
   gap: 10px;
 }
 
-.form-group {
-  margin-bottom: 25px;
-}
-
 label {
   display: block;
   font-size: 12px;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "Helvetica Neue", sans-serif;
 }
 
 #title-edit {
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  font-family: "NeueMontreal", sans-serif;
   font-weight: 700;
   font-style: italic;
   font-size: 18px;
@@ -751,59 +642,6 @@ label {
   padding: 0;
   max-width: 100px;
   overflow-y: hidden;
-}
-
-#chat-checkbox {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 10%;
-}
-
-#chat-checkbox label {
-  margin-bottom: 0;
-}
-
-input[type="range"] {
-  -webkit-appearance: none;
-  width: 80%;
-  height: 3px;
-  border-radius: 5px;
-  background: #ddd;
-  outline: none;
-  padding: 0;
-  margin: 0;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #333;
-  cursor: pointer;
-  transition: background 0.3s ease-in-out;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  background: #111;
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
-  border: none;
-  border-radius: 50%;
-  background: #333;
-  cursor: pointer;
-}
-
-input[type="range"]::-ms-thumb {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #333;
 }
 
 output {
@@ -826,29 +664,6 @@ output {
   justify-content: flex-start;
 }
 
-#send-button i {
-  font-size: 1rem;
-}
-
-.range-value-input {
-  border: none;
-  background-color: #faf5e6;
-  border-radius: 10px;
-  text-align: center;
-  font-size: 12px;
-  width: 20%;
-  display: inline-block;
-  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-}
-
-.range-value-input:focus {
-  outline: none;
-}
-
-#model {
-  margin-top: 5px;
-}
-
 #preference-submit,
 #docs-preferences-submit {
   margin-left: auto;
@@ -858,7 +673,7 @@ output {
   padding: 0.6em 1.3em;
   font-weight: 900;
   font-size: 12px;
-  border: 3px solid black;
+  border: 3px solid #2a2a2a;
   border-radius: 0.4em;
   cursor: pointer;
   box-shadow: 0.1em 0.1em;
@@ -873,12 +688,6 @@ output {
 #preference-submit:active {
   transform: translate(0.05em, 0.05em);
   box-shadow: 0.05em 0.05em;
-}
-
-#conversation-history {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 15px;
 }
 
 .docs_list li {
@@ -920,10 +729,6 @@ output {
   font-style: italic; /* Italic style for author names */
 }
 
-#title-edit {
-  font-weight: bold;
-}
-
 #loader-template {
   margin-left: auto;
   margin-right: auto;
@@ -934,6 +739,19 @@ output {
 }
 
 .range-value-input {
-  width: 50px; /* Fixed width for the percentage display */
   text-align: center; /* Center the text inside the input */
+  border: none;
+  background-color: #fafafa;
+  border-radius: 10px;
+  font-size: 12px;
+  width: 20%;
+  display: inline-block;
+  font-family: "Helvetica Neue", sans-serif;
+}
+
+/* Step 4: Update styling for the edit icon */
+.edit-conversation-title {
+  cursor: pointer;
+  margin-left: 10px;
+  color: #007bff; /* Bootstrap info color for consistency */
 }

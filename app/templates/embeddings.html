@@ -31,6 +31,9 @@
       </ul>
     </div>
     <div class="doc-upload">
+      <p id="upload-prompt">
+        Use the upload button below to select the document(s) for embedding.
+      </p>
       <form
         id="uploadForm"
         action="{{ url_for('embeddings.upload_document') }}"
@@ -40,6 +43,12 @@
         <label for="file" class="file-upload-btn"
           ><i class="fa-solid fa-cloud-arrow-up"></i>Upload</label
         >
+        <p id="file-types-list">
+          Accepted file types: <span class="file-type">.txt</span>,
+          <span class="file-type">.pdf</span>,
+          <span class="file-type">.docx</span>.
+        </p>
+
         <input
           type="file"
           id="file"
@@ -59,7 +68,9 @@
             <i class="fas fa-arrow-right"></i>
           </button>
         </div>
-        <button type="submit" class="doc-submit-btn">Upload Documents</button>
+        <button type="submit" class="doc-submit-btn">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>Submit Docs
+        </button>
         <div id="uploadStatus"></div>
       </form>
     </div>
