@@ -10,7 +10,6 @@ from app.util.chat_util import (
     get_user_preferences,
     user_history,
     handle_stream,
-    handle_nonstream,
     allowed_file,
     save_image,
     get_image_url,
@@ -27,6 +26,8 @@ from app.util.forms_util import (
 )
 from app.util.session_util import initialize_openai_client
 from sqlalchemy.inspection import inspect
+
+from app.util.vector_cache import VectorCache
 
 bp = Blueprint("chat", __name__, url_prefix="/chat")
 
@@ -80,7 +81,6 @@ def chat_index():
             MessageImages.user_id == current_user.id, MessageImages.message_id.is_(None)
         ).all()
 
-        # Convert the images to a list of URLs
         image_urls = [image.image_url for image in images_without_message_id]
     else:
         image_urls = []
@@ -99,7 +99,8 @@ def chat_index():
         }
         for doc in user_documents
     ]
-    # Pass the image URLs to the template
+    if preferences.knowledge_query_mode:
+        VectorCache.load_user_vectors(current_user.id)
     return render_template(
         "chat_page.html",
         new_conversation_form=new_conversation_form,
@@ -119,6 +120,15 @@ def new_conversation():
     form = NewConversationForm()
     if form.validate_on_submit():
         user_id = current_user.id
+        conversation_count = Conversation.query.filter_by(user_id=user_id).count()
+        if conversation_count >= 5:
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": "Maximum number of conversations reached",
+                }
+            )
+
         # Fetch all conversations for the user that start with "Convo #"
         existing_conversations = Conversation.query.filter(
             Conversation.user_id == user_id, Conversation.title.like("Convo #%")
@@ -242,31 +252,18 @@ def chat_completion():
         return jsonify({"status": "error", "message": error})
 
     preferences = get_user_preferences(user_id)
-    stream_preference = preferences.get("stream", True)
     raw_prompt = form.prompt.data
     try:
-        # Call append_knowledge_context and handle different return values
         result = append_knowledge_context(raw_prompt, user_id, client)
-
-        # If the result is a tuple, unpack it accordingly
         if isinstance(result, tuple):
-            if len(result) == 2:
-                prompt, chunk_associations = result
-            elif len(result) == 1:
-                # If only one value is returned, it wasn't a knowledge query
-                (prompt,) = result
-                chunk_associations = None
-            else:
-                # This block will handle more than two values returned
-                prompt = result[0] if len(result) > 0 else None
-                chunk_associations = None
+            prompt, chunk_associations = (
+                result if len(result) == 2 else (result[0], None)
+            )
         else:
-            # If the result is not a tuple, assume it's just the prompt
-            prompt = result
-            chunk_associations = None
-
+            prompt, chunk_associations = result, None
     except ValueError as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
     session["interruption"] = None
 
     if preferences["model"] == "gpt-4-vision-preview":
@@ -276,36 +273,81 @@ def chat_completion():
         image_urls = [image.image_url for image in images]
     else:
         image_urls = []
+
     try:
-        if stream_preference:
-            response, _ = handle_stream(
-                raw_prompt,
-                prompt,
-                client,
-                user_id,
-                conversation_id,
-                image_urls,
-                chunk_associations=chunk_associations,
-            )
-            return Response(
-                response, content_type="text/plain", headers={"X-Accel-Buffering": "no"}
+        response, _ = handle_stream(
+            raw_prompt,
+            prompt,
+            client,
+            user_id,
+            conversation_id,
+            image_urls,
+            chunk_associations=chunk_associations,
+        )
+        return Response(
+            response, content_type="text/plain", headers={"X-Accel-Buffering": "no"}
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+
+@bp.route("/retry-message/<string:message_id>", methods=["POST"])
+@login_required
+def retry_message(message_id):
+    message = Message.query.get_or_404(message_id)
+    conversation_id = message.conversation_id
+
+    if message.conversation.user_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    user_id = current_user.id
+    client, error = initialize_openai_client(user_id)
+    if error:
+        return jsonify({"status": "error", "message": error})
+
+    raw_prompt = message.content
+    try:
+        result = append_knowledge_context(raw_prompt, user_id, client)
+        if isinstance(result, tuple):
+            prompt, chunk_associations = (
+                result if len(result) == 2 else (result[0], None)
             )
         else:
-            full_response = handle_nonstream(
-                raw_prompt,
-                prompt,
-                client,
-                user_id,
-                conversation_id,
-                image_urls,
-                chunk_associations=chunk_associations,
-            )
-            if full_response:
-                return jsonify({"status": "success", "message": full_response.strip()})
-            else:
-                return jsonify(
-                    {"status": "warning", "message": "No response from the AI."}
-                )
+            prompt, chunk_associations = result, None
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+    session["interruption"] = None
+    image_urls = (
+        [
+            image.image_url
+            for image in MessageImages.query.filter(
+                MessageImages.user_id == current_user.id,
+                MessageImages.message_id == message.id,
+            ).all()
+        ]
+        if message.is_vision
+        else []
+    )
+
+    try:
+        retry_delete_messages(conversation_id, message.id)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+    try:
+        response, _ = handle_stream(
+            raw_prompt,
+            prompt,
+            client,
+            user_id,
+            conversation_id,
+            image_urls,
+            retry=True,
+            chunk_associations=chunk_associations,
+        )
+        return Response(
+            response, content_type="text/plain", headers={"X-Accel-Buffering": "no"}
+        )
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
@@ -443,8 +485,6 @@ def update_system_prompt(conversation_id):
 def edit_message(message_id):
     data = request.get_json()
     new_content = data.get("content")
-
-    # Validate new_content: not None and not just whitespace
     if new_content is None or not new_content.strip():
         return (
             jsonify(
@@ -458,11 +498,9 @@ def edit_message(message_id):
 
     message = Message.query.get_or_404(message_id)
 
-    # Check if the current user is authorized to edit the message
     if message.conversation.user_id != current_user.id:
         return jsonify({"status": "error", "message": "Unauthorized"}), 403
 
-    # Update the message content with the validated and stripped content
     message.content = new_content.strip()
     try:
         db.session.commit()
@@ -503,56 +541,6 @@ def check_new_messages(conversation_id):
     ]
 
     return jsonify({"status": "success", "new_messages": new_messages_dict})
-
-
-@bp.route("/retry-message/<string:message_id>", methods=["POST"])
-@login_required
-def retry_message(message_id):
-    message = Message.query.get_or_404(message_id)
-    conversation_id = message.conversation_id
-    message_id = message.id
-
-    if message.conversation.user_id != current_user.id:
-        return jsonify({"status": "error", "message": "Unauthorized"}), 403
-
-    user_id = current_user.id
-    client, error = initialize_openai_client(user_id)
-    if error:
-        return jsonify({"status": "error", "message": error})
-
-    preferences = get_user_preferences(user_id)
-    stream_preference = preferences.get("stream", True)
-    prompt = message.content
-    if message.is_vision:
-        images = MessageImages.query.filter(
-            MessageImages.user_id == current_user.id,
-            MessageImages.message_id == message.id,
-        ).all()
-        image_urls = [image.image_url for image in images]
-    else:
-        image_urls = []
-    try:
-        retry_delete_messages(conversation_id, message_id)
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
-    try:
-        if stream_preference:
-            response, full_response = handle_stream(
-                prompt, client, user_id, conversation_id, images=image_urls, retry=True
-            )
-            return Response(
-                response, content_type="text/plain", headers={"X-Accel-Buffering": "no"}
-            )
-        else:
-            full_response = handle_nonstream(
-                prompt, client, user_id, conversation_id, images=image_urls, retry=True
-            )
-        if full_response:
-            return jsonify({"status": "success", "message": full_response.strip()})
-        else:
-            return jsonify({"status": "warning", "message": "No response from the AI."})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
 
 
 @bp.route("/interrupt-stream/<string:conversation_id>", methods=["POST"])

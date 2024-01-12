@@ -23,6 +23,7 @@ from app.util.forms_util import (
 )
 from app.util.session_util import initialize_openai_client
 from app.util.usage_util import embedding_cost, update_usage_and_costs
+from app.util.vector_cache import VectorCache
 
 # Initialize the blueprint
 bp = Blueprint("embeddings", __name__, url_prefix="/embeddings")
@@ -306,8 +307,7 @@ def update_docs_preferences():
                 document = Document.query.get(doc_id)
                 if document and document.user_id == current_user.id:
                     document.selected = True
-
-        # Commit the changes to the database
+        VectorCache.load_user_vectors(current_user.id)
         try:
             db.session.commit()
             return jsonify(

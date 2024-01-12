@@ -86,7 +86,6 @@ def login():
                     user.last_attempt_time = None
                     db.session.commit()
                     login_user(user, remember=remember)
-                    VectorCache.load_user_vectors(user.id)
                     return jsonify(
                         {"status": "success", "redirect": url_for("user.dashboard")}
                     )

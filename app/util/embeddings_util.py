@@ -172,7 +172,6 @@ def split_text(text_pages, max_tokens=512):
     return chunks, chunk_pages, total_tokens, chunk_token_counts
 
 
-# Ensure the embedding returned by the OpenAI API has the correct dimension
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
 def get_embedding(
     text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs
@@ -340,7 +339,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
 
 
 def append_knowledge_context(user_query, user_id, client):
-    # Fetch user's chat preferences
     user_preferences = (
         db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
     )
@@ -382,8 +380,6 @@ def append_knowledge_context(user_query, user_id, client):
 
     modified_query = context + user_query
     return modified_query, chunk_associations
-
-
 
 def delete_all_documents():
     try:

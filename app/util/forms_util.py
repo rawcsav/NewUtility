@@ -213,7 +213,6 @@ class UserPreferencesForm(FlaskForm):
         "Presence Penalty", validators=[NumberRange(min=-2, max=2)], places=2, default=0
     )
 
-    stream = BooleanField("Stream")
     submit = SubmitField("Get Completion")
 
 
@@ -234,7 +233,7 @@ class NewConversationForm(FlaskForm):
 class UpdateDocPreferencesForm(FlaskForm):
     document_id = StringField("Document ID", validators=[Optional()])
     selected = BooleanField("Selected", validators=[Optional()])
-    knowledge_query_mode = BooleanField("Knowledge Query Mode", validators=[Optional()])
+    knowledge_query_mode = BooleanField("Enable", validators=[Optional()])
     knowledge_context_tokens = FloatField(
         "% Context",
         validators=[

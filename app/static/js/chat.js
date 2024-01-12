@@ -680,11 +680,11 @@ function setupSystemMessageEditing(content, messageId) {
 
 function selectConversation(conversationId) {
   updateConversationTitle(conversationId);
+  highlightActiveConversation(conversationId);
   clearChatBox();
 
   fetchConversationMessages(conversationId)
     .then((messages) => {
-      console.log("Loaded conversation messages:", messages);
       messages.forEach((message) => {
         // Use the existing appendMessageToChatBox function to add the message content
         appendMessageToChatBox(
@@ -701,6 +701,8 @@ function selectConversation(conversationId) {
     });
 }
 
+const throttledSelectConversation = throttle(selectConversation, 1000); // Adjust the 1000ms delay as needed
+
 function updateConversationTitle(conversationId) {
   requestAnimationFrame(() => {
     const conversationEntry = document.querySelector(
@@ -710,8 +712,6 @@ function updateConversationTitle(conversationId) {
     if (conversationEntry && conversationEntry.dataset.conversationTitle) {
       const convoTitleElement = document.getElementById("convo-title");
       if (convoTitleElement) {
-        convoTitleElement.textContent =
-          conversationEntry.dataset.conversationTitle;
         convoTitleElement.setAttribute("data-conversation-id", conversationId);
       }
     }
@@ -866,7 +866,6 @@ const modelMaxTokens = {
 requestAnimationFrame(() => {
   setupMessageInput();
   initializeToggleButton();
-  setupConversationTitleEditing();
   setupModelChangeListener();
   setupChatCompletionForm();
   setupNewConversationForm();
@@ -961,41 +960,6 @@ function triggerFormSubmission(formId) {
   }
 }
 
-function setupConversationTitleEditing() {
-  let convoTitleElement = document.getElementById("convo-title");
-  if (!convoTitleElement) return;
-
-  convoTitleElement.addEventListener("blur", function () {
-    handleConversationTitleChange(this);
-  });
-
-  convoTitleElement.addEventListener("keydown", function (event) {
-    submitOnEnter(event, this);
-  });
-}
-
-function handleConversationTitleChange(element) {
-  let conversationId = element.getAttribute("data-conversation-id");
-  let newTitle = element.textContent.trim();
-
-  if (newTitle.length >= 1 && newTitle.length <= 25) {
-    saveConvoTitle(conversationId, newTitle);
-  } else {
-    showToast(
-      "Conversation title must be between 1 and 25 characters.",
-      "error",
-    );
-    element.textContent = element.getAttribute("data-conversation-title");
-  }
-}
-
-function submitOnEnter(event, element) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    element.blur();
-  }
-}
-
 function checkConversationHistory() {
   if (hasConversationsInHistory()) {
     displayMostRecentConversation();
@@ -1012,7 +976,7 @@ function hasConversationsInHistory() {
 function displayMostRecentConversation() {
   const mostRecentConversation =
     conversationHistory[conversationHistory.length - 1];
-  selectConversation(mostRecentConversation.id);
+  throttledSelectConversation(mostRecentConversation.id);
 }
 
 function appendAllMessagesFromHistory() {
@@ -1335,6 +1299,17 @@ function processStreamedResponse(response) {
   });
 }
 
+function highlightActiveConversation(conversationId) {
+  const conversationEntries = document.querySelectorAll(".conversation-entry");
+  conversationEntries.forEach((entry) => {
+    if (entry.getAttribute("data-conversation-id") === conversationId) {
+      entry.classList.add("active");
+    } else {
+      entry.classList.remove("active");
+    }
+  });
+}
+
 function processNonStreamedResponse(text) {
   requestAnimationFrame(() => {
     if (text.includes("An error occurred:")) {
@@ -1402,7 +1377,7 @@ function processNewConversationResponse(data) {
   if (data.status === "success") {
     addNewConversationToHistory(data);
     updateConversationListUI(data.conversation_id, data.title);
-    selectConversation(data.conversation_id);
+    throttledSelectConversation(data.conversation_id);
     showToast("New conversation started.", "success");
   } else {
     showToast(data.message, "error");
@@ -1433,135 +1408,126 @@ function updateConversationListUI(conversationId, conversationTitle) {
     fragment.appendChild(newConvoEntry);
 
     conversationHistoryDiv.appendChild(fragment);
-    chatBox.innerHTML = "";
+    chatBox.innerHTML = ""; // Clear the chat box for the new conversation
+
+    // Ensure the new conversation is highlighted as active
+    highlightActiveConversation(conversationId);
   });
 }
 
-// Modify the createConversationEntry function to attach event listeners programmatically
-function createConversationEntry(conversationId, conversationTitle) {
-  const newConvoEntry = document.createElement("div");
-  newConvoEntry.classList.add("conversation-entry");
-  newConvoEntry.setAttribute("data-conversation-id", conversationId);
-  newConvoEntry.setAttribute("data-conversation-title", conversationTitle);
-
-  // Create the text entry element
+// Create a text entry for the conversation title
+function createTextEntry(conversationTitle) {
   const textEntry = document.createElement("p");
   textEntry.classList.add("text-entry");
   textEntry.textContent = conversationTitle;
-  newConvoEntry.appendChild(textEntry);
+  return textEntry;
+}
 
-  // Create the edit icon span and append it to the conversation entry
+// Create an edit icon span
+function createTitleEditIcon(conversationId) {
   const editSpan = document.createElement("span");
   editSpan.classList.add("edit-conversation-title");
   editSpan.setAttribute("data-conversation-id", conversationId);
   const editIcon = document.createElement("i");
   editIcon.classList.add("fas", "fa-edit");
   editSpan.appendChild(editIcon);
+  return editSpan;
+}
 
-  // Append the edit icon span to the conversation entry
-  newConvoEntry.appendChild(editSpan);
-
-  // Attach an event listener to the edit icon
-  editSpan.addEventListener("click", function (event) {
-    event.stopPropagation(); // Prevent selecting the conversation
-    textEntry.contentEditable = "true";
-    textEntry.focus();
-    textEntry.setAttribute("data-conversation-title", conversationTitle);
-
-    // Event listener for the Enter key to save the new title
-    textEntry.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation(); // Prevent selecting the conversation
-        saveConvoTitle(conversationId, textEntry.textContent.trim());
-        textEntry.contentEditable = "false";
-      }
-    });
-  });
-
-  // Create the delete icon span and append it to the conversation entry
+// Create a delete icon span
+function createDeleteIcon(conversationId) {
   const deleteSpan = document.createElement("span");
   deleteSpan.classList.add("delete-conversation");
   deleteSpan.setAttribute("data-conversation-id", conversationId);
   const deleteIcon = document.createElement("i");
   deleteIcon.classList.add("fas", "fa-trash-alt");
   deleteSpan.appendChild(deleteIcon);
+  return deleteSpan;
+}
 
-  // Append the delete icon span to the conversation entry
-  newConvoEntry.appendChild(deleteSpan);
+// Create a div to contain the icons
+function createIconsContainer(editSpan, deleteSpan) {
+  const iconsContainer = document.createElement("div");
+  iconsContainer.classList.add("convo-icons");
+  iconsContainer.appendChild(editSpan);
+  iconsContainer.appendChild(deleteSpan);
+  return iconsContainer;
+}
 
-  // Attach an event listener to the delete icon
-  deleteSpan.addEventListener("click", function (event) {
-    event.stopPropagation(); // Prevent selecting the conversation
-    deleteConversation(conversationId);
-  });
+// Main function to create a conversation entry
+function createConversationEntry(conversationId, conversationTitle) {
+  const newConvoEntry = document.createElement("div");
+  newConvoEntry.classList.add("conversation-entry");
+  newConvoEntry.setAttribute("data-conversation-id", conversationId);
+  newConvoEntry.setAttribute("data-conversation-title", conversationTitle);
 
-  // Return the modified conversation entry
+  const textEntry = createTextEntry(conversationTitle);
+  newConvoEntry.appendChild(textEntry);
+
+  const editSpan = createTitleEditIcon(conversationId);
+  const deleteSpan = createDeleteIcon(conversationId);
+  const iconsContainer = createIconsContainer(editSpan, deleteSpan);
+  newConvoEntry.appendChild(iconsContainer);
+
   return newConvoEntry;
 }
+// Event delegation setup on the container of all conversation entries
+function initializeEventListeners() {
+  const conversationContainer = document.getElementById("conversation-history");
 
-function applyEditListenersToAllConversations() {
-  const conversationEntries = document.querySelectorAll(".conversation-entry");
-  conversationEntries.forEach((entry) => {
-    const conversationId = entry.getAttribute("data-conversation-id");
-    const textEntry = entry.querySelector(".text-entry");
-    const editSpan = entry.querySelector(".edit-conversation-title");
-    const deleteSpan = entry.querySelector(".delete-conversation");
+  conversationContainer.addEventListener("keydown", function (event) {
+    if (
+      event.key === "Enter" &&
+      event.target.classList.contains("text-entry") &&
+      event.target.contentEditable === "true"
+    ) {
+      event.preventDefault();
+      const textEntry = event.target;
+      const conversationId = textEntry
+        .closest(".conversation-entry")
+        .getAttribute("data-conversation-id");
+      saveConvoTitle(conversationId, textEntry.textContent.trim());
+      textEntry.contentEditable = "false";
+      textEntry.blur(); // Remove focus after editing
+    }
+  });
 
-    if (editSpan) {
-      editSpan.addEventListener("click", function (event) {
-        event.stopPropagation(); // Prevent selecting the conversation
+  conversationContainer.addEventListener("click", function (event) {
+    const target = event.target;
+    const editIcon = target.closest(".edit-conversation-title");
+    const deleteIcon = target.closest(".delete-conversation");
+    const textEntry = target.closest(".text-entry");
+
+    // Handle clicks on edit and delete icons
+    if (editIcon || deleteIcon) {
+      event.stopPropagation(); // Prevent triggering conversation selection
+
+      if (editIcon) {
+        const textEntry = editIcon.parentNode.previousElementSibling;
         textEntry.contentEditable = "true";
         textEntry.focus();
-        textEntry.setAttribute(
-          "data-conversation-title",
-          textEntry.textContent,
-        );
-
-        textEntry.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            event.stopPropagation(); // Prevent selecting the conversation
-            saveConvoTitle(conversationId, textEntry.textContent.trim());
-            textEntry.contentEditable = "false";
-          }
-        });
-      });
-    }
-
-    if (deleteSpan) {
-      deleteSpan.addEventListener("click", function (event) {
-        event.stopPropagation(); // Prevent selecting the conversation
+      } else if (deleteIcon) {
+        const conversationId = deleteIcon.getAttribute("data-conversation-id");
         deleteConversation(conversationId);
-      });
+      }
+    } else if (textEntry && textEntry.contentEditable === "true") {
+      // Prevent conversation selection when text entry is editable
+      event.stopPropagation();
+    } else {
+      // Handle conversation entry clicks for non-editable text entries
+      const conversationEntry = target.closest(".conversation-entry");
+      if (conversationEntry) {
+        const conversationId = conversationEntry.getAttribute(
+          "data-conversation-id",
+        );
+        throttledSelectConversation(conversationId);
+      }
     }
   });
 }
 
-applyEditListenersToAllConversations();
-
-// Update the event listeners for dynamically added conversation entries
-document.addEventListener("click", function (event) {
-  if (event.target.matches(".delete-conversation, .delete-conversation *")) {
-    // Check if the click is on the delete icon or its children
-    const conversationEntry = event.target.closest(".conversation-entry");
-    if (conversationEntry) {
-      const conversationId = conversationEntry.getAttribute(
-        "data-conversation-id",
-      );
-      deleteConversation(conversationId);
-    }
-  }
-});
-
-// Handles for 'Select Conversation' entries
-const conversationEntries = document.querySelectorAll(".conversation-entry");
-conversationEntries.forEach(function (entry) {
-  entry.addEventListener("click", function () {
-    let conversationId = entry.getAttribute("data-conversation-id");
-    selectConversation(conversationId);
-  });
-});
+// Call this function once at the start, passing the container of the conversation entries
+initializeEventListeners();
 
 // Handle for image upload icon
 const imageUploadIcon = document.getElementById("image-upload-icon");

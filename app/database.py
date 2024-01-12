@@ -1,16 +1,22 @@
 import uuid
 from flask_login import UserMixin
-from sqlalchemy import BLOB, select
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import BLOB
 from sqlalchemy.sql import func
 from app import db
 
+def generate_uuid():
+    return str(uuid.uuid4())
+
+# Mixin for common columns
+class SoftDeleteMixin:
+    delete = db.Column(db.Boolean, default=False, nullable=False)
+class TimestampMixin:
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
 
 def generate_default_nickname():
     max_number = db.session.query(db.func.max(UserAPIKey.nickname)).scalar()
     next_number = int(max_number or 0) + 1  # Increment the max number by 1
     return f"User{next_number}"
-
 
 class MessageChunkAssociation(db.Model):
     __tablename__ = "message_chunk_association"
@@ -27,9 +33,9 @@ class MessageChunkAssociation(db.Model):
     chunk = db.relationship("DocumentChunk", back_populates="message_associations")
 
 
-class UserAPIKey(db.Model):
+class UserAPIKey(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "user_api_keys"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(
         db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
@@ -42,23 +48,20 @@ class UserAPIKey(db.Model):
     api_key_token = db.Column(
         db.String(64), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
     )
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     usage_image_gen = db.Column(db.Numeric(10, 5), default=0, nullable=False)
     usage_chat = db.Column(db.Numeric(10, 5), default=0, nullable=False)
     usage_embedding = db.Column(db.Numeric(10, 5), default=0, nullable=False)
     usage_audio = db.Column(db.Numeric(10, 5), default=0, nullable=False)
-    delete = db.Column(db.Boolean, default=False, nullable=False)
 
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model, TimestampMixin):
     __tablename__ = "users"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     username = db.Column(db.String(20), unique=True, nullable=False, index=True)
     email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     email_confirmed = db.Column(db.Boolean, default=False, nullable=False)
     confirmation_code = db.Column(db.String(6))
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     login_attempts = db.Column(db.Integer, default=0)
     last_attempt_time = db.Column(db.DateTime)
     last_username_change = db.Column(db.DateTime)
@@ -90,14 +93,13 @@ class User(UserMixin, db.Model):
     )
 
 
-class Conversation(db.Model):
+class Conversation(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "conversations"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     title = db.Column(db.String(255), nullable=True, default="New Conversation")
     user_id = db.Column(
         db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     system_prompt = db.Column(
         db.String(2048), nullable=True
     )  # New field for system prompts
@@ -106,12 +108,11 @@ class Conversation(db.Model):
     messages = db.relationship(
         "Message", backref="conversation", lazy="dynamic", cascade="all, delete-orphan"
     )
-    delete = db.Column(db.Boolean, default=False, nullable=False)
 
 
-class Message(db.Model):
+class Message(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "messages"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     conversation_id = db.Column(
         db.String(36), db.ForeignKey("conversations.id", ondelete="CASCADE"), index=True
     )
@@ -122,9 +123,6 @@ class Message(db.Model):
     is_voice = db.Column(db.Boolean, default=False)
     is_vision = db.Column(db.Boolean, default=False)
     is_error = db.Column(db.Boolean, default=False)
-    created_at = db.Column(
-        db.DateTime(timezone=False), server_default=func.now(), index=True
-    )
     message_images = db.relationship(
         "MessageImages", backref="message", lazy="joined", cascade="all, delete-orphan"
     )
@@ -133,12 +131,11 @@ class Message(db.Model):
         back_populates="message",
         cascade="all, delete-orphan",
     )
-    delete = db.Column(db.Boolean, default=False, nullable=False)
 
 
 class ModelContextWindow(db.Model):
     __tablename__ = "model_context_windows"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     model_name = db.Column(db.String(50), nullable=False, unique=True)
     context_window_size = db.Column(db.Integer, nullable=False)
 
@@ -146,7 +143,7 @@ class ModelContextWindow(db.Model):
 class ChatPreferences(db.Model):
     __tablename__ = "chat_preferences"
 
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(
         db.String(36), db.ForeignKey("users.id"), unique=True, index=True
     )
@@ -156,18 +153,17 @@ class ChatPreferences(db.Model):
     frequency_penalty = db.Column(db.Float, default=0.0)
     presence_penalty = db.Column(db.Float, default=0.0)
     top_p = db.Column(db.Float, default=1.0)
-    stream = db.Column(db.Boolean, default=True)
     voice_mode = db.Column(db.Boolean, default=False)
     voice_model = db.Column(db.String(50), default="alloy")
     knowledge_query_mode = db.Column(db.Boolean, default=False)
     knowledge_context_tokens = db.Column(
         db.Integer, default=30
-    )  # This is a percentage (0-100)
+    )
 
 
-class Document(db.Model):
+class Document(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "documents"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(
         db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
@@ -176,19 +172,17 @@ class Document(db.Model):
     total_tokens = db.Column(db.Integer, nullable=False)
     pages = db.Column(db.String(25), nullable=True)
     selected = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     chunks = db.relationship(
         "DocumentChunk",
         back_populates="document",
         order_by="DocumentChunk.chunk_index",
         cascade="all, delete, delete-orphan",
     )  # Include "delete"
-    delete = db.Column(db.Boolean, default=False, nullable=False)
 
 
 class DocumentChunk(db.Model):
     __tablename__ = "document_chunks"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     document_id = db.Column(
         db.String(36),
         db.ForeignKey("documents.id", ondelete="CASCADE"),
@@ -215,9 +209,9 @@ class DocumentChunk(db.Model):
     )
 
 
-class DocumentEmbedding(db.Model):
+class DocumentEmbedding(db.Model, TimestampMixin):
     __tablename__ = "document_embeddings"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
     chunk_id = db.Column(
         db.String(36),
@@ -226,13 +220,12 @@ class DocumentEmbedding(db.Model):
     )
     embedding = db.Column(db.LargeBinary, nullable=False)
     model = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
     chunk = db.relationship("DocumentChunk", back_populates="embeddings")
 
 
 class APIUsage(db.Model):
     __tablename__ = "api_usage"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
     usage_image_gen = db.Column(db.Numeric(10, 5), default=0, nullable=False)
     usage_chat = db.Column(db.Numeric(10, 5), default=0, nullable=False)
@@ -240,15 +233,14 @@ class APIUsage(db.Model):
     usage_audio = db.Column(db.Numeric(10, 5), default=0, nullable=False)
 
 
-class GeneratedImage(db.Model):
+class GeneratedImage(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "generated_images"
 
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
-    delete = db.Column(db.Boolean, default=False, nullable=False)
+
 
     # New columns
     size = db.Column(
@@ -260,9 +252,9 @@ class GeneratedImage(db.Model):
     user = db.relationship("User", back_populates="generated_images")
 
 
-class MessageImages(db.Model):
+class MessageImages(db.Model, SoftDeleteMixin):
     __tablename__ = "message_images"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     uuid = db.Column(db.String(255), nullable=False, unique=True)
     image_url = db.Column(db.String(255), nullable=False)
     user_id = db.Column(
@@ -281,4 +273,3 @@ class MessageImages(db.Model):
     conversation = db.relationship(
         "Conversation", backref="message_images", lazy="joined"
     )
-    delete = db.Column(db.Boolean, default=False, nullable=False)

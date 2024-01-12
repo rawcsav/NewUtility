@@ -236,6 +236,7 @@ def save_message(
                     db.session.add(image_record)
 
         if chunk_ids and similarity_ranks and (len(chunk_ids) == len(similarity_ranks)):
+            message.is_knowledge_query = True
             for chunk_id, similarity_rank in zip(chunk_ids, similarity_ranks):
                 chunk_association = MessageChunkAssociation(
                     message_id=message.id,
@@ -397,92 +398,6 @@ def chat_stream(
             yield error_message
 
 
-def chat_nonstream(
-    raw_prompt,
-    prompt,
-    client,
-    user_id,
-    conversation_id,
-    images=None,
-    retry=False,
-    chunk_associations=None,
-):
-    conversation, conversation_history = get_user_conversation(user_id, conversation_id)
-    if not conversation:
-        return
-    if conversation.user_id != current_user.id:
-        abort(403)
-    else:
-        preferences = get_user_preferences(user_id)
-
-        if preferences["model"] == "gpt-4-vision-preview" and images:
-            image_payloads = get_image_payload(images)
-            user_message_content = [{"type": "text", "text": prompt}]
-            user_message_content.extend(image_payloads)
-        else:
-            user_message_content = prompt
-
-        truncate_limit = preferences["truncate_limit"]
-        full_response = ""
-        if retry:
-            if conversation_history and conversation_history[-1]["role"] == "user":
-                conversation_history.pop()
-        else:
-            if chunk_associations is not None:
-                save_message(
-                    conversation_id,
-                    raw_prompt,
-                    "outgoing",
-                    preferences["model"],
-                    images=images,
-                    chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
-                    similarity_ranks=[rank for _, rank in chunk_associations],
-                )
-            else:
-                save_message(
-                    conversation_id,
-                    raw_prompt,
-                    "outgoing",
-                    preferences["model"],
-                    images=images,
-                )
-        truncate_conversation(conversation_history, truncate_limit)
-        try:
-            response = client.chat.completions.create(
-                model=preferences["model"],
-                messages=conversation_history
-                + [{"role": "user", "content": user_message_content}],
-                temperature=preferences["temperature"],
-                max_tokens=preferences["max_tokens"],
-                frequency_penalty=preferences["frequency_penalty"],
-                presence_penalty=preferences["presence_penalty"],
-                top_p=preferences["top_p"],
-                stream=False,
-            )
-            if response:
-                full_response = response.choices[0].message.content
-                if full_response.strip():
-                    save_message(
-                        conversation_id, full_response, "incoming", preferences["model"]
-                    )
-
-                    # Use the token counts from the response to calculate the cost
-                    prompt_tokens = response.usage.prompt_tokens
-                    completion_tokens = response.usage.completion_tokens
-                    cost = chat_cost(
-                        preferences["model"], prompt_tokens, completion_tokens
-                    )
-                    update_usage_and_costs(
-                        user_id=user_id,
-                        api_key_id=current_user.selected_api_key_id,
-                        usage_type="chat",
-                        cost=cost,
-                    )
-                return full_response
-        except Exception as e:
-            error_message = f"An error occurred: {e}"
-            return error_message
-
 
 def handle_stream(
     raw_prompt,
@@ -512,28 +427,6 @@ def handle_stream(
             yield content
 
     return stream_with_context(generate()), full_response
-
-
-def handle_nonstream(
-    raw_prompt,
-    prompt,
-    client,
-    user_id,
-    conversation_id,
-    images=None,
-    retry=False,
-    chunk_associations=None,
-):
-    return chat_nonstream(
-        raw_prompt,
-        prompt,
-        client,
-        user_id,
-        conversation_id,
-        images,
-        retry,
-        chunk_associations,
-    )
 
 
 def retry_delete_messages(conversation_id, message_id):

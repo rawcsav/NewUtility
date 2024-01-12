@@ -191,14 +191,8 @@
     {% block styles %} {% endblock %}
   </head>
   <body>
-    {% include 'menu.html' %}
-    <a class="homepage-link" href="https://rawcsav.com">
-      <img
-        alt="Homepage"
-        src="{{ url_for('static', filename='logo/blacklogo.svg') }}"
-      />
-    </a>
-    {% block body %} {% endblock %} {% include 'footer.html' %}
+    {% include 'menu.html' %} {% block body %} {% endblock %} {% include
+    'footer.html' %}
     <script>
       const dropdown = document.querySelector(".dropdown-menu");
       const hamburgerMenu = document.querySelector(".hamburger-menu");

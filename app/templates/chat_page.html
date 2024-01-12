@@ -7,11 +7,11 @@
 />
 {% endblock %} {% block body %}
 <div class="container">
-  <div class="shape tall-rectangle" id="brown">
+  <div id="chat-settings">
     <div id="options-container">
-      <h3>Options</h3>
+      <h3>GPT</h3>
       <div id="options">
-        <button id="show-history-btn" class="options-button">
+        <button id="show-history-btn" class="options-button active">
           <i class="fas fa-history"></i>
         </button>
         <button id="show-preferences-btn" class="options-button">
@@ -20,17 +20,6 @@
         <button id="docs-preferences-btn" class="options-button">
           <i class="fa-regular fa-file-lines"></i>
         </button>
-        <form
-          id="new-conversation-form"
-          action="{{ url_for('chat.new_conversation') }}"
-          method="post"
-          class="{{ 'hidden' if has_conversation_history else '' }}"
-        >
-          {{ new_conversation_form.system_prompt(class_="hidden") }}
-          <button type="submit" class="button-send">
-            <i class="fas fa-plus-circle"></i>
-          </button>
-        </form>
       </div>
     </div>
     <div id="conversation-container">
@@ -43,24 +32,33 @@
           data-conversation-title="{{ conversation.title }}"
         >
           <p class="text-entry">{{ conversation.title }}</p>
-          <span
-            class="edit-conversation-title"
-            data-conversation-id="{{ conversation.id }}"
-            ><i class="fas fa-edit"></i
-          ></span>
-          <span
-            class="delete-conversation"
-            data-conversation-id="{{ conversation.id }}"
-          >
-            <i class="fas fa-trash-alt"></i>
-          </span>
+          <div class="convo-icons">
+            <span
+              class="edit-conversation-title"
+              data-conversation-id="{{ conversation.id }}"
+              ><i class="fas fa-edit"></i
+            ></span>
+            <span
+              class="delete-conversation"
+              data-conversation-id="{{ conversation.id }}"
+            >
+              <i class="fas fa-trash-alt"></i>
+            </span>
+          </div>
         </div>
         {% endfor %}
       </div>
-      <div
-        id="conversation-history-status"
-        class="conversation-history-status"
-      ></div>
+      <form
+        id="new-conversation-form"
+        action="{{ url_for('chat.new_conversation') }}"
+        method="post"
+        class="{{ 'hidden' if has_conversation_history else '' }}"
+      >
+        {{ new_conversation_form.system_prompt(class_="hidden") }}
+        <button type="submit" class="button-send">
+          <i class="fa fa-comments" aria-hidden="true"></i>
+        </button>
+      </form>
     </div>
     <input type="hidden" id="selected-conversation-id" value="" />
     <div id="preference-popup" class="preference-popup hidden">
@@ -170,18 +168,7 @@
             oninput="document.getElementById('top_p').value = this.value"
           />
         </div>
-        <div class="form-group" id="chat-checkbox">
-          <div class="stream-check">
-            <label>
-              {{ user_preferences_form.stream.label }} {% if
-              user_preferences_form.stream.data %}
-              <input type="checkbox" id="stream" name="stream" checked />
-              {% else %}
-              <input type="checkbox" id="stream" name="stream" />
-              {% endif %}
-            </label>
-          </div>
-        </div>
+        <div class="form-group" id="chat-checkbox"></div>
         <input
           type="submit"
           value="Update Preferences"
@@ -191,7 +178,7 @@
       </form>
     </div>
     <div id="docs-settings-popup" class="docs-settings-popup hidden">
-      <h3>Knowledge Retrieval</h3>
+      <h3>Knowledge Query</h3>
       <form id="docs-preferences-form">
         {{ doc_preferences_form.hidden_tag() }}
         <div class="knowledge-select form-group">
@@ -253,9 +240,7 @@
   </div>
   <div class="chat-container">
     <div class="top-banner">
-      <h4 id="convo-title" data-conversation-id="{{ conversation_id }}">
-        {{ conversation_title }}
-      </h4>
+      <div id="convo-title" data-conversation-id="{{ conversation_id }}"></div>
     </div>
     <div class="messages" id="chat-box"></div>
     <div id="loader-template" style="display: none">

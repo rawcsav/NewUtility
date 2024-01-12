@@ -6,9 +6,6 @@ html {
   width: 100%;
   overflow: hidden;
 }
-.hidden {
-  display: none;
-}
 
 body {
   margin: 0;
@@ -17,31 +14,50 @@ body {
   min-height: 100vh;
 }
 
-.image-div {
-  position: relative;
-}
-
-.delete-icon {
-  position: absolute;
-  right: 0;
-  cursor: pointer;
+h3 {
+  font-family: "NeueMontreal", sans-serif;
+  font-size: 1.5em;
+  font-weight: 900;
+  margin: 0 0 10px;
   top: 0;
-  z-index: 1;
-  padding: 0 2px;
-  border-radius: 20%;
-  background-color: #dc3545; /* A color that usually signifies 'delete' or 'danger' */
-  color: white; /* Contrast color for the icon */
-  border: 1px solid transparent; /* Optional: in case you want a border */
-  transition:
-    background-color 0.2s,
-    transform 0.2s; /* Smooth transition for hover effects */
+  text-align: center;
 }
 
-.delete-icon:hover,
-.delete-icon:focus {
-  background-color: #bd2130; /* A darker shade for hover state */
-  transform: scale(1.1); /* Slightly bigger on hover for a nice effect */
-  outline: none; /* Removes the outline if the icon is focusable */
+h4 {
+  width: fit-content;
+  font-family: "NeueMontreal", serif;
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0;
+  top: 0;
+  text-align: center;
+  color: #2a2a2a;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+output {
+  display: inline-block;
+  padding: 0 5px;
+  font-size: 0.9em;
+  line-height: 1.5em;
+  height: 1.5em;
+  background-color: #f9f4f5;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-left: 10px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-family: "Helvetica Neue", sans-serif;
+}
+
+.hidden {
+  display: none;
 }
 
 #toast {
@@ -68,18 +84,16 @@ body {
 }
 
 .thumbnail {
-  width: 50px; /* Or any other size */
+  width: 50px;
   height: 50px;
   object-fit: cover;
   border-radius: 8px;
 }
 
-#brown {
+#chat-settings {
   position: relative;
-  flex: 1;
-  background-color: #e8e8e8;
-  z-index: 2;
-  width: 100%;
+  background-color: #e5e4e2;
+  width: 15%;
   overflow-x: hidden;
   max-height: 100%;
   display: flex;
@@ -97,19 +111,20 @@ body {
 .chat-container {
   padding: 0 20px 20px;
   display: flex;
-  width: 100%;
+  width: 85%;
   flex-direction: column;
   background-color: #fafafa;
   border-left: none;
   overflow-y: auto;
-  flex: 5;
 }
 
 .conversation-entry {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: flex-start;
+  padding: 10px;
+  gap: 5px;
   justify-content: space-evenly;
 }
 
@@ -119,8 +134,9 @@ body {
   cursor: pointer;
 }
 
-.conversation-entry:hover p {
-  transform: scale(1.05);
+.conversation-entry:hover {
+  cursor: pointer;
+  background-color: #d5d3d1;
 }
 
 .messages {
@@ -129,7 +145,7 @@ body {
   border-radius: 8px;
   overflow-y: auto;
   margin-right: 125px;
-  padding: 10px;
+  padding: 25px;
   margin-left: 125px;
 }
 
@@ -141,7 +157,6 @@ body {
   align-items: center;
 }
 
-/*noinspection CssUnusedSymbol*/
 .system-message {
   text-align: left;
   font-style: italic;
@@ -149,13 +164,11 @@ body {
   margin: 20px 0 0;
 }
 
-/*noinspection CssUnusedSymbol*/
 .fa-clipboard,
 .retry-icon {
   cursor: pointer;
 }
 
-/*noinspection CssUnusedSymbol*/
 .fa-clipboard:hover,
 .retry-icon:hover {
   transform: scale(1.1);
@@ -181,12 +194,17 @@ body {
   margin-right: 10px;
 }
 
-/*noinspection CssUnusedSymbol*/
 #new-convo-icon {
   cursor: pointer;
   font-size: 1.5em;
 }
 
+.convo-icons {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+}
 .form-group {
   margin-bottom: 25px;
 }
@@ -207,7 +225,7 @@ input[type="range"] {
   width: 80%;
   height: 3px;
   border-radius: 5px;
-  background: #ddd;
+  background: #ff7900;
   outline: none;
   padding: 0;
   margin: 0;
@@ -219,13 +237,13 @@ input[type="range"]::-webkit-slider-thumb {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #333;
+  background: #2a2a2a;
   cursor: pointer;
   transition: background 0.3s ease-in-out;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  background: #111;
+  background: #2a2a2a;
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -233,7 +251,7 @@ input[type="range"]::-moz-range-thumb {
   height: 10px;
   border: none;
   border-radius: 50%;
-  background: #333;
+  background: #2a2a2a;
   cursor: pointer;
 }
 
@@ -241,22 +259,7 @@ input[type="range"]::-ms-thumb {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #333;
-}
-
-h4 {
-  width: fit-content;
-  font-family: "NeueMontreal", serif;
-  font-size: 2em;
-  font-weight: bold;
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: #2a2a2a;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+  background: #2a2a2a;
 }
 
 .input-group {
@@ -268,7 +271,6 @@ pre {
   position: relative;
 }
 
-/*noinspection CssUnusedSymbol*/
 .code-clipboard-icon {
   position: absolute;
   top: 5px;
@@ -292,12 +294,6 @@ pre {
   color: #ff7900;
 }
 
-.top-banner {
-  display: flex;
-  justify-content: center;
-  padding-bottom: 20px;
-  text-align: center;
-}
 .message-input {
   font-family: "Helvetica Neue", sans-serif;
   height: auto;
@@ -307,6 +303,7 @@ pre {
   max-height: 80px;
   line-height: 20px;
   min-height: 20px;
+  margin-left: 5px;
   border: none;
   padding: 0;
   width: 100%;
@@ -315,18 +312,15 @@ pre {
   flex-grow: 1;
 }
 
-.message-input:focus,
-#convo-title:focus {
+.message-input:focus {
   outline: none;
 }
 
-/*noinspection CssUnusedSymbol*/
 #send-button {
   margin: 0;
   border: none;
 }
 
-/*noinspection CssUnusedSymbol*/
 .message-header {
   display: flex;
   justify-content: flex-end;
@@ -337,11 +331,11 @@ pre {
 #update-preferences-form {
   display: flex;
   flex-direction: column;
-  /* padding: 20px; */
   overflow-y: auto;
   max-height: 100%;
   align-items: flex-start;
   justify-content: flex-start;
+  padding: 10px;
 }
 
 #send-button i {
@@ -360,7 +354,6 @@ pre {
   display: none;
 }
 
-/*noinspection CssUnusedSymbol*/
 .show {
   display: block;
 }
@@ -479,17 +472,17 @@ pre {
 
 .assistant-message h5 {
   margin: 0;
-  color: #ff4500;
+  color: #4f9d69;
 }
 
 .user-message h5 {
   margin: 0;
-  color: #ff7900;
+  color: #0033a0;
 }
 
 .system-message h5 {
   margin: 0;
-  color: #f3b61f;
+  color: #ff7900;
 }
 #conversation-container {
   height: 90%;
@@ -501,7 +494,6 @@ pre {
 #conversation-history {
   display: flex;
   flex-direction: column-reverse;
-  gap: 15px;
 }
 
 #options {
@@ -511,34 +503,60 @@ pre {
 }
 
 #options-container {
-  border-bottom: 1px solid #654321;
   display: flex;
   flex-direction: column;
   text-align: center;
   width: 100%;
-}
-
-h3 {
-  font-family: "NeueMontreal", sans-serif;
-  font-size: 1.5em;
-  font-weight: 900;
-  margin: 0 0 10px;
-  top: 0;
-  text-align: center;
+  margin-top: 10px;
 }
 
 #options-container h3 {
-  font-size: 18px;
+  font-size: 24px;
+  color: #ff7900;
 }
 
 #options-container i {
-  color: #4f9d69;
+  color: #ff7900;
 }
 
 #conversation-container h3,
 #preference-popup h3,
 #docs-settings-popup h3 {
   font-size: 18px;
+  color: #2a2a2a;
+}
+
+#chat-settings p,
+#chat-settings label,
+#chat-settings a {
+  color: #2a2a2a;
+}
+
+.image-div {
+  position: relative;
+}
+
+.delete-icon {
+  position: absolute;
+  right: 0;
+  cursor: pointer;
+  top: 0;
+  z-index: 1;
+  padding: 0 2px;
+  border-radius: 20%;
+  background-color: #dc3545;
+  color: white;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
+}
+
+.delete-icon:hover,
+.delete-icon:focus {
+  background-color: #bd2130;
+  transform: scale(1.1);
+  outline: none;
 }
 
 .options-button,
@@ -563,7 +581,6 @@ h3 {
 
 .button-send:hover {
   transform: scale(1.1);
-  color: #45a049;
 }
 
 .options-button:hover i {
@@ -587,15 +604,19 @@ h3 {
 }
 
 .user-message i {
-  color: #ff7900;
+  color: #0033a0;
 }
 
 .assistant-message i {
-  color: #ff4500;
+  color: #4f9d69;
 }
 
 .system-message i {
-  color: #f3b61f;
+  color: #ff7900;
+}
+
+p {
+  margin: 0;
 }
 
 .message-content p {
@@ -617,19 +638,12 @@ h3 {
   gap: 10px;
 }
 
-label {
-  display: block;
-  font-size: 12px;
-  font-family: "Helvetica Neue", sans-serif;
-}
-
 #title-edit {
   font-family: "NeueMontreal", sans-serif;
   font-weight: 700;
   font-style: italic;
   font-size: 18px;
   background-color: transparent;
-  color: #654321;
   max-width: 100px;
 }
 
@@ -637,23 +651,10 @@ label {
 .editable-container p {
   font-size: 14px;
   background-color: transparent;
-  color: #654321;
   margin: 0;
   padding: 0;
   max-width: 100px;
   overflow-y: hidden;
-}
-
-output {
-  display: inline-block;
-  padding: 0 5px;
-  font-size: 0.9em;
-  line-height: 1.5em;
-  height: 1.5em;
-  background-color: #f8f8f8;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  margin-left: 10px;
 }
 
 #update-preferences-form,
@@ -662,30 +663,35 @@ output {
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
+  padding: 10px;
 }
 
 #preference-submit,
 #docs-preferences-submit {
   margin-left: auto;
   margin-right: auto;
-  background: #ec9ca0;
-  font-family: inherit;
   padding: 0.6em 1.3em;
   font-weight: 900;
   font-size: 12px;
-  border: 3px solid #2a2a2a;
-  border-radius: 0.4em;
   cursor: pointer;
-  box-shadow: 0.1em 0.1em;
   margin-bottom: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  --bg-color: #ffffff;
+  --main-color: #2a2a2a;
+  font-family: "Helvetica Neue", sans-serif;
 }
 
-#preference-submit:hover {
+#preference-submit:hover,
+#docs-preferences-submit:hover {
   transform: translate(-0.05em, -0.05em);
   box-shadow: 0.15em 0.15em;
 }
 
-#preference-submit:active {
+#preference-submit:active,
+#docs-preferences-submit:active {
   transform: translate(0.05em, 0.05em);
   box-shadow: 0.05em 0.05em;
 }
@@ -698,6 +704,10 @@ output {
 #docs-preferences-form ul {
   padding: 0;
   margin: 0 0 25px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .knowledge-select {
@@ -707,26 +717,27 @@ output {
   margin-top: 10px;
 }
 
+/* Input */
+
 .document-item {
-  display: flex; /* Flex layout for horizontal alignment */
-  justify-content: space-between; /* Space out the document info and the select checkbox */
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 5px;
-  border-bottom: 1px solid #ddd; /* Border for separation between items */
+  width: 100%;
 }
 
 .doc-info p,
 #title-edit,
 #author-edit {
-  font-size: 14px; /* Font size for document info text */
-  background-color: transparent; /* Transparent background for editable fields */
-  color: #654321; /* Text color for consistency */
-  margin: 0; /* No margin for compact layout */
-  padding: 0; /* No padding to align text to the edges */
+  font-size: 14px;
+  background-color: transparent;
+  color: #654321;
+  margin: 0;
+  padding: 0;
 }
 
 #author-edit {
-  font-style: italic; /* Italic style for author names */
+  font-style: italic;
 }
 
 #loader-template {
@@ -735,11 +746,11 @@ output {
 }
 
 .doc-select input[type="checkbox"] {
-  margin-right: 5px; /* Right margin for spacing next to the label */
+  margin-right: 5px;
 }
 
 .range-value-input {
-  text-align: center; /* Center the text inside the input */
+  text-align: center;
   border: none;
   background-color: #fafafa;
   border-radius: 10px;
@@ -749,9 +760,90 @@ output {
   font-family: "Helvetica Neue", sans-serif;
 }
 
-/* Step 4: Update styling for the edit icon */
 .edit-conversation-title {
   cursor: pointer;
-  margin-left: 10px;
-  color: #007bff; /* Bootstrap info color for consistency */
+}
+
+.conversation-entry.active {
+  background-color: #c6c4c0;
+  border-left: 4px solid #ff4500;
+}
+
+.conversation-entry p {
+  margin: 0;
+}
+
+#new-conversation-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+#new-conversation-form i {
+  font-size: 30px;
+  color: #4f9d69;
+  cursor: pointer;
+}
+
+#new-conversation-form i:hover {
+  transform: scale(1.1);
+}
+
+/* Delete conversation icon hover effect */
+.delete-conversation i {
+  color: #e50000;
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
+  font-size: 16px;
+}
+
+.delete-conversation i:hover {
+  color: #ff3333; /* Lighten the color on hover */
+  transform: scale(1.1); /* Slightly increase the size */
+}
+
+/* Edit conversation title icon hover effect */
+.edit-conversation-title i {
+  color: #4f9d69;
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
+  font-size: 16px;
+}
+
+.edit-conversation-title i:hover {
+  color: #66b47d; /* Lighten the color on hover */
+  transform: scale(1.1); /* Slightly increase the size */
+}
+
+.text-entry {
+  font-weight: 500;
+}
+
+.new-convo-wrapper {
+  display: flex;
+  justify-content: center; /* Center the button */
+  padding: 10px; /* Padding around the button */
+  margin-top: 10px; /* Space from the top element */
+}
+
+.new-convo-button {
+  background: #e8e8e8; /* Neutral background */
+  border: none; /* No border for a modern look */
+  border-radius: 50%; /* Circular shape */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  width: 40px; /* Fixed width */
+  height: 40px; /* Fixed height */
+  display: flex;
+  align-items: center; /* Center icon vertically */
+  justify-content: center; /* Center icon horizontally */
+  cursor: pointer; /* Cursor pointer */
+  transition: background-color 0.3s; /* Smooth transition for background */
+}
+
+.new-convo-button i.fa-comments {
+  color: #5b5b5b; /* Icon color */
+  font-size: 20px; /* Icon size */
 }

@@ -38,6 +38,8 @@ pre code.hljs {
   display: block;
   overflow-x: auto;
   padding: 1em;
+  max-width: 100%;
+  white-space: break-spaces;
 }
 
 code.hljs {
