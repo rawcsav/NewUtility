@@ -1,22 +1,29 @@
 import uuid
+
 from flask_login import UserMixin
 from sqlalchemy import BLOB
 from sqlalchemy.sql import func
+
 from app import db
+
 
 def generate_uuid():
     return str(uuid.uuid4())
 
-# Mixin for common columns
+
 class SoftDeleteMixin:
     delete = db.Column(db.Boolean, default=False, nullable=False)
+
+
 class TimestampMixin:
     created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+
 
 def generate_default_nickname():
     max_number = db.session.query(db.func.max(UserAPIKey.nickname)).scalar()
     next_number = int(max_number or 0) + 1  # Increment the max number by 1
     return f"User{next_number}"
+
 
 class MessageChunkAssociation(db.Model):
     __tablename__ = "message_chunk_association"
@@ -25,7 +32,9 @@ class MessageChunkAssociation(db.Model):
         db.String(36), db.ForeignKey("messages.id"), primary_key=True
     )
     chunk_id = db.Column(
-        db.String(36), db.ForeignKey("document_chunks.id", ondelete='CASCADE'), primary_key=True
+        db.String(36),
+        db.ForeignKey("document_chunks.id", ondelete="CASCADE"),
+        primary_key=True,
     )
     similarity_rank = db.Column(db.Integer, nullable=False)  # Store the ranking here
 
@@ -90,6 +99,15 @@ class User(UserMixin, db.Model, TimestampMixin):
     )
     chat_preferences = db.relationship(
         "ChatPreferences", backref="user", uselist=False, cascade="all, delete-orphan"
+    )
+    tts_preferences = db.relationship(
+        "TtsPreferences", backref="user", uselist=False, cascade="all, delete-orphan"
+    )
+    whisper_preferences = db.relationship(
+        "WhisperPreferences",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
 
@@ -156,9 +174,7 @@ class ChatPreferences(db.Model):
     voice_mode = db.Column(db.Boolean, default=False)
     voice_model = db.Column(db.String(50), default="alloy")
     knowledge_query_mode = db.Column(db.Boolean, default=False)
-    knowledge_context_tokens = db.Column(
-        db.Integer, default=30
-    )
+    knowledge_context_tokens = db.Column(db.Integer, default=30)
 
 
 class Document(db.Model, SoftDeleteMixin, TimestampMixin):
@@ -240,15 +256,9 @@ class GeneratedImage(db.Model, SoftDeleteMixin, TimestampMixin):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
-
-
-    # New columns
-    size = db.Column(
-        db.String(50), nullable=False
-    )  # Assuming size is a string like "1024x1024"
-    quality = db.Column(db.String(50), nullable=True)  # Quality can be nullable
-    style = db.Column(db.String(50), nullable=True)  # Style can be nullable
-
+    size = db.Column(db.String(50), nullable=False)
+    quality = db.Column(db.String(50), nullable=True)
+    style = db.Column(db.String(50), nullable=True)
     user = db.relationship("User", back_populates="generated_images")
 
 
@@ -273,3 +283,35 @@ class MessageImages(db.Model, SoftDeleteMixin):
     conversation = db.relationship(
         "Conversation", backref="message_images", lazy="joined"
     )
+
+
+class TtsPreferences(db.Model):
+    __tablename__ = "tts_preferences"
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id"), unique=True, index=True
+    )
+    model = db.Column(db.Enum("tts-1", "tts-1-hd"), nullable=False, default="tts-1")
+    voice = db.Column(
+        db.Enum("alloy", "echo", "fable", "onyx", "nova", "shimmer"),
+        nullable=False,
+        default="alloy",
+    )
+    response_format = db.Column(
+        db.Enum("mp3", "opus", "aac", "flac"), nullable=False, default="mp3"
+    )
+    speed = db.Column(db.Float, nullable=False, default=1.0)
+
+
+class WhisperPreferences(db.Model):
+    __tablename__ = "transcription_preferences"
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id"), unique=True, index=True
+    )
+    model = db.Column(db.Enum("whisper-1"), nullable=False, default="whisper-1")
+    language = db.Column(db.String(2), nullable=True, default="en")
+    response_format= db.Column(
+        db.Enum("json", "text", "srt", "verbose_json","vtt"), nullable=False, default="text")
+    temperature = db.Column(db.Float, nullable=False, default=0.0)
+

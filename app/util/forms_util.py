@@ -241,3 +241,35 @@ class UpdateDocPreferencesForm(FlaskForm):
             NumberRange(min=1, max=80, message="Value must be between 1 and 80"),
         ],
     )
+
+
+class TtsForm(FlaskForm):
+    input = StringField('Input', validators=[DataRequired(), Length(max=4096)])
+    model = SelectField('Model', choices=[('tts-1', 'TTS 1'), ('tts-1-hd', 'TTS 1 HD')], default='tts-1')
+    voice = SelectField('Voice', choices=[('alloy', 'Alloy'), ('echo', 'Echo'), ('fable', 'Fable'), ('onyx', 'Onyx'), ('nova', 'Nova'), ('shimmer', 'Shimmer')], default='alloy')
+    response_format = SelectField('Response Format', choices=[('mp3', 'MP3'), ('opus', 'OPUS'), ('aac', 'AAC'), ('flac', 'FLAC')], default='mp3')
+    speed = FloatField('Speed', validators=[DataRequired(), NumberRange(min=0.5, max=2.0)], default=1.0)
+
+
+class TranscriptionForm(FlaskForm):
+    file = FileField('Audio File', validators=[
+        DataRequired(),
+        FileAllowed(['flac', 'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'ogg', 'wav', 'webm'], 'Invalid audio format!')
+    ])
+    model = SelectField('Model', choices=[('whisper-1', 'Whisper 1')], default='whisper-1')
+    language = StringField('Language', validators=[Optional()])
+    prompt = StringField('Prompt', validators=[Optional()])
+    generate_prompt = StringField('Generate Prompt', validators=[Optional()])
+    response_format = SelectField('Response Format', choices=[('json', 'JSON'), ('text', 'Text'), ('srt', 'SRT'), ('verbose_json', 'Verbose JSON'), ('vtt', 'VTT')], default='json')
+    temperature = FloatField('Temperature', validators=[Optional(), NumberRange(min=0.0, max=1.0)], default=0.0)
+
+class TranslationForm(FlaskForm):
+    file = FileField('Audio File', validators=[
+        DataRequired(),
+        FileAllowed(['flac', 'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'ogg', 'wav', 'webm'], 'Invalid audio format!')
+    ])
+    model = SelectField('Model', choices=[('whisper-1', 'Whisper 1')], default='whisper-1')
+    prompt = StringField('Prompt', validators=[Optional()])
+    generate_prompt = StringField('Generate Prompt', validators=[Optional()])
+    response_format = SelectField('Response Format', choices=[('json', 'JSON'), ('text', 'Text'), ('srt', 'SRT'), ('verbose_json', 'Verbose JSON'), ('vtt', 'VTT')], default='json')
+    temperature = FloatField('Temperature', validators=[Optional(), NumberRange(min=0.0, max=1.0)], default=0.0)
