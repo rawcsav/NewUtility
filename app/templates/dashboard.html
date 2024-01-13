@@ -338,18 +338,6 @@
               oninput="document.getElementById('top_p').value = this.value"
             />
           </div>
-          <div class="form-group" id="chat-checkbox">
-            <div class="stream-check">
-              <label>
-                {{ user_preferences_form.stream.label }} {% if
-                user_preferences_form.stream.data %}
-                <input type="checkbox" id="stream" name="stream" checked />
-                {% else %}
-                <input type="checkbox" id="stream" name="stream" />
-                {% endif %}
-              </label>
-            </div>
-          </div>
           <input
             type="submit"
             value="Update Preferences"

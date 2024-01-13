@@ -150,7 +150,6 @@ setupFormSubmission(
 
 function togglePopup(activePopupId, activeButtonId) {
   requestAnimationFrame(() => {
-    // Define all popup elements and their corresponding buttons
     const popups = {
       "preference-popup": "show-preferences-btn",
       "docs-settings-popup": "docs-preferences-btn",
@@ -344,7 +343,6 @@ function updateStreamMessageContent(isUserMessage, chunk) {
 }
 
 function getUuidFromUrl(url) {
-  // Split the URL by the '/' character to get the filename
   let filename = url.split("/").pop();
 
   // Split the filename by the '.' character to get the UUID
@@ -484,8 +482,6 @@ function retryMessage(messageId) {
     const contentType = response.headers.get("Content-Type");
     if (contentType && contentType.includes("text/plain")) {
       processStreamedResponse(response);
-    } else {
-      response.text().then((text) => processNonStreamedResponse(text));
     }
   });
 }
@@ -1013,6 +1009,7 @@ function setupModelChangeListener() {
 
   modelDropdown.addEventListener("change", function () {
     updateMaxTokensBasedOnModel(this.value);
+    toggleImageUploadIcon(this.value);
   });
 
   updateMaxTokensBasedOnModel(modelDropdown.value);
@@ -1238,8 +1235,6 @@ function processChatCompletionResponse(response) {
     hideLoading(); // Hide the loader when the response is processed
     toggleButtonState();
     processStreamedResponse(response);
-  } else {
-    response.text().then((text) => processNonStreamedResponse(text));
   }
 }
 
@@ -1307,26 +1302,6 @@ function highlightActiveConversation(conversationId) {
     } else {
       entry.classList.remove("active");
     }
-  });
-}
-
-function processNonStreamedResponse(text) {
-  requestAnimationFrame(() => {
-    if (text.includes("An error occurred:")) {
-      showToast(text, "error");
-    } else {
-      try {
-        const data = JSON.parse(text);
-        appendMessageToChatBox(data.message, "assistant-message", null);
-        let conversationId = document
-          .getElementById("convo-title")
-          .getAttribute("data-conversation-id");
-        locateNewMessages(conversationId);
-      } catch (error) {
-        showToast("Unexpected response format: " + text, "error");
-      }
-    }
-    window.isWaitingForResponse = false;
   });
 }
 
@@ -1526,21 +1501,8 @@ function initializeEventListeners() {
   });
 }
 
-// Call this function once at the start, passing the container of the conversation entries
 initializeEventListeners();
 
-// Handle for image upload icon
-const imageUploadIcon = document.getElementById("image-upload-icon");
-if (imageUploadIcon) {
-  imageUploadIcon.addEventListener("click", function () {
-    const imageUploadInput = document.getElementById("image-upload");
-    if (imageUploadInput) {
-      imageUploadInput.click(); // Trigger the file input click event
-    }
-  });
-}
-
-// Handle for delete image icons
 const deleteImageIcons = document.querySelectorAll(".delete-icon");
 deleteImageIcons.forEach(function (icon) {
   icon.addEventListener("click", function () {

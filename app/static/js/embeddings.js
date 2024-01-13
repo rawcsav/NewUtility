@@ -127,7 +127,11 @@ function onSubmit(event) {
 function processDocumentAtIndex(index, totalDocuments) {
   if (index >= totalDocuments) {
     showToast("All documents processed.", "success");
-    return; // Stop the processing once all documents are processed
+    updateUploadMessages(
+      "All documents have been successfully processed.",
+      "success",
+    );
+    return;
   }
 
   updateUploadMessages(
@@ -183,11 +187,13 @@ function displayCurrentForm() {
 let documentData = {}; // Object to store form data for each document
 
 function saveFormData(index) {
-  // Save form data for the current document
   const formData = new FormData(document.querySelector("form"));
+  const file = fileInput.files[index];
+  let title = formData.get("title");
+  title = title || file.name; // Use file name if title is not provided
   documentData[index] = {
-    file: fileInput.files[index],
-    title: formData.get("title"),
+    file: file,
+    title: title,
     author: formData.get("author"),
     chunk_size: formData.get("chunk_size"),
   };

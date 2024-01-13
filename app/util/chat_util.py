@@ -186,7 +186,6 @@ def get_user_preferences(user_id):
             "frequency_penalty": preferences.frequency_penalty,
             "presence_penalty": preferences.presence_penalty,
             "top_p": preferences.top_p,
-            "stream": preferences.stream,
             "truncate_limit": truncate_limit,
         }
     else:
@@ -197,7 +196,6 @@ def get_user_preferences(user_id):
             "frequency_penalty": 0.0,
             "presence_penalty": 0.0,
             "top_p": 1.0,
-            "stream": True,
             "truncate_limit": int(4096 * 0.85),
         }
 

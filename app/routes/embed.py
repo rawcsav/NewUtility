@@ -74,19 +74,27 @@ def upload_document():
         chunk_size = int(chunk_sizes[i]) if i < len(chunk_sizes) else 512
 
         temp_path = save_temp_file(file)
-        uploaded_files_info.append({
-            "temp_path": temp_path,
-            "title": title,
-            "author": author,
-            "chunk_size": chunk_size,
-        })
+        uploaded_files_info.append(
+            {
+                "temp_path": temp_path,
+                "title": title,
+                "author": author,
+                "chunk_size": chunk_size,
+            }
+        )
 
     session["uploaded_files_info"] = uploaded_files_info
 
-    return jsonify({
-        "status": "success",
-        "message": "Files uploaded successfully. Please proceed to processing.",
-    }), 200
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "message": "Files uploaded successfully. Please proceed to processing.",
+            }
+        ),
+        200,
+    )
+
 
 @bp.route("/process/<int:doc_index>", methods=["POST"])
 @login_required
@@ -106,7 +114,7 @@ def process_individual_document(doc_index):
         author = file_info["author"]
         chunk_size = file_info["chunk_size"]
 
-        file_info['status'] = 'Processing'
+        file_info["status"] = "Processing"
         session.modified = True
 
         # Processing steps for the individual document
@@ -154,13 +162,18 @@ def process_individual_document(doc_index):
         store_embeddings(new_document.id, embeddings)
         db.session.commit()
 
-        file_info['status'] = 'Complete'
+        file_info["status"] = "Complete"
         session.modified = True
-        return jsonify({"status": "success", "message": "Document processed successfully."}), 200
+        return (
+            jsonify(
+                {"status": "success", "message": "Document processed successfully."}
+            ),
+            200,
+        )
 
     except Exception as e:
         db.session.rollback()
-        file_info['status'] = 'Error'
+        file_info["status"] = "Error"
         session.modified = True
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -176,8 +189,11 @@ def get_processing_status():
         return jsonify({"error": "No documents found"}), 404
 
     # Extracting only relevant data for the frontend
-    status_info = [{"title": f["title"], "status": f["status"]} for f in uploaded_files_info]
+    status_info = [
+        {"title": f["title"], "status": f["status"]} for f in uploaded_files_info
+    ]
     return jsonify(status_info)
+
 
 @bp.route("/delete/<string:document_id>", methods=["POST"])
 @login_required
@@ -295,6 +311,8 @@ def update_docs_preferences():
             user_id=current_user.id
         ).first()
         chat_preferences.knowledge_query_mode = "knowledge_query_mode" in form_data
+        if chat_preferences.knowledge_query_mode:
+            VectorCache.load_user_vectors(current_user.id)
         chat_preferences.knowledge_context_tokens = int(
             form_data.get("knowledge_context_tokens", 0)
         )
@@ -307,7 +325,6 @@ def update_docs_preferences():
                 document = Document.query.get(doc_id)
                 if document and document.user_id == current_user.id:
                     document.selected = True
-        VectorCache.load_user_vectors(current_user.id)
         try:
             db.session.commit()
             return jsonify(

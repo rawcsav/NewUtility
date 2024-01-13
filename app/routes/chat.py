@@ -208,7 +208,7 @@ def update_preferences():
         preferences.frequency_penalty = form.frequency_penalty.data
         preferences.presence_penalty = form.presence_penalty.data
         preferences.top_p = form.top_p.data
-        preferences.stream = form.stream.data
+
 
         if (
             old_model == "gpt-4-vision-preview"
