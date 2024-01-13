@@ -128,7 +128,7 @@ def get_user_conversation(user_id, conversation_id):
 
 def user_history(user_id, conversation_id):
     conversation = Conversation.query.filter_by(
-        user_id=user_id, id=conversation_id
+        user_id=user_id, id=conversation_id, delete=False
     ).first()
     if conversation:
         conversation_history = []

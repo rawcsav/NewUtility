@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
-from app.database import DocumentEmbedding
+from app.database import DocumentEmbedding, Document, DocumentChunk
+
 
 def deserialize_embedding(embedding_bytes):
     try:
@@ -8,9 +9,13 @@ def deserialize_embedding(embedding_bytes):
     except Exception as e:
         raise ValueError("Failed to deserialize embedding: {}".format(e))
     if embedding_array.dtype != np.float32:
-        raise ValueError("Unexpected embedding array dtype: {}".format(embedding_array.dtype))
+        raise ValueError(
+            "Unexpected embedding array dtype: {}".format(embedding_array.dtype)
+        )
     if embedding_array.shape != (1536,):
-        raise ValueError("Unexpected embedding array shape: {}".format(embedding_array.shape))
+        raise ValueError(
+            "Unexpected embedding array shape: {}".format(embedding_array.shape)
+        )
 
     return embedding_array
 
@@ -32,7 +37,18 @@ class VectorCache:
     @classmethod
     def load_user_vectors(cls, user_id):
         cls.clear_cache()
-        embeddings = DocumentEmbedding.query.filter_by(user_id=user_id).all()
+
+        # Join DocumentEmbedding with DocumentChunk and then with Document
+        # Filter by non-deleted documents
+        embeddings = (
+            DocumentEmbedding.query.join(
+                DocumentChunk, DocumentChunk.id == DocumentEmbedding.chunk_id
+            )
+            .join(Document, Document.id == DocumentChunk.document_id)
+            .filter(DocumentEmbedding.user_id == user_id, Document.delete == False)
+            .all()
+        )
+
         vector_data = {}
 
         for embedding in embeddings:
@@ -67,6 +83,8 @@ class VectorCache:
         similarities.sort(key=lambda x: x[1], reverse=True)
 
         # Convert similarity scores to ranks
-        ranked_similarities = [(id, rank + 1) for rank, (id, _) in enumerate(similarities)]
+        ranked_similarities = [
+            (id, rank + 1) for rank, (id, _) in enumerate(similarities)
+        ]
 
         return ranked_similarities

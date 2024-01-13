@@ -43,7 +43,7 @@ def chat_index():
     new_conversation_form = NewConversationForm()
     chat_completion_form = ChatCompletionForm()
 
-    conversation_history = Conversation.query.filter_by(user_id=current_user.id).all()
+    conversation_history = Conversation.query.filter_by(user_id=current_user.id, delete=False).all()
 
     if not conversation_history:
         new_conversation = Conversation(
@@ -184,7 +184,7 @@ def delete_conversation(conversation_id):
             403,
         )
 
-    db.session.delete(conversation_to_delete)
+    conversation_to_delete.delete = True
     try:
         db.session.commit()
         return jsonify(

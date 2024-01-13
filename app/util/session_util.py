@@ -193,3 +193,5 @@ def generate_unique_username(base_username):
         counter += 1
 
     return new_username
+
+
