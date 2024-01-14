@@ -8,13 +8,13 @@ from app import db
 from app.database import ChatPreferences, Conversation, Message, MessageImages, Document
 from app.util.chat_util import (
     get_user_preferences,
-    user_history,
+    get_user_history,
     handle_stream,
     allowed_file,
     save_image,
     get_image_url,
     retry_delete_messages,
-    delete_local_image_file,
+    delete_local_image,
     set_interruption_flag,
 )
 from app.util.embeddings_util import append_knowledge_context
@@ -355,7 +355,7 @@ def retry_message(message_id):
 @bp.route("/conversation/<string:conversation_id>", methods=["GET"])
 @login_required
 def get_conversation_messages(conversation_id):
-    conversation, conversation_history = user_history(current_user.id, conversation_id)
+    conversation, conversation_history = get_user_history(current_user.id, conversation_id)
     if conversation:
         messages = [
             {
@@ -604,7 +604,7 @@ def delete_image(image_uuid):
 
     if image_record.user_id != current_user.id:
         return jsonify({"status": "error", "message": "Unauthorized"}), 403
-    delete_local_image_file(image_uuid)
+    delete_local_image(image_uuid)
     db.session.delete(image_record)
     db.session.commit()
 

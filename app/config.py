@@ -64,6 +64,8 @@ class Config(object):
 
     USER_IMAGE_DIRECTORY = os.path.join(basedir, "static", "temp_img")
     CHAT_IMAGE_DIRECTORY = os.path.join(basedir, "static", "user_img")
+    USER_AUDIO_DIRECTORY = os.path.join(basedir, "static", "user_audio")
+
 
     @classmethod
     def init_app(cls, oauth, app):

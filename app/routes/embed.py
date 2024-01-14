@@ -2,18 +2,16 @@ from datetime import datetime
 from flask import Blueprint, jsonify, render_template, request, session
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from openai import OpenAI
 from app import db
-from app.database import Document, DocumentChunk, UserAPIKey, ChatPreferences
+from app.database import Document, DocumentChunk, ChatPreferences
 
 from app.util.embeddings_util import (
     split_text,
     extract_text_from_file,
-    remove_temp_file,
+    remove_temp,
     get_embedding_batch,
     store_embeddings,
-    save_temp_file,
-    delete_all_documents,
+    save_temp,
 )
 from app.util.forms_util import (
     DocumentUploadForm,
@@ -73,7 +71,7 @@ def upload_document():
         author = authors[i] if i < len(authors) else ""
         chunk_size = int(chunk_sizes[i]) if i < len(chunk_sizes) else 512
 
-        temp_path = save_temp_file(file)
+        temp_path = save_temp(file)
         uploaded_files_info.append(
             {
                 "temp_path": temp_path,
@@ -178,7 +176,7 @@ def process_individual_document(doc_index):
         return jsonify({"status": "error", "message": str(e)}), 500
 
     finally:
-        remove_temp_file(file_info["temp_path"])
+        remove_temp(file_info["temp_path"])
 
 
 @bp.route("/status", methods=["GET"])

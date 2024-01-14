@@ -18,3 +18,4 @@ cloudinary>=1.36.0
 Authlib>=1.2.1
 python-dotenv>=1.0.0
 alembic>=1.12.1
+pydub>=0.25.1

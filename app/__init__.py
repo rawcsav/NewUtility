@@ -45,7 +45,7 @@ def create_app():
     login_manager.login_message_category = "info"
 
     with app.app_context():
-        from .routes import landing, auth, user, image, embed, chat
+        from .routes import landing, auth, user, image, embed, chat, audio
 
         app.register_blueprint(landing.bp)
         app.register_blueprint(auth.bp)
@@ -53,6 +53,7 @@ def create_app():
         app.register_blueprint(image.bp)
         app.register_blueprint(embed.bp)
         app.register_blueprint(chat.bp)
+        app.register_blueprint(audio.bp)
 
         @app.teardown_request
         def session_teardown(exception=None):

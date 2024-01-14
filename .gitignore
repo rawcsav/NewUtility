@@ -177,3 +177,4 @@ stylelint.config.js
 /cert.pem
 /key.pem
 /app/static/user_img/*
+/app/static/user_audio/*

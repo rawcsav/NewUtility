@@ -31,14 +31,14 @@ MAX_TOKENS_PER_BATCH = 8000  # Define the maximum tokens per batch
 WORDS_PER_PAGE = 500  # Define the number of words per page
 
 
-def save_temp_file(uploaded_file):
+def save_temp(uploaded_file):
     temp_dir = tempfile.mkdtemp()
     temp_path = os.path.join(temp_dir, secure_filename(uploaded_file.filename))
     uploaded_file.save(temp_path)
     return temp_path
 
 
-def remove_temp_file(temp_path):
+def remove_temp(temp_path):
     temp_dir = os.path.dirname(temp_path)
     os.remove(temp_path)
     os.rmdir(temp_dir)
@@ -224,22 +224,6 @@ def get_embedding_batch(
     return embeddings
 
 
-def serialize_embedding(embedding_array):
-    # Ensure the embedding is a numpy array with the expected shape and dtype
-    if not isinstance(embedding_array, np.ndarray):
-        embedding_array = np.array(embedding_array, dtype=np.float32)
-
-    if embedding_array.dtype != np.float32:
-        raise ValueError(
-            "Unexpected embedding array dtype: {}".format(embedding_array.dtype)
-        )
-    if embedding_array.shape != (1536,):
-        raise ValueError(
-            "Unexpected embedding array shape: {}".format(embedding_array.shape)
-        )
-
-    # Serialize the numpy array using pickle
-    return pickle.dumps(embedding_array, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def store_embeddings(document_id, embeddings):

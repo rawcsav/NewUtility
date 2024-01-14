@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pycountry
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileRequired, FileField, FileAllowed
 from wtforms import (
@@ -13,6 +14,7 @@ from wtforms import (
     DecimalField,
     SelectField,
 )
+from wtforms.fields.choices import RadioField
 from wtforms.fields.numeric import FloatField
 from wtforms.validators import (
     DataRequired,
@@ -243,33 +245,119 @@ class UpdateDocPreferencesForm(FlaskForm):
     )
 
 
+class TtsPreferencesForm(FlaskForm):
+    model = SelectField(
+        "Model", choices=[("tts-1", "TTS 1"), ("tts-1-hd", "TTS 1 HD")], default="tts-1"
+    )
+    voice = SelectField(
+        "Voice",
+        choices=[
+            ("alloy", "Alloy"),
+            ("echo", "Echo"),
+            ("fable", "Fable"),
+            ("onyx", "Onyx"),
+            ("nova", "Nova"),
+            ("shimmer", "Shimmer"),
+        ],
+        default="alloy",
+    )
+    response_format = SelectField(
+        "Response Format",
+        choices=[("mp3", "MP3"), ("opus", "OPUS"), ("aac", "AAC"), ("flac", "FLAC")],
+        default="mp3",
+    )
+    speed = FloatField(
+        "Speed", validators=[DataRequired(), NumberRange(min=0.5, max=2.0)], default=1.0
+    )
+
+
 class TtsForm(FlaskForm):
-    input = StringField('Input', validators=[DataRequired(), Length(max=4096)])
-    model = SelectField('Model', choices=[('tts-1', 'TTS 1'), ('tts-1-hd', 'TTS 1 HD')], default='tts-1')
-    voice = SelectField('Voice', choices=[('alloy', 'Alloy'), ('echo', 'Echo'), ('fable', 'Fable'), ('onyx', 'Onyx'), ('nova', 'Nova'), ('shimmer', 'Shimmer')], default='alloy')
-    response_format = SelectField('Response Format', choices=[('mp3', 'MP3'), ('opus', 'OPUS'), ('aac', 'AAC'), ('flac', 'FLAC')], default='mp3')
-    speed = FloatField('Speed', validators=[DataRequired(), NumberRange(min=0.5, max=2.0)], default=1.0)
+    input = StringField("Input", validators=[DataRequired(), Length(max=4096)])
+
+
+class WhisperPreferencesForm(FlaskForm):
+    response_format = SelectField(
+        "Response Format",
+        choices=[
+            ("json", "JSON"),
+            ("text", "Text"),
+            ("srt", "SRT"),
+            ("verbose_json", "Verbose JSON"),
+            ("vtt", "VTT"),
+        ],
+        default="json",
+    )
+    temperature = DecimalField(
+        "Temperature",
+        validators=[Optional(), NumberRange(min=0.0, max=1.0)],
+        default=0,
+    )
+    model = SelectField(
+        "Model", choices=[("whisper-1", "Whisper 1")], default="whisper-1"
+    )
+    language_choices = [
+        ("en", "English"),
+        ("zh", "Chinese"),
+        ("es", "Spanish"),
+        ("hi", "Hindi"),
+        ("ar", "Arabic"),
+        ("pt", "Portuguese"),
+        ("ru", "Russian"),
+        ("ja", "Japanese"),
+        ("de", "German"),
+        ("fr", "French"),
+        ("ko", "Korean"),
+        ("it", "Italian"),
+        ("vi", "Vietnamese"),
+        ("ur", "Urdu"),
+    ]
+    language = SelectField("Language", choices=language_choices)
 
 
 class TranscriptionForm(FlaskForm):
-    file = FileField('Audio File', validators=[
-        DataRequired(),
-        FileAllowed(['flac', 'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'ogg', 'wav', 'webm'], 'Invalid audio format!')
-    ])
-    model = SelectField('Model', choices=[('whisper-1', 'Whisper 1')], default='whisper-1')
-    language = StringField('Language', validators=[Optional()])
-    prompt = StringField('Prompt', validators=[Optional()])
-    generate_prompt = StringField('Generate Prompt', validators=[Optional()])
-    response_format = SelectField('Response Format', choices=[('json', 'JSON'), ('text', 'Text'), ('srt', 'SRT'), ('verbose_json', 'Verbose JSON'), ('vtt', 'VTT')], default='json')
-    temperature = FloatField('Temperature', validators=[Optional(), NumberRange(min=0.0, max=1.0)], default=0.0)
+    file = FileField(
+        "Audio File",
+        validators=[
+            DataRequired(),
+            FileAllowed(
+                ["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"],
+                "Invalid audio format!",
+            ),
+        ],
+    )
+    prompt_option = RadioField(
+        "Prompt option",
+        choices=[
+            ("none", "None"),
+            ("manual", "Enter prompt manually"),
+            ("generate", "Generate prompt based on idea"),
+        ],
+        default="none",
+    )
+    prompt = StringField("Prompt", validators=[Optional()])
+    generate_prompt = StringField("Generate Prompt", validators=[Optional()])
+
 
 class TranslationForm(FlaskForm):
-    file = FileField('Audio File', validators=[
-        DataRequired(),
-        FileAllowed(['flac', 'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'ogg', 'wav', 'webm'], 'Invalid audio format!')
-    ])
-    model = SelectField('Model', choices=[('whisper-1', 'Whisper 1')], default='whisper-1')
-    prompt = StringField('Prompt', validators=[Optional()])
-    generate_prompt = StringField('Generate Prompt', validators=[Optional()])
-    response_format = SelectField('Response Format', choices=[('json', 'JSON'), ('text', 'Text'), ('srt', 'SRT'), ('verbose_json', 'Verbose JSON'), ('vtt', 'VTT')], default='json')
-    temperature = FloatField('Temperature', validators=[Optional(), NumberRange(min=0.0, max=1.0)], default=0.0)
+    # Form for creating translation POST requests
+    file = FileField(
+        "Audio File",
+        validators=[
+            DataRequired(),
+            FileAllowed(
+                ["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"],
+                "Invalid audio format!",
+            ),
+        ],
+    )
+    prompt_option = RadioField(
+        "Prompt option",
+        choices=[
+            ("none", "None"),
+            ("manual", "Enter prompt manually"),
+            ("generate", "Generate prompt based on idea"),
+        ],
+        default="none",
+    )
+    prompt = StringField("Prompt", validators=[Optional()])
+    generate_prompt = StringField("Generate Prompt", validators=[Optional()])

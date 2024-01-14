@@ -10,7 +10,7 @@ from app.database import GeneratedImage
 from app.util.usage_util import update_usage_and_costs, dalle_cost
 
 
-def download_and_convert_image(download_dir, image_url, image_id):
+def download_compressed_image(download_dir, image_url, image_id):
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 
@@ -76,5 +76,5 @@ def save_image_to_db(user_id, prompt, model, size, quality, style):
 
 
 def download_and_store_image(download_dir, image_url, uuid):
-    local_image_url = download_and_convert_image(download_dir, image_url, uuid)
+    local_image_url = download_compressed_image(download_dir, image_url, uuid)
     return local_image_url

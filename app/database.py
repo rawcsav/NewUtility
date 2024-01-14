@@ -144,13 +144,31 @@ class User(UserMixin, db.Model, TimestampMixin):
         "ChatPreferences", backref="user", uselist=False, cascade="all, delete-orphan"
     )
     tts_preferences = db.relationship(
-        "TtsPreferences", backref="user", uselist=False, cascade="all, delete-orphan"
+        "TTSPreferences", backref="user", uselist=False, cascade="all, delete-orphan"
     )
     whisper_preferences = db.relationship(
         "WhisperPreferences",
         backref="user",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    tts_jobs = db.relationship(
+        "TTSJob",
+        primaryjoin="and_(User.id==TTSJob.user_id, TTSJob.delete==False)",
+        back_populates="user",
+        lazy="dynamic"
+    )
+    transcription_jobs = db.relationship(
+        "TranscriptionJob",
+        primaryjoin="and_(User.id==TranscriptionJob.user_id, TranscriptionJob.delete==False)",
+        back_populates="user",
+        lazy="dynamic"
+    )
+    translation_jobs = db.relationship(
+        "TranslationJob",
+        primaryjoin="and_(User.id==TranslationJob.user_id, TranslationJob.delete==False)",
+        back_populates="user",
+        lazy="dynamic"
     )
 
     def __init__(self, username, email, password_hash, **kwargs):
@@ -355,7 +373,7 @@ class MessageImages(db.Model, SoftDeleteMixin):
     )
 
 
-class TtsPreferences(db.Model):
+class TTSPreferences(db.Model):
     __tablename__ = "tts_preferences"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(
@@ -388,44 +406,79 @@ class WhisperPreferences(db.Model):
     )
     temperature = db.Column(db.Float, nullable=False, default=0.0)
 
-
-class AudioJob(db.Model, SoftDeleteMixin, TimestampMixin):
-    __tablename__ = "audio_jobs"
+class TTSJob(db.Model, SoftDeleteMixin, TimestampMixin):
+    __tablename__ = "tts_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
-    type = db.Column(db.Enum("tts", "transcription", "translation"), nullable=False)
-    model = db.Column(db.Enum("tts-1", "tts-1-hd", "whisper-1"), nullable=False)
+    model = db.Column(db.Enum("tts-1", "tts-1-hd"), nullable=False)
     voice = db.Column(
-        db.Enum("alloy", "echo", "fable", "onyx", "nova", "shimmer"), nullable=True
+        db.Enum("alloy", "echo", "fable", "onyx", "nova", "shimmer"), nullable=False
     )
     response_format = db.Column(
-        db.Enum(
-            "mp3", "opus", "aac", "flac", "json", "text", "srt", "verbose_json", "vtt"
-        ),
+        db.Enum("mp3", "opus", "aac", "flac"), nullable=False
+    )
+    speed = db.Column(db.Float, nullable=False)
+    input_text = db.Column(db.String(4096), nullable=False)
+    final_output_path = db.Column(db.String(255), nullable=True)
+    user = db.relationship("User", back_populates="tts_jobs")
+
+
+class TranscriptionJob(db.Model, SoftDeleteMixin, TimestampMixin):
+    __tablename__ = "transcription_jobs"
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
+    prompt= db.Column(db.Text, nullable=False)
+    model = db.Column(db.Enum("whisper-1"), nullable=False)
+    language = db.Column(db.String(2), nullable=True)
+    response_format = db.Column(
+        db.Enum("json", "text", "srt", "verbose_json", "vtt"),
         nullable=False,
     )
-    speed = db.Column(db.Float, nullable=True)
-    language = db.Column(db.String(2), nullable=True)
-    temperature = db.Column(db.Float, nullable=True)
+    temperature = db.Column(db.Float, nullable=False)
     final_output_path = db.Column(db.String(255), nullable=True)
-    segments = db.relationship("AudioJobSegment", order_by="AudioJobSegment.job_index", back_populates="audio_job", cascade="all, delete-orphan")
+    segments = db.relationship("TranscriptionJobSegment", order_by="TranscriptionJobSegment.job_index", back_populates="transcription_job", cascade="all, delete-orphan")
+    user = db.relationship("User", back_populates="transcription_jobs")
 
 
-
-class AudioJobSegment(db.Model):
-    __tablename__ = "audio_job_segments"
+class TranslationJob(db.Model, SoftDeleteMixin, TimestampMixin):
+    __tablename__ = "translation_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    audio_job_id = db.Column(
-        db.String(36), db.ForeignKey("audio_jobs.id", ondelete="CASCADE")
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
+    prompt= db.Column(db.Text, nullable=False)
+    model = db.Column(db.Enum("whisper-1"), nullable=False)
+    response_format = db.Column(
+        db.Enum("json", "text", "srt", "verbose_json", "vtt"),
+        nullable=False,
+    )
+    temperature = db.Column(db.Float, nullable=False)
+    final_output_path = db.Column(db.String(255), nullable=True)
+    segments = db.relationship("TranslationJobSegment", order_by="TranslationJobSegment.job_index", back_populates="translation_job", cascade="all, delete-orphan")
+    user = db.relationship("User", back_populates="translation_jobs")
+
+
+class TranscriptionJobSegment(db.Model):
+    __tablename__ = "transcription_job_segments"
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    transcription_job_id = db.Column(
+        db.String(36), db.ForeignKey("transcription_jobs.id", ondelete="CASCADE")
     )
     input_file_path = db.Column(db.String(255), nullable=False)
     output_file_path = db.Column(db.String(255), nullable=False)
     job_index = db.Column(db.Integer, nullable=False)
-    audio_job = db.relationship("AudioJob", back_populates="segments")
+    transcription_job = db.relationship("TranscriptionJob", back_populates="segments")
 
+class TranslationJobSegment(db.Model):
+    __tablename__ = "translation_job_segments"
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    translation_job_id = db.Column(
+        db.String(36), db.ForeignKey("translation_jobs.id", ondelete="CASCADE")
+    )
+    input_file_path = db.Column(db.String(255), nullable=False)
+    output_file_path = db.Column(db.String(255), nullable=False)
+    job_index = db.Column(db.Integer, nullable=False)
+    translation_job = db.relationship("TranslationJob", back_populates="segments")
 
 def initialize_roles_with_limits():
-    # Define default limits for each tier
     tier_limits = {
         "Guest": TierLimit(
             max_audio_file_size=20 * 1024 * 1024,

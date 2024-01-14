@@ -37,9 +37,6 @@ class VectorCache:
     @classmethod
     def load_user_vectors(cls, user_id):
         cls.clear_cache()
-
-        # Join DocumentEmbedding with DocumentChunk and then with Document
-        # Filter by non-deleted documents
         embeddings = (
             DocumentEmbedding.query.join(
                 DocumentChunk, DocumentChunk.id == DocumentEmbedding.chunk_id

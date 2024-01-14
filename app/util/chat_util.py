@@ -39,7 +39,7 @@ MODEL_TOKEN_LIMITS = {
 ENCODING = tiktoken.get_encoding("cl100k_base")
 
 
-def get_truncate_limit(model_name):
+def chat_truncate_limit(model_name):
     model_max_tokens = MODEL_TOKEN_LIMITS.get(model_name)
     if model_max_tokens:
         return int(model_max_tokens * 0.85)
@@ -47,7 +47,7 @@ def get_truncate_limit(model_name):
         return int(4096 * 0.85)
 
 
-def get_token_count(conversation_history, encoding=ENCODING):
+def chat_tokens(conversation_history, encoding=ENCODING):
     num_tokens = 0
     for message in conversation_history:
         num_tokens += 5  # Assuming 5 tokens for the role separator or similar
@@ -70,7 +70,7 @@ def get_token_count(conversation_history, encoding=ENCODING):
 def truncate_conversation(conversation_history, truncate_limit):
     while True:
         if (
-            get_token_count(conversation_history, ENCODING) > truncate_limit
+            chat_tokens(conversation_history, ENCODING) > truncate_limit
             and len(conversation_history) > 1
         ):
             conversation_history.pop(1)
@@ -126,7 +126,7 @@ def get_user_conversation(user_id, conversation_id):
         return None, []
 
 
-def user_history(user_id, conversation_id):
+def get_user_history(user_id, conversation_id):
     conversation = Conversation.query.filter_by(
         user_id=user_id, id=conversation_id, delete=False
     ).first()
@@ -173,7 +173,7 @@ def get_user_preferences(user_id):
         model_name = preferences.model if preferences.model else "gpt-3.5-turbo"
         max_token_limit = MODEL_TOKEN_LIMITS.get(model_name, 4096)
         model_max_tokens = int(max_token_limit * 0.5)
-        truncate_limit = get_truncate_limit(model_name)
+        truncate_limit = chat_truncate_limit(model_name)
 
         max_tokens = (
             preferences.max_tokens if preferences.max_tokens else model_max_tokens
@@ -468,7 +468,7 @@ def get_image_url(webp_file_name):
     return url_for("static", filename=f"user_img/{webp_file_name}", _external=True)
 
 
-def delete_local_image_file(image_uuid):
+def delete_local_image(image_uuid):
     image_file_path = os.path.join(
         current_app.config["CHAT_IMAGE_DIRECTORY"], f"{image_uuid}.webp"
     )
