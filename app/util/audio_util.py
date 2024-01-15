@@ -1,10 +1,10 @@
 import json
 import os
 import re
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import openai
-from flask import current_app
+from flask import current_app, jsonify
 from flask_login import current_user
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
@@ -33,35 +33,11 @@ def user_subdirectory(user_id):
     return user_subdirectory_path
 
 
-def convert_format(filepath, target_format="mp3"):
-    supported_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
-    if target_format not in supported_formats:
-        raise ValueError(f"Unsupported target format: {target_format}")
-
-    original_format = os.path.splitext(filepath)[-1].lower().strip(".")
-    if original_format not in supported_formats:
-        raise ValueError(f"Unsupported original format: {original_format}")
-
-    if original_format == target_format:
-        return filepath
-
-    audio = AudioSegment.from_file(filepath, format=original_format)
-    new_filepath = os.path.splitext(filepath)[0] + "." + target_format
-    audio.export(new_filepath, format=target_format)
-
-    os.remove(filepath)
-
-    return new_filepath
-
-
-# Function to find the first sound in an audio file after a period of silence
 def ms_until_sound(sound, silence_threshold_in_decibels=-20.0, chunk_size=10):
-    """Find the number of milliseconds until sound is detected in an audio segment."""
-    trim_ms = 0  # Start at the beginning of the audio segment
+    trim_ms = 0
 
     assert chunk_size > 0, "Chunk size must be positive"
 
-    # Iterate over chunks of the audio segment until sound is detected
     while sound[
         trim_ms : trim_ms + chunk_size
     ].dBFS < silence_threshold_in_decibels and trim_ms < len(sound):
@@ -70,55 +46,89 @@ def ms_until_sound(sound, silence_threshold_in_decibels=-20.0, chunk_size=10):
     return trim_ms
 
 
-def trim_start(filepath):
-    directory, filename = os.path.split(filepath)
-    basename, ext = os.path.splitext(filename)
-    audio = AudioSegment.from_file(filepath, format="mp3")
-    start_trim = ms_until_sound(audio)
-    trimmed_audio = audio[start_trim:]
-    new_filename = os.path.join(directory, f"trimmed_{basename}{ext}")
-    trimmed_audio.export(new_filename, format="mp3")
-    return new_filename
-
-
-# Utility function to export an audio chunk
-def export_audio_chunk(chunk, directory, filename, file_extension, index):
-    """Export a single audio chunk to a file."""
-    segment_filename = f"{filename}_segment_{index}{file_extension}"
+def export_audio_chunk(chunk, directory, filename, index):
+    segment_filename = f"{filename}_segment_{index}.mp3"
     segment_filepath = os.path.join(directory, segment_filename)
-    chunk.export(segment_filepath, format=file_extension.lstrip("."))
+    chunk.export(segment_filepath, format="mp3")
     return segment_filepath
 
 
-# Refactored segment_audio function with extracted export logic
-def segment_audio(
-    filepath,
-    max_size_in_bytes=25 * 1024 * 1024,
-    silence_thresh=-20,
-    min_silence_len=500,
-    keep_silence=100,
-):
-    """Segment an audio file into smaller chunks based on silence detection."""
-    directory, filename_with_extension = os.path.split(filepath)
-    filename, file_extension = os.path.splitext(filename_with_extension)
+def preprocess_audio(filepath, user_directory):
+    max_size_in_bytes = 24 * 1024 * 1024
+    supported_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
+    original_format = os.path.splitext(filepath)[-1].lower().strip(".")
 
-    if os.path.getsize(filepath) <= max_size_in_bytes:
-        return [filepath]
+    if original_format not in supported_formats:
+        raise ValueError(f"Unsupported format: {original_format}")
+    audio = AudioSegment.from_file(filepath, format=original_format)
+    start_trim = ms_until_sound(audio)
+    print("trimmed")
+    trimmed_audio = audio[start_trim:]
+    new_filename = f"trim_{os.path.splitext(os.path.basename(filepath))[0]}.mp3"
+    new_filepath = os.path.join(user_directory, new_filename)
+    trimmed_audio.export(new_filepath, format="mp3")
+    print("exported to mp3")
+    if os.path.getsize(new_filepath) <= max_size_in_bytes:
+        os.remove(filepath)
+        return [new_filepath]
 
-    audio = AudioSegment.from_file(filepath)
-    chunks = split_on_silence(
-        audio,
-        min_silence_len=min_silence_len,
-        silence_thresh=silence_thresh,
-        keep_silence=keep_silence,
-    )
+    # Define the length of each chunk in milliseconds (5 minutes)
+    chunk_length_ms = 5 * 60 * 1000  # 5 minutes in milliseconds
 
+    # Split audio into 5-minute chunks
+    chunks = [
+        audio[i : i + chunk_length_ms] for i in range(0, len(trimmed_audio), chunk_length_ms)
+    ]
+    print("chunks created")
     segment_filepaths = [
-        export_audio_chunk(chunk, directory, filename, file_extension, i)
+        export_audio_chunk(chunk, user_directory, new_filepath, i)
         for i, chunk in enumerate(chunks)
     ]
-
+    print("chunked and segmented")
+    os.remove(filepath)
+    os.remove(new_filepath)
     return segment_filepaths
+
+
+def parse_timestamp(timestamp):
+    hours, minutes, seconds = timestamp.split(":")
+    seconds, milliseconds = seconds.split(",")
+    return (int(hours) * 3600 + int(minutes) * 60 + int(seconds)) * 1000 + int(
+        milliseconds
+    )
+
+
+def format_timestamp(milliseconds):
+    hours = milliseconds // 3600000
+    milliseconds %= 3600000
+    minutes = milliseconds // 60000
+    milliseconds %= 60000
+    seconds = milliseconds // 1000
+    milliseconds %= 1000
+    return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
+
+
+def adjust_subtitle_timing(subtitle_content, previous_duration_ms, response_format):
+    if response_format.lower() not in ["srt", "vtt"] or previous_duration_ms == 0:
+        return subtitle_content
+
+    adjusted_subtitle = []
+    for line in subtitle_content.splitlines():
+        if "-->" in line:
+            start, end = line.split(" --> ")
+            start_ms = parse_timestamp(start) + previous_duration_ms
+            end_ms = parse_timestamp(end) + previous_duration_ms
+            adjusted_subtitle.append(
+                f"{format_timestamp(start_ms)} --> {format_timestamp(end_ms)}"
+            )
+        else:
+            adjusted_subtitle.append(line)
+    return "\n".join(adjusted_subtitle)
+
+
+def get_audio_duration(file_path):
+    audio = AudioSegment.from_file(file_path)
+    return len(audio)
 
 
 def generate_prompt(client, instruction: str) -> str:
@@ -145,17 +155,13 @@ def generate_prompt(client, instruction: str) -> str:
 
 
 def determine_prompt(client, form_data):
-    if form_data.generate_prompt:
-        generated_prompt = generate_prompt(client, form_data.generate_prompt)
+    if "generate_prompt" in form_data and form_data["generate_prompt"]:
+        generated_prompt = generate_prompt(client, form_data["generate_prompt"])
         return generated_prompt
-    elif form_data.prompt:
-        return form_data.prompt
+    elif "prompt" in form_data and form_data["prompt"]:
+        return form_data["prompt"]
     else:
         return ""
-
-
-def remove_non_ascii(text):
-    return "".join(i for i in text if ord(i) < 128)
 
 
 def generate_speech(client, model, voice, input_text, response_format="mp3", speed=1.0):
@@ -165,7 +171,8 @@ def generate_speech(client, model, voice, input_text, response_format="mp3", spe
     )
     tts_filename = f"tts_{tts_job.id}.{response_format}"
     tts_filepath = os.path.join(download_dir, tts_filename)
-
+    tts_job.output_filename = tts_filename
+    db.session.commit()
     if not create_and_stream_tts_audio(
         client, model, voice, input_text, response_format, speed, tts_filepath
     ):
@@ -201,10 +208,11 @@ def process_audio_transcription(
     response_format,
     temperature,
     index,
+    total_duration_ms=0,
 ):
     try:
         with open(file_path, "rb") as audio_file:
-            response = client.audio.transcriptions.create(
+            transcript = client.audio.transcriptions.create(
                 model=model,
                 file=audio_file,
                 language=language,
@@ -212,19 +220,18 @@ def process_audio_transcription(
                 response_format=response_format,
                 temperature=temperature,
             )
-        transcript = remove_non_ascii(response)
-        transcript_filename = (
-            f"transcript_{transcription_job.id}_{index}.{response_format}"
-        )
-        transcript_filepath = os.path.join(
-            user_subdirectory(transcription_job.user_id), transcript_filename
-        )
-        with open(transcript_filepath, "w", encoding="utf-8") as outfile:
-            outfile.write(transcript)
+        if response_format in ["json", "verbose_json"]:
+            transcript = transcript.model_dump_json()
+        elif response_format in ["srt", "vtt"]:
+            print("adjusting subtitle timing")
+            transcript = adjust_subtitle_timing(
+                transcript, total_duration_ms, response_format
+            )
+        duration = get_audio_duration(file_path)
         create_transcription_job_segment(
-            transcription_job.id, file_path, transcript_filepath, index
+            transcription_job.id, transcript, index, duration
         )
-        return transcript_filepath
+        return duration
     except openai.OpenAIError as e:
         return {"error": str(e)}
 
@@ -232,11 +239,12 @@ def process_audio_transcription(
 def transcribe_audio(
     client,
     file_paths,
+    input_filename,
+    response_format,
+    temperature,
     model="whisper-1",
     language=None,
     prompt=None,
-    response_format="text",
-    temperature=0.0,
 ):
     transcription_job = create_transcription_job(
         user_id=current_user.id,
@@ -245,30 +253,35 @@ def transcribe_audio(
         language=language,
         response_format=response_format,
         temperature=temperature,
+        input_filename=input_filename,
     )
-    transcript_file_paths = []
-    for index, file_path in enumerate(file_paths):
-        result = process_audio_transcription(
-            client,
-            file_path,
-            transcription_job,
-            model,
-            language,
-            prompt,
-            response_format,
-            temperature,
-            index,
-        )
-        if "error" in result:
-            return result
-        transcript_file_paths.append(result)
+    total_duration_ms = 0  # Initialize the total duration
+    try:
+        for index, file_path in enumerate(file_paths):
+            print(f"transcribing segment {index}")
+            segment_duration = process_audio_transcription(
+                client,
+                file_path,
+                transcription_job,
+                model,
+                language,
+                prompt,
+                response_format,
+                temperature,
+                index,
+                total_duration_ms,
+            )
+            print("transcribed")
+            if isinstance(segment_duration, dict):
+                raise Exception(segment_duration["error"])
+            total_duration_ms += segment_duration
+        transcription_job.finished = True
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(e)
 
-    output_filename = f"transcript_{transcription_job.id}.{response_format}"
-    output_filepath = os.path.join(user_subdirectory(current_user.id), output_filename)
-    concatenate_transcripts(transcript_file_paths, response_format, output_filepath)
-    transcription_job.final_output_path = output_filepath
-    db.session.commit()
-    return output_filepath
+    return transcription_job.id
 
 
 def process_audio_translation(
@@ -280,29 +293,28 @@ def process_audio_translation(
     response_format,
     temperature,
     index,
+    total_duration_ms=0,
 ):
     try:
         with open(file_path, "rb") as audio_file:
-            response = client.audio.translations.create(
+            translation = client.audio.translations.create(
                 model=model,
                 file=audio_file,
                 prompt=prompt,
                 response_format=response_format,
                 temperature=temperature,
             )
-        translation = remove_non_ascii(response)
-        translation_filename = (
-            f"translation_{translation_job.id}_{index}.{response_format}"
-        )
-        translation_filepath = os.path.join(
-            user_subdirectory(translation_job.user_id), translation_filename
-        )
-        with open(translation_filepath, "w", encoding="utf-8") as outfile:
-            outfile.write(translation)
-        create_translation_job_segment(
-            translation_job.id, file_path, translation_filepath, index
-        )
-        return translation_filepath
+            if response_format in ["json", "verbose_json"]:
+                translation = translation.model_dump_json()
+            elif response_format in ["srt", "vtt"]:
+                transcript = adjust_subtitle_timing(
+                    translation, total_duration_ms, response_format
+                )
+            duration = get_audio_duration(file_path)
+            create_transcription_job_segment(
+                translation_job.id, transcript, index, duration
+            )
+            return duration  # Return the duration of the current segment
     except openai.OpenAIError as e:
         return {"error": str(e)}
 
@@ -310,6 +322,7 @@ def process_audio_translation(
 def translate_audio(
     client,
     file_paths,
+    input_filename,
     model="whisper-1",
     prompt=None,
     response_format="text",
@@ -321,154 +334,44 @@ def translate_audio(
         model=model,
         response_format=response_format,
         temperature=temperature,
+        input_filename=input_filename,
     )
-    translation_file_paths = []
-    for index, file_path in enumerate(file_paths):
-        result = process_audio_translation(
-            client,
-            file_path,
-            translation_job,
-            model,
-            prompt,
-            response_format,
-            temperature,
-            index,
-        )
-        if "error" in result:
-            return result
-        translation_file_paths.append(result)
-
-    output_filename = f"translation_{translation_job.id}.{response_format}"
-    output_filepath = os.path.join(user_subdirectory(current_user.id), output_filename)
-    concatenate_transcripts(translation_file_paths, response_format, output_filepath)
-    translation_job.final_output_path = output_filepath
-    db.session.commit()
-    return output_filename
-
-
-def concatenate_transcripts(transcript_filepaths, output_format, output_filepath):
-    if output_format in ["srt", "vtt"]:
-        return concatenate_subtitles(transcript_filepaths, output_filepath)
-    else:
-        concatenated_transcript = []
-
-        for filepath in transcript_filepaths:
-            with open(filepath, "r", encoding="utf-8") as file:
-                if output_format in ["json", "verbose_json"]:
-                    transcript_data = json.load(file)
-                    concatenated_transcript.extend(transcript_data["transcript"])
-                elif output_format == "text":
-                    transcript_data = file.read()
-                    concatenated_transcript.append(transcript_data)
-        with open(output_filepath, "w", encoding="utf-8") as outfile:
-            if output_format in ["json", "verbose_json"]:
-                json.dump(
-                    {"transcript": concatenated_transcript},
-                    outfile,
-                    ensure_ascii=False,
-                    indent=4,
-                )
-            elif output_format == "text":
-                outfile.write("\n".join(concatenated_transcript))
-
-        return output_filepath
-
-
-def parse_subs(subtitle_content, file_format):
-    if file_format == "srt":
-        pattern = re.compile(
-            r"(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) "
-            r"--> (\d{2}:\d{2}:\d{2},\d{3})\n(.*?)\n\n",
-            re.DOTALL,
-        )
-    elif file_format == "vtt":
-        pattern = re.compile(
-            r"(\d+)\n(\d{2}:\d{2}:\d{2}\.\d{3}) "
-            r"--> (\d{2}:\d{2}:\d{2}\.\d{3})\n(.*?)\n\n",
-            re.DOTALL,
-        )
-    else:
-        return []
-
-    matches = pattern.findall(subtitle_content)
-    return [
-        {"index": int(index), "start": start, "end": end, "text": text.strip()}
-        for index, start, end, text in matches
-    ]
-
-
-def time_calc_subs(time_str):
-    time_parts = re.split("[.,:]", time_str)
-    return timedelta(
-        hours=int(time_parts[0]),
-        minutes=int(time_parts[1]),
-        seconds=int(time_parts[2]),
-        milliseconds=int(time_parts[3]),
-    )
-
-
-def adjust_timestamps(subtitles, delta):
-    for subtitle in subtitles:
-        start_td = time_calc_subs(subtitle["start"]) + delta
-        end_td = time_calc_subs(subtitle["end"]) + delta
-        subtitle["start"] = str(start_td)[:-3].replace(".", ",")
-        subtitle["end"] = str(end_td)[:-3].replace(".", ",")
-
-
-def subs_string(subtitles, file_format):
-    if file_format == "srt":
-        return "\n\n".join(
-            f"{i+1}\n{sub['start'].replace('.', ',')} "
-            f"--> {sub['end'].replace('.', ',')}\n{sub['text']}"
-            for i, sub in enumerate(subtitles)
-        )
-    elif file_format == "vtt":
-        return "\n\n".join(
-            f"{i+1}\n{sub['start']} --> {sub['end']}\n{sub['text']}"
-            for i, sub in enumerate(subtitles)
-        )
-
-
-def detect_format(subtitle_content):
-    if "WEBVTT" in subtitle_content:
-        return "vtt"
-    else:
-        return "srt"
-
-
-def concatenate_subtitles(subtitle_filepaths, output_filepath):
-    concatenated_subtitles = []
-    total_delta = timedelta(0)
-
-    for filepath in subtitle_filepaths:
-        with open(filepath, "r", encoding="utf-8") as file:
-            content = file.read()
-            file_format = detect_format(content)
-            subtitles = parse_subs(content, file_format)
-            if concatenated_subtitles:
-                last_subtitle = concatenated_subtitles[-1]
-                total_delta += time_calc_subs(last_subtitle["end"])
-            adjust_timestamps(subtitles, total_delta)
-            concatenated_subtitles.extend(subtitles)
-
-    output_format = detect_format(concatenated_subtitles[0]["text"])
-    with open(output_filepath, "w", encoding="utf-8") as outfile:
-        outfile.write(subs_string(concatenated_subtitles, output_format))
+    total_duration_ms = 0
+    try:
+        for index, file_path in enumerate(file_paths):
+            segment_duration = process_audio_transcription(
+                client,
+                file_path,
+                translation_job,
+                model,
+                prompt,
+                response_format,
+                temperature,
+                index,
+                total_duration_ms,
+            )
+            if isinstance(segment_duration, dict):
+                raise Exception(segment_duration["error"])
+            total_duration_ms += segment_duration
+        translation_job.finished = True
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+    return translation_job.id
 
 
 def create_tts_job(
-    user_id, model, voice, response_format, speed, input_text, final_output_path=None
+    user_id, model, voice, response_format, speed, input_text, output_filename=None
 ):
-    uuid = str(generate_uuid())
     job = TTSJob(
-        id=uuid,
         user_id=user_id,
         model=model,
         voice=voice,
         response_format=response_format,
         speed=speed,
         input_text=input_text,
-        final_output_path=final_output_path,
+        output_filename=output_filename,
     )
     db.session.add(job)
     db.session.commit()
@@ -476,25 +379,16 @@ def create_tts_job(
 
 
 def create_transcription_job(
-    user_id,
-    prompt,
-    model,
-    language,
-    response_format,
-    temperature,
-    final_output_path=None,
+    user_id, prompt, model, language, response_format, temperature, input_filename
 ):
-    uuid = str(generate_uuid())
-
     job = TranscriptionJob(
-        id=uuid,
         user_id=user_id,
         prompt=prompt,
         model=model,
         language=language,
         response_format=response_format,
         temperature=temperature,
-        final_output_path=final_output_path,
+        input_filename=input_filename,
     )
     db.session.add(job)
     db.session.commit()
@@ -502,17 +396,15 @@ def create_transcription_job(
 
 
 def create_translation_job(
-    user_id, prompt, model, response_format, temperature, final_output_path=None
+    user_id, prompt, model, response_format, temperature, input_filename
 ):
-    uuid = str(generate_uuid())
     job = TranslationJob(
-        id=uuid,
         user_id=user_id,
         prompt=prompt,
         model=model,
         response_format=response_format,
         temperature=temperature,
-        final_output_path=final_output_path,
+        input_filename=input_filename,
     )
     db.session.add(job)
     db.session.commit()
@@ -520,15 +412,13 @@ def create_translation_job(
 
 
 def create_transcription_job_segment(
-    transcription_job_id, input_file_path, output_file_path, job_index
+    transcription_job_id, transcription, job_index, duration
 ):
-    uuid = str(generate_uuid())
     segment = TranscriptionJobSegment(
-        id=uuid,
         transcription_job_id=transcription_job_id,
-        input_file_path=input_file_path,
-        output_file_path=output_file_path,
+        output_content=transcription,
         job_index=job_index,
+        duration=duration,
     )
     db.session.add(segment)
     db.session.commit()
@@ -536,16 +426,13 @@ def create_transcription_job_segment(
 
 
 def create_translation_job_segment(
-    translation_job_id, input_file_path, output_file_path, job_index
+    translation_job_id, translation, job_index, duration
 ):
-    uuid = str(generate_uuid())
-
     segment = TranslationJobSegment(
-        id=uuid,
         translation_job_id=translation_job_id,
-        input_file_path=input_file_path,
-        output_file_path=output_file_path,
+        output_content=translation,
         job_index=job_index,
+        duration=duration,
     )
     db.session.add(segment)
     db.session.commit()
@@ -585,3 +472,36 @@ def get_whisper_preferences(user_id):
             "language": "en",
             "response_format": "text",
         }
+
+
+def cleanup_expired_files():
+    expired_jobs = TranscriptionJob.query.filter(
+        TranscriptionJob.download_timestamp < datetime.utcnow() - timedelta(hours=24)
+    ).all()
+    expired_jobs.extend(
+        TranslationJob.query.filter(
+            TranslationJob.download_timestamp < datetime.utcnow() - timedelta(hours=24)
+        ).all()
+    )
+
+    for job in expired_jobs:
+        if job.download_url and os.path.exists(job.download_url):
+            os.remove(job.download_url)  # Delete the file
+            job.download_url = None  # Clear the download URL
+            job.download_timestamp = None  # Clear the download timestamp
+            db.session.commit()
+
+
+def save_file_to_disk(content, file_extension, job_id, user_directory):
+    if not os.path.exists(user_directory):
+        os.makedirs(user_directory)
+
+    # Define the file path
+    file_name = f"{job_id}.{file_extension}"
+    file_path = os.path.join(user_directory, file_name)
+
+    # Write content to the file
+    with open(file_path, "wb") as file:
+        file.write(content.encode("utf-8"))
+
+    return file_path

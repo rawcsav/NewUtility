@@ -80,29 +80,6 @@ function handleFormSubmission(formId, endpoint, isTTS = false) {
       .then((data) => {
         if (data.status === "success") {
           showToast(`${formId} completed successfully.`, "success");
-          // If it's a TTS form, display an audio player
-          if (isTTS) {
-            const audioPlayer = document.createElement("audio");
-            audioPlayer.src = data.download_url;
-            audioPlayer.controls = true;
-            document.getElementById(formId).appendChild(audioPlayer);
-          } else {
-            // If it's a transcription form, display the transcription text
-            const transcriptionText = document.createElement("textarea");
-            transcriptionText.textContent = data.transcription; // Assuming 'data.transcription' contains the transcription text
-            document.getElementById(formId).appendChild(transcriptionText);
-          }
-
-          // Display the download button
-          const downloadButton = document.createElement("button");
-          downloadButton.textContent = "Download";
-          downloadButton.onclick = function () {
-            const downloadLink = document.createElement("a");
-            downloadLink.href = data.download_url;
-            downloadLink.download = data.download_url.split("/").pop(); // Extract the filename from the URL
-            downloadLink.click();
-          };
-          document.getElementById(formId).appendChild(downloadButton);
         } else {
           showToast(`Error during ${formId}.`, "error");
         }
@@ -114,7 +91,7 @@ function handleFormSubmission(formId, endpoint, isTTS = false) {
 }
 
 // Handle form submissions for TTS, transcription, and translation
-handleFormSubmission("tts-form", "/audio/generate-tts", true); // Pass 'true' for TTS form
+handleFormSubmission("tts-form", "/audio/generate_tts", true); // Pass 'true' for TTS form
 handleFormSubmission("transcription-form", "/audio/transcription");
 handleFormSubmission("translation-form", "/audio/translation");
 
@@ -150,11 +127,11 @@ function handlePreferencesFormSubmission(formId, endpoint) {
 // Handle form submissions for TTS and Whisper preferences
 handlePreferencesFormSubmission(
   "tts-preferences-form",
-  "/audio/tts-preferences",
+  "/audio/tts_preferences",
 );
 handlePreferencesFormSubmission(
   "whisper-preferences-form",
-  "/audio/whisper-preferences",
+  "/audio/whisper_preferences",
 );
 
 const utilityIcons = document.querySelectorAll(".utility-toggle i");
@@ -207,3 +184,92 @@ utilityIcons.forEach((icon) => {
 
 // Trigger click on the first utility icon to display the initial utility
 if (utilityIcons.length > 0) utilityIcons[0].click();
+
+function toggleDetails(jobId, jobType) {
+  var detailsElement = document.getElementById(jobType + "-details-" + jobId);
+  var isVisible = detailsElement.style.display === "block";
+  detailsElement.style.display = isVisible ? "none" : "block";
+}
+
+// Function to append a transcription job to the transcription history list
+function appendTranscriptionJobToHistory(job) {
+  const historyList = document
+    .getElementById("transcription-history")
+    .querySelector("ul");
+  const newHistoryEntry = document.createElement("li");
+  newHistoryEntry.className = "history-entry";
+  newHistoryEntry.dataset.jobId = job.id;
+  newHistoryEntry.setAttribute(
+    "onclick",
+    `toggleDetails('${job.id}', 'transcription')`,
+  );
+  newHistoryEntry.innerHTML = `
+    <div class="history-summary">
+      ${job.created_at} - ${job.input_filename}
+    </div>
+    <div class="history-details" id="transcription-details-${job.id}" style="display: none">
+      <p>Language: ${job.language}</p>
+      <p>Model: ${job.model}</p>
+      <p>Temperature: ${job.temperature}</p>
+      <p>Prompt: ${job.prompt}</p>
+      <a href="${job.download_url}" download>
+        <i class="fas fa-download"></i> Download Transcription
+      </a>
+    </div>
+  `;
+  historyList.appendChild(newHistoryEntry);
+}
+
+// Function to append a translation job to the translation history list
+function appendTranslationJobToHistory(job) {
+  const historyList = document
+    .getElementById("translation-history")
+    .querySelector("ul");
+  const newHistoryEntry = document.createElement("li");
+  newHistoryEntry.className = "history-entry";
+  newHistoryEntry.dataset.jobId = job.id;
+  newHistoryEntry.setAttribute(
+    "onclick",
+    `toggleDetails('${job.id}', 'translation')`,
+  );
+  newHistoryEntry.innerHTML = `
+    <div class="history-summary">
+      ${job.created_at} - ${job.input_filename}
+    </div>
+    <div class="history-details" id="translation-details-${job.id}" style="display: none">
+      <p>Model: ${job.model}</p>
+      <p>Temperature: ${job.temperature}</p>
+      <p>Prompt: ${job.prompt}</p>
+      <a href="${job.download_url}" download>
+        <i class="fas fa-download"></i> Download Translation
+      </a>
+    </div>
+  `;
+  historyList.appendChild(newHistoryEntry);
+}
+
+// Function to append a TTS job to the TTS history list
+function appendTtsJobToHistory(job) {
+  const historyList = document
+    .getElementById("tts-history")
+    .querySelector("ul");
+  const newHistoryEntry = document.createElement("li");
+  newHistoryEntry.className = "history-entry";
+  newHistoryEntry.dataset.jobId = job.id;
+  newHistoryEntry.setAttribute("onclick", `toggleDetails('${job.id}', 'tts')`);
+  newHistoryEntry.innerHTML = `
+    <div class="history-summary">
+      ${job.created_at} - ${job.voice}
+    </div>
+    <div class="history-details" id="tts-details-${job.id}" style="display: none">
+      <p>Model: ${job.model}</p>
+      <p>Speed: ${job.speed}</p>
+      <audio controls>
+        <source src="${job.download_url}" type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
+      <a href="${job.download_url}" download>Download Audio</a>
+    </div>
+  `;
+  historyList.appendChild(newHistoryEntry);
+}

@@ -1,17 +1,17 @@
 import os
+import tempfile
+from datetime import datetime, timedelta
 
 from flask import (
     Blueprint,
     jsonify,
-    send_from_directory,
     url_for,
     render_template,
-send_file,
+    send_file,
+    current_app,
 )
 from flask_login import login_required, current_user
-from werkzeug.security import safe_join
 from werkzeug.utils import secure_filename
-from flask import request
 from app import db
 from app.database import (
     TTSPreferences,
@@ -24,13 +24,12 @@ from app.util.audio_util import (
     generate_speech,
     transcribe_audio,
     translate_audio,
-    segment_audio,
     determine_prompt,
     user_subdirectory,
     get_whisper_preferences,
-    convert_format,
-    trim_start,
+    preprocess_audio,
     get_tts_preferences,
+    save_file_to_disk,
 )
 from app.util.forms_util import (
     TtsForm,
@@ -59,7 +58,6 @@ def audio_center():
     tts_preferences_form = TtsPreferencesForm(obj=user_tts_preferences)
     whisper_preferences_form = WhisperPreferencesForm(obj=user_whisper_preferences)
 
-    # Other forms without pre-filled data
     tts_form = TtsForm()
     transcription_form = TranscriptionForm()
     translation_form = TranslationForm()
@@ -83,7 +81,7 @@ def audio_center():
     )
 
 
-@bp.route("/tts-preferences", methods=["POST"])
+@bp.route("/tts_preferences", methods=["POST"])
 @login_required
 def tts_preferences():
     tts_prefs = TTSPreferences.query.filter_by(user_id=current_user.id).first()
@@ -121,7 +119,7 @@ def tts_preferences():
         )
 
 
-@bp.route("/whisper-preferences", methods=["POST"])
+@bp.route("/whisper_preferences", methods=["POST"])
 @login_required
 def whisper_preferences():
     whisper_prefs = WhisperPreferences.query.filter_by(user_id=current_user.id).first()
@@ -159,7 +157,7 @@ def whisper_preferences():
         )
 
 
-@bp.route("/generate-tts", methods=["GET", "POST"])
+@bp.route("/generate_tts", methods=["GET", "POST"])
 @login_required
 def generate_tts():
     form = TtsForm()
@@ -179,9 +177,7 @@ def generate_tts():
         return jsonify(
             {
                 "status": "success",
-                "download_url": url_for(
-                    "audio.download_file", filename=filename
-                ),
+                "download_url": url_for("audio.download_tts", filename=filename),
             }
         )
 
@@ -201,23 +197,23 @@ def transcription():
         filename = secure_filename(audio_file.filename)
         filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
-        segment_filepaths = segment_audio(filepath)
+        segment_filepaths = preprocess_audio(filepath, download_dir)
         prompt = determine_prompt(client, form.data)
-        filepath = transcribe_audio(
+        temperature = preferences.get("temperature", 0)
+        job_id = transcribe_audio(
             client,
             file_paths=segment_filepaths,
+            input_filename=filename,
             model=preferences["model"],
             prompt=prompt,
             response_format=preferences["response_format"],
-            temperature=preferences["temperature"],
+            temperature=temperature,
             language=preferences["language"],
         )
         return jsonify(
             {
                 "status": "success",
-                "download_url": url_for(
-                    "bp.download_file", filename=os.path.basename(filepath)
-                ),
+                "download_url": url_for("audio.download_whisper", job_id=job_id),
             }
         )
 
@@ -238,13 +234,12 @@ def translation():
         filename = secure_filename(audio_file.filename)
         filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
-        mp3_filepath = convert_format(filepath)
-        trimmed_mp3_filepath = trim_start(mp3_filepath)
-        segment_filepaths = segment_audio(trimmed_mp3_filepath)
+        segment_filepaths = preprocess_audio(filepath, download_dir)
         prompt = determine_prompt(client, form.data)
-        filepath = translate_audio(
+        job_id = translate_audio(
             client,
             file_paths=segment_filepaths,
+            input_filename=filename,
             model=preferences["model"],
             prompt=prompt,
             response_format=preferences["response_format"],
@@ -253,17 +248,57 @@ def translation():
         return jsonify(
             {
                 "status": "success",
-                "download_url": url_for(
-                    "bp.download_file", filename=os.path.basename(filepath)
-                ),
+                "download_url": url_for("audio.download_whisper", job_id=job_id),
             }
         )
 
 
-@bp.route("/download/<filename>")
+@bp.route("/download_tts/<filename>")
 @login_required
-def download_file(filename):
-    download_dir = user_subdirectory(current_user.id)
-    secure_path = os.path.join(download_dir, filename)
-    print(secure_path)
-    return send_file(secure_path, as_attachment=True)
+def download_tts(filename):
+    user_dir = user_subdirectory(current_user.id)
+
+    secure_filename_path = secure_filename(filename)
+
+    file_path = os.path.join(user_dir, secure_filename_path)
+
+    if os.path.isfile(file_path):
+        return send_file(file_path, as_attachment=True)
+    else:
+        return jsonify({"status": "error", "message": "File not found"}), 404
+
+
+@bp.route("/download_whisper/<job_id>")
+@login_required
+def download_whisper(job_id):
+    job = TranscriptionJob.query.get(job_id) or TranslationJob.query.get(job_id)
+    if not job or job.user_id != current_user.id:
+        return (
+            jsonify({"status": "error", "message": "File not found or access denied"}),
+            404,
+        )
+    if (
+        job.download_url
+        and job.download_timestamp
+        and datetime.utcnow() - job.download_timestamp < timedelta(hours=24)
+    ):
+        return send_file(job.download_url, as_attachment=True)
+
+    print("making final_content into download")
+    concatenated_content = job.final_content
+    file_extension = {
+        "json": "json",
+        "verbose_json": "json",
+        "text": "txt",
+        "srt": "srt",
+        "vtt": "vtt",
+    }.get(job.response_format, "txt")
+    user_directory = user_subdirectory(current_user.id)
+    file_path = save_file_to_disk(
+        concatenated_content, file_extension, job_id, user_directory
+    )
+    job.download_url = file_path
+    job.download_timestamp = datetime.utcnow()
+    db.session.commit()
+
+    return send_file(file_path, as_attachment=True)

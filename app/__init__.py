@@ -62,7 +62,7 @@ def create_app():
             db.session.remove()
 
         db.create_all()
-        #from app.database import initialize_roles_with_limits
-        #initialize_roles_with_limits()
+        #from app.database import initialize_roles_with_limits, TierLimit, Role
+        #initialize_roles_with_limits(db)
 
     return app

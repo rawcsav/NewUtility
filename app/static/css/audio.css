@@ -125,3 +125,46 @@ h2 {
   align-items: center;
   margin-top: 20px;
 }
+
+.history-entry {
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.history-entry .history-summary {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  margin-bottom: 5px;
+}
+
+.history-entry .history-details {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  display: none; /* Hidden by default */
+  transition: all 0.3s ease;
+}
+
+/* Additional styling for audio player and download links */
+.history-entry audio {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.history-entry a {
+  display: inline-block;
+  margin-top: 10px;
+  background-color: #007bff;
+  color: white;
+  padding: 5px 15px;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.history-entry a:hover {
+  background-color: #0056b3;
+}

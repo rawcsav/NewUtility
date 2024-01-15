@@ -14,6 +14,108 @@
     <div class="section-title-div">
       <h2 id="section-title">Audio</h2>
     </div>
+    <div id="history-section">
+      <h2>History</h2>
+      <div id="tts-history">
+        <h3>Text-to-Speech History</h3>
+        <ul>
+          {% for job in TTSJobs %} {% if job.output_filename %}
+          <li
+            class="history-entry"
+            data-job-id="{{ job.id }}"
+            onclick="toggleDetails('{{ job.id }}', 'tts')"
+          >
+            <div class="history-summary">
+              {{ job.created_at }} - {{ job.voice }}
+            </div>
+            <div
+              class="history-details"
+              id="tts-details-{{ job.id }}"
+              style="display: none"
+            >
+              <p>Model: {{ job.model }}</p>
+              <p>Speed: {{ job.speed }}</p>
+              <audio controls>
+                <source
+                  src="{{ url_for('audio.download_tts', filename=job.output_filename) }}"
+                  type="audio/mpeg"
+                />
+                Your browser does not support the audio element.
+              </audio>
+              <a
+                href="{{ url_for('audio.download_tts', filename=job.output_filename) }}"
+                download
+                >Download Audio</a
+              >
+            </div>
+          </li>
+          {% endif %} {% endfor %}
+        </ul>
+      </div>
+      <div id="transcription-history">
+        <h3>Transcription History</h3>
+        <ul>
+          {% for job in TranscriptionJobs %} {% if job.finished %}
+          <li
+            class="history-entry"
+            data-job-id="{{ job.id }}"
+            onclick="toggleDetails('{{ job.id }}', 'transcription')"
+          >
+            <div class="history-summary">
+              {{ job.created_at }} - {{ job.input_filename }}
+            </div>
+            <div
+              class="history-details"
+              id="transcription-details-{{ job.id }}"
+              style="display: none"
+            >
+              <p>Language: {{ job.language }}</p>
+              <p>Model: {{ job.model }}</p>
+              <p>Temperature: {{ job.temperature }}</p>
+              <p>Prompt: {{ job.prompt }}</p>
+              <a
+                href="{{ url_for('audio.download_whisper', job_id=job.id) }}"
+                download
+              >
+                <i class="fas fa-download"></i> Download Transcription
+              </a>
+            </div>
+          </li>
+          {% endif %} {% endfor %}
+        </ul>
+      </div>
+      <div id="translation-history">
+        <h3>Translation History</h3>
+        <ul>
+          {% for job in TranslationJobs %} {% if job.finished %}
+          <li
+            class="history-entry"
+            data-job-id="{{ job.id }}"
+            onclick="toggleDetails('{{ job.id }}', 'translation')"
+          >
+            <div class="history-summary">
+              {{ job.created_at }} - {{ job.input_filename }}
+            </div>
+            <div
+              class="history-details"
+              id="translation-details-{{ job.id }}"
+              style="display: none"
+            >
+              <p>Model: {{ job.model }}</p>
+              <p>Temperature: {{ job.temperature }}</p>
+              <p>Prompt: {{ job.prompt }}</p>
+              <a
+                href="{{ url_for('audio.download_whisper', job_id=job.id) }}"
+                download
+              >
+                <i class="fas fa-download"></i> Download Translation
+              </a>
+            </div>
+          </li>
+          {% endif %} {% endfor %}
+        </ul>
+      </div>
+    </div>
     <div class="audio-column">
       <div class="audio-utility-container">
         <div class="utility-toggle">

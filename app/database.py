@@ -1,7 +1,9 @@
+import json
 import uuid
 
 from flask_login import UserMixin
 from sqlalchemy import BLOB
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref
 from sqlalchemy.sql import func
 
@@ -24,6 +26,10 @@ def generate_default_nickname():
     max_number = db.session.query(db.func.max(UserAPIKey.nickname)).scalar()
     next_number = int(max_number or 0) + 1  # Increment the max number by 1
     return f"User{next_number}"
+
+
+
+
 
 
 class MessageChunkAssociation(db.Model):
@@ -113,7 +119,7 @@ class User(UserMixin, db.Model, TimestampMixin):
         "Conversation",
         primaryjoin="and_(User.id==Conversation.user_id, Conversation.delete==False)",
         backref="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
     document_embeddings = db.relationship(
         "DocumentEmbedding", backref="user", lazy="dynamic"
@@ -122,14 +128,14 @@ class User(UserMixin, db.Model, TimestampMixin):
         "Document",
         primaryjoin="and_(User.id==Document.user_id, Document.delete==False)",
         backref="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
     api_usage = db.relationship("APIUsage", backref="user", lazy="dynamic")
     api_keys = db.relationship(
         "UserAPIKey",
         primaryjoin="and_(User.id==UserAPIKey.user_id, UserAPIKey.delete==False)",
         backref="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
     role_id = db.Column(db.String(36), db.ForeignKey("role.id"))
     role = db.relationship("Role", backref=db.backref("users", lazy="dynamic"))
@@ -138,7 +144,7 @@ class User(UserMixin, db.Model, TimestampMixin):
         "GeneratedImage",
         primaryjoin="and_(User.id==GeneratedImage.user_id, GeneratedImage.delete==False)",
         back_populates="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
     chat_preferences = db.relationship(
         "ChatPreferences", backref="user", uselist=False, cascade="all, delete-orphan"
@@ -156,19 +162,19 @@ class User(UserMixin, db.Model, TimestampMixin):
         "TTSJob",
         primaryjoin="and_(User.id==TTSJob.user_id, TTSJob.delete==False)",
         back_populates="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
     transcription_jobs = db.relationship(
         "TranscriptionJob",
         primaryjoin="and_(User.id==TranscriptionJob.user_id, TranscriptionJob.delete==False)",
         back_populates="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
     translation_jobs = db.relationship(
         "TranslationJob",
         primaryjoin="and_(User.id==TranslationJob.user_id, TranslationJob.delete==False)",
         back_populates="user",
-        lazy="dynamic"
+        lazy="dynamic",
     )
 
     def __init__(self, username, email, password_hash, **kwargs):
@@ -197,7 +203,7 @@ class Conversation(db.Model, SoftDeleteMixin, TimestampMixin):
         primaryjoin="and_(Conversation.id==Message.conversation_id, Message.delete==False)",
         backref="conversation",
         lazy="dynamic",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
 
 
@@ -219,7 +225,7 @@ class Message(db.Model, SoftDeleteMixin, TimestampMixin):
         primaryjoin="and_(Message.id==MessageImages.message_id, MessageImages.delete==False)",
         backref="message",
         lazy="joined",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
     chunk_associations = db.relationship(
         "MessageChunkAssociation",
@@ -270,7 +276,7 @@ class Document(db.Model, SoftDeleteMixin, TimestampMixin):
         back_populates="document",
         order_by="DocumentChunk.chunk_index",
         cascade="all, delete, delete-orphan",
-        primaryjoin="and_(Document.id==DocumentChunk.document_id, Document.delete==False)"
+        primaryjoin="and_(Document.id==DocumentChunk.document_id, Document.delete==False)",
     )
 
 
@@ -323,7 +329,7 @@ class DocumentEmbedding(db.Model, TimestampMixin):
         primaryjoin="DocumentEmbedding.chunk_id==DocumentChunk.id",
         secondaryjoin="and_(DocumentChunk.document_id==Document.id, Document.delete==False)",
         viewonly=True,
-        backref=backref("embeddings", cascade="all, delete-orphan")
+        backref=backref("embeddings", cascade="all, delete-orphan"),
     )
 
 
@@ -406,6 +412,7 @@ class WhisperPreferences(db.Model):
     )
     temperature = db.Column(db.Float, nullable=False, default=0.0)
 
+
 class TTSJob(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "tts_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
@@ -414,20 +421,26 @@ class TTSJob(db.Model, SoftDeleteMixin, TimestampMixin):
     voice = db.Column(
         db.Enum("alloy", "echo", "fable", "onyx", "nova", "shimmer"), nullable=False
     )
-    response_format = db.Column(
-        db.Enum("mp3", "opus", "aac", "flac"), nullable=False
-    )
+    response_format = db.Column(db.Enum("mp3", "opus", "aac", "flac"), nullable=False)
     speed = db.Column(db.Float, nullable=False)
     input_text = db.Column(db.String(4096), nullable=False)
-    final_output_path = db.Column(db.String(255), nullable=True)
+    output_filename = db.Column(db.String(255), nullable=True)
     user = db.relationship("User", back_populates="tts_jobs")
 
+
+def _concatenate_vtt_segments(sorted_segments):
+    header = "WEBVTT\n\n"
+    body = "\n\n".join(segment.output_text for segment in sorted_segments)
+    return header + body
+
+def _concatenate_srt_segments(sorted_segments):
+    return "\n\n".join(segment.output_content for segment in sorted_segments)
 
 class TranscriptionJob(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "transcription_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
-    prompt= db.Column(db.Text, nullable=False)
+    prompt = db.Column(db.Text, nullable=True)
     model = db.Column(db.Enum("whisper-1"), nullable=False)
     language = db.Column(db.String(2), nullable=True)
     response_format = db.Column(
@@ -435,48 +448,109 @@ class TranscriptionJob(db.Model, SoftDeleteMixin, TimestampMixin):
         nullable=False,
     )
     temperature = db.Column(db.Float, nullable=False)
-    final_output_path = db.Column(db.String(255), nullable=True)
-    segments = db.relationship("TranscriptionJobSegment", order_by="TranscriptionJobSegment.job_index", back_populates="transcription_job", cascade="all, delete-orphan")
+    input_filename = db.Column(db.String(255), nullable=False)
+    finished = db.Column(db.Boolean, nullable=False, default=False)
+    download_timestamp = db.Column(db.DateTime(timezone=False), nullable=True)
+    download_url = db.Column(db.String(255), nullable=True)
+    segments = db.relationship(
+        "TranscriptionJobSegment",
+        order_by="TranscriptionJobSegment.job_index",
+        back_populates="transcription_job",
+        cascade="all, delete-orphan",
+    )
     user = db.relationship("User", back_populates="transcription_jobs")
+
+    @hybrid_property
+    def final_content(self):
+        return self._generate_concatenated_output()
+
+    def _generate_concatenated_output(self):
+        sorted_segments = sorted(self.segments, key=lambda seg: seg.job_index)
+        if self.response_format in ["json", "verbose_json"]:
+            return json.dumps(
+                [json.loads(segment.output_content) for segment in sorted_segments]
+            )
+        elif self.response_format == "text":
+            return "\n".join(segment.output_content for segment in sorted_segments)
+        elif self.response_format == "srt":
+            return _concatenate_srt_segments(sorted_segments)
+        elif self.response_format == "vtt":
+            return _concatenate_vtt_segments(sorted_segments)
+        else:
+            return "\n".join(segment.output_text for segment in sorted_segments)
 
 
 class TranslationJob(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "translation_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
-    prompt= db.Column(db.Text, nullable=False)
+    prompt = db.Column(db.Text, nullable=True)
     model = db.Column(db.Enum("whisper-1"), nullable=False)
     response_format = db.Column(
         db.Enum("json", "text", "srt", "verbose_json", "vtt"),
         nullable=False,
     )
     temperature = db.Column(db.Float, nullable=False)
-    final_output_path = db.Column(db.String(255), nullable=True)
-    segments = db.relationship("TranslationJobSegment", order_by="TranslationJobSegment.job_index", back_populates="translation_job", cascade="all, delete-orphan")
+    input_filename = db.Column(db.String(255), nullable=False)
+    finished = db.Column(db.Boolean, nullable=False, default=False)
+    download_timestamp = db.Column(db.DateTime(timezone=False), nullable=True)
+    download_url = db.Column(db.String(255), nullable=True)
+    segments = db.relationship(
+        "TranslationJobSegment",
+        order_by="TranslationJobSegment.job_index",
+        back_populates="translation_job",
+        cascade="all, delete-orphan",
+    )
     user = db.relationship("User", back_populates="translation_jobs")
+
+    @hybrid_property
+    def final_content(self):
+        return self._generate_concatenated_output()
+
+    def _generate_concatenated_output(self):
+        sorted_segments = sorted(self.segments, key=lambda seg: seg.job_index)
+
+        if self.response_format in ["json", "verbose_json"]:
+            return json.dumps(
+                [json.loads(segment.output_content) for segment in sorted_segments]
+            )
+        elif self.response_format == "text":
+            return "\n".join(segment.output_content for segment in sorted_segments)
+        elif self.response_format == "srt":
+            return _concatenate_srt_segments(sorted_segments)
+        elif self.response_format == "vtt":
+            return _concatenate_vtt_segments(sorted_segments)
+        else:
+            return "\n".join(segment.output_text for segment in sorted_segments)
 
 
 class TranscriptionJobSegment(db.Model):
     __tablename__ = "transcription_job_segments"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     transcription_job_id = db.Column(
-        db.String(36), db.ForeignKey("transcription_jobs.id", ondelete="CASCADE")
+        db.String(36),
+        db.ForeignKey("transcription_jobs.id", ondelete="CASCADE"),
+        index=True,
     )
-    input_file_path = db.Column(db.String(255), nullable=False)
-    output_file_path = db.Column(db.String(255), nullable=False)
+    duration = db.Column(db.Float, nullable=False)
+    output_content = db.Column(db.Text, nullable=False)
     job_index = db.Column(db.Integer, nullable=False)
     transcription_job = db.relationship("TranscriptionJob", back_populates="segments")
+
 
 class TranslationJobSegment(db.Model):
     __tablename__ = "translation_job_segments"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     translation_job_id = db.Column(
-        db.String(36), db.ForeignKey("translation_jobs.id", ondelete="CASCADE")
+        db.String(36),
+        db.ForeignKey("translation_jobs.id", ondelete="CASCADE"),
+        index=True,
     )
-    input_file_path = db.Column(db.String(255), nullable=False)
-    output_file_path = db.Column(db.String(255), nullable=False)
+    duration = db.Column(db.Float, nullable=False)
+    output_content = db.Column(db.Text, nullable=False)
     job_index = db.Column(db.Integer, nullable=False)
     translation_job = db.relationship("TranslationJob", back_populates="segments")
+
 
 def initialize_roles_with_limits():
     tier_limits = {
