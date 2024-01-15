@@ -4,7 +4,8 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #toast {
@@ -28,6 +29,10 @@ html {
 
 #toast.error {
   background-color: red;
+}
+
+.hamburger-menu {
+  color: #fafafa;
 }
 
 body {
@@ -56,6 +61,8 @@ body {
   margin-left: auto;
   margin-right: auto;
   margin-top: auto;
+  margin-bottom: auto;
+
   background-color: #ffffff;
   border-radius: 5px;
   --font-color: #000000;
@@ -125,6 +132,8 @@ ul li {
   display: flex;
   flex-direction: row;
   width: 100%;
+  height: calc(100% - 10px);
+  border-bottom: 10px solid #e50000;
 }
 
 .homepage-link {

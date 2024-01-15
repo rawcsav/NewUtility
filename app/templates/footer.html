@@ -1,61 +1,121 @@
 <style>
-  .footer {
-    position: fixed;
-    bottom: 0;
-    height: 30px;
-    overflow-x: hidden;
-    font-family: "Neue Haas Grotesk Display Pro", sans-serif;
+  .site-footer {
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    color: #2a2a2a;
+  }
+
+  .site-footer .footer-content {
     display: flex;
-    background-color: #f2f2f2;
-    left: 0;
-    right: 0;
     justify-content: space-between;
-    align-items: center;
-    padding: 0 30px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 10;
+    max-width: 64rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.5rem;
   }
 
-  .footer a:hover {
-    color: #fff;
-    text-decoration: none; /* Removes the underline */
-  }
-  .footer a::after {
-    content: "|";
-    margin: 0 3px; /* Adjust space around the separator */
-    color: #333333;
-  }
-  .footer a:last-child::after {
-    content: "";
-  }
-
-  .footer svg {
-    color: #333333;
-    height: 1.5em; /* Adjust this value for desired size */
-  }
-
-  .footer p,
-  .footer a {
-    font-size: 0.9rem; /* Adjust this value as needed */
-    color: #333333;
-    text-decoration: none; /* Removes the underline */
-    margin: 0;
-    padding: 0;
-    bottom: 0;
-  }
-
-  .footer-links {
+  .site-footer .footer-section {
+    flex: 1;
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .site-footer .footer-heading {
+    font-size: 1.6rem;
+    font-family: "NeueMontreal", sans-serif;
+    margin-bottom: 0;
+  }
+
+  .site-footer .footer-nav ul {
+    list-style: none; /* Remove list bullets */
+    padding: 0;
+  }
+
+  .footer-links li a {
+    color: #575757;
+    text-decoration: none; /* No underline */
+    transition: color 0.3s; /* Smooth color transition */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .site-footer .footer-nav li a:hover {
+    color: #ff4500; /* Darker blue on hover */
+  }
+
+  .site-footer .footer-bottom {
+    text-align: center;
+    margin-top: 3rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .site-footer .footer-bottom p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  #rawcsav-text {
+    color: #e50000;
   }
 </style>
-<div id="footer" class="footer">
-  <p>Copyright © 2023 RAWCSAV. All rights reserved.</p>
-  <div class="footer-links">
-    <p>
-      <a href="https://rawcsav.com/">Home</a>
-      <a href="https://rawcsav.com/contact.html">Contact</a>
-      <a href="https://github.com/rawcsav">GitHub</a>
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <div class="inner-footer">
+        <h4 class="footer-heading">Site</h4>
+        <nav class="footer-nav">
+          <ul class="footer-links">
+            <li><a href="https://rawcsav.com/">Home</a></li>
+            <li><a href="https://rawcsav.com/projects.html">Projects</a></li>
+            <li><a href="https://rawcsav.com/writings.html">Writings</a></li>
+            <li><a href="https://rawcsav.com/about.html">About</a></li>
+            <li><a href="https://rawcsav.com/contact.html">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="footer-section">
+      <div class="inner-footer">
+        <h4 class="footer-heading">Links</h4>
+        <nav class="footer-nav">
+          <ul class="footer-links">
+            <li><a href="https://github.com/rawcsav">GitHub</a></li>
+            <li>
+              <a href="https://github.com/rawcsav/AIUtilsFlask"
+                >Project GitHub</a
+              >
+            </li>
+            <li>
+              <a href="https://www.linkedin.com/in/gmason21/">LinkedIn</a>
+            </li>
+            <li><a href="https://rawcsav.com/about.html">About</a></li>
+            <li><a href="https://rawcsav.com/contact.html">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="footer-section">
+      <div class="inner-footer">
+        <h4 class="footer-heading">New Utility</h4>
+        <nav class="footer-nav">
+          <ul class="footer-links">
+            <li><a href="[Project Docs URL Placeholder]">Register</a></li>
+            <li><a href="[Project Docs URL Placeholder]">Dashboard</a></li>
+            <li><a href="[Project Docs URL Placeholder]">Images</a></li>
+            <li><a href="[Project Docs URL Placeholder]">Embeddings</a></li>
+            <li><a href="[Project Docs URL Placeholder]">Chat</a></li>
+            <li><a href="[Project Docs URL Placeholder]">Audio</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="copyright">
+      Copyright © 2024 <span id="rawcsav-text">RAWCSAV</span>. All rights
+      reserved.
     </p>
   </div>
-</div>
+</footer>

@@ -1,5 +1,5 @@
 {% extends 'base.html' %} {% block head %}
-<title>Dashboard</title>
+<title>Dashboard | New Utility</title>
 {% endblock %} {% block styles %}
 <link
   rel="stylesheet"
@@ -174,9 +174,7 @@
           <h3>Utilities</h3>
           <ul>
             <li>
-              <a href="{{ url_for('image.generate_image') }}"
-                >Image Generation</a
-              >
+              <a href="{{ url_for('image.generate_image') }}">Images</a>
             </li>
             <li>
               <a href="{{ url_for('embeddings.embeddings_center') }}"

@@ -6,12 +6,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta
       name="description"
-      content="Jack of all Trades offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
+      content="New Utility offers users a straightforward interface that grants access to a suite of developer tools powered by OpenAI."
     />
     <meta name="author" content="RAWCSAV" />
     <meta
       name="keywords"
-      content="Jack of all Trades, RAWCSAV, Developer Tools, OpenAI, Flask, Python, JavaScript, npm, pip, SQLAlchemy, OAuth, Flask-Migrate, Flask-CORS, Flask-Bcrypt, Flask-Mail, Flask-Login, Flask-WTF, CSRF, Werkzeug, ProfilerMiddleware, Cloudinary, Google OAuth, GitHub OAuth, SSH Tunnel, MySQL, PyMySQL, SMTP, Gmail, User Interface, Images, Media Display, Login, Landing, Auth, User, Image, Embed, Chat, CSRF Token, Favicon, Font Awesome, Google Tag Manager, Jinja2, HTML5, CSS3, Responsive Design, Web Development, Web Application, User Experience, User Interface, Frontend, Backend, Full Stack, Debugging, Testing, PyCharm, macOS, Open Source, GitHub, Version Control, Git, Continuous Integration, Continuous Deployment"
+      content="New Utility, RAWCSAV, Developer Tools, OpenAI, Flask, Python, JavaScript, npm, pip, SQLAlchemy, OAuth, Flask-Migrate, Flask-CORS, Flask-Bcrypt, Flask-Mail, Flask-Login, Flask-WTF, CSRF, Werkzeug, ProfilerMiddleware, Cloudinary, Google OAuth, GitHub OAuth, SSH Tunnel, MySQL, PyMySQL, SMTP, Gmail, User Interface, Images, Media Display, Login, Landing, Auth, User, Image, Embed, Chat, CSRF Token, Favicon, Font Awesome, Google Tag Manager, Jinja2, HTML5, CSS3, Responsive Design, Web Development, Web Application, User Experience, User Interface, Frontend, Backend, Full Stack, Debugging, Testing, PyCharm, macOS, Open Source, GitHub, Version Control, Git, Continuous Integration, Continuous Deployment"
     />
     <link
       rel="apple-touch-icon"
@@ -58,15 +58,19 @@
       html {
         height: 100%;
         width: 100%;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        font-family: "Helvetica Neue", sans-serif;
       }
 
       body {
         font-family: "Helvetica Neue", sans-serif;
         margin: 0;
         transition: opacity 0.5s ease;
+        min-height: 100vh;
       }
 
-      nav {
+      .menu-nav {
         display: flex;
         position: absolute;
         align-items: center;
