@@ -6,481 +6,485 @@
   href="{{ url_for('static', filename='css/dashboard.css') }}"
 />
 {% endblock %} {% block body %}
-<div id="left-column">
-  <div id="title-container">
-    <h1>New Utility</h1>
-  </div>
-  <div class="lower-row">
-    <div class="section-title-div">
-      <h2 id="section-title">Dashboard</h2>
+<div id="full-container">
+  <div id="left-column">
+    <div id="title-container">
+      <h1>New Utility</h1>
     </div>
-    <div class="profile-column">
-      <div class="user-container">
-        <h3>User Info</h3>
-        <div id="user-options">
-          <button id="userinfo-btn" class="options-button">
-            <i class="fa-solid fa-user"></i>
-          </button>
-          <button id="userchange-btn" class="options-button">
-            <i class="fas fa-user-edit"></i>
-          </button>
-        </div>
-        <div class="user-info" id="user-info">
-          <p>Username: {{ current_user.username }}</p>
-          <p>Email: {{ current_user.email }}</p>
-          <p>
-            Email Confirmed: {{ 'Yes' if current_user.email_confirmed else 'No'
-            }}
-          </p>
-          <p>
-            Account Created: {{ current_user.created_at.strftime('%Y-%m-%d') }}
-          </p>
-        </div>
-        <div class="user-change" id="user-change">
-          <form id="username-change-form">
-            <input
-              type="text"
-              name="new_username"
-              id="new_user_input"
-              placeholder="New Username"
-              required
-            />
-            <button class="submit-user" type="submit">
-              Submit <i class="fa fa-arrow-right"></i>
-            </button>
-          </form>
-          <h4>
-            <a
-              href="{{ url_for('auth.reset_password_request') }}"
-              class="btn dropdown-button"
-            >
-              Reset Password <i class="fa fa-arrow-right"></i>
-            </a>
-          </h4>
-        </div>
+    <div class="lower-row">
+      <div class="section-title-div">
+        <h2 id="section-title">Dashboard</h2>
       </div>
-      <div class="key-container">
-        <h3 id="key-title">Key Management</h3>
-        <div id="key-options">
-          <button id="keyslist-btn" class="options-button">
-            <i class="fas fa-key"></i>
-            <!-- Icon representing a key or list of keys -->
-          </button>
-          <button id="keyedits-btn" class="options-button">
-            <i class="fas fa-edit"></i>
-            <!-- Icon representing the action of editing -->
-          </button>
-        </div>
-        <div class="key-edits" id="key-edits">
-          <form
-            id="api-key-form"
-            method="POST"
-            action="{{ url_for('user.upload_api_key') }}"
-          >
-            <div class="form-group">
+      <div class="profile-column">
+        <div class="user-container">
+          <h3>User Info</h3>
+          <div id="user-options">
+            <button id="userinfo-btn" class="options-button">
+              <i class="fa-solid fa-user"></i>
+            </button>
+            <button id="userchange-btn" class="options-button">
+              <i class="fas fa-user-edit"></i>
+            </button>
+          </div>
+          <div class="user-info" id="user-info">
+            <p>Username: {{ current_user.username }}</p>
+            <p>Email: {{ current_user.email }}</p>
+            <p>
+              Email Confirmed: {{ 'Yes' if current_user.email_confirmed else
+              'No' }}
+            </p>
+            <p>
+              Account Created: {{ current_user.created_at.strftime('%Y-%m-%d')
+              }}
+            </p>
+          </div>
+          <div class="user-change" id="user-change">
+            <form id="username-change-form">
               <input
                 type="text"
-                id="api_key"
-                name="api_key"
-                placeholder="Enter Key:"
+                name="new_username"
+                id="new_user_input"
+                placeholder="New Username"
                 required
               />
+              <button class="submit-user" type="submit">
+                Submit <i class="fa fa-arrow-right"></i>
+              </button>
+            </form>
+            <h4>
+              <a
+                href="{{ url_for('auth.reset_password_request') }}"
+                class="btn dropdown-button"
+              >
+                Reset Password <i class="fa fa-arrow-right"></i>
+              </a>
+            </h4>
+          </div>
+        </div>
+        <div class="key-container">
+          <h3 id="key-title">Key Management</h3>
+          <div id="key-options">
+            <button id="keyslist-btn" class="options-button">
+              <i class="fas fa-key"></i>
+              <!-- Icon representing a key or list of keys -->
+            </button>
+            <button id="keyedits-btn" class="options-button">
+              <i class="fas fa-edit"></i>
+              <!-- Icon representing the action of editing -->
+            </button>
+          </div>
+          <div class="key-edits" id="key-edits">
+            <form
+              id="api-key-form"
+              method="POST"
+              action="{{ url_for('user.upload_api_key') }}"
+            >
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="api_key"
+                  name="api_key"
+                  placeholder="Enter Key:"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="nickname"
+                  placeholder="Nickname:"
+                  name="nickname"
+                  maxlength="25"
+                />
+              </div>
+              <button type="submit" class="button save-api-key-button">
+                <i class="fas fa-save"></i> Save
+              </button>
+            </form>
+          </div>
+          <ul id="key-list">
+            {% for key in user_api_keys %}
+            <li
+              class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
+              data-key-id="{{ key.id }}"
+            >
+              <div class="key-info">
+                <p>
+                  <span id="key-name">{{ key.nickname }}</span>
+                  <span id="key-tag">({{ key.identifier }})</span>
+                </p>
+                <p id="key-model">{{ key.label }}</p>
+              </div>
+              <div
+                id="usage-info-{{ key.id }}"
+                class="key-usage"
+                style="display: none"
+              >
+                <p>Images: {{ '%0.2f'|format(key.usage_image_gen) }}</p>
+                <p>GPT: {{ '%0.2f'|format(key.usage_chat) }}</p>
+                <p>Embeddings: {{ '%0.2f'|format(key.usage_embedding) }}</p>
+                <p>Audio: {{ '%0.2f'|format(key.usage_audio) }}</p>
+              </div>
+              <div class="key-forms">
+                <form
+                  class="retest-api-key-form"
+                  action="{{ url_for('user.retest_api_key') }}"
+                  method="post"
+                >
+                  <input type="hidden" name="key_id" value="{{ key.id }}" />
+                  <button type="submit" class="button retest-key-button">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </form>
+
+                <form
+                  class="delete-api-key-form"
+                  action="{{ url_for('user.delete_api_key') }}"
+                  method="post"
+                >
+                  <input type="hidden" name="key_id" value="{{ key.id }}" />
+                  <button type="submit" class="button delete-key-button">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </form>
+                <form
+                  class="select-api-key-form"
+                  action="{{ url_for('user.select_api_key') }}"
+                  method="post"
+                >
+                  <input type="hidden" name="key_id" value="{{ key.id }}" />
+                  <button type="submit" class="button select-key-button">
+                    <i class="fas fa-hand-pointer"></i>
+                  </button>
+                </form>
+                <button
+                  class="button view-usage-button"
+                  title="See Usage Info"
+                  usage-div-id="usage-info-{{ key.id }}"
+                >
+                  <i class="fas fa-dollar-sign"></i>
+                </button>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="utility-column">
+        <div class="utility-container">
+          <div class="redirect-links">
+            <h3>Utilities</h3>
+            <ul>
+              <li>
+                <a href="{{ url_for('image.generate_image') }}">Images</a>
+              </li>
+              <li>
+                <a href="{{ url_for('embeddings.embeddings_center') }}"
+                  >Document Embeddings</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('chat.chat_index') }}">GPT</a>
+              </li>
+              <li>
+                <a href="{{ url_for('audio.audio_center') }}">Audio</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="image-container">
+          <h3>Img History</h3>
+          <div class="image-history-carousel">
+            {% for image in user_images %}
+            <div class="image-history-item">
+              {% if loop.index <= 2 %}
+              <img
+                src="{{ url_for('static', filename='temp_img/' ~ image.id ~ '.webp') }}"
+                alt="Generated Image"
+                data-id="{{ image.id }}"
+              />
+              {% else %}
+              <img
+                src="{{ url_for('static', filename='temp_img/' ~ image.id ~ '.webp') }}"
+                alt="Generated Image"
+                data-id="{{ image.id }}"
+                loading="lazy"
+              />
+              {% endif %}
+              <div class="icons-container"></div>
+            </div>
+            {% else %}
+            <p>No images found.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="utility-settings">
+        <h3>Utility Settings</h3>
+        <div id="options">
+          <button id="show-preferences-btn" class="options-button">
+            <i class="fa-regular fa-comment"></i>
+          </button>
+          <button id="docs-edit-btn" class="options-button">
+            <i class="fas fa-file-signature"></i>
+          </button>
+          <button id="docs-preferences-btn" class="options-button">
+            <i class="fas fa-file-lines"></i>
+          </button>
+        </div>
+        <input type="hidden" id="selected-conversation-id" value="" />
+        <div id="preference-popup" class="preference-popup">
+          <h4>Chat Preferences</h4>
+          <form id="update-preferences-form">
+            <div class="form-group">
+              {{ user_preferences_form.model.label }} {{
+              user_preferences_form.model() }}
             </div>
             <div class="form-group">
+              {{ user_preferences_form.temperature.label }}
+
+              <input
+                type="range"
+                id="temperature"
+                name="temperature"
+                min="0"
+                max="2"
+                step="0.1"
+                value="{{ user_preferences_form.temperature.data }}"
+                oninput="document.getElementById('temperature-value').value = this.value"
+              />
               <input
                 type="text"
-                id="nickname"
-                placeholder="Nickname:"
-                name="nickname"
-                maxlength="25"
+                id="temperature-value"
+                class="range-value-input"
+                value="{{ user_preferences_form.temperature.data }}"
+                oninput="document.getElementById('temperature').value = this.value"
               />
             </div>
-            <button type="submit" class="button save-api-key-button">
-              <i class="fas fa-save"></i> Save
-            </button>
+            <div class="form-group">
+              {{ user_preferences_form.max_tokens.label }}
+              <input
+                type="range"
+                id="max_tokens"
+                name="max_tokens"
+                min="0"
+                max="4096"
+                step="1"
+                value="{{ user_preferences_form.max_tokens.data }}"
+                oninput="document.getElementById('max-tokens-value').value = this.value"
+              />
+              <input
+                type="text"
+                id="max-tokens-value"
+                class="range-value-input"
+                value="{{ user_preferences_form.max_tokens.data }}"
+                oninput="document.getElementById('max_tokens').value = this.value"
+              />
+            </div>
+            <div class="form-group">
+              {{ user_preferences_form.frequency_penalty.label }}
+              <input
+                type="range"
+                id="frequency_penalty"
+                name="frequency_penalty"
+                min="-2"
+                max="2"
+                step="0.1"
+                value="{{ user_preferences_form.frequency_penalty.data }}"
+                oninput="document.getElementById('frequency-penalty-value').value = this.value"
+              />
+              <input
+                type="text"
+                id="frequency-penalty-value"
+                class="range-value-input"
+                value="{{ user_preferences_form.frequency_penalty.data }}"
+                oninput="document.getElementById('frequency_penalty').value = this.value"
+              />
+            </div>
+            <div class="form-group">
+              {{ user_preferences_form.presence_penalty.label }}
+              <input
+                type="range"
+                id="presence_penalty"
+                name="presence_penalty"
+                min="-2"
+                max="2"
+                step="0.1"
+                value="{{ user_preferences_form.presence_penalty.data }}"
+                oninput="document.getElementById('presence-penalty-value').value = this.value"
+              />
+              <input
+                type="text"
+                id="presence-penalty-value"
+                class="range-value-input"
+                value="{{ user_preferences_form.presence_penalty.data }}"
+                oninput="document.getElementById('presence_penalty').value = this.value"
+              />
+            </div>
+            <div class="form-group">
+              {{ user_preferences_form.top_p.label }}
+              <input
+                type="range"
+                id="top_p"
+                name="top_p"
+                min="0"
+                max="1"
+                step="0.01"
+                value="{{ user_preferences_form.top_p.data }}"
+                oninput="document.getElementById('top-p-value').value = this.value"
+              />
+              <input
+                type="text"
+                id="top-p-value"
+                class="range-value-input"
+                value="{{ user_preferences_form.top_p.data }}"
+                oninput="document.getElementById('top_p').value = this.value"
+              />
+            </div>
+            <input
+              type="submit"
+              value="Update Preferences"
+              id="preference-submit"
+              class="button-send"
+            />
           </form>
         </div>
-        <ul id="key-list">
-          {% for key in user_api_keys %}
-          <li
-            class="key-list {% if key.id == selected_api_key_id %}selected-key{% else %}non-selected-key{% endif %}"
-            data-key-id="{{ key.id }}"
-          >
-            <div class="key-info">
-              <p>
-                <span id="key-name">{{ key.nickname }}</span>
-                <span id="key-tag">({{ key.identifier }})</span>
-              </p>
-              <p id="key-model">{{ key.label }}</p>
-            </div>
-            <div
-              id="usage-info-{{ key.id }}"
-              class="key-usage"
-              style="display: none"
-            >
-              <p>Images: {{ '%0.2f'|format(key.usage_image_gen) }}</p>
-              <p>GPT: {{ '%0.2f'|format(key.usage_chat) }}</p>
-              <p>Embeddings: {{ '%0.2f'|format(key.usage_embedding) }}</p>
-              <p>Audio: {{ '%0.2f'|format(key.usage_audio) }}</p>
-            </div>
-            <div class="key-forms">
-              <form
-                class="retest-api-key-form"
-                action="{{ url_for('user.retest_api_key') }}"
-                method="post"
-              >
-                <input type="hidden" name="key_id" value="{{ key.id }}" />
-                <button type="submit" class="button retest-key-button">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-              </form>
-
-              <form
-                class="delete-api-key-form"
-                action="{{ url_for('user.delete_api_key') }}"
-                method="post"
-              >
-                <input type="hidden" name="key_id" value="{{ key.id }}" />
-                <button type="submit" class="button delete-key-button">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </form>
-              <form
-                class="select-api-key-form"
-                action="{{ url_for('user.select_api_key') }}"
-                method="post"
-              >
-                <input type="hidden" name="key_id" value="{{ key.id }}" />
-                <button type="submit" class="button select-key-button">
-                  <i class="fas fa-hand-pointer"></i>
-                </button>
-              </form>
-              <button
-                class="button view-usage-button"
-                title="See Usage Info"
-                usage-div-id="usage-info-{{ key.id }}"
-              >
-                <i class="fas fa-dollar-sign"></i>
-              </button>
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-    <div class="utility-column">
-      <div class="utility-container">
-        <div class="redirect-links">
-          <h3>Utilities</h3>
-          <ul>
-            <li>
-              <a href="{{ url_for('image.generate_image') }}">Images</a>
-            </li>
-            <li>
-              <a href="{{ url_for('embeddings.embeddings_center') }}"
-                >Document Embeddings</a
-              >
-            </li>
-            <li>
-              <a href="{{ url_for('chat.chat_index') }}">GPT</a>
-            </li>
-            <li>
-              <a href="{{ url_for('audio.audio_center') }}">Audio</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="image-container">
-        <h3>Img History</h3>
-        <div class="image-history-carousel">
-          {% for image in user_images %}
-          <div class="image-history-item">
-            {% if loop.index <= 2 %}
-            <img
-              src="{{ url_for('static', filename='temp_img/' ~ image.id ~ '.webp') }}"
-              alt="Generated Image"
-              data-id="{{ image.id }}"
-            />
-            {% else %}
-            <img
-              src="{{ url_for('static', filename='temp_img/' ~ image.id ~ '.webp') }}"
-              alt="Generated Image"
-              data-id="{{ image.id }}"
-              loading="lazy"
-            />
-            {% endif %}
-            <div class="icons-container"></div>
-          </div>
-          {% else %}
-          <p>No images found.</p>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <div class="utility-settings">
-      <h3>Utility Settings</h3>
-      <div id="options">
-        <button id="show-preferences-btn" class="options-button">
-          <i class="fa-regular fa-comment"></i>
-        </button>
-        <button id="docs-edit-btn" class="options-button">
-          <i class="fas fa-file-signature"></i>
-        </button>
-        <button id="docs-preferences-btn" class="options-button">
-          <i class="fas fa-file-lines"></i>
-        </button>
-      </div>
-      <input type="hidden" id="selected-conversation-id" value="" />
-      <div id="preference-popup" class="preference-popup">
-        <h4>Chat Preferences</h4>
-        <form id="update-preferences-form">
-          <div class="form-group">
-            {{ user_preferences_form.model.label }} {{
-            user_preferences_form.model() }}
-          </div>
-          <div class="form-group">
-            {{ user_preferences_form.temperature.label }}
-
-            <input
-              type="range"
-              id="temperature"
-              name="temperature"
-              min="0"
-              max="2"
-              step="0.1"
-              value="{{ user_preferences_form.temperature.data }}"
-              oninput="document.getElementById('temperature-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="temperature-value"
-              class="range-value-input"
-              value="{{ user_preferences_form.temperature.data }}"
-              oninput="document.getElementById('temperature').value = this.value"
-            />
-          </div>
-          <div class="form-group">
-            {{ user_preferences_form.max_tokens.label }}
-            <input
-              type="range"
-              id="max_tokens"
-              name="max_tokens"
-              min="0"
-              max="4096"
-              step="1"
-              value="{{ user_preferences_form.max_tokens.data }}"
-              oninput="document.getElementById('max-tokens-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="max-tokens-value"
-              class="range-value-input"
-              value="{{ user_preferences_form.max_tokens.data }}"
-              oninput="document.getElementById('max_tokens').value = this.value"
-            />
-          </div>
-          <div class="form-group">
-            {{ user_preferences_form.frequency_penalty.label }}
-            <input
-              type="range"
-              id="frequency_penalty"
-              name="frequency_penalty"
-              min="-2"
-              max="2"
-              step="0.1"
-              value="{{ user_preferences_form.frequency_penalty.data }}"
-              oninput="document.getElementById('frequency-penalty-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="frequency-penalty-value"
-              class="range-value-input"
-              value="{{ user_preferences_form.frequency_penalty.data }}"
-              oninput="document.getElementById('frequency_penalty').value = this.value"
-            />
-          </div>
-          <div class="form-group">
-            {{ user_preferences_form.presence_penalty.label }}
-            <input
-              type="range"
-              id="presence_penalty"
-              name="presence_penalty"
-              min="-2"
-              max="2"
-              step="0.1"
-              value="{{ user_preferences_form.presence_penalty.data }}"
-              oninput="document.getElementById('presence-penalty-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="presence-penalty-value"
-              class="range-value-input"
-              value="{{ user_preferences_form.presence_penalty.data }}"
-              oninput="document.getElementById('presence_penalty').value = this.value"
-            />
-          </div>
-          <div class="form-group">
-            {{ user_preferences_form.top_p.label }}
-            <input
-              type="range"
-              id="top_p"
-              name="top_p"
-              min="0"
-              max="1"
-              step="0.01"
-              value="{{ user_preferences_form.top_p.data }}"
-              oninput="document.getElementById('top-p-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="top-p-value"
-              class="range-value-input"
-              value="{{ user_preferences_form.top_p.data }}"
-              oninput="document.getElementById('top_p').value = this.value"
-            />
-          </div>
-          <input
-            type="submit"
-            value="Update Preferences"
-            id="preference-submit"
-            class="button-send"
-          />
-        </form>
-      </div>
-      <div id="docs-edit-popup" class="docs-edit-popup">
-        <h4>Documents</h4>
-        <div class="docs-container">
-          <ul class="docs_list">
-            {% for document in documents %}
-            <li id="document-{{ document.id }}">
-              <form
-                class="edit-document-form"
-                action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
-                method="post"
-              >
-                <input
-                  type="hidden"
-                  name="document_id"
-                  value="{{ document.id }}"
-                />
-                <div class="editable-container">
+        <div id="docs-edit-popup" class="docs-edit-popup">
+          <h4>Documents</h4>
+          <div class="docs-container">
+            <ul class="docs_list">
+              {% for document in documents %}
+              <li id="document-{{ document.id }}">
+                <form
+                  class="edit-document-form"
+                  action="{{ url_for('embeddings.update_document', document_id=document.id) }}"
+                  method="post"
+                >
                   <input
-                    class="editable"
-                    type="text"
-                    id="title-edit"
-                    name="title"
-                    value="{{ document.title }}"
-                    readonly
+                    type="hidden"
+                    name="document_id"
+                    value="{{ document.id }}"
                   />
-                  <input
-                    class="editable"
-                    type="text"
-                    id="author-edit"
-                    name="author"
-                    value="Author: {{ document.author }}"
-                    readonly
-                  />
-                  <p>Total Tokens: {{ document.total_tokens }}</p>
-                  <p>Chunk Count: {{ document.chunk_count }}</p>
+                  <div class="editable-container">
+                    <input
+                      class="editable"
+                      type="text"
+                      id="title-edit"
+                      name="title"
+                      value="{{ document.title }}"
+                      readonly
+                    />
+                    <input
+                      class="editable"
+                      type="text"
+                      id="author-edit"
+                      name="author"
+                      value="Author: {{ document.author }}"
+                      readonly
+                    />
+                    <p>Total Tokens: {{ document.total_tokens }}</p>
+                    <p>Chunk Count: {{ document.chunk_count }}</p>
+                  </div>
+                </form>
+                <form
+                  action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
+                  method="post"
+                ></form>
+                <div class="button-container">
+                  <button
+                    type="button"
+                    class="btn-icon edit-btn"
+                    title="Edit Document"
+                  >
+                    <i class="fa fa-edit"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-icon save-btn"
+                    title="Save Changes"
+                    style="display: none"
+                  >
+                    <i class="fa fa-save"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-icon delete-btn"
+                    data-doc-id="{{ document.id }}"
+                    title="Delete Document"
+                  >
+                    <i class="fa fa-trash"></i>
+                  </button>
                 </div>
-              </form>
-              <form
-                action="{{ url_for('embeddings.delete_document', document_id=document.id) }}"
-                method="post"
-              ></form>
-              <div class="button-container">
-                <button
-                  type="button"
-                  class="btn-icon edit-btn"
-                  title="Edit Document"
-                >
-                  <i class="fa fa-edit"></i>
-                </button>
-                <button
-                  type="button"
-                  class="btn-icon save-btn"
-                  title="Save Changes"
-                  style="display: none"
-                >
-                  <i class="fa fa-save"></i>
-                </button>
-                <button
-                  type="button"
-                  class="btn-icon delete-btn"
-                  data-doc-id="{{ document.id }}"
-                  title="Delete Document"
-                >
-                  <i class="fa fa-trash"></i>
-                </button>
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
-      </div>
-      <div id="docs-settings-popup" class="docs-settings-popup=">
-        <h4>Knowledge Retrieval</h4>
-        <form id="docs-preferences-form">
-          {{ doc_preferences_form.hidden_tag() }}
-          <div class="knowledge-select form-group">
-            {{ doc_preferences_form.knowledge_query_mode.label }} {{
-            doc_preferences_form.knowledge_query_mode() }}
-          </div>
-          <div class="form-group">
-            {{ doc_preferences_form.knowledge_context_tokens.label }}
+        <div id="docs-settings-popup" class="docs-settings-popup=">
+          <h4>Knowledge Retrieval</h4>
+          <form id="docs-preferences-form">
+            {{ doc_preferences_form.hidden_tag() }}
+            <div class="knowledge-select form-group">
+              {{ doc_preferences_form.knowledge_query_mode.label }} {{
+              doc_preferences_form.knowledge_query_mode() }}
+            </div>
+            <div class="form-group">
+              {{ doc_preferences_form.knowledge_context_tokens.label }}
+              <input
+                type="range"
+                id="knowledge_context_tokens"
+                name="knowledge_context_tokens"
+                min="1"
+                max="80"
+                value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
+                oninput="document.getElementById('knowledge_context_tokens_value').value = this.value + '%'"
+              />
+              <input
+                type="text"
+                id="knowledge_context_tokens_value"
+                class="range-value-input"
+                value="{{ doc_preferences_form.knowledge_context_tokens.data }}%"
+                oninput="document.getElementById('knowledge_context_tokens').value = this.value.replace('%', '')"
+              />
+            </div>
+            <ul class="docs-preference-list">
+              {% for document in documents %}
+              <li id="document-{{ document.id }}" class="document-item">
+                <div class="doc-info">
+                  <p id="title-edit">{{ document.title }}</p>
+                  <p id="author-edit">{{ document.author }}</p>
+                  <p>Tokens: {{ document.total_tokens }}</p>
+                  <p>Chunks: {{ document.chunk_count }}</p>
+                </div>
+                <div class="doc-select">
+                  <input
+                    type="checkbox"
+                    id="checkbox-{{ document.id }}"
+                    name="document_selection_{{ document.id }}"
+                    {%
+                    if
+                    document.selected
+                    %}checked{%
+                    endif
+                    %}
+                  />
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
             <input
-              type="range"
-              id="knowledge_context_tokens"
-              name="knowledge_context_tokens"
-              min="1"
-              max="80"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
-              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value + '%'"
+              type="submit"
+              value="Save Preferences"
+              id="docs-preferences-submit"
+              class="button-send"
             />
-            <input
-              type="text"
-              id="knowledge_context_tokens_value"
-              class="range-value-input"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}%"
-              oninput="document.getElementById('knowledge_context_tokens').value = this.value.replace('%', '')"
-            />
-          </div>
-          <ul class="docs-preference-list">
-            {% for document in documents %}
-            <li id="document-{{ document.id }}" class="document-item">
-              <div class="doc-info">
-                <p id="title-edit">{{ document.title }}</p>
-                <p id="author-edit">{{ document.author }}</p>
-                <p>Tokens: {{ document.total_tokens }}</p>
-                <p>Chunks: {{ document.chunk_count }}</p>
-              </div>
-              <div class="doc-select">
-                <input
-                  type="checkbox"
-                  id="checkbox-{{ document.id }}"
-                  name="document_selection_{{ document.id }}"
-                  {%
-                  if
-                  document.selected
-                  %}checked{%
-                  endif
-                  %}
-                />
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
-          <input
-            type="submit"
-            value="Save Preferences"
-            id="docs-preferences-submit"
-            class="button-send"
-          />
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock %} {% block scripts %}
+{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
+block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

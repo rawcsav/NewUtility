@@ -21,7 +21,8 @@
     align-items: center;
   }
 
-  .site-footer .footer-heading {
+  .site-footer .footer-heading,
+  .site-footer h6 {
     font-size: 1.6rem;
     font-family: "NeueMontreal", sans-serif;
     margin-bottom: 0;
@@ -45,6 +46,11 @@
     color: #ff4500; /* Darker blue on hover */
   }
 
+  .inner-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .site-footer .footer-bottom {
     text-align: center;
     margin-top: 3rem;
@@ -64,7 +70,7 @@
   <div class="footer-content">
     <div class="footer-section">
       <div class="inner-footer">
-        <h4 class="footer-heading">Site</h4>
+        <h6 class="footer-heading">Site</h6>
         <nav class="footer-nav">
           <ul class="footer-links">
             <li><a href="https://rawcsav.com/">Home</a></li>
@@ -78,7 +84,7 @@
     </div>
     <div class="footer-section">
       <div class="inner-footer">
-        <h4 class="footer-heading">Links</h4>
+        <h6 class="footer-heading">Links</h6>
         <nav class="footer-nav">
           <ul class="footer-links">
             <li><a href="https://github.com/rawcsav">GitHub</a></li>
@@ -98,7 +104,7 @@
     </div>
     <div class="footer-section">
       <div class="inner-footer">
-        <h4 class="footer-heading">New Utility</h4>
+        <h6 class="footer-heading">New Utility</h6>
         <nav class="footer-nav">
           <ul class="footer-links">
             <li><a href="[Project Docs URL Placeholder]">Register</a></li>

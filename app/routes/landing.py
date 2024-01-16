@@ -1,7 +1,18 @@
-from flask import Blueprint, render_template
+import os
 
-bp = Blueprint('landing', __name__)
+from flask import Blueprint, render_template, current_app
+from markdown2 import markdown
 
-@bp.route('/')
+bp = Blueprint("landing", __name__)
+
+
+@bp.route("/")
 def landing_page():
-    return render_template('landing.html')
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "landing.md"
+    )
+
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("landing.html", tooltip=docs_content)

@@ -250,3 +250,12 @@ a {
 .submit:hover {
   color: #ff7900;
 }
+
+.hamburger-menu,
+.toolbox-icon {
+  color: #fafafa !important;
+}
+
+.messages-icon {
+  display: none !important;
+}

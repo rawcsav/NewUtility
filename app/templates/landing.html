@@ -65,6 +65,7 @@
     </div>
   </div>
 </div>
-{% endblock %} {% block scripts %}
+{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
+block scripts %}
 <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 {% endblock %}

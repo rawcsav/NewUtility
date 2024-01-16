@@ -1,5 +1,8 @@
+import os
 import re
 from flask_login import login_user, logout_user, login_required, current_user
+from markdown2 import markdown
+
 from app.database import UserAPIKey, User
 from app.util.forms_util import (
     LoginForm,
@@ -122,8 +125,14 @@ def login():
         return jsonify(
             {"status": "error", "message": "Invalid login credential or password."}
         )
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "landing.md"
+    )
 
-    return render_template("login.html", form=form)
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("login.html", form=form, tooltip=docs_content)
 
 
 @bp.route("/signup", methods=["GET", "POST"])
@@ -209,8 +218,14 @@ def signup():
             ),
             200,
         )
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "landing.md"
+    )
 
-    return render_template("signup.html", form=form)
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("signup.html", form=form, tooltip=docs_content)
 
 
 @bp.route("/confirm_email", methods=["GET", "POST"])
@@ -235,8 +250,14 @@ def confirm_email():
                 jsonify({"status": "error", "message": "Invalid confirmation code."}),
                 400,
             )
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "landing.md"
+    )
 
-    return render_template("confirm_email.html", form=form)
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("confirm_email.html", form=form, tooltip=docs_content)
 
 
 @bp.route("/logout")
@@ -309,8 +330,14 @@ def reset_password_request():
             ),
             200,
         )
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "landing.md"
+    )
 
-    return render_template("reset_password.html", form=form)
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("reset_password.html", form=form, tooltip=docs_content)
 
 
 @bp.route("/reset_password/<token>", methods=["GET", "POST"])
@@ -375,8 +402,14 @@ def reset_password(token):
 
     if form.errors:
         return jsonify({"status": "error", "errors": form.errors}), 400
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "landing.md"
+    )
 
-    return render_template("reset_password.html", form=form, token=token)
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("reset_password.html", form=form, token=token, tooltip=docs_content)
 
 
 @bp.route("/login/google")

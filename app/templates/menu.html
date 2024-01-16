@@ -1,19 +1,285 @@
+<style>
+  .menu-nav {
+      display: flex;
+      position: absolute;
+      align-items: center;
+      top: 10px;
+      gap: 10px;
+      right: 2%;
+  }
+
+  .hamburger-menu {
+      font-size: 20px;
+      cursor: pointer;
+      color: #ff7900;
+      transition: transform 0.2s ease-in-out; /* Smooth transition for scale */
+  }
+
+  .hamburger-menu:hover {
+      transform: scale(1.05);
+  }
+
+  .dropdown-menu {
+      display: none; /* Hidden by default */
+      position: absolute;
+      right: 0; /* Align to the right edge of the hamburger menu */
+      top: 100%; /* Position below the hamburger menu */
+      border-radius: 5px;
+      background-color: #fff; /* White background for the dropdown */
+      padding: 10px 0; /* Padding on top and bottom */
+      border: 1px solid #ccc; /* Light grey border */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+      z-index: 101;
+      width: 125px; /* Set a fixed width for the dropdown */
+  }
+
+  .dropdown-menu a {
+      display: block;
+      padding: 5px 10px; /* Increase padding for better touch targets */
+      font-size: 14px; /* Increase font size for readability */
+      font-family: "Helvetica Neue", sans-serif;
+      text-decoration: none;
+      color: #2a2a2a;
+      font-weight: 500;
+      border-bottom: 1px solid #eaeaea; /* Lighter border color for separation */
+      transition: background-color 0.2s ease-in-out; /* Smooth transition for background */
+  }
+
+
+  .dropdown-menu a:hover {
+      background-color: #f6f6f6; /* Light grey background on hover */
+  }
+
+  /* Remove the border from the last item */
+  .dropdown-menu a:last-child {
+      border-bottom: none;
+  }
+
+  header {
+      -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+  }
+
+  /* Show the dropdown menu when the hamburger menu is clicked */
+  .hamburger-menu.active + .dropdown-menu {
+      display: block;
+  }
+
+  .logout-menu {
+      color: #e50000 !important;
+      font-weight: 700 !important;
+  }
+
+  .dashboard-menu,
+  .home-menu {
+      font-weight: 700 !important;
+  }
+
+  .dashboard-category {
+      font-style: italic !important;
+      font-size: 13px !important;
+      color: #575757 !important;
+      margin-left: 10px;
+  !important;
+  }
+
+
+  /* Styles for the toolbox and messages icons */
+  .toolbox-icon,
+  .messages-icon {
+      font-size: 20px;
+      cursor: pointer;
+      color: #ff7900; /* Example color, adjust as needed */
+      transition: transform 0.2s ease-in-out;
+  }
+
+  .toolbox-icon:hover,
+  .messages-icon:hover {
+      transform: scale(1.05);
+  }
+
+  /* New styles for overlay and tooltip */
+  .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      z-index: 1000; /* High z-index to be on top */
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.3s ease-in-out;
+      opacity: 0;
+      pointer-events: none; /* Prevent interaction when not visible */
+  }
+
+  .overlay.active {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto; /* Allow interaction when visible */
+  }
+
+  .tooltip {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      max-height: 80%;
+      max-width: 70%;
+      overflow: auto;
+      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      transform: scale(0.9);
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+  }
+
+  .tooltip.active {
+      transform: scale(1); /* Scale to normal size */
+      opacity: 1;
+  }
+
+  /* Standardize headings within Markdown content */
+  .tooltip h1,
+  .tooltip h2,
+  .tooltip h3,
+  .tooltip h4,
+  .tooltip h5,
+  .tooltip h6 {
+      color: #2a2a2a;
+      writing-mode: unset;
+      margin: unset;
+      padding: unset;
+      font-weight: bold;
+      font-family: "NeueMontreal", sans-serif;
+  }
+
+
+  .tooltip h1 {
+      font-size: 2em;
+      margin-bottom: 25px;
+  }
+
+  .tooltip h2 {
+      font-size: 1.8em;
+      margin-bottom: 23px;
+  }
+
+  .tooltip h3 {
+      font-size: 1.6em;
+      margin-bottom: 20px;
+  }
+
+  .tooltip h4 {
+      font-size: 1.5em;
+      margin-bottom: 18px;
+  }
+
+  .tooltip h5 {
+      font-weight: 500;
+      font-size: 1.4em;
+      margin-bottom: 16px;
+  }
+
+  .tooltip h6 {
+      font-weight: 500;
+      font-size: 1.2em;
+      margin-bottom: 14px;
+  }
+
+  /* Standardize paragraphs within Markdown content */
+  .tooltip p {
+      color: #474747;
+      font-family: "Helvetica Neue", sans-serif;
+      line-height: 1.6;
+      padding: unset;
+      font-size: 1em;
+      margin: unset;
+      margin-bottom: 20px;
+  }
+
+  /* Standardize lists within Markdown content */
+  .tooltip ul,
+  .tooltip ol {
+      padding: unset;
+      padding-left: 20px;
+      color: #474747;
+      font-family: "Helvetica Neue", sans-serif;
+      list-style-position: inside;
+      list-style: unset !important;
+      margin: unset;
+      font-size: 1em;
+      max-height: unset !important;
+      overflow-y: unset !important;
+      margin-bottom: 20px;
+
+  }
+
+  /* Standardize links within Markdown content */
+  .tooltip a {
+      font-size: 1em;
+      color: #0066cc;
+      font-family: "Helvetica Neue", sans-serif;
+      text-decoration: none;
+  }
+
+  /* Standardize code blocks within Markdown content */
+  .tooltip pre,
+  .tooltip code {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 1px;
+      border-radius: 3px;
+  }
+</style>
 <header>
   <nav class="menu-nav">
+    {% if current_user.is_authenticated %}
+    <i class="fas fa-envelope messages-icon"></i>
+    <i class="fas fa-toolbox toolbox-icon"></i>
+    {% endif %}
     <i class="fas fa-bars hamburger-menu"></i>
     <div class="dropdown-menu">
-      <a class="drop-item" href="{{ url_for('landing.landing_page') }}">Home</a>
+      <a
+        class="drop-item home-menu"
+        href="{{ url_for('landing.landing_page') }}"
+        >Home</a
+      >
       {% if current_user.is_authenticated %}
-      <a class="drop-item" href="{{ url_for('user.dashboard') }}">Dashboard</a>
-      <a class="drop-item" href="{{ url_for('image.generate_image') }}"
+      <a class="drop-item dashboard-menu" href="{{ url_for('user.dashboard') }}"
+        >Dashboard</a
+      >
+      <a
+        class="drop-item dashboard-category"
+        href="{{ url_for('image.generate_image') }}"
         >Images</a
       >
-      <a class="drop-item" href="{{ url_for('embeddings.embeddings_center') }}"
+      <a
+        class="drop-item dashboard-category"
+        href="{{ url_for('embeddings.embeddings_center') }}"
         >Embeddings</a
       >
-      <a class="drop-item" href="{{ url_for('chat.chat_index') }}">Chat</a>
-      <a class="drop-item" href="{{ url_for('audio.audio_center') }}">Audio</a>
-      <a class="drop-item" href="{{ url_for('auth.logout') }}">Logout</a>
+      <a
+        class="drop-item dashboard-category"
+        href="{{ url_for('chat.chat_index') }}"
+        >Chat</a
+      >
+      <a
+        class="drop-item dashboard-category"
+        href="{{ url_for('audio.audio_center') }}"
+        >Audio</a
+      >
+      <a class="drop-item logout-menu" href="{{ url_for('auth.logout') }}"
+        >Logout</a
+      >
       {% else %}
       <a class="drop-item" href="{{ url_for('auth.login') }}">Login</a>
       <a class="drop-item" href="{{ url_for('auth.signup') }}">Signup</a>

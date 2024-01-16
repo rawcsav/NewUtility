@@ -90,8 +90,13 @@ ul li {
   display: none;
 }
 
-.hamburger-menu {
-  color: #fafafa;
+.hamburger-menu,
+.toolbox-icon {
+  color: #fafafa !important;
+}
+
+.messages-icon {
+  display: none !important;
 }
 
 #title-container {

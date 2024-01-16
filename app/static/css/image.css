@@ -4,7 +4,8 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #toast {
@@ -20,6 +21,14 @@ html {
   opacity: 0;
   transition: opacity 0.6s;
   z-index: 1000;
+}
+
+#full-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100% - 5px);
+  border-bottom: 5px solid #ff4500;
 }
 
 #toast.success {

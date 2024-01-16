@@ -209,3 +209,12 @@ a {
   font-size: 16px;
   text-decoration: none;
 }
+
+.hamburger-menu,
+.toolbox-icon {
+  color: #fafafa !important;
+}
+
+.messages-icon {
+  display: none !important;
+}

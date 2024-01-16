@@ -1,5 +1,6 @@
 import os
 import tempfile
+from markdown2 import markdown
 from datetime import datetime, timedelta
 
 from flask import (
@@ -61,7 +62,13 @@ def audio_center():
     tts_form = TtsForm()
     transcription_form = TranscriptionForm()
     translation_form = TranslationForm()
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "audio.md"
+    )
 
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
     # Other required data
     tts_jobs = TTSJob.query.filter_by(user_id=current_user.id).all()
     translation_jobs = TranslationJob.query.filter_by(user_id=current_user.id).all()
@@ -78,6 +85,7 @@ def audio_center():
         TTSJobs=tts_jobs,
         TranslationJobs=translation_jobs,
         TranscriptionJobs=transcription_jobs,
+        tooltip=docs_content,
     )
 
 

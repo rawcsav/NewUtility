@@ -12,7 +12,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound
-
+from markdown2 import markdown
 from app import db
 from app.database import GeneratedImage
 from app.util.forms_util import GenerateImageForm
@@ -35,7 +35,13 @@ def generate_image():
     image_urls = []
     image_metadata = []  # List to hold metadata for each image
     error_message = None
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "image.md"
+    )
 
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
     if form.validate_on_submit():
         try:
             prompt = form.prompt.data
@@ -103,7 +109,8 @@ def generate_image():
         )
 
     return render_template(
-        "image.html", form=form, image_urls=image_urls, error_message=error_message
+        "image.html", form=form, image_urls=image_urls, error_message=error_message,
+        tooltip=docs_content
     )
 
 

@@ -1,6 +1,7 @@
+import os
 from datetime import datetime
-
-from flask import jsonify, Response, abort, session
+from markdown2 import markdown
+from flask import jsonify, Response, abort, session, current_app
 from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
 
@@ -42,8 +43,17 @@ def chat_index():
     # Create form instances
     new_conversation_form = NewConversationForm()
     chat_completion_form = ChatCompletionForm()
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "chat.md"
+    )
 
-    conversation_history = Conversation.query.filter_by(user_id=current_user.id, delete=False).all()
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+
+    conversation_history = Conversation.query.filter_by(
+        user_id=current_user.id, delete=False
+    ).all()
 
     if not conversation_history:
         new_conversation = Conversation(
@@ -111,6 +121,7 @@ def chat_index():
         documents=documents_data,
         preferences_dict=preferences_dict,
         doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
+        tooltip=docs_content,
     )
 
 
@@ -208,7 +219,6 @@ def update_preferences():
         preferences.frequency_penalty = form.frequency_penalty.data
         preferences.presence_penalty = form.presence_penalty.data
         preferences.top_p = form.top_p.data
-
 
         if (
             old_model == "gpt-4-vision-preview"
@@ -355,7 +365,9 @@ def retry_message(message_id):
 @bp.route("/conversation/<string:conversation_id>", methods=["GET"])
 @login_required
 def get_conversation_messages(conversation_id):
-    conversation, conversation_history = get_user_history(current_user.id, conversation_id)
+    conversation, conversation_history = get_user_history(
+        current_user.id, conversation_id
+    )
     if conversation:
         messages = [
             {

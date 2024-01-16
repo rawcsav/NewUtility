@@ -1,7 +1,9 @@
+import os
 import re
 from datetime import timedelta, datetime
-
-from flask import Blueprint, render_template, redirect, url_for, request, jsonify
+from markdown2 import markdown
+from flask import Blueprint, render_template, redirect, url_for, request, jsonify, \
+    current_app
 from flask_login import login_required, current_user
 
 from app import db
@@ -69,7 +71,13 @@ def dashboard():
         db.session.commit()
 
     preferences_dict = model_to_dict(preferences)
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "dashboard.md"
+    )
 
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
     return render_template(
         "dashboard.html",
         user_api_keys=user_api_keys,
@@ -80,6 +88,7 @@ def dashboard():
         preferences_dict=preferences_dict,
         user_preferences_form=UserPreferencesForm(data=preferences_dict),
         doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
+        tooltip=docs_content,
     )
 
 

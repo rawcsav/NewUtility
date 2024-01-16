@@ -1,8 +1,10 @@
+import os
 from datetime import datetime
-from flask import Blueprint, jsonify, render_template, request, session
+from flask import Blueprint, jsonify, render_template, request, session, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
+from markdown2 import markdown
 from app.database import Document, DocumentChunk, ChatPreferences
 
 from app.util.embeddings_util import (
@@ -30,7 +32,13 @@ bp = Blueprint("embeddings", __name__, url_prefix="/embeddings")
 @bp.route("/embeddings", methods=["GET"])
 @login_required
 def embeddings_center():
-    # Query the database for the current user's documents
+    markdown_file_path = os.path.join(
+        current_app.root_path, "static", "docs", "embeddings.md"
+    )
+
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
     user_documents = Document.query.filter_by(
         user_id=current_user.id, delete=False
     ).all()
@@ -46,7 +54,7 @@ def embeddings_center():
         for doc in user_documents
     ]
 
-    return render_template("embeddings.html", documents=documents_data)
+    return render_template("embeddings.html", documents=documents_data, tooltip=docs_content)
 
 
 @bp.route("/upload", methods=["POST"])
