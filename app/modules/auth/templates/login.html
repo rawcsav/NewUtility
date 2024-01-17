@@ -1,0 +1,66 @@
+{% extends 'base.html' %} {% block head %}
+<title>Login | New Utility</title>
+{% endblock %} {% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='dist/css/login.css') }}"
+/>
+{% endblock %} {% block body %}
+<div id="full-container">
+  <div id="left-column">
+    <div id="title-container">
+      <h1>New Utility</h1>
+      <h1>Nouvelle Utilité</h1>
+      <h1>Neue Nützlichkeit</h1>
+      <h1>Nuova Utilità</h1>
+      <h2>Login</h2>
+    </div>
+  </div>
+  <div class="form-container" id="login-container">
+    <form class="form" id="login-form" method="post">
+      <input
+        type="text"
+        name="middle-name"
+        id="middle-name"
+        style="display: none"
+      />
+      <div class="input-group">
+        <input
+          type="text"
+          name="username"
+          id="username"
+          class="input"
+          placeholder="Username"
+          required
+        />
+      </div>
+      <div class="input-group">
+        <input
+          type="password"
+          name="password"
+          id="password"
+          class="input"
+          placeholder="Password"
+          required
+        />
+        <div class="forgot">
+          <a
+            rel="noopener noreferrer"
+            href="{{ url_for('auth_bp.reset_password_request') }}"
+            >Forgot Password?</a
+          >
+        </div>
+      </div>
+      <button type="submit" class="submit">Login</button>
+      <div id="message-container"></div>
+      <div class="checkbox">
+        <input type="checkbox" id="remember" name="remember" />
+        <label for="remember">Remember Me</label>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
+block scripts %}
+<script src="{{ url_for('static', filename='dist/js/login.js') }}"></script>
+{% endblock %}

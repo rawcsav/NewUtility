@@ -250,39 +250,41 @@
     <div class="dropdown-menu">
       <a
         class="drop-item home-menu"
-        href="{{ url_for('landing.landing_page') }}"
+        href="{{ url_for('home_bp.landing_page') }}"
         >Home</a
       >
       {% if current_user.is_authenticated %}
-      <a class="drop-item dashboard-menu" href="{{ url_for('user.dashboard') }}"
+      <a
+        class="drop-item dashboard-menu"
+        href="{{ url_for('user_bp.dashboard') }}"
         >Dashboard</a
       >
       <a
         class="drop-item dashboard-category"
-        href="{{ url_for('image.generate_image') }}"
+        href="{{ url_for('image_bp.generate_image') }}"
         >Images</a
       >
       <a
         class="drop-item dashboard-category"
-        href="{{ url_for('embeddings.embeddings_center') }}"
+        href="{{ url_for('embedding_bp.embeddings_center') }}"
         >Embeddings</a
       >
       <a
         class="drop-item dashboard-category"
-        href="{{ url_for('chat.chat_index') }}"
+        href="{{ url_for('chat_bp.chat_index') }}"
         >Chat</a
       >
       <a
         class="drop-item dashboard-category"
-        href="{{ url_for('audio.audio_center') }}"
+        href="{{ url_for('audio_bp.audio_center') }}"
         >Audio</a
       >
-      <a class="drop-item logout-menu" href="{{ url_for('auth.logout') }}"
+      <a class="drop-item logout-menu" href="{{ url_for('auth_bp.logout') }}"
         >Logout</a
       >
       {% else %}
-      <a class="drop-item" href="{{ url_for('auth.login') }}">Login</a>
-      <a class="drop-item" href="{{ url_for('auth.signup') }}">Signup</a>
+      <a class="drop-item" href="{{ url_for('auth_bp.login') }}">Login</a>
+      <a class="drop-item" href="{{ url_for('auth_bp.signup') }}">Signup</a>
       {% endif %}
     </div>
   </nav>

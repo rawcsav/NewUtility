@@ -1,0 +1,50 @@
+{% extends 'base.html' %} {% block head %}
+<title>Confirm Email | New Utility</title>
+{% endblock %} {% block styles %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='dist/css/confirm.css') }}"
+/>
+{% endblock %} {% block body %}
+<div id="full-container">
+  <div id="left-column">
+    <div id="title-container">
+      <h1>New Utility</h1>
+      <h1>Nouvelle Utilité</h1>
+      <h1>Neue Nützlichkeit</h1>
+      <h1>Nuova Utilità</h1>
+      <h2>Confirm</h2>
+    </div>
+  </div>
+  <div class="form-container">
+    <form
+      action="{{ url_for('auth_bp.confirm_email') }}"
+      id="confirm-email-form"
+      class="form"
+      method="post"
+    >
+      <input
+        type="text"
+        name="middle-name"
+        id="middle-name"
+        style="display: none"
+      />
+      <div class="input-group">
+        <input
+          type="text"
+          id="code"
+          name="code"
+          class="input"
+          required
+          placeholder="Confirmation Code"
+        />
+      </div>
+      <button type="submit" class="submit">Confirm</button>
+      <div id="message-container"></div>
+    </form>
+  </div>
+  {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock
+  %}{% block scripts %}
+  <script src="{{ url_for('static', filename='dist/js/confirm.js') }}"></script>
+  {% endblock %}
+</div>

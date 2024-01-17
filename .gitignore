@@ -173,8 +173,8 @@ pyproject.toml
 stylelint.config.js
 /app/static/fonts/
 /include/
-/app/static/temp_img/*
+/app/static/user_files/temp_img/*
 /cert.pem
 /key.pem
-/app/static/user_img/*
-/app/static/user_audio/*
+/app/static/user_files/user_img/*
+/app/static/user_files/user_audio/*

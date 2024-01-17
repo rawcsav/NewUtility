@@ -1,0 +1,221 @@
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-Regular.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-Italic.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-Medium.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-MediumItalic.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-MediumItalic.woff") format("woff");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-SemiBold.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-SemiBoldItalic.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-SemiBoldItalic.woff") format("woff");
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-Bold.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "IBMPlexMono";
+  src:
+    url("../../fonts/IBMPlexMono-BoldItalic.woff2") format("woff2"),
+    url("../../fonts/IBMPlexMono-BoldItalic.woff") format("woff");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: normal;
+  font-weight: 500;
+  src:
+    url("../../fonts/HelveticaNeue-Medium.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-Medium.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: normal;
+  font-weight: 200;
+  src:
+    url("../../fonts/HelveticaNeue-Ultralight.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-Ultralight.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: italic;
+  font-weight: 400;
+  src:
+    url("../../fonts/HelveticaNeue-RegularItalic.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-RegularItalic.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: normal;
+  font-weight: 700;
+  src:
+    url("../../fonts/HelveticaNeue-Bold.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-Bold.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: normal;
+  font-weight: 300;
+  src:
+    url("../../fonts/HelveticaNeue-Light.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-Light.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: normal;
+  font-weight: 100;
+  src:
+    url("../../fonts/HelveticaNeue-Thin.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-Thin.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  font-style: normal;
+  font-weight: 400;
+  src:
+    url("../../fonts/HelveticaNeue-Regular.woff2") format("woff2"),
+    url("../../fonts/HelveticaNeue-Regular.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-Regular.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-Medium.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-Light.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-Italic.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-Italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-MediumItalic.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-MediumItalic.woff") format("woff");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-BoldItalic.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-BoldItalic.woff") format("woff");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-LightItalic.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-LightItalic.woff") format("woff");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueMontreal";
+  src:
+    url("../../fonts/NeueMontreal-Bold.woff2") format("woff2"),
+    url("../../fonts/NeueMontreal-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

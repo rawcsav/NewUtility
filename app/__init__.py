@@ -1,13 +1,13 @@
 import os
 from flask_sqlalchemy import SQLAlchemy
-from app.config import Config, ProductionConfig, DevelopmentConfig
-from authlib.integrations.flask_client import OAuth
+from config import ProductionConfig, DevelopmentConfig
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_login import LoginManager
 from flask import Flask
+from flask_assets import Environment
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
@@ -15,7 +15,6 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 mail = Mail()
 login_manager = LoginManager()
-oauth = OAuth()
 
 
 def create_app():
@@ -23,14 +22,15 @@ def create_app():
     flask_env = os.getenv("FLASK_ENV", "production").lower()
     if flask_env == "development":
         app.config.from_object(DevelopmentConfig)
-        DevelopmentConfig.init_app(oauth, app)
+        DevelopmentConfig.init_app(app)
     else:
         app.config.from_object(ProductionConfig)
-        ProductionConfig.init_app(oauth, app)
+        ProductionConfig.init_app(app)
 
     profile_env = os.getenv("FLASK_PROFILING", "false").lower()
     if profile_env == "true":
-        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5], )
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
+    assets = Environment()
 
     CSRFProtect(app)
     CORS(app)
@@ -38,6 +38,7 @@ def create_app():
     Migrate(app, db)
     bcrypt.init_app(app)
     mail.init_app(app)
+    assets.init_app(app)  # Initialize Flask-Assets
 
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
@@ -45,15 +46,24 @@ def create_app():
     login_manager.login_message_category = "info"
 
     with app.app_context():
-        from .routes import landing, auth, user, image, embed, chat, audio
+        from app.modules.user import user
+        from app.modules.home import home
+        from app.modules.image import image
+        from app.modules.embedding import embedding
+        from app.modules.chat import chat
+        from app.modules.auth import auth
+        from app.modules.audio import audio
+        from .assets import compile_static_assets
 
-        app.register_blueprint(landing.bp)
-        app.register_blueprint(auth.bp)
-        app.register_blueprint(user.bp)
-        app.register_blueprint(image.bp)
-        app.register_blueprint(embed.bp)
-        app.register_blueprint(chat.bp)
-        app.register_blueprint(audio.bp)
+        app.register_blueprint(home.home_bp)
+        app.register_blueprint(auth.auth_bp)
+        app.register_blueprint(user.user_bp)
+        app.register_blueprint(image.image_bp)
+        app.register_blueprint(embedding.embedding_bp)
+        app.register_blueprint(chat.chat_bp)
+        app.register_blueprint(audio.audio_bp)
+
+        compile_static_assets(assets)
 
         @app.teardown_request
         def session_teardown(exception=None):
@@ -62,7 +72,7 @@ def create_app():
             db.session.remove()
 
         db.create_all()
-        #from app.database import initialize_roles_with_limits, TierLimit, Role
-        #initialize_roles_with_limits(db)
+        # from app.database import initialize_roles_with_limits, TierLimit, Role
+        # initialize_roles_with_limits(db)
 
     return app
