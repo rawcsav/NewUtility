@@ -240,7 +240,7 @@ def download_tts(filename):
 def download_whisper(job_id):
     job = TranscriptionJob.query.get(job_id) or TranslationJob.query.get(job_id)
     if not job or job.user_id != current_user.id:
-        return (jsonify({"status": "error", "message": "File not found or access denied"}), 404)
+        return jsonify({"status": "error", "message": "File not found or access denied"}), 404
 
     concatenated_content = job.final_content
     file_extension = {"json": "json", "verbose_json": "json", "text": "txt", "srt": "srt", "vtt": "vtt"}.get(

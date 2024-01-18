@@ -58,10 +58,7 @@ body {
 }
 
 .form-container {
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: auto;
-  margin-bottom: auto;
+  margin: auto;
 
   background-color: #ffffff;
   border-radius: 5px;

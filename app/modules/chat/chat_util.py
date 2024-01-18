@@ -2,17 +2,17 @@ import base64
 import os
 import uuid
 from urllib.parse import urlparse
-import requests
 
+import requests
 import tiktoken
 from PIL import Image
 from flask import abort, stream_with_context, current_app, url_for
 from flask_login import current_user
 
 from app import db
-from app.models.image_models import MessageImages
 from app.models.chat_models import MessageChunkAssociation, Conversation, Message, ChatPreferences
-from app.utils.usage_util import chat_cost, update_usage_and_costs, num_tokens_from_string
+from app.models.image_models import MessageImages
+from app.utils.usage_util import chat_cost, num_tokens_from_string
 
 MODEL_TOKEN_LIMITS = {
     "gpt-4-1106-preview": 4096,
@@ -309,13 +309,9 @@ def chat_stream(
             total_prompt_tokens = num_tokens_from_string(prompt, preferences["model"])
             total_completion_tokens = num_tokens_from_string(full_response, preferences["model"])
 
-            # After the chat is completed, calculate the cost based on token counts
-            cost = chat_cost(preferences["model"], total_prompt_tokens, total_completion_tokens)
-            update_usage_and_costs(
-                user_id=user_id, api_key_id=current_user.selected_api_key_id, usage_type="chat", cost=cost
-            )
+            chat_cost(preferences["model"], total_prompt_tokens, total_completion_tokens)
 
-            if full_response.strip():  # Save only if there's non-empty content
+            if full_response.strip():
                 save_message(conversation_id, full_response, "incoming", preferences["model"])
 
         except Exception as e:
@@ -341,12 +337,9 @@ def handle_stream(
 
 def retry_delete_messages(conversation_id, message_id):
     try:
-        # Find the message to use as a reference point for deletion
         message_to_retry = Message.query.get_or_404(message_id)
         if message_to_retry.conversation_id != conversation_id:
             raise ValueError("Message ID does not match the conversation ID.")
-
-        # Delete messages that come after the specified message
         Message.query.filter(
             Message.conversation_id == conversation_id, Message.created_at > message_to_retry.created_at
         ).delete()
@@ -358,7 +351,7 @@ def retry_delete_messages(conversation_id, message_id):
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 

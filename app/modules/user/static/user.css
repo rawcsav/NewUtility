@@ -252,8 +252,7 @@ h4 {
   max-height: 80%;
   overflow-y: auto;
   margin: 0;
-  padding: 0;
-  padding-right: 15px;
+  padding: 0 15px 0 0;
 }
 .key-edits .dropdown-button {
   max-width: 100%;

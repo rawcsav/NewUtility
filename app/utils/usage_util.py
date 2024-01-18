@@ -1,4 +1,5 @@
 import tiktoken
+from flask_login import current_user
 
 from app import db
 from app.models.user_models import UserAPIKey, APIUsage
@@ -34,16 +35,17 @@ def chat_cost(model, input_tokens, completion_tokens):
 
     # Calculate the total cost
     total_cost = ((input_tokens / 1000) * input_cost) + ((completion_tokens / 1000) * output_cost)
+    update_usage_and_costs(current_user.id, current_user.selected_api_key_id, "chat", cost=total_cost)
 
     return total_cost
 
 
 def embedding_cost(input_tokens: int):
     cost = (input_tokens / 1000) * 0.0001
-    return cost
+    update_usage_and_costs(current_user.id, current_user.selected_api_key_id, "embedding", cost=cost)
 
 
-def dalle_cost(model_name: str, resolution: str, num_images: int = 1, quality: str = None) -> float:
+def dalle_cost(model_name: str, resolution: str, num_images: int = 1, quality: str = None):
     pricing = {
         "dall-e-3": {
             "standard": {"1024x1024": 0.040, "1024x1792": 0.080, "1792x1024": 0.080},
@@ -66,37 +68,7 @@ def dalle_cost(model_name: str, resolution: str, num_images: int = 1, quality: s
         raise ValueError(f"Unsupported model: {model_name}")
 
     total_cost = cost_per_image * num_images
-
-    return total_cost
-
-
-def whisper_cost(duration_seconds: int) -> float:
-    price_per_minute = 0.006
-    seconds_per_minute = 60
-
-    minutes = duration_seconds / seconds_per_minute
-
-    total_cost = minutes * price_per_minute
-
-    return total_cost
-
-
-def tts_cost(model_name: str, num_characters: int) -> float:
-    price_per_1k_standard = 0.015  # Cost per 1000 characters for standard TTS
-    price_per_1k_hd = 0.030  # Cost per 1000 characters for HD TTS
-
-    # Choose the correct pricing based on the model name
-    if model_name == "tts-1-hd":
-        price_per_1k = price_per_1k_hd
-    elif model_name == "tts-1-standard":
-        price_per_1k = price_per_1k_standard
-    else:
-        raise ValueError("Unsupported model name")
-
-    # Calculate the total cost based on the exact number of characters
-    total_cost = (num_characters / 1000) * price_per_1k
-
-    return total_cost
+    update_usage_and_costs(current_user.id, current_user.selected_api_key_id, "image_gen", cost=total_cost)
 
 
 def update_usage_and_costs(user_id, api_key_id, usage_type, cost):
@@ -143,3 +115,20 @@ def update_usage_and_costs(user_id, api_key_id, usage_type, cost):
 
     # Commit the changes to the database
     db.session.commit()
+
+
+def whisper_cost(duration_seconds):
+    whisper_rate_per_minute = 0.006
+    duration_minutes = round(duration_seconds / 60, 2)  # Round to the nearest second
+    cost = duration_minutes * whisper_rate_per_minute
+    cost = round(cost, 2)
+    update_usage_and_costs(current_user.id, current_user.selected_api_key_id, "audio", cost=cost)
+
+
+def tts_cost(characters, model):
+    rates = {"tts-1": 0.015 / 1000, "tts-1-hd": 0.030 / 1000}  # Per 1K characters rate  # Per 1K characters rate
+    if model not in rates:
+        raise ValueError("Invalid model type. Choose from 'whisper', 'tts', or 'tts_hd'.")
+    cost = characters * rates[model]
+    cost = round(cost, 2)
+    update_usage_and_costs(current_user.id, current_user.selected_api_key_id, "audio", cost=cost)

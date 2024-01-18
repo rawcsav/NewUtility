@@ -1,13 +1,9 @@
-import json
 import os
-import re
-from datetime import timedelta, datetime
 
 import openai
-from flask import current_app, jsonify
+from flask import current_app
 from flask_login import current_user
 from pydub import AudioSegment
-from pydub.silence import split_on_silence
 
 from app import db
 from app.models.audio_models import (
@@ -19,7 +15,7 @@ from app.models.audio_models import (
     TranscriptionJobSegment,
     TranslationJobSegment,
 )
-from app.models.mixins import generate_uuid
+from app.utils.usage_util import num_tokens_from_string, chat_cost, tts_cost, whisper_cost
 
 
 def user_subdirectory(user_id):
@@ -84,12 +80,10 @@ def preprocess_audio(filepath, user_directory):
         raise ValueError(f"Unsupported format: {original_format}")
     audio = AudioSegment.from_file(filepath, format=original_format)
     start_trim = ms_until_sound(audio)
-    print("trimmed")
     trimmed_audio = audio[start_trim:]
     new_filename = f"trim_{os.path.splitext(os.path.basename(filepath))[0]}.mp3"
     new_filepath = os.path.join(user_directory, new_filename)
     trimmed_audio.export(new_filepath, format="mp3")
-    print("exported to mp3")
     if os.path.getsize(new_filepath) <= max_size_in_bytes:
         os.remove(filepath)
         return [new_filepath]
@@ -102,9 +96,7 @@ def preprocess_audio(filepath, user_directory):
         next_split = find_nearest_silence(trimmed_audio, current_ms + chunk_length_ms, search_radius_ms)
         chunks.append(trimmed_audio[current_ms:next_split])
         current_ms = next_split
-    print("chunks created")
     segment_filepaths = [export_audio_chunk(chunk, user_directory, new_filepath, i) for i, chunk in enumerate(chunks)]
-    print("chunked and segmented")
     os.remove(filepath)
     os.remove(new_filepath)
     return segment_filepaths
@@ -166,7 +158,13 @@ def generate_prompt(client, instruction: str) -> str:
             {"role": "user", "content": instruction},
         ],
     )
+
     fictitious_prompt = response.choices[0].message.content
+    total_prompt_tokens = num_tokens_from_string(instruction, "gpt-3.5-turbo-0613")
+    total_completion_tokens = num_tokens_from_string(fictitious_prompt, "gpt-3.5-turbo-0613")
+
+    # After the chat is completed, calculate the cost based on token counts
+    chat_cost("gpt-3.5-turbo-0613", total_prompt_tokens, total_completion_tokens)
     return fictitious_prompt
 
 
@@ -189,7 +187,7 @@ def generate_speech(client, model, voice, input_text, response_format="mp3", spe
     db.session.commit()
     if not create_and_stream_tts_audio(client, model, voice, input_text, response_format, speed, tts_filepath):
         return {"error": "Failed to generate speech"}
-
+    tts_cost(len(input_text), model)
     return tts_filepath, tts_filename
 
 
@@ -229,9 +227,10 @@ def process_audio_transcription(
         if response_format in ["json", "verbose_json"]:
             transcript = transcript.model_dump_json()
         elif response_format in ["srt", "vtt"]:
-            print("adjusting subtitle timing")
             transcript = adjust_subtitle_timing(transcript, total_duration_ms, response_format)
         duration = get_audio_duration(file_path)
+        seconds = duration * 1000
+        whisper_cost(seconds)
         create_transcription_job_segment(transcription_job.id, transcript, index, duration)
         return duration
     except openai.OpenAIError as e:
@@ -253,7 +252,6 @@ def transcribe_audio(
     total_duration_ms = 0  # Initialize the total duration
     try:
         for index, file_path in enumerate(file_paths):
-            print(f"transcribing segment {index}")
             segment_duration = process_audio_transcription(
                 client,
                 file_path,
@@ -266,7 +264,6 @@ def transcribe_audio(
                 index,
                 total_duration_ms,
             )
-            print("transcribed")
             if isinstance(segment_duration, dict):
                 raise Exception(segment_duration["error"])
             total_duration_ms += segment_duration
@@ -274,8 +271,6 @@ def transcribe_audio(
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        print(e)
-
     return transcription_job.id
 
 
@@ -292,8 +287,10 @@ def process_audio_translation(
             elif response_format in ["srt", "vtt"]:
                 transcript = adjust_subtitle_timing(translation, total_duration_ms, response_format)
             duration = get_audio_duration(file_path)
-            create_transcription_job_segment(translation_job.id, transcript, index, duration)
-            return duration  # Return the duration of the current segment
+            seconds = duration * 1000
+            whisper_cost(seconds)
+            create_translation_job_segment(translation_job.id, transcript, index, duration)
+            return duration
     except openai.OpenAIError as e:
         return {"error": str(e)}
 
@@ -330,7 +327,6 @@ def translate_audio(
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        print(e)
     return translation_job.id
 
 
@@ -420,22 +416,6 @@ def get_whisper_preferences(user_id):
         }
     else:
         return {"model": "whisper-1", "language": "en", "response_format": "text"}
-
-
-def cleanup_expired_files():
-    expired_jobs = TranscriptionJob.query.filter(
-        TranscriptionJob.download_timestamp < datetime.utcnow() - timedelta(hours=24)
-    ).all()
-    expired_jobs.extend(
-        TranslationJob.query.filter(TranslationJob.download_timestamp < datetime.utcnow() - timedelta(hours=24)).all()
-    )
-
-    for job in expired_jobs:
-        if job.download_url and os.path.exists(job.download_url):
-            os.remove(job.download_url)  # Delete the file
-            job.download_url = None  # Clear the download URL
-            job.download_timestamp = None  # Clear the download timestamp
-            db.session.commit()
 
 
 def save_file_to_disk(content, file_extension, job_id, user_directory):

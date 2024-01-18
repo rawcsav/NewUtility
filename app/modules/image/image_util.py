@@ -1,13 +1,13 @@
 import os
 from datetime import datetime
 
+import requests
 from PIL import Image
 from flask import url_for
-import requests
 
 from app import db
 from app.models.image_models import GeneratedImage
-from app.utils.usage_util import update_usage_and_costs, dalle_cost
+from app.utils.usage_util import dalle_cost
 
 
 def download_compressed_image(download_dir, image_url, image_id):
@@ -42,19 +42,17 @@ def download_compressed_image(download_dir, image_url, image_id):
         return None
 
 
-def generate_images(client, request_params, user_id, api_key_id):
+def generate_images(client, request_params):
     response = client.images.generate(**request_params)
     if response is None or not hasattr(response, "data"):
         raise Exception("Failed to generate img")
 
-    cost = dalle_cost(
+    dalle_cost(
         model_name=request_params["model"],
         resolution=request_params["size"],
         num_images=request_params["n"],
         quality=request_params.get("quality"),
     )
-    update_usage_and_costs(user_id, api_key_id, "image_gen", cost)
-
     return response.data
 
 

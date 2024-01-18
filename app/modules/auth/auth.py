@@ -103,9 +103,9 @@ def signup():
         confirm_password = request.form.get("confirm_password")
 
         if not username or not email or not password:
-            return (jsonify({"status": "error", "message": "All fields are required."}), 400)
+            return jsonify({"status": "error", "message": "All fields are required."}), 400
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            return (jsonify({"status": "error", "message": "Invalid email address."}), 400)
+            return jsonify({"status": "error", "message": "Invalid email address."}), 400
         if (
             len(password) < 8
             or not re.search("[a-z]", password)
@@ -124,11 +124,11 @@ def signup():
                 400,
             )
         if password != confirm_password:
-            return (jsonify({"status": "error", "message": "Passwords do not match."}), 400)
+            return jsonify({"status": "error", "message": "Passwords do not match."}), 400
         if User.query.filter_by(username=username).first():
-            return (jsonify({"status": "error", "message": "Username already exists."}), 400)
+            return jsonify({"status": "error", "message": "Username already exists."}), 400
         if User.query.filter_by(email=email).first():
-            return (jsonify({"status": "error", "message": "Email already registered."}), 400)
+            return jsonify({"status": "error", "message": "Email already registered."}), 400
 
         hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
         confirmation_code = generate_confirmation_code()
@@ -182,7 +182,7 @@ def confirm_email():
                 }
             )
         else:
-            return (jsonify({"status": "error", "message": "Invalid confirmation code."}), 400)
+            return jsonify({"status": "error", "message": "Invalid confirmation code."}), 400
     markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
 
     with open(markdown_file_path, "r") as file:
@@ -217,7 +217,7 @@ def reset_password_request():
         user = User.query.filter_by(email=email).first()
 
         if not user:
-            return (jsonify({"status": "error", "message": "No account with that email address."}), 404)
+            return jsonify({"status": "error", "message": "No account with that email address."}), 404
         else:
             if user.login_method in ["Github", "Google"]:
                 message = f"Please use {user.login_method.title()} to sign in."
@@ -232,7 +232,7 @@ def reset_password_request():
         msg.body = f"Please click on the link to reset your password: {reset_link}. " f"It resets in 5 minutes."
         mail.send(msg)
 
-        return (jsonify({"status": "success", "message": "An email has been sent with further instructions."}), 200)
+        return jsonify({"status": "success", "message": "An email has been sent with further instructions."}), 200
     markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
 
     with open(markdown_file_path, "r") as file:
@@ -263,7 +263,7 @@ def reset_password(token):
         confirm_password = form.confirm_password.data
 
         if password != confirm_password:
-            return (jsonify({"status": "error", "message": "Passwords do not match."}), 400)
+            return jsonify({"status": "error", "message": "Passwords do not match."}), 400
 
         if (
             len(password) < 8
@@ -289,7 +289,11 @@ def reset_password(token):
         db.session.commit()
         return (
             jsonify(
-                {"status": "success", "message": "Your password has been updated!", "redirect": url_for("auth_bp.login")}
+                {
+                    "status": "success",
+                    "message": "Your password has been updated!",
+                    "redirect": url_for("auth_bp.login"),
+                }
             ),
             200,
         )

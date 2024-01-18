@@ -133,7 +133,7 @@ def upload_api_key():
             elif label == "Error":
                 nickname = get_unique_nickname(current_user.id, nickname)
                 create_and_save_api_key(current_user.id, api_key, nickname, label)
-                return (jsonify({"status": "error", "message": f"{api_key} is not valid."}), 400)
+                return jsonify({"status": "error", "message": f"{api_key} is not valid."}), 400
 
             nickname = get_unique_nickname(current_user.id, nickname)
             create_and_save_api_key(current_user.id, api_key, nickname, label)
@@ -145,7 +145,7 @@ def upload_api_key():
         except Exception as e:
             print(e)
             db.session.rollback()
-            return (jsonify({"status": "error", "message": "Failed to verify API key."}), 400)
+            return jsonify({"status": "error", "message": "Failed to verify API key."}), 400
 
 
 @user_bp.route("/retest_api_key", methods=["POST"])
@@ -176,7 +176,7 @@ def retest_api_key():
             user_api_key.label = label
             db.session.commit()
 
-            return (jsonify({"status": "success", "message": f'API key "{nickname}" retested successfully'}), 200)
+            return jsonify({"status": "success", "message": f'API key "{nickname}" retested successfully'}), 200
         except Exception:
             db.session.rollback()
             return jsonify({"status": "error", "message": "Failed to retest API key"}), 400
@@ -204,7 +204,7 @@ def delete_api_key():
                 200,
             )
         else:
-            return (jsonify({"status": "error", "message": "API key not found or already marked for deletion"}), 400)
+            return jsonify({"status": "error", "message": "API key not found or already marked for deletion"}), 400
     return redirect(url_for("user_bp.dashboard"))
 
 

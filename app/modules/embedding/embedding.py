@@ -1,13 +1,15 @@
 import os
 from datetime import datetime
+
 from flask import Blueprint, jsonify, render_template, request, session, current_app
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
-from app import db
 from markdown2 import markdown
-from app.models.embedding_models import Document, DocumentChunk
-from app.models.chat_models import ChatPreferences
+from werkzeug.utils import secure_filename
 
+from app import db
+from app.models.chat_models import ChatPreferences
+from app.models.embedding_models import Document, DocumentChunk
+from app.modules.auth.auth_util import initialize_openai_client
 from app.modules.embedding.embedding_util import (
     split_text,
     extract_text_from_file,
@@ -17,8 +19,7 @@ from app.modules.embedding.embedding_util import (
     save_temp,
 )
 from app.utils.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm, UpdateDocPreferencesForm
-from app.modules.auth.auth_util import initialize_openai_client
-from app.utils.usage_util import embedding_cost, update_usage_and_costs
+from app.utils.usage_util import embedding_cost
 from app.utils.vector_cache import VectorCache
 
 # Initialize the blueprint
@@ -133,17 +134,14 @@ def process_individual_document(doc_index):
 
         embeddings = get_embedding_batch(chunks, client)
 
-        cost = embedding_cost(total_tokens)
-        update_usage_and_costs(
-            user_id=current_user.id, api_key_id=current_user.selected_api_key_id, usage_type="embedding", cost=cost
-        )
+        embedding_cost(total_tokens)
 
         store_embeddings(new_document.id, embeddings)
         db.session.commit()
 
         file_info["status"] = "Complete"
         session.modified = True
-        return (jsonify({"status": "success", "message": "Document processed successfully."}), 200)
+        return jsonify({"status": "success", "message": "Document processed successfully."}), 200
 
     except Exception as e:
         db.session.rollback()

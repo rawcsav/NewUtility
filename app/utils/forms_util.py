@@ -1,6 +1,5 @@
 from datetime import datetime
-
-import pycountry
+from decimal import Decimal
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileRequired, FileField, FileAllowed
 from wtforms import (
@@ -16,15 +15,7 @@ from wtforms import (
 )
 from wtforms.fields.choices import RadioField
 from wtforms.fields.numeric import FloatField
-from wtforms.validators import (
-    DataRequired,
-    Length,
-    Regexp,
-    Email,
-    EqualTo,
-    NumberRange,
-    Optional,
-)
+from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo, NumberRange, Optional
 
 
 class LoginForm(FlaskForm):
@@ -36,11 +27,7 @@ class LoginForm(FlaskForm):
 class SignupForm(FlaskForm):
     username = StringField(
         "Username",
-        validators=[
-            DataRequired(),
-            Length(min=3, max=20),
-            Regexp(r"^\S+$", message="Username cannot contain spaces."),
-        ],
+        validators=[DataRequired(), Length(min=3, max=20), Regexp(r"^\S+$", message="Username cannot contain spaces.")],
     )
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField(
@@ -48,22 +35,15 @@ class SignupForm(FlaskForm):
         validators=[
             DataRequired(),
             Length(min=8),
-            Regexp(
-                r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]",
-                message="Password requirements not met.",
-            ),
+            Regexp(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]", message="Password requirements not met."),
         ],
     )
-    confirm_password = PasswordField(
-        "Confirm Password", validators=[DataRequired(), EqualTo("password")]
-    )
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo("password")])
     submit = SubmitField("Register")
 
 
 class ConfirmEmailForm(FlaskForm):
-    code = StringField(
-        "Confirmation Code", validators=[DataRequired(), Length(min=6, max=6)]
-    )
+    code = StringField("Confirmation Code", validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField("Confirm Email")
 
 
@@ -81,26 +61,18 @@ class ResetPasswordForm(FlaskForm):
             EqualTo("confirm_password", message="Passwords must match."),
         ],
     )
-    confirm_password = PasswordField(
-        "Confirm Password", validators=[DataRequired(), EqualTo("password")]
-    )
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo("password")])
     submit = SubmitField("Reset Password")
 
 
 class ChangeUsernameForm(FlaskForm):
-    new_username = StringField(
-        "New Username", validators=[DataRequired(), Length(min=3, max=20)]
-    )
+    new_username = StringField("New Username", validators=[DataRequired(), Length(min=3, max=20)])
     submit = SubmitField("Change Username")
 
 
 class UploadAPIKeyForm(FlaskForm):
     api_key = StringField(
-        "API Key",
-        validators=[
-            DataRequired(),
-            Regexp(r"sk-[A-Za-z0-9]{48}", message="Invalid API key format."),
-        ],
+        "API Key", validators=[DataRequired(), Regexp(r"sk-[A-Za-z0-9]{48}", message="Invalid API key format.")]
     )
     nickname = StringField("Nickname", validators=[Optional()])
     submit = SubmitField("Upload")
@@ -130,9 +102,7 @@ class GenerateImageForm(FlaskForm):
     style = StringField("Style", validators=[Optional()])
 
     def validate(self, extra_validators=None):
-        if not super(GenerateImageForm, self).validate(
-            extra_validators=extra_validators
-        ):
+        if not super(GenerateImageForm, self).validate(extra_validators=extra_validators):
             return False
 
         if self.model.data == "dall-e-3":
@@ -140,25 +110,18 @@ class GenerateImageForm(FlaskForm):
 
             self.n.validators.append(NumberRange(min=1, max=1))
 
-            return super(GenerateImageForm, self).validate(
-                extra_validators=extra_validators
-            )
+            return super(GenerateImageForm, self).validate(extra_validators=extra_validators)
         return True
 
 
 class DocumentUploadForm(FlaskForm):
     file = FileField(
         "Document",
-        validators=[
-            FileRequired(),
-            FileAllowed(["pdf", "doc", "docx", "txt"], "Text, pdf, or doc files only!"),
-        ],
+        validators=[FileRequired(), FileAllowed(["pdf", "doc", "docx", "txt"], "Text, pdf, or doc files only!")],
     )
     title = StringField("Document Title", validators=[Optional()])
     author = StringField("Author Name", validators=[Optional()])
-    chunk_size = IntegerField(
-        "Max Tokens per Chunk", validators=[Optional(), NumberRange(min=1, max=8000)]
-    )
+    chunk_size = IntegerField("Max Tokens per Chunk", validators=[Optional(), NumberRange(min=1, max=8000)])
 
 
 class DeleteDocumentForm(FlaskForm):
@@ -195,24 +158,16 @@ class UserPreferencesForm(FlaskForm):
     )
     max_tokens = IntegerField("Max Tokens")
     temperature = DecimalField(
-        "Temperature",
-        validators=[NumberRange(min=0, max=2), Optional()],
-        places=1,
-        default=0.7,
+        "Temperature", validators=[NumberRange(min=0, max=2), Optional()], places=1, default=Decimal("0.7")
     )
-    top_p = DecimalField(
-        "Top P", validators=[NumberRange(min=0, max=1)], places=2, default=1.0
-    )
+    top_p = DecimalField("Top P", validators=[NumberRange(min=0, max=1)], places=2, default=Decimal("1.00"))
 
     frequency_penalty = DecimalField(
-        "Frequency Penalty",
-        validators=[NumberRange(min=-2, max=2)],
-        places=2,
-        default=0,
+        "Frequency Penalty", validators=[NumberRange(min=-2, max=2)], places=2, default=Decimal("0.00")
     )
 
     presence_penalty = DecimalField(
-        "Presence Penalty", validators=[NumberRange(min=-2, max=2)], places=2, default=0
+        "Presence Penalty", validators=[NumberRange(min=-2, max=2)], places=2, default=Decimal("0.00")
     )
 
     submit = SubmitField("Get Completion")
@@ -237,18 +192,12 @@ class UpdateDocPreferencesForm(FlaskForm):
     selected = BooleanField("Selected", validators=[Optional()])
     knowledge_query_mode = BooleanField("Enable", validators=[Optional()])
     knowledge_context_tokens = FloatField(
-        "% Context",
-        validators=[
-            Optional(),
-            NumberRange(min=1, max=80, message="Value must be between 1 and 80"),
-        ],
+        "% Context", validators=[Optional(), NumberRange(min=1, max=80, message="Value must be between 1 and 80")]
     )
 
 
 class TtsPreferencesForm(FlaskForm):
-    model = SelectField(
-        "Model", choices=[("tts-1", "TTS 1"), ("tts-1-hd", "TTS 1 HD")], default="tts-1"
-    )
+    model = SelectField("Model", choices=[("tts-1", "TTS 1"), ("tts-1-hd", "TTS 1 HD")], default="tts-1")
     voice = SelectField(
         "Voice",
         choices=[
@@ -262,13 +211,9 @@ class TtsPreferencesForm(FlaskForm):
         default="alloy",
     )
     response_format = SelectField(
-        "Response Format",
-        choices=[("mp3", "MP3"), ("opus", "OPUS"), ("aac", "AAC"), ("flac", "FLAC")],
-        default="mp3",
+        "Response Format", choices=[("mp3", "MP3"), ("opus", "OPUS"), ("aac", "AAC"), ("flac", "FLAC")], default="mp3"
     )
-    speed = FloatField(
-        "Speed", validators=[DataRequired(), NumberRange(min=0.5, max=2.0)], default=1.0
-    )
+    speed = FloatField("Speed", validators=[DataRequired(), NumberRange(min=0.5, max=2.0)], default=1.0)
 
 
 class TtsForm(FlaskForm):
@@ -278,23 +223,13 @@ class TtsForm(FlaskForm):
 class WhisperPreferencesForm(FlaskForm):
     response_format = SelectField(
         "Response Format",
-        choices=[
-            ("json", "JSON"),
-            ("text", "Text"),
-            ("srt", "SRT"),
-            ("verbose_json", "Verbose JSON"),
-            ("vtt", "VTT"),
-        ],
+        choices=[("json", "JSON"), ("text", "Text"), ("srt", "SRT"), ("verbose_json", "Verbose JSON"), ("vtt", "VTT")],
         default="json",
     )
     temperature = DecimalField(
-        "Temperature",
-        validators=[Optional(), NumberRange(min=0.0, max=1.0)],
-        default=0,
+        "Temperature", validators=[Optional(), NumberRange(min=0.0, max=1.0)], places=1, default=Decimal("0.0")
     )
-    model = SelectField(
-        "Model", choices=[("whisper-1", "Whisper 1")], default="whisper-1"
-    )
+    model = SelectField("Model", choices=[("whisper-1", "Whisper 1")], default="whisper-1")
     language_choices = [
         ("en", "English"),
         ("zh", "Chinese"),
@@ -319,19 +254,12 @@ class TranscriptionForm(FlaskForm):
         "Audio File",
         validators=[
             DataRequired(),
-            FileAllowed(
-                ["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"],
-                "Invalid audio format!",
-            ),
+            FileAllowed(["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"], "Invalid audio format!"),
         ],
     )
     prompt_option = RadioField(
         "Prompt option",
-        choices=[
-            ("none", "None"),
-            ("manual", "Enter prompt manually"),
-            ("generate", "Generate prompt based on idea"),
-        ],
+        choices=[("none", "None"), ("manual", "Enter prompt manually"), ("generate", "Generate prompt based on idea")],
         default="none",
     )
     prompt = StringField("Prompt", validators=[Optional()])
@@ -344,19 +272,12 @@ class TranslationForm(FlaskForm):
         "Audio File",
         validators=[
             DataRequired(),
-            FileAllowed(
-                ["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"],
-                "Invalid audio format!",
-            ),
+            FileAllowed(["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"], "Invalid audio format!"),
         ],
     )
     prompt_option = RadioField(
         "Prompt option",
-        choices=[
-            ("none", "None"),
-            ("manual", "Enter prompt manually"),
-            ("generate", "Generate prompt based on idea"),
-        ],
+        choices=[("none", "None"), ("manual", "Enter prompt manually"), ("generate", "Generate prompt based on idea")],
         default="none",
     )
     prompt = StringField("Prompt", validators=[Optional()])

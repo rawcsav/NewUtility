@@ -1,16 +1,16 @@
 import hashlib
 import os
-import string
+import random
 import re
+
 import openai
 import requests
 from cryptography.fernet import Fernet
+from flask_login import current_user
 from openai import OpenAI
 
-from app import bcrypt, db
-from flask_login import current_user
-import random
-from app.models.user_models import UserAPIKey, User
+from app import db
+from app.models.user_models import UserAPIKey
 
 
 def generate_confirmation_code():

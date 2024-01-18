@@ -125,7 +125,7 @@ def split_text(text_pages, max_tokens=512):
                         chunk_pages.append(current_chunk_pages.copy())
                         current_sentence_chunk = [word]
                         current_chunk_token_count = word_token_count
-                        current_chunk_pages = set([page_number])
+                        current_chunk_pages = {page_number}
                 if current_sentence_chunk:
                     # Add the remaining words from the long sentence as a new chunk
                     chunks.append(" ".join(current_sentence_chunk))
@@ -133,7 +133,7 @@ def split_text(text_pages, max_tokens=512):
                 # Reset for a new sentence
                 current_chunk = []
                 current_chunk_token_count = 0
-                current_chunk_pages = set([page_number])
+                current_chunk_pages = {page_number}
             elif current_chunk_token_count + sentence_token_count <= max_tokens:
                 current_chunk.append(sentence)
                 current_chunk_token_count += sentence_token_count
@@ -144,7 +144,7 @@ def split_text(text_pages, max_tokens=512):
                 chunk_pages.append(current_chunk_pages.copy())
                 current_chunk = [sentence]
                 current_chunk_token_count = sentence_token_count
-                current_chunk_pages = set([page_number])
+                current_chunk_pages = {page_number}
 
     # Add the last chunk if it's not empty
     if current_chunk:

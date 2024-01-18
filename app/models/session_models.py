@@ -1,14 +1,7 @@
 from sqlalchemy import func
 
 from app import db
-from app.models.audio_models import TTSJob, TranslationJob, TranscriptionJob
-from app.models.chat_models import Conversation
-from app.models.embedding_models import Document
-from app.models.image_models import GeneratedImage, MessageImages
 from app.models.mixins import generate_uuid
-from sqlalchemy import event
-
-from app.models.user_models import UserAPIKey, User
 
 
 def after_update_listener(mapper, connection, target):

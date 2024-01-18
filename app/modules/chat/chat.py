@@ -169,7 +169,7 @@ def delete_conversation(conversation_id):
     # Check if this is the user's last conversation
     conversation_count = Conversation.query.filter_by(user_id=current_user.id).count()
     if conversation_count <= 1:
-        return (jsonify({"status": "error", "message": "Cannot have 0 conversations."}), 403)
+        return jsonify({"status": "error", "message": "Cannot have 0 conversations."}), 403
 
     conversation_to_delete.delete = True
     try:
@@ -344,7 +344,7 @@ def update_conversation_title(conversation_id):
     new_title = data.get("title")
 
     if new_title is None or not new_title.strip() or len(new_title.strip()) > 25:
-        return (jsonify({"status": "error", "message": "Title must be provided (25 characters or fewer)."}), 400)
+        return jsonify({"status": "error", "message": "Title must be provided (25 characters or fewer)."}), 400
 
     conversation = Conversation.query.get_or_404(conversation_id)
 
@@ -419,7 +419,7 @@ def edit_message(message_id):
     data = request.get_json()
     new_content = data.get("content")
     if new_content is None or not new_content.strip():
-        return (jsonify({"status": "error", "message": "Content must be provided and not just whitespace."}), 400)
+        return jsonify({"status": "error", "message": "Content must be provided and not just whitespace."}), 400
 
     message = Message.query.get_or_404(message_id)
 
@@ -506,7 +506,7 @@ def upload_image():
 
         except Exception as e:
             db.session.rollback()
-            return (jsonify({"status": "error", "message": f"Error processing image: {e}"}), 500)
+            return jsonify({"status": "error", "message": f"Error processing image: {e}"}), 500
     else:
         return jsonify({"status": "error", "message": "Invalid file upload"}), 400
 

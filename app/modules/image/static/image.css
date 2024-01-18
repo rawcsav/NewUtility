@@ -96,12 +96,11 @@ h2 {
 }
 
 .section-title-div {
-  margin: 0;
   border-right: 3px solid #2a2a2a;
   display: flex;
   height: fit-content;
   align-items: flex-start;
-  margin-right: auto;
+  margin: 0 auto 0 0;
 }
 
 .flex-form {
