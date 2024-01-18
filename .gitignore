@@ -14,7 +14,6 @@ key.pem
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -178,3 +177,4 @@ stylelint.config.js
 /key.pem
 /app/static/user_files/user_img/*
 /app/static/user_files/user_audio/*
+!/app/static/dist/
