@@ -52,7 +52,7 @@ class Role(db.Model):
         self.name = name
 
 
-class User(UserMixin, db.Model, TimestampMixin):
+class User(UserMixin, db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "users"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     username = db.Column(db.String(20), unique=True, nullable=False, index=True)
