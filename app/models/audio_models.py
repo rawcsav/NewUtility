@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import backref
 
 from app import db
 from app.models.mixins import generate_uuid, SoftDeleteMixin, TimestampMixin
@@ -30,6 +31,8 @@ class TTSJob(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "tts_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
+    task_id = db.Column(db.String(36), db.ForeignKey("task.id"))
+    task = db.relationship("Task", backref=backref("tts_job", uselist=False))
     model = db.Column(db.Enum("tts-1", "tts-1-hd"), nullable=False)
     voice = db.Column(db.Enum("alloy", "echo", "fable", "onyx", "nova", "shimmer"), nullable=False)
     response_format = db.Column(db.Enum("mp3", "opus", "aac", "flac"), nullable=False)
@@ -53,6 +56,8 @@ class TranscriptionJob(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "transcription_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
+    task_id = db.Column(db.String(36), db.ForeignKey("task.id"))
+    task = db.relationship("Task", backref=backref("transcription_job", uselist=False))
     prompt = db.Column(db.Text, nullable=True)
     model = db.Column(db.Enum("whisper-1"), nullable=False)
     language = db.Column(db.String(2), nullable=True)
@@ -90,6 +95,8 @@ class TranslationJob(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "translation_jobs"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
+    task_id = db.Column(db.String(36), db.ForeignKey("task.id"))
+    task = db.relationship("Task", backref=backref("translation_job", uselist=False))
     prompt = db.Column(db.Text, nullable=True)
     model = db.Column(db.Enum("whisper-1"), nullable=False)
     response_format = db.Column(db.Enum("json", "text", "srt", "verbose_json", "vtt"), nullable=False)

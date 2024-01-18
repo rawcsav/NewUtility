@@ -26,7 +26,7 @@ def load_user(user_id):
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("user.dashboard"))
+        return redirect(url_for("user_bp.dashboard"))
 
     form = LoginForm()
     if form.validate_on_submit():
@@ -59,7 +59,7 @@ def login():
                     user.last_attempt_time = None
                     db.session.commit()
                     login_user(user, remember=remember)
-                    return jsonify({"status": "success", "redirect": url_for("user.dashboard")})
+                    return jsonify({"status": "success", "redirect": url_for("user_bp.dashboard")})
                 else:
                     return jsonify({"status": "unconfirmed", "redirect": url_for("auth.confirm_email")})
             else:
@@ -86,8 +86,7 @@ def login():
                     )
 
         return jsonify({"status": "error", "message": "Invalid login credential or password."})
-    markdown_file_path = "static/home.md"
-
+    markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
@@ -158,8 +157,7 @@ def signup():
             ),
             200,
         )
-        markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
-
+    markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
@@ -185,7 +183,7 @@ def confirm_email():
             )
         else:
             return (jsonify({"status": "error", "message": "Invalid confirmation code."}), 400)
-        markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
+    markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
 
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
@@ -235,7 +233,7 @@ def reset_password_request():
         mail.send(msg)
 
         return (jsonify({"status": "success", "message": "An email has been sent with further instructions."}), 200)
-        markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
+    markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
 
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
@@ -298,7 +296,7 @@ def reset_password(token):
 
     if form.errors:
         return jsonify({"status": "error", "errors": form.errors}), 400
-        markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
+    markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
 
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()

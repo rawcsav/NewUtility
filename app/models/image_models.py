@@ -7,6 +7,8 @@ class GeneratedImage(db.Model, SoftDeleteMixin, TimestampMixin):
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
+    task_id = db.Column(db.String(36), db.ForeignKey("task.id"))
+    task = db.relationship("Task", backref="generated_images")
     prompt = db.Column(db.Text, nullable=False)
     model = db.Column(db.String(50), nullable=False)
     size = db.Column(db.String(50), nullable=False)

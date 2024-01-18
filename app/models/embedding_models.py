@@ -15,6 +15,8 @@ class Document(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "documents"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    task_id = db.Column(db.String(36), db.ForeignKey("task.id"))
+    task = db.relationship("Task", backref="documents")
     title = db.Column(db.String(255), nullable=False)
     author = db.Column(db.String(255), nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)

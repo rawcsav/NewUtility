@@ -205,7 +205,7 @@ def delete_api_key():
             )
         else:
             return (jsonify({"status": "error", "message": "API key not found or already marked for deletion"}), 400)
-    return redirect(url_for("user.dashboard"))
+    return redirect(url_for("user_bp.dashboard"))
 
 
 @user_bp.route("/select_api_key", methods=["POST"])
