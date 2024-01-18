@@ -61,7 +61,7 @@ def login():
                     login_user(user, remember=remember)
                     return jsonify({"status": "success", "redirect": url_for("user_bp.dashboard")})
                 else:
-                    return jsonify({"status": "unconfirmed", "redirect": url_for("auth.confirm_email")})
+                    return jsonify({"status": "unconfirmed", "redirect": url_for("auth_bp.confirm_email")})
             else:
                 user.login_attempts += 1
                 user.last_attempt_time = datetime.utcnow()
@@ -152,7 +152,7 @@ def signup():
                 {
                     "status": "success",
                     "message": "A a code has been sent to your email address.",
-                    "redirect": url_for("auth.confirm_email"),
+                    "redirect": url_for("auth_bp.confirm_email"),
                 }
             ),
             200,
@@ -178,7 +178,7 @@ def confirm_email():
                 {
                     "status": "success",
                     "message": "Redirecting to login page in 5s...",
-                    "redirect": url_for("auth.login"),
+                    "redirect": url_for("auth_bp.login"),
                 }
             )
         else:
@@ -228,7 +228,7 @@ def reset_password_request():
         db.session.commit()
 
         msg = Message("Password Reset Request", sender=current_app.config["MAIL_DEFAULT_SENDER"], recipients=[email])
-        reset_link = url_for("auth.reset_password", token=token, _external=True)
+        reset_link = url_for("auth_bp.reset_password", token=token, _external=True)
         msg.body = f"Please click on the link to reset your password: {reset_link}. " f"It resets in 5 minutes."
         mail.send(msg)
 
@@ -252,11 +252,11 @@ def reset_password(token):
 
         if not bcrypt.check_password_hash(user.reset_token_hash, token):
             flash("Invalid or stale token. Please request another", "token")
-            return redirect(url_for("auth.reset_password_request"))
+            return redirect(url_for("auth_bp.reset_password_request"))
 
     except (ValueError, BadSignature):
         flash("Invalid or stale token. Please request another", "token")
-        return redirect(url_for("auth.reset_password_request"))
+        return redirect(url_for("auth_bp.reset_password_request"))
 
     if form.validate_on_submit():
         password = form.password.data
@@ -289,7 +289,7 @@ def reset_password(token):
         db.session.commit()
         return (
             jsonify(
-                {"status": "success", "message": "Your password has been updated!", "redirect": url_for("auth.login")}
+                {"status": "success", "message": "Your password has been updated!", "redirect": url_for("auth_bp.login")}
             ),
             200,
         )
