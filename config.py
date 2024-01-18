@@ -83,7 +83,7 @@ class DevelopmentConfig(Config):
 
     @classmethod
     def init_app(cls, app):
-        super().init_app(app)  # Call the parent init_app
+        super().init_app(app)
         app.tunnel = get_tunnel(
             SSH_HOST=cls.SSH_HOST, SSH_USER=cls.SSH_USER, SSH_PASS=cls.SSH_PASS, SQL_HOSTNAME=cls.SQL_HOSTNAME
         )

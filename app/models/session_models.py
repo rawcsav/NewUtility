@@ -44,17 +44,3 @@ class DeletionTask(db.Model):
     task_id = db.Column(db.String(36), db.ForeignKey("task.id"))  # Link to Task model
     entity_type = db.Column(db.String(255))  # Type of entity to delete (e.g., 'TTSJob', 'File')
     entity_id = db.Column(db.String(36))  # ID of the entity to delete
-
-
-for cls in [
-    GeneratedImage,
-    MessageImages,
-    TTSJob,
-    TranslationJob,
-    TranscriptionJob,
-    Conversation,
-    UserAPIKey,
-    User,
-    Document,
-]:
-    event.listen(cls, "after_update", after_update_listener)

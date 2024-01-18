@@ -1,5 +1,7 @@
 import os
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
+
 from config import ProductionConfig, DevelopmentConfig
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -71,8 +73,25 @@ def create_app():
                 db.session.rollback()
             db.session.remove()
 
+        from app.models.session_models import after_update_listener
+        from app.models.audio_models import TTSJob, TranscriptionJob, TranslationJob
+        from app.models.chat_models import Conversation
+        from app.models.image_models import GeneratedImage, MessageImages
+        from app.models.user_models import UserAPIKey, User
+        from app.models.embedding_models import Document
+
         db.create_all()
-        # from app.database import initialize_roles_with_limits, TierLimit, Role
-        # initialize_roles_with_limits(db)
+        for cls in [
+            GeneratedImage,
+            MessageImages,
+            TTSJob,
+            TranslationJob,
+            TranscriptionJob,
+            Conversation,
+            UserAPIKey,
+            User,
+            Document,
+        ]:
+            event.listen(cls, "after_update", after_update_listener)
 
     return app
