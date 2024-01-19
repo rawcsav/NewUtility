@@ -43,7 +43,7 @@ def create_app():
     assets.init_app(app)  # Initialize Flask-Assets
 
     login_manager.init_app(app)
-    login_manager.login_view = "auth.login"
+    login_manager.login_view = "auth_bp.login"
     login_manager.login_message = "Please log in to access this page."
     login_manager.login_message_category = "info"
 
@@ -73,14 +73,15 @@ def create_app():
                 db.session.rollback()
             db.session.remove()
 
-        from app.models.session_models import after_update_listener
+        db.create_all()
+
+        from app.models.task_models import after_update_listener
         from app.models.audio_models import TTSJob, TranscriptionJob, TranslationJob
         from app.models.chat_models import Conversation
         from app.models.image_models import GeneratedImage, MessageImages
         from app.models.user_models import UserAPIKey, User
         from app.models.embedding_models import Document
 
-        db.create_all()
         for cls in [
             GeneratedImage,
             MessageImages,

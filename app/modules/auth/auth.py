@@ -201,7 +201,7 @@ def logout():
 
 @auth_bp.route("/get_api_keys", methods=["GET"])
 def get_api_keys():
-    user_api_keys = UserAPIKey.query.filter_by(user_id=current_user.id).all()
+    user_api_keys = UserAPIKey.query.filter_by(user_id=current_user.id, delete=False).all()
     decrypted_api_keys = [
         {"id": key.id, "api_key": decrypt_api_key(key.encrypted_api_key), "label": key.label} for key in user_api_keys
     ]

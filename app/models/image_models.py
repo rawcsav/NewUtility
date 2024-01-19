@@ -4,7 +4,6 @@ from app.models.mixins import SoftDeleteMixin, TimestampMixin, generate_uuid
 
 class GeneratedImage(db.Model, SoftDeleteMixin, TimestampMixin):
     __tablename__ = "generated_images"
-
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"))
     task_id = db.Column(db.String(36), db.ForeignKey("task.id"))
@@ -20,7 +19,6 @@ class GeneratedImage(db.Model, SoftDeleteMixin, TimestampMixin):
 class MessageImages(db.Model, SoftDeleteMixin):
     __tablename__ = "message_images"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    uuid = db.Column(db.String(255), nullable=False, unique=True)
     image_url = db.Column(db.String(255), nullable=False)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
     conversation_id = db.Column(db.String(36), db.ForeignKey("conversations.id", ondelete="CASCADE"))

@@ -72,7 +72,6 @@ class Config(object):
 
     @classmethod
     def init_app(cls, app):
-        # Configure Cloudinary
         cloudinary.config(cloud_name=cls.CLOUD_NAME, api_key=cls.CLOUD_API_KEY, api_secret=cls.CLOUD_SECRET)
 
 

@@ -98,7 +98,7 @@ def is_valid_api_key_format(api_key):
 
 
 def api_key_exists(user_id, api_key_token):
-    return UserAPIKey.query.filter_by(user_id=user_id, api_key_token=api_key_token).first()
+    return UserAPIKey.query.filter_by(user_id=user_id, api_key_token=api_key_token, delete=False).first()
 
 
 def test_api_key_models(api_key, available_models):
@@ -120,7 +120,7 @@ def test_api_key_models(api_key, available_models):
 def get_unique_nickname(user_id, nickname):
     counter = 1
     original_nickname = nickname
-    while UserAPIKey.query.filter_by(user_id=user_id, nickname=nickname).first():
+    while UserAPIKey.query.filter_by(user_id=user_id, nickname=nickname, delete=False).first():
         nickname = f"{original_nickname}({counter})"
         counter += 1
     return nickname
@@ -145,7 +145,7 @@ def create_and_save_api_key(user_id, api_key, nickname, label):
 
 def initialize_openai_client(user_id):
     key_id = current_user.selected_api_key_id
-    user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id).first()
+    user_api_key = UserAPIKey.query.filter_by(user_id=user_id, id=key_id, delete=False).first()
 
     if not user_api_key:
         return None, "API Key not found."

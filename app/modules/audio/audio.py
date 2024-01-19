@@ -1,12 +1,13 @@
 import os
 from markdown2 import markdown
 
-from flask import Blueprint, jsonify, url_for, render_template, send_file, current_app
+from flask import Blueprint, jsonify, url_for, render_template, send_file, current_app, request
 from flask_login import login_required, current_user
 from openai import InternalServerError
 from werkzeug.utils import secure_filename
 from app import db
 from app.models.audio_models import TTSPreferences, WhisperPreferences, TTSJob, TranscriptionJob, TranslationJob
+from app.models.task_models import Task, TTSTask, TranslationTask, TranscriptionTask
 from app.modules.audio.audio_util import (
     generate_speech,
     transcribe_audio,
@@ -143,20 +144,35 @@ def whisper_preferences():
 @login_required
 def generate_tts():
     form = TtsForm()
-    if form.validate_on_submit():
-        client, error = initialize_openai_client(current_user.id)
-        if error:
-            return jsonify({"status": "error", "message": error})
-        preferences = get_tts_preferences(current_user.id)
-        filepath, filename = generate_speech(
-            client,
-            model=preferences["model"],
-            voice=preferences["voice"],
-            input_text=form.input.data,
-            response_format=preferences["response_format"],
-            speed=preferences["speed"],
-        )
-        return jsonify({"status": "success", "download_url": url_for("audio.download_tts", filename=filename)})
+    if request.method == "POST" and form.validate():
+        try:
+            preferences = get_tts_preferences(current_user.id)
+
+            # Create a new Task for TTS generation
+            new_task = Task(type="TTS", status="pending", user_id=current_user.id)
+            db.session.add(new_task)
+            db.session.flush()
+
+            # Create a new TTSTask
+            new_tts_task = TTSTask(
+                task_id=new_task.id,
+                model=preferences["model"],
+                voice=preferences["voice"],
+                input_text=form.input.data,
+                response_format=preferences["response_format"],
+                speed=preferences["speed"],
+            )
+            db.session.add(new_tts_task)
+            db.session.commit()
+
+            return jsonify({"status": "success", "task_id": new_task.id})
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": str(e)})
+
+    # For GET requests or failed POST validations, return an appropriate JSON response
+    return jsonify({"status": "error", "message": "Invalid request or form data"})
 
 
 @audio_bp.route("/transcription", methods=["GET", "POST"])
@@ -165,29 +181,33 @@ def transcription():
     form = TranscriptionForm()
     if form.validate_on_submit():
         user_id = current_user.id
-        download_dir = user_subdirectory(user_id)
+        preferences = get_whisper_preferences(user_id)
         client, error = initialize_openai_client(user_id)
         if error:
             return jsonify({"status": "error", "message": error})
-        preferences = get_whisper_preferences(user_id)
+        download_dir = user_subdirectory(user_id)
         audio_file = form.file.data
         filename = secure_filename(audio_file.filename)
         filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
-        segment_filepaths = preprocess_audio(filepath, download_dir)
         prompt = determine_prompt(client, form.data)
-        temperature = preferences.get("temperature", 0)
-        job_id = transcribe_audio(
-            client,
-            file_paths=segment_filepaths,
+
+        new_task = Task(type="Transcription", status="pending", user_id=user_id)
+        new_transcription_task = TranscriptionTask(
+            task_id=new_task.id,
             input_filename=filename,
             model=preferences["model"],
             prompt=prompt,
             response_format=preferences["response_format"],
-            temperature=temperature,
+            temperature=preferences["temperature"],
             language=preferences["language"],
         )
-        return jsonify({"status": "success", "download_url": url_for("audio.download_whisper", job_id=job_id)})
+        db.session.add_all([new_task, new_transcription_task])
+        db.session.commit()
+
+        return jsonify({"status": "success", "task_id": new_task.id})
+
+    return jsonify({"status": "error", "message": "Invalid form submission"})
 
 
 @audio_bp.route("/translation", methods=["GET", "POST"])
@@ -196,28 +216,32 @@ def translation():
     form = TranslationForm()
     if form.validate_on_submit():
         user_id = current_user.id
-        download_dir = user_subdirectory(user_id)
+        preferences = get_whisper_preferences(user_id)
         client, error = initialize_openai_client(user_id)
         if error:
             return jsonify({"status": "error", "message": error})
-
-        preferences = get_whisper_preferences(user_id)
+        download_dir = user_subdirectory(user_id)
         audio_file = form.file.data
         filename = secure_filename(audio_file.filename)
         filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
-        segment_filepaths = preprocess_audio(filepath, download_dir)
         prompt = determine_prompt(client, form.data)
-        job_id = translate_audio(
-            client,
-            file_paths=segment_filepaths,
+
+        new_task = Task(type="Translation", status="pending", user_id=user_id)
+        new_translation_task = TranslationTask(
+            task_id=new_task.id,
             input_filename=filename,
             model=preferences["model"],
             prompt=prompt,
             response_format=preferences["response_format"],
             temperature=preferences["temperature"],
         )
-        return jsonify({"status": "success", "download_url": url_for("audio.download_whisper", job_id=job_id)})
+        db.session.add_all([new_task, new_translation_task])
+        db.session.commit()
+
+        return jsonify({"status": "success", "task_id": new_task.id})
+
+    return jsonify({"status": "error", "message": "Invalid form submission"})
 
 
 @audio_bp.route("/download_tts/<filename>")

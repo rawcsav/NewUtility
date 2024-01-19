@@ -1,15 +1,13 @@
 import os
-from datetime import datetime
 
-from flask import request, jsonify, Blueprint, render_template, send_file, url_for, current_app
+from flask import jsonify, Blueprint, render_template, send_file, url_for, current_app
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound
 from markdown2 import markdown
 from app import db
 from app.models.image_models import GeneratedImage
+from app.models.task_models import ImageTask, Task
 from app.utils.forms_util import GenerateImageForm
-from app.modules.image.image_util import generate_images, save_image_to_db, download_and_store_image
-from app.modules.auth.auth_util import initialize_openai_client
 
 image_bp = Blueprint("image_bp", __name__, template_folder="templates", static_folder="static", url_prefix="/image")
 
@@ -20,74 +18,43 @@ date_format = "%b %d, %Y at %I:%M %p"
 @login_required
 def generate_image():
     form = GenerateImageForm()
-    image_urls = []
-    image_metadata = []  # List to hold metadata for each image
     error_message = None
-    markdown_file_path = os.path.join(current_app.root_path, image_bp.static_folder, "image.md")
-
-    with open(markdown_file_path, "r") as file:
-        markdown_content = file.read()
-    docs_content = markdown(markdown_content)
     if form.validate_on_submit():
         try:
+            # Gather request details
             prompt = form.prompt.data
             model = form.model.data or "dall-e-3"
             n = form.n.data or 1
             size = form.size.data or "1024x1024"
             quality = form.quality.data if model.startswith("dall-e-3") else None
             style = form.style.data if model.startswith("dall-e-3") else None
-            request_params = {
-                "model": model,
-                "prompt": prompt,
-                "n": n,
-                "size": size,
-                "quality": quality,
-                "style": style,
-            }
 
-            client, error = initialize_openai_client(current_user.id)
-            image_data = generate_images(client, request_params, current_user.id, current_user.selected_api_key_id)
+            # Create a new Task for image generation
+            new_task = Task(type="Image", status="pending", user_id=current_user.id)
+            db.session.add(new_task)
+            db.session.flush()
 
-            download_dir = current_app.config["USER_IMAGE_DIRECTORY"]
-            for image_response in image_data:
-                image_url = image_response.url
-                image_id = save_image_to_db(current_user.id, prompt, model, size, quality, style)
-                local_image_url = download_and_store_image(download_dir, image_url, image_id)
-                image_urls.append(local_image_url)
-
-                # Create and append metadata dictionary for each image
-                image_metadata.append(
-                    {
-                        "id": image_id,
-                        "prompt": prompt,
-                        "model": model,
-                        "size": size,
-                        "quality": quality,
-                        "style": style,
-                        "created_at": datetime.utcnow().strftime(date_format),
-                    }
-                )
+            # Create a new ImageTask
+            new_image_task = ImageTask(
+                task_id=new_task.id, prompt=prompt, model=model, size=size, quality=quality, style=style, n=n
+            )
+            db.session.add(new_image_task)
+            db.session.commit()
 
         except Exception as e:
             error_message = str(e)
             db.session.rollback()
-            print(f"Error generating image: {error_message}")
-
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        if error_message:
-            return jsonify({"error_message": error_message, "status": "error"})
-        # Return both image URLs and metadata in the response
-        return jsonify({"image_urls": image_urls, "image_metadata": image_metadata, "status": "success"})
-
-    return render_template(
-        "image.html", form=form, image_urls=image_urls, error_message=error_message, tooltip=docs_content
-    )
+    markdown_file_path = os.path.join(current_app.root_path, image_bp.static_folder, "image.md")
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
+    return render_template("image.html", form=form, error_message=error_message, tooltip=docs_content)
 
 
 @image_bp.route("/download_image/<uuid:image_id>")
 @login_required
 def download_image(image_id):
-    image_record = GeneratedImage.query.filter_by(user_id=current_user.id, id=str(image_id), delete=False).first()
+    image_record = GeneratedImage.query.filter_by(user_id=current_user.id, id=str(image_id)).first()
 
     if not image_record:
         raise NotFound("Image not found or does not belong to the current user")
@@ -132,7 +99,7 @@ def image_history():
 @image_bp.route("/mark_delete/<uuid:image_id>", methods=["POST"])
 @login_required
 def mark_delete(image_id):
-    image_record = GeneratedImage.query.filter_by(user_id=current_user.id, id=str(image_id)).first()
+    image_record = GeneratedImage.query.filter_by(user_id=current_user.id, id=str(image_id), delete=False).first()
 
     if not image_record:
         return jsonify({"status": "error", "message": "Image not found"}), 404

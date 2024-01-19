@@ -119,13 +119,13 @@ def new_conversation():
     form = NewConversationForm()
     if form.validate_on_submit():
         user_id = current_user.id
-        conversation_count = Conversation.query.filter_by(user_id=user_id).count()
+        conversation_count = Conversation.query.filter_by(user_id=user_id, delete=False).count()
         if conversation_count >= 5:
             return jsonify({"status": "error", "message": "Maximum number of conversations reached"})
 
         # Fetch all conversations for the user that start with "Convo #"
         existing_conversations = Conversation.query.filter(
-            Conversation.user_id == user_id, Conversation.title.like("Convo #%")
+            Conversation.user_id == user_id, Conversation.title.like("Convo #%"), Conversation.delete == False
         ).all()
 
         convo_numbers = [
@@ -167,7 +167,7 @@ def delete_conversation(conversation_id):
         return jsonify({"status": "error", "message": "Unauthorized"}), 403
 
     # Check if this is the user's last conversation
-    conversation_count = Conversation.query.filter_by(user_id=current_user.id).count()
+    conversation_count = Conversation.query.filter_by(user_id=current_user.id, delete=False).count()
     if conversation_count <= 1:
         return jsonify({"status": "error", "message": "Cannot have 0 conversations."}), 403
 
@@ -195,23 +195,30 @@ def update_preferences():
         preferences.top_p = form.top_p.data
 
         if old_model == "gpt-4-vision-preview" and form.model.data != "gpt-4-vision-preview":
-            MessageImages.query.filter_by(user_id=current_user.id).delete()
+            # Set the 'delete' column to True for all MessageImages records for the current user
+            MessageImages.query.filter_by(user_id=current_user.id).update({"delete": True})
 
-            message_ids_with_images = MessageImages.query.with_entities(MessageImages.message_id).filter_by(
-                user_id=current_user.id
-            )
-            Message.query.filter(Message.id.in_(message_ids_with_images)).update(
-                {Message.is_vision: False}, synchronize_session="fetch"
+            # Get message IDs that have associated images and are not marked as deleted
+            message_ids_with_images = (
+                MessageImages.query.with_entities(MessageImages.message_id)
+                .filter(MessageImages.user_id == current_user.id, MessageImages.delete == False)
+                .all()
             )
 
+            # Convert list of tuples to list of message IDs
+            message_ids_with_images = [message_id for (message_id,) in message_ids_with_images]
+
+            # Update the 'is_vision' column to False for messages that are not marked as deleted
+            if message_ids_with_images:
+                Message.query.filter(Message.id.in_(message_ids_with_images)).update(
+                    {Message.is_vision: False}, synchronize_session="fetch"
+                )
         try:
             db.session.commit()
             return jsonify({"status": "success", "message": "Preferences updated successfully."})
         except Exception as e:
             db.session.rollback()
             return jsonify({"status": "error", "message": str(e)})
-    else:
-        return jsonify({"status": "error", "errors": form.errors})
 
 
 @chat_bp.route("/completion", methods=["POST"])
@@ -245,7 +252,7 @@ def chat_completion():
 
     if preferences["model"] == "gpt-4-vision-preview":
         images = MessageImages.query.filter(
-            MessageImages.user_id == current_user.id, MessageImages.message_id.is_(None)
+            MessageImages.user_id == current_user.id, MessageImages.message_id.is_(None), MessageImages.delete == False
         ).all()
         image_urls = [image.image_url for image in images]
     else:
@@ -289,7 +296,9 @@ def retry_message(message_id):
         [
             image.image_url
             for image in MessageImages.query.filter(
-                MessageImages.user_id == current_user.id, MessageImages.message_id == message.id
+                MessageImages.user_id == current_user.id,
+                MessageImages.message_id == message.id,
+                MessageImages.delete == False,
             ).all()
         ]
         if message.is_vision
@@ -487,7 +496,7 @@ def upload_image():
             webp_url = get_image_url(webp_file_name)
 
             new_image_entry = MessageImages(
-                image_url=webp_url, uuid=image_uuid, user_id=current_user.id, conversation_id=conversation_id
+                id=image_uuid, image_url=webp_url, user_id=current_user.id, conversation_id=conversation_id
             )
             db.session.add(new_image_entry)
             db.session.commit()
@@ -514,12 +523,11 @@ def upload_image():
 @chat_bp.route("/delete-image/<string:image_uuid>", methods=["POST"])
 @login_required
 def delete_image(image_uuid):
-    image_record = MessageImages.query.filter_by(uuid=image_uuid).first()
-
-    if image_record.user_id != current_user.id:
-        return jsonify({"status": "error", "message": "Unauthorized"}), 403
-    delete_local_image(image_uuid)
-    db.session.delete(image_record)
-    db.session.commit()
-
-    return jsonify({"status": "success", "message": "Image deleted successfully"})
+    image_record = MessageImages.query.filter_by(user_id=current_user.id, id=image_uuid, delete=False).first()
+    try:
+        image_record.delete = True
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Image marked for deletion"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500

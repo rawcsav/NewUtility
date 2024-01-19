@@ -66,7 +66,7 @@ def truncate_conversation(conversation_history, truncate_limit):
 
 
 def get_user_conversation(user_id, conversation_id):
-    conversation = Conversation.query.filter_by(user_id=user_id, id=conversation_id).first()
+    conversation = Conversation.query.filter_by(user_id=user_id, id=conversation_id, delete=False).first()
     if conversation:
         conversation_history = []
         system_prompt = conversation.system_prompt
@@ -98,7 +98,7 @@ def get_user_conversation(user_id, conversation_id):
 
 
 def get_user_history(user_id, conversation_id):
-    conversation = Conversation.query.filter_by(user_id=user_id, id=conversation_id, delete=False).first()
+    conversation = Conversation.query.filter_by(user_id=user_id).first()
     if conversation:
         conversation_history = []
         system_prompt = conversation.system_prompt
@@ -356,13 +356,11 @@ def allowed_file(filename):
 
 
 def save_image(file_stream):
-    # Generate a unique UUID for the image file
     image_uuid = str(uuid.uuid4())
     webp_file_name = f"{image_uuid}.webp"
     webp_file_path = os.path.join(current_app.config["CHAT_IMAGE_DIRECTORY"], webp_file_name)
     image = Image.open(file_stream).convert("RGB")
     image.save(webp_file_path, "WEBP")
-
     return image_uuid, webp_file_name
 
 
@@ -374,7 +372,6 @@ def delete_local_image(image_uuid):
     image_file_path = os.path.join(current_app.config["CHAT_IMAGE_DIRECTORY"], f"{image_uuid}.webp")
     if os.path.isfile(image_file_path):
         try:
-            # Delete the file
             os.remove(image_file_path)
             print(f"Image file {image_uuid}.webp deleted successfully")
         except OSError as e:

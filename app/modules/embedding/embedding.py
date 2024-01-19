@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import Document, DocumentChunk
+from app.models.task_models import EmbeddingTask, Task
 from app.modules.auth.auth_util import initialize_openai_client
 from app.modules.embedding.embedding_util import (
     split_text,
@@ -68,89 +69,41 @@ def upload_document():
     authors = request.form.getlist("author")
     chunk_sizes = request.form.getlist("chunk_size")
 
-    uploaded_files_info = []
+    tasks_info = []  # To keep track of created tasks and associated file info
+
     for i, file in enumerate(files):
         title = titles[i] if i < len(titles) else secure_filename(file.filename)
         author = authors[i] if i < len(authors) else ""
         chunk_size = int(chunk_sizes[i]) if i < len(chunk_sizes) else 512
 
         temp_path = save_temp(file)
-        uploaded_files_info.append({"temp_path": temp_path, "title": title, "author": author, "chunk_size": chunk_size})
 
-    session["uploaded_files_info"] = uploaded_files_info
-
-    return (
-        jsonify({"status": "success", "message": "Files uploaded successfully. Please proceed to processing."}),
-        200,
-    )
-
-
-@embedding_bp.route("/process/<int:doc_index>", methods=["POST"])
-@login_required
-def process_individual_document(doc_index):
-    # Retrieve uploaded files info from the session
-    uploaded_files_info = session.get("uploaded_files_info", [])
-
-    # Validate document index
-    if doc_index < 0 or doc_index >= len(uploaded_files_info):
-        return jsonify({"error": "Invalid document index"}), 400
-
-    file_info = uploaded_files_info[doc_index]
-
-    try:
-        temp_path = file_info["temp_path"]
-        title = file_info["title"]
-        author = file_info["author"]
-        chunk_size = file_info["chunk_size"]
-
-        file_info["status"] = "Processing"
-        session.modified = True
-
-        # Processing steps for the individual document
-        text_pages = extract_text_from_file(temp_path)
-        chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(text_pages, chunk_size)
-
-        new_document = Document(
-            user_id=current_user.id, title=title, author=author, total_tokens=total_tokens, created_at=datetime.utcnow()
-        )
-        db.session.add(new_document)
+        # Create a new Task for document processing
+        new_task = Task(type="Embedding", status="pending", user_id=current_user.id)
+        db.session.add(new_task)
         db.session.flush()
 
-        for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
-            pages_str = ",".join(map(str, pages))
-            chunk = DocumentChunk(
-                document_id=new_document.id,
-                chunk_index=i,
-                content=chunk_content,
-                tokens=chunk_token_counts[i],
-                pages=pages_str,
-            )
-            db.session.add(chunk)
+        # Create a new EmbeddingTask
+        new_embedding_task = EmbeddingTask(
+            task_id=new_task.id, title=title, author=author, chunk_size=chunk_size, temp_path=temp_path
+        )
+        db.session.add(new_embedding_task)
 
-        # Assuming the existence of the following functions
-        client, error = initialize_openai_client(current_user.id)
-        if error:
-            return jsonify({"status": "error", "message": error})
+        tasks_info.append(
+            {"task_id": new_task.id, "title": title, "author": author, "chunk_size": chunk_size, "temp_path": temp_path}
+        )
 
-        embeddings = get_embedding_batch(chunks, client)
-
-        embedding_cost(total_tokens)
-
-        store_embeddings(new_document.id, embeddings)
-        db.session.commit()
-
-        file_info["status"] = "Complete"
-        session.modified = True
-        return jsonify({"status": "success", "message": "Document processed successfully."}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        file_info["status"] = "Error"
-        session.modified = True
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-    finally:
-        remove_temp(file_info["temp_path"])
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "message": "Files uploaded successfully. Processing tasks created.",
+                "tasks": tasks_info,
+            }
+        ),
+        200,
+    )
 
 
 @embedding_bp.route("/status", methods=["GET"])
@@ -169,10 +122,9 @@ def get_processing_status():
 @login_required
 def delete_document(document_id):
     form = DeleteDocumentForm()
-    document = Document.query.get_or_404(document_id)
+    document = Document.query.filter_by(user_id=current_user.id, id=document_id, delete=False).first()
     if document.user_id != current_user.id or not form.validate_on_submit():
         return jsonify({"error": "Unauthorized or invalid form submission"}), 403
-
     try:
         document.delete = True
         db.session.commit()
@@ -198,7 +150,7 @@ def update_document():
     title = form.title.data
     author = form.author.data
 
-    document = Document.query.get_or_404(document_id)
+    document = Document.query.filter_by(user_id=current_user.id, id=document_id, delete=False).first()
     if document.user_id != current_user.id:
         return jsonify({"error": "Unauthorized"}), 403
 

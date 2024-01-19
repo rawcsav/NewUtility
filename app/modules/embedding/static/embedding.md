@@ -1,4 +1,4 @@
-## Getting Started with Chat Utilities
+## Getting Started with Embedding Utilities
 
 ### Uploading Documents
 To upload documents for embedding:

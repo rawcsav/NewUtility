@@ -178,9 +178,9 @@ def determine_prompt(client, form_data):
         return ""
 
 
-def generate_speech(client, model, voice, input_text, response_format="mp3", speed=1.0):
+def generate_speech(client, model, voice, input_text, task_id, response_format="mp3", speed=1.0):
     download_dir = user_subdirectory(current_user.id)
-    tts_job = create_tts_job(current_user.id, model, voice, response_format, speed, input_text)
+    tts_job = create_tts_job(current_user.id, model, voice, response_format, speed, input_text, task_id)
     tts_filename = f"tts_{tts_job.id}.{response_format}"
     tts_filepath = os.path.join(download_dir, tts_filename)
     tts_job.output_filename = tts_filename
@@ -238,7 +238,15 @@ def process_audio_transcription(
 
 
 def transcribe_audio(
-    client, file_paths, input_filename, response_format, temperature, model="whisper-1", language=None, prompt=None
+    client,
+    file_paths,
+    input_filename,
+    response_format,
+    temperature,
+    task_id,
+    model="whisper-1",
+    language=None,
+    prompt=None,
 ):
     transcription_job = create_transcription_job(
         user_id=current_user.id,
@@ -248,6 +256,7 @@ def transcribe_audio(
         response_format=response_format,
         temperature=temperature,
         input_filename=input_filename,
+        task_id=task_id,
     )
     total_duration_ms = 0  # Initialize the total duration
     try:
@@ -296,10 +305,11 @@ def process_audio_translation(
 
 
 def translate_audio(
-    client, file_paths, input_filename, model="whisper-1", prompt=None, response_format="text", temperature=0.0
+    client, file_paths, input_filename, task_id, model="whisper-1", prompt=None, response_format="text", temperature=0.0
 ):
     translation_job = create_translation_job(
         user_id=current_user.id,
+        task_id=task_id,
         prompt=prompt,
         model=model,
         response_format=response_format,
@@ -330,9 +340,10 @@ def translate_audio(
     return translation_job.id
 
 
-def create_tts_job(user_id, model, voice, response_format, speed, input_text, output_filename=None):
+def create_tts_job(user_id, model, voice, response_format, speed, input_text, task_id, output_filename=None):
     job = TTSJob(
         user_id=user_id,
+        task_id=task_id,
         model=model,
         voice=voice,
         response_format=response_format,
@@ -345,9 +356,10 @@ def create_tts_job(user_id, model, voice, response_format, speed, input_text, ou
     return job
 
 
-def create_transcription_job(user_id, prompt, model, language, response_format, temperature, input_filename):
+def create_transcription_job(user_id, prompt, model, language, response_format, temperature, task_id, input_filename):
     job = TranscriptionJob(
         user_id=user_id,
+        task_id=task_id,
         prompt=prompt,
         model=model,
         language=language,
@@ -360,9 +372,10 @@ def create_transcription_job(user_id, prompt, model, language, response_format, 
     return job
 
 
-def create_translation_job(user_id, prompt, model, response_format, temperature, input_filename):
+def create_translation_job(user_id, prompt, model, response_format, temperature, task_id, input_filename):
     job = TranslationJob(
         user_id=user_id,
+        task_id=task_id,
         prompt=prompt,
         model=model,
         response_format=response_format,

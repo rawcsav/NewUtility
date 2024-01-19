@@ -78,7 +78,7 @@ def update_usage_and_costs(user_id, api_key_id, usage_type, cost):
         raise ValueError("Cost must be non-negative")
 
     # Retrieve the API key and user from the database
-    api_key = UserAPIKey.query.filter_by(id=api_key_id, user_id=user_id).first()
+    api_key = UserAPIKey.query.filter_by(id=api_key_id, user_id=user_id, delete=False).first()
 
     if not api_key:
         raise ValueError("API key not found")

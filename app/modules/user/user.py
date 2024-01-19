@@ -154,7 +154,7 @@ def retest_api_key():
     form = RetestAPIKeyForm()
     if form.validate_on_submit():
         key_id = form.key_id.data
-        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id).first()
+        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id, delete=False).first()
 
         if not user_api_key:
             return jsonify({"success": False, "message": "API key not found"}), 404
@@ -190,7 +190,7 @@ def delete_api_key():
     form = DeleteAPIKeyForm()
     if form.validate_on_submit():
         key_id = form.key_id.data
-        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id).first()
+        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id, delete=False).first()
         if user_api_key:
             user_api_key.delete = True  # Mark the API key as deleted
             db.session.commit()
@@ -214,7 +214,7 @@ def select_api_key():
     form = SelectAPIKeyForm()
     if form.validate_on_submit():
         key_id = request.form.get("key_id")
-        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id).first()
+        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id, delete=False).first()
 
         if not user_api_key:
             return jsonify({"success": False, "message": "API key not found"}), 404

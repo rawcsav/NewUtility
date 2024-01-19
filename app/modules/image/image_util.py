@@ -56,7 +56,7 @@ def generate_images(client, request_params):
     return response.data
 
 
-def save_image_to_db(user_id, prompt, model, size, quality, style):
+def save_image_to_db(user_id, prompt, model, size, quality, style, task_id):
     new_image = GeneratedImage(
         user_id=user_id,
         prompt=prompt,
@@ -65,6 +65,7 @@ def save_image_to_db(user_id, prompt, model, size, quality, style):
         size=size,
         quality=quality,
         style=style,
+        task_id=task_id,
     )
     db.session.add(new_image)
     db.session.commit()
