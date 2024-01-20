@@ -1,10 +1,10 @@
+import os
 from dotenv import load_dotenv
 from app.models.task_models import Task
 from app.utils.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 from app.utils.tasks.deletion_task import process_deletion_task
 from app.utils.tasks.embedding_task import process_embedding_task
 from app.utils.tasks.image_task import process_image_task
-import os
 import time
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
