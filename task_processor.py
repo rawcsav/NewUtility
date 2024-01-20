@@ -1,4 +1,4 @@
-from doteknv import load_dotenv
+from dotenv import load_dotenv
 from app.models.task_models import Task
 from app.utils.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 from app.utils.tasks.deletion_task import process_deletion_task
