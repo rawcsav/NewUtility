@@ -182,7 +182,7 @@ def save_message(
             for filename in images:
                 image_uuid = filename.rsplit("/", 1)[-1].rsplit(".", 1)[0]
 
-                image_record = MessageImages.query.filter_by(uuid=image_uuid).first()
+                image_record = MessageImages.query.filter_by(id=image_uuid).first()
                 if image_record:
                     image_record.message_id = message.id
                     message.is_vision = True
