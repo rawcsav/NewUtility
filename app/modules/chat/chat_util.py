@@ -67,6 +67,8 @@ def truncate_conversation(conversation_history, truncate_limit):
 
 def get_user_conversation(user_id, conversation_id):
     conversation = Conversation.query.filter_by(user_id=user_id, id=conversation_id, delete=False).first()
+    preferences = get_user_preferences(user_id)
+
     if conversation:
         conversation_history = []
         system_prompt = conversation.system_prompt
@@ -79,9 +81,9 @@ def get_user_conversation(user_id, conversation_id):
 
             # If the message has associated img, construct the image payload
             if message.is_vision:
-                image_records = MessageImages.query.filter_by(message_id=message.id).all()
+                image_records = MessageImages.query.filter_by(message_id=message.id, delete=False).all()
                 # Only construct the payload if there are img
-                if image_records:
+                if message.is_vision and preferences["model"] == "gpt-4-vision-preview":
                     image_urls = [image.image_url for image in image_records]
                     image_payloads = get_image_payload(image_urls)
                     # Combine text and image payloads into a list
@@ -99,6 +101,8 @@ def get_user_conversation(user_id, conversation_id):
 
 def get_user_history(user_id, conversation_id):
     conversation = Conversation.query.filter_by(user_id=user_id).first()
+    preferences = get_user_preferences(user_id)
+
     if conversation:
         conversation_history = []
         system_prompt = conversation.system_prompt
@@ -113,9 +117,8 @@ def get_user_history(user_id, conversation_id):
                 "content": message.content,
             }
 
-            # If the message has associated img, add their URLs
-            if message.is_vision:
-                image_records = MessageImages.query.filter_by(message_id=message.id).all()
+            if message.is_vision and preferences["model"] == "gpt-4-vision-preview":
+                image_records = MessageImages.query.filter_by(message_id=message.id, delete=False).all()
                 message_dict["img"] = [image.image_url for image in image_records]
 
             conversation_history.append(message_dict)
