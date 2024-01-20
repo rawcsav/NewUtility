@@ -113,7 +113,7 @@ function onSubmit(event) {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        startProcessing();
+        updateUploadMessages("Processing...", "success");
       } else {
         updateUploadMessages("Upload Failed.", "error");
         console.error("Upload failed:", data.message);
@@ -122,50 +122,6 @@ function onSubmit(event) {
     .catch((error) => {
       console.error("Error during upload:", error);
     });
-}
-
-function processDocumentAtIndex(index, totalDocuments) {
-  if (index >= totalDocuments) {
-    showToast("All documents processed.", "success");
-    updateUploadMessages(
-      "All documents have been successfully processed.",
-      "success",
-    );
-    return;
-  }
-
-  updateUploadMessages(
-    `Processing document ${index + 1} of ${totalDocuments}...`,
-    "info",
-  );
-
-  fetch(`/embedding/process/${index}`, {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.status === "success") {
-        processDocumentAtIndex(index + 1, totalDocuments); // Process next document
-      } else {
-        updateUploadMessages("Processing Failed.", "error");
-        console.error("Processing failed:", data.message);
-      }
-    })
-    .catch((error) => {
-      console.error("Error during processing:", error);
-      updateUploadMessages(
-        "Error during processing: " + error.message,
-        "error",
-      );
-    });
-}
-
-function startProcessing() {
-  let totalDocuments = Object.keys(documentData).length;
-  processDocumentAtIndex(0, totalDocuments); // Start processing from the first document
 }
 
 function displayCurrentForm() {

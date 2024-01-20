@@ -10,17 +10,8 @@ from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import EmbeddingTask, Task
-from app.modules.auth.auth_util import initialize_openai_client
-from app.modules.embedding.embedding_util import (
-    split_text,
-    extract_text_from_file,
-    remove_temp,
-    get_embedding_batch,
-    store_embeddings,
-    save_temp,
-)
+from app.modules.embedding.embedding_util import remove_temp, save_temp
 from app.utils.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm, UpdateDocPreferencesForm
-from app.utils.usage_util import embedding_cost
 from app.utils.vector_cache import VectorCache
 
 # Initialize the blueprint

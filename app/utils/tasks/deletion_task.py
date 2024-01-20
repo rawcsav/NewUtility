@@ -1,66 +1,76 @@
 import os
 
-from flask import current_app
-
-from app import db, create_app
 from app.models.audio_models import TranslationJob, TTSJob, TranscriptionJob
 from app.models.chat_models import Conversation
 from app.models.embedding_models import Document
 from app.models.image_models import GeneratedImage, MessageImages
+from app.models.task_models import Task, DeletionTask
 from app.models.user_models import UserAPIKey, User
+from app.utils.tasks.task_logging import setup_logging
+from config import appdir
+
+logger = setup_logging()
 
 
 def delete_local_files(entity_id, entity_type):
-    if entity_type == "GeneratedImage":
-        dir_to_check = current_app.config["USER_IMAGE_DIRECTORY"]
-    elif entity_type == "MessageImages":
-        dir_to_check = current_app.config["CHAT_IMAGE_DIRECTORY"]
-    elif entity_type in ["TTSJob", "TranscriptionJob", "TranslationJob"]:
-        dir_to_check = current_app.config["USER_AUDIO_DIRECTORY"]
+    if entity_type == "generated_images":
+        dir_to_check = os.path.join(appdir, "static", "user_files", "temp_img")
+    elif entity_type == "message_images":
+        dir_to_check = os.path.join(appdir, "static", "user_files", "user_img")
+    elif entity_type in ["tts_jobs", "transcription_jobs", "translation_jobs"]:
+        dir_to_check = os.path.join(appdir, "static", "user_files", "temp_audio")
     else:
         return  # Return if the entity type does not match
 
-    for filename in os.listdir(dir_to_check):
-        if entity_id in filename:
-            file_path = os.path.join(dir_to_check, filename)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
+    for root, dirs, files in os.walk(dir_to_check):
+        for filename in files:
+            if entity_id in filename:
+                file_path = os.path.join(root, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
 
 
-def delete_entity(entity_type, entity_id):
+def delete_entity(session, entity_type, entity_id):
     model_classes = {
-        "TranslationJob": TranslationJob,
-        "TTSJob": TTSJob,
-        "TranscriptionJob": TranscriptionJob,
-        "Conversation": Conversation,
-        "Document": Document,
-        "UserAPIKey": UserAPIKey,
-        "GeneratedImage": GeneratedImage,
-        "MessageImages": MessageImages,
-        "User": User,
+        "translation_jobs": TranslationJob,
+        "tts_jobs": TTSJob,
+        "transcription_jobs": TranscriptionJob,
+        "conversations": Conversation,
+        "documents": Document,
+        "user_api_keys": UserAPIKey,
+        "generated_images": GeneratedImage,
+        "message_images": MessageImages,
+        "user": User,
     }
 
     model_class = model_classes.get(entity_type)
+    if not model_class:
+        raise ValueError(f"Unknown entity type: {entity_type}")
 
-    if model_class:
-        entity = model_class.query.with_deleted().get(entity_id)
-        if entity:
-            try:
-                delete_local_files(entity_id, entity_type)
-                db.session.delete(entity)
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                raise e  # Optionally log this error or handle it as needed
+    entity = session.query(model_class).get(entity_id)
+    if not entity:
+        raise ValueError(f"Entity of type '{entity_type}' with ID '{entity_id}' not found")
+
+    try:
+        delete_local_files(entity_id, entity_type)
+        session.delete(entity)
+    except Exception as e:
+        print(f"Error deleting entity: {e}")
 
 
-def process_deletion_task(deletion_task):
-    app = create_app()
-    with app.app_context():
-        try:
-            delete_entity(deletion_task.entity_type, deletion_task.entity_id)
-            deletion_task.task.status = "completed"
-            db.session.commit()
-        except Exception as e:
-            deletion_task.task.status = "failed"
-            db.session.commit()
+def process_deletion_task(session, task_id):
+    try:
+        task = session.query(Task).get(task_id)
+        if not task:
+            raise ValueError(f"Task with ID '{task_id}' not found")
+
+        deletion_task = session.query(DeletionTask).filter_by(task_id=task_id).first()
+        if not deletion_task:
+            raise ValueError(f"DeletionTask for task ID '{task_id}' not found")
+
+        delete_entity(session, deletion_task.entity_type, deletion_task.entity_id)
+        return True
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error processing deletion task {task_id}: {e}")
+        return False

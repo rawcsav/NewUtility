@@ -116,7 +116,8 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("image-generation-form")
     .addEventListener("submit", function (event) {
       event.preventDefault();
-      showLoader();
+      showLoader(); // Start the loader immediately upon form submission
+
       var formData = new FormData(this);
 
       fetch("/image/", {
@@ -129,40 +130,17 @@ document.addEventListener("DOMContentLoaded", function () {
       })
         .then((response) => {
           if (!response.ok) {
-            throw new Error("Server returned an error response");
+            throw new Error("Network response was not ok.");
           }
           return response.json();
         })
         .then((data) => {
-          if (data.error_message) {
-            hideLoader();
-            console.error("Server error:", data.error_message);
-            showToast(data.error_message, "error");
-          } else {
-            hideLoader();
-
-            var lastImageMetadata =
-              data.image_metadata[data.image_metadata.length - 1];
-            var lastImageUrl = data.image_urls[data.image_urls.length - 1];
-
-            var imageId = lastImageMetadata.id; // The ID of the newly generated image
-            var displayMetadata = {
-              Prompt: lastImageMetadata.prompt,
-              Model: lastImageMetadata.model,
-              Size: lastImageMetadata.size,
-              Quality: lastImageMetadata.quality,
-              Style: lastImageMetadata.style,
-              Created_at: lastImageMetadata.created_at,
-            };
-            displayImage(imageId, lastImageUrl, displayMetadata);
-            showToast("Image generated successfully!", "success");
-            loadImageHistory();
-          }
+          showToast("Image generation task has been queued.", "success"); // Display success message
+          // The loader will continue to show
         })
         .catch((error) => {
-          hideLoader();
-          console.error("Error:", error);
-          showToast("Error: " + error.message, "error");
+          showToast("Error: " + error.message, "error"); // Display error message
+          // The loader will continue to show
         });
     });
   function loadImageHistory() {

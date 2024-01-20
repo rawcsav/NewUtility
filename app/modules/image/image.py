@@ -1,6 +1,6 @@
 import os
 
-from flask import jsonify, Blueprint, render_template, send_file, url_for, current_app
+from flask import jsonify, Blueprint, render_template, send_file, url_for, current_app, request
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound
 from markdown2 import markdown
@@ -19,6 +19,11 @@ date_format = "%b %d, %Y at %I:%M %p"
 def generate_image():
     form = GenerateImageForm()
     error_message = None
+    markdown_file_path = os.path.join(current_app.root_path, image_bp.static_folder, "image.md")
+
+    with open(markdown_file_path, "r") as file:
+        markdown_content = file.read()
+    docs_content = markdown(markdown_content)
     if form.validate_on_submit():
         try:
             # Gather request details
@@ -44,10 +49,12 @@ def generate_image():
         except Exception as e:
             error_message = str(e)
             db.session.rollback()
-    markdown_file_path = os.path.join(current_app.root_path, image_bp.static_folder, "image.md")
-    with open(markdown_file_path, "r") as file:
-        markdown_content = file.read()
-    docs_content = markdown(markdown_content)
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        if error_message:
+            return jsonify({"error_message": error_message, "status": "error"})
+        # Return both image URLs and metadata in the response
+        return jsonify({"message": "Image Processing...", "status": "success"})
+
     return render_template("image.html", form=form, error_message=error_message, tooltip=docs_content)
 
 

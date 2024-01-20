@@ -309,7 +309,14 @@ def chat_stream(
             total_prompt_tokens = num_tokens_from_string(prompt, preferences["model"])
             total_completion_tokens = num_tokens_from_string(full_response, preferences["model"])
 
-            chat_cost(preferences["model"], total_prompt_tokens, total_completion_tokens)
+            chat_cost(
+                session=db.session,
+                user_id=current_user.id,
+                api_key_id=current_user.selected_api_key_id,
+                model=preferences["model"],
+                input_tokens=total_prompt_tokens,
+                completion_tokens=total_completion_tokens,
+            )
 
             if full_response.strip():
                 save_message(conversation_id, full_response, "incoming", preferences["model"])

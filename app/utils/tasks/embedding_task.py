@@ -1,34 +1,36 @@
 import os
-from app import create_app, db
 from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import Task, EmbeddingTask
-from app.modules.auth.auth_util import initialize_openai_client
+from app.modules.auth.auth_util import task_client
 from app.modules.embedding.embedding_util import (
     extract_text_from_file,
     split_text,
     get_embedding_batch,
     store_embeddings,
 )
+from app.utils.tasks.task_logging import setup_logging
+
 from app.utils.usage_util import embedding_cost
 
+# Configure logging for the embedding task
+logger = setup_logging()
 
-def process_document(embedding_task, user_id):
+
+def process_document(session, embedding_task, user_id):
     try:
-        # Processing steps for the individual document
+        print("working")
         text_pages = extract_text_from_file(embedding_task.temp_path)
         chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(text_pages, embedding_task.chunk_size)
 
-        from datetime import datetime
-
         new_document = Document(
-            user_id=embedding_task.user_id,
+            user_id=user_id,
             task_id=embedding_task.task_id,
             title=embedding_task.title,
             author=embedding_task.author,
             total_tokens=total_tokens,
         )
-        db.session.add(new_document)
-        db.session.flush()
+        session.add(new_document)
+        session.flush()
 
         for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
             pages_str = ",".join(map(str, pages))
@@ -39,31 +41,33 @@ def process_document(embedding_task, user_id):
                 tokens=chunk_token_counts[i],
                 pages=pages_str,
             )
-            db.session.add(chunk)
-
-        client, error = initialize_openai_client(user_id)
+            session.add(chunk)
+        session.commit()
+        client, key_id, error = task_client(session, user_id)
         if error:
             raise Exception(error)
-
         embeddings = get_embedding_batch(chunks, client)
-        embedding_cost(total_tokens)
-        store_embeddings(new_document.id, embeddings)
-        db.session.commit()
-
-        os.remove(embedding_task.temp_path)
-
+        store_embeddings(session, new_document.id, embeddings, user_id)
+        embedding_cost(session=session, user_id=user_id, api_key_id=key_id, input_tokens=total_tokens)
     except Exception as e:
-        db.session.rollback()
-        print(f"Error processing document: {e}")
+        logger.info(f"Error processing document {embedding_task.id}: {e}")
+        os.remove(embedding_task.temp_path)
+        raise e
 
 
-def process_embedding_task(task_id):
-    app = create_app()
-    with app.app_context():
-        task = Task.query.get(task_id)
-        embedding_task = EmbeddingTask.query.filter_by(task_id=task.id).first()
+def process_embedding_task(session, task_id):
+    try:
+        logger.info(f"Retrieving embedding task with ID '{task_id}'")
+        embedding_task = session.query(EmbeddingTask).filter_by(task_id=task_id).first()
 
-        if task and embedding_task and task.status == "pending":
-            process_document(embedding_task=embedding_task, user_id=task.user_id)
-            task.status = "completed"
-            db.session.commit()
+        if not embedding_task:
+            raise ValueError(f"EmbeddingTask for task ID '{task_id}' not found")
+        task = session.query(Task).filter_by(id=task_id).one()
+        print(task)
+
+        process_document(session, embedding_task, user_id=task.user_id)
+        logger.info(f"Embedding task {task_id} processed successfully")
+        return True
+    except Exception as e:
+        logger.error(f"Error processing embedding task {task_id}: {e}")
+        return False

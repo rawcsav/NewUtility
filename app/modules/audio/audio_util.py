@@ -1,7 +1,6 @@
 import os
 
 import openai
-from flask import current_app
 from flask_login import current_user
 from pydub import AudioSegment
 
@@ -16,16 +15,14 @@ from app.models.audio_models import (
     TranslationJobSegment,
 )
 from app.utils.usage_util import num_tokens_from_string, chat_cost, tts_cost, whisper_cost
+from config import appdir
 
 
 def user_subdirectory(user_id):
-    base_download_dir = current_app.config["USER_AUDIO_DIRECTORY"]
-
+    base_download_dir = os.path.join(appdir, "static", "user_files", "user_audio")
     user_subdirectory_path = os.path.join(base_download_dir, str(user_id))
-
     if not os.path.exists(user_subdirectory_path):
         os.makedirs(user_subdirectory_path)
-
     return user_subdirectory_path
 
 
@@ -139,7 +136,7 @@ def get_audio_duration(file_path):
     return len(audio)
 
 
-def generate_prompt(client, instruction: str) -> str:
+def generate_prompt(session, client, instruction: str) -> str:
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-0613",
         temperature=0,
@@ -162,15 +159,20 @@ def generate_prompt(client, instruction: str) -> str:
     fictitious_prompt = response.choices[0].message.content
     total_prompt_tokens = num_tokens_from_string(instruction, "gpt-3.5-turbo-0613")
     total_completion_tokens = num_tokens_from_string(fictitious_prompt, "gpt-3.5-turbo-0613")
-
-    # After the chat is completed, calculate the cost based on token counts
-    chat_cost("gpt-3.5-turbo-0613", total_prompt_tokens, total_completion_tokens)
+    chat_cost(
+        session=session,
+        user_id=current_user.id,
+        api_key_id=current_user.selected_api_key_id,
+        model="gpt-3.5-turbo-0613",
+        input_tokens=total_prompt_tokens,
+        completion_tokens=total_completion_tokens,
+    )
     return fictitious_prompt
 
 
 def determine_prompt(client, form_data):
     if "generate_prompt" in form_data and form_data["generate_prompt"]:
-        generated_prompt = generate_prompt(client, form_data["generate_prompt"])
+        generated_prompt = generate_prompt(session=db.session, client=client, instruction=form_data["generate_prompt"])
         return generated_prompt
     elif "prompt" in form_data and form_data["prompt"]:
         return form_data["prompt"]
@@ -178,17 +180,19 @@ def determine_prompt(client, form_data):
         return ""
 
 
-def generate_speech(client, model, voice, input_text, task_id, response_format="mp3", speed=1.0):
-    download_dir = user_subdirectory(current_user.id)
-    tts_job = create_tts_job(current_user.id, model, voice, response_format, speed, input_text, task_id)
-    tts_filename = f"tts_{tts_job.id}.{response_format}"
+def generate_speech(
+    session, client, api_key_id, user_id, model, voice, input_text, task_id, response_format="mp3", speed=1.0
+):
+    download_dir = user_subdirectory(user_id)
+    tts_job = create_tts_job(session, user_id, model, voice, response_format, speed, input_text, task_id)
+    tts_filename = f"{tts_job.id}.{response_format}"
     tts_filepath = os.path.join(download_dir, tts_filename)
     tts_job.output_filename = tts_filename
-    db.session.commit()
+    session.commit()
     if not create_and_stream_tts_audio(client, model, voice, input_text, response_format, speed, tts_filepath):
         return {"error": "Failed to generate speech"}
-    tts_cost(len(input_text), model)
-    return tts_filepath, tts_filename
+    tts_cost(session=session, user_id=user_id, api_key_id=api_key_id, model_name=model, num_characters=len(input_text))
+    return tts_filepath
 
 
 def create_and_stream_tts_audio(client, model, voice, input_text, response_format, speed, filepath):
@@ -203,6 +207,9 @@ def create_and_stream_tts_audio(client, model, voice, input_text, response_forma
 
 
 def process_audio_transcription(
+    session,
+    user_id,
+    api_key_id,
     client,
     file_path,
     transcription_job,
@@ -230,14 +237,17 @@ def process_audio_transcription(
             transcript = adjust_subtitle_timing(transcript, total_duration_ms, response_format)
         duration = get_audio_duration(file_path)
         seconds = duration * 1000
-        whisper_cost(seconds)
-        create_transcription_job_segment(transcription_job.id, transcript, index, duration)
+        whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
+        create_transcription_job_segment(session, transcription_job.id, transcript, index, duration)
         return duration
     except openai.OpenAIError as e:
         return {"error": str(e)}
 
 
 def transcribe_audio(
+    session,
+    user_id,
+    api_key_id,
     client,
     file_paths,
     input_filename,
@@ -249,7 +259,8 @@ def transcribe_audio(
     prompt=None,
 ):
     transcription_job = create_transcription_job(
-        user_id=current_user.id,
+        session=session,
+        user_id=user_id,
         prompt=prompt,
         model=model,
         language=language,
@@ -262,6 +273,9 @@ def transcribe_audio(
     try:
         for index, file_path in enumerate(file_paths):
             segment_duration = process_audio_transcription(
+                session,
+                user_id,
+                api_key_id,
                 client,
                 file_path,
                 transcription_job,
@@ -277,14 +291,25 @@ def transcribe_audio(
                 raise Exception(segment_duration["error"])
             total_duration_ms += segment_duration
         transcription_job.finished = True
-        db.session.commit()
+        session.commit()
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
     return transcription_job.id
 
 
 def process_audio_translation(
-    client, file_path, translation_job, model, prompt, response_format, temperature, index, total_duration_ms=0
+    session,
+    user_id,
+    api_key_id,
+    client,
+    file_path,
+    translation_job,
+    model,
+    prompt,
+    response_format,
+    temperature,
+    index,
+    total_duration_ms=0,
 ):
     try:
         with open(file_path, "rb") as audio_file:
@@ -297,18 +322,29 @@ def process_audio_translation(
                 transcript = adjust_subtitle_timing(translation, total_duration_ms, response_format)
             duration = get_audio_duration(file_path)
             seconds = duration * 1000
-            whisper_cost(seconds)
-            create_translation_job_segment(translation_job.id, transcript, index, duration)
+            whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
+            create_translation_job_segment(session, translation_job.id, transcript, index, duration)
             return duration
     except openai.OpenAIError as e:
         return {"error": str(e)}
 
 
 def translate_audio(
-    client, file_paths, input_filename, task_id, model="whisper-1", prompt=None, response_format="text", temperature=0.0
+    session,
+    api_key_id,
+    user_id,
+    client,
+    file_paths,
+    input_filename,
+    task_id,
+    model="whisper-1",
+    prompt=None,
+    response_format="text",
+    temperature=0.0,
 ):
     translation_job = create_translation_job(
-        user_id=current_user.id,
+        session=session,
+        user_id=user_id,
         task_id=task_id,
         prompt=prompt,
         model=model,
@@ -320,6 +356,9 @@ def translate_audio(
     try:
         for index, file_path in enumerate(file_paths):
             segment_duration = process_audio_transcription(
+                session,
+                api_key_id,
+                user_id,
                 client,
                 file_path,
                 translation_job,
@@ -334,13 +373,13 @@ def translate_audio(
                 raise Exception(segment_duration["error"])
             total_duration_ms += segment_duration
         translation_job.finished = True
-        db.session.commit()
+        session.commit()
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
     return translation_job.id
 
 
-def create_tts_job(user_id, model, voice, response_format, speed, input_text, task_id, output_filename=None):
+def create_tts_job(session, user_id, model, voice, response_format, speed, input_text, task_id, output_filename=None):
     job = TTSJob(
         user_id=user_id,
         task_id=task_id,
@@ -351,12 +390,14 @@ def create_tts_job(user_id, model, voice, response_format, speed, input_text, ta
         input_text=input_text,
         output_filename=output_filename,
     )
-    db.session.add(job)
-    db.session.commit()
+    session.add(job)
+    session.commit()
     return job
 
 
-def create_transcription_job(user_id, prompt, model, language, response_format, temperature, task_id, input_filename):
+def create_transcription_job(
+    session, user_id, prompt, model, language, response_format, temperature, task_id, input_filename
+):
     job = TranscriptionJob(
         user_id=user_id,
         task_id=task_id,
@@ -367,12 +408,12 @@ def create_transcription_job(user_id, prompt, model, language, response_format, 
         temperature=temperature,
         input_filename=input_filename,
     )
-    db.session.add(job)
-    db.session.commit()
+    session.add(job)
+    session.commit()
     return job
 
 
-def create_translation_job(user_id, prompt, model, response_format, temperature, task_id, input_filename):
+def create_translation_job(session, user_id, prompt, model, response_format, temperature, task_id, input_filename):
     job = TranslationJob(
         user_id=user_id,
         task_id=task_id,
@@ -382,26 +423,26 @@ def create_translation_job(user_id, prompt, model, response_format, temperature,
         temperature=temperature,
         input_filename=input_filename,
     )
-    db.session.add(job)
-    db.session.commit()
+    session.add(job)
+    session.commit()
     return job
 
 
-def create_transcription_job_segment(transcription_job_id, transcription, job_index, duration):
+def create_transcription_job_segment(session, transcription_job_id, transcription, job_index, duration):
     segment = TranscriptionJobSegment(
         transcription_job_id=transcription_job_id, output_content=transcription, job_index=job_index, duration=duration
     )
-    db.session.add(segment)
-    db.session.commit()
+    session.add(segment)
+    session.commit()
     return segment
 
 
-def create_translation_job_segment(translation_job_id, translation, job_index, duration):
+def create_translation_job_segment(session, translation_job_id, translation, job_index, duration):
     segment = TranslationJobSegment(
         translation_job_id=translation_job_id, output_content=translation, job_index=job_index, duration=duration
     )
-    db.session.add(segment)
-    db.session.commit()
+    session.add(segment)
+    session.commit()
     return segment
 
 
@@ -426,9 +467,10 @@ def get_whisper_preferences(user_id):
             "model": preferences.model,
             "language": preferences.language,
             "response_format": preferences.response_format,
+            "temperature": preferences.temperature,
         }
     else:
-        return {"model": "whisper-1", "language": "en", "response_format": "text"}
+        return {"model": "whisper-1", "language": "en", "response_format": "text", "temperature": "0.0"}
 
 
 def save_file_to_disk(content, file_extension, job_id, user_directory):

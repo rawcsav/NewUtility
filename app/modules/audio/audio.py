@@ -15,7 +15,6 @@ from app.modules.audio.audio_util import (
     determine_prompt,
     user_subdirectory,
     get_whisper_preferences,
-    preprocess_audio,
     get_tts_preferences,
     save_file_to_disk,
 )
@@ -191,11 +190,12 @@ def transcription():
         filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
         prompt = determine_prompt(client, form.data)
-
         new_task = Task(type="Transcription", status="pending", user_id=user_id)
+        db.session.add(new_task)
+        db.session.flush()
         new_transcription_task = TranscriptionTask(
             task_id=new_task.id,
-            input_filename=filename,
+            input_filename=filepath,
             model=preferences["model"],
             prompt=prompt,
             response_format=preferences["response_format"],
@@ -226,11 +226,12 @@ def translation():
         filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
         prompt = determine_prompt(client, form.data)
-
         new_task = Task(type="Translation", status="pending", user_id=user_id)
+        db.session.add(new_task)
+        db.session.flush()
         new_translation_task = TranslationTask(
             task_id=new_task.id,
-            input_filename=filename,
+            input_filename=filepath,
             model=preferences["model"],
             prompt=prompt,
             response_format=preferences["response_format"],

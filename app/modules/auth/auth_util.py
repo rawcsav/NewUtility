@@ -10,7 +10,7 @@ from flask_login import current_user
 from openai import OpenAI
 
 from app import db
-from app.models.user_models import UserAPIKey
+from app.models.user_models import UserAPIKey, User
 
 
 def generate_confirmation_code():
@@ -153,3 +153,14 @@ def initialize_openai_client(user_id):
     api_key = decrypt_api_key(user_api_key.encrypted_api_key)
     client = OpenAI(api_key=api_key)
     return client, None
+
+
+def task_client(session, user_id):
+    user = session.query(User).filter_by(id=user_id).first()
+    key_id = user.selected_api_key_id
+    user_api_key = session.query(UserAPIKey).filter_by(user_id=user_id, id=key_id, delete=False).first()
+    if not user_api_key:
+        return None, "API Key not found."
+    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
+    client = OpenAI(api_key=api_key)
+    return client, key_id, None

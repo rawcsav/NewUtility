@@ -8,7 +8,6 @@ import numpy as np
 import openai
 import tiktoken
 from docx2txt import docx2txt
-from flask_login import current_user
 from nltk.tokenize import word_tokenize, sent_tokenize
 from pypdf import PdfReader
 from tenacity import retry, stop_after_attempt, wait_random_exponential
@@ -195,8 +194,8 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
     return embeddings
 
 
-def store_embeddings(document_id, embeddings):
-    chunks = DocumentChunk.query.filter_by(document_id=document_id).all()
+def store_embeddings(session, document_id, embeddings, user_id):
+    chunks = session.query(DocumentChunk).filter_by(document_id=document_id).all()
     if len(chunks) != len(embeddings):
         raise ValueError("The number of embeddings does not match the number of document chunks.")
 
@@ -204,19 +203,12 @@ def store_embeddings(document_id, embeddings):
     for chunk, embedding_vector in zip(chunks, embeddings):
         embedding_bytes = np.array(embedding_vector, dtype=np.float32).tobytes()
         embedding_model = DocumentEmbedding(
-            chunk_id=chunk.id,
-            embedding=embedding_bytes,  # Store as binary data
-            user_id=current_user.id,
-            model=EMBEDDING_MODEL,
+            chunk_id=chunk.id, embedding=embedding_bytes, user_id=user_id, model=EMBEDDING_MODEL  # Store as binary data
         )
         embedding_models.append(embedding_model)
 
-    # Bulk add to the session and commit once
-    db.session.bulk_save_objects(embedding_models)
-    db.session.commit()
-
-    # Update the cache (consider if this needs to be done each time)
-    VectorCache.load_user_vectors(current_user.id)
+    session.bulk_save_objects(embedding_models)
+    session.commit()
 
 
 def cosine_similarity(vec_a, vec_b):

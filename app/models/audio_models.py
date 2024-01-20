@@ -18,7 +18,7 @@ class TTSPreferences(db.Model):
 
 
 class WhisperPreferences(db.Model):
-    __tablename__ = "transcription_preferences"
+    __tablename__ = "whisper_preferences"
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey("users.id"), unique=True, index=True)
     model = db.Column(db.Enum("whisper-1"), nullable=False, default="whisper-1")

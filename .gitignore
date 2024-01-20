@@ -133,6 +133,7 @@ ENV/
 env.bak/
 venv.bak/
 node_modules/
+local_config.py
 
 #Config
 config.ini
