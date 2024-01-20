@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+from doteknv import load_dotenv
 from app.models.task_models import Task
 from app.utils.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 from app.utils.tasks.deletion_task import process_deletion_task
@@ -18,7 +18,8 @@ logger = setup_logging()
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 # Connect the path with your '.env' file name
-load_dotenv(os.path.join(BASEDIR, '.env'))
+load_dotenv(os.path.join(BASEDIR, ".env"))
+
 
 def find_and_mark_pending_task(Session):
     with Session() as session:  # Use Session() to create a new session instance
