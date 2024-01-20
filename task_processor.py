@@ -14,6 +14,11 @@ from app.utils.tunnel_util import get_tunnel
 
 logger = setup_logging()
 
+# Get the path to the directory this file is in
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+# Connect the path with your '.env' file name
+load_dotenv(os.path.join(BASEDIR, '.env'))
 
 def find_and_mark_pending_task(Session):
     with Session() as session:  # Use Session() to create a new session instance
