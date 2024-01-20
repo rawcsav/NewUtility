@@ -143,7 +143,6 @@ def upload_api_key():
                 200,
             )
         except Exception as e:
-            print(e)
             db.session.rollback()
             return jsonify({"status": "error", "message": "Failed to verify API key."}), 400
 

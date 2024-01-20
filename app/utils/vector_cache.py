@@ -27,7 +27,6 @@ class VectorCache:
 
     @classmethod
     def clear_cache(cls):
-        print("Clearing the vector cache.")
         cls._vectors.clear()
 
     @classmethod
@@ -56,19 +55,11 @@ class VectorCache:
         if query_vector.ndim != 1:
             raise ValueError("Query vector must be a 1D array.")
 
-        print(f"Number of vectors loaded: {len(cls._vectors)}")
-        print(f"Query vector dimensions: {query_vector.shape}")
-
-        for vector_id, vector in cls._vectors.items():
-            print(f"Vector ID: {vector_id}, Shape: {vector.shape}")
-
         similarities = []
         for id in subset_ids:
             if id in cls._vectors:
                 similarity = np.dot(query_vector, cls._vectors[id])
                 similarities.append((id, similarity))
-            else:
-                print(f"ID {id} not found in the cache.")
 
         # Sort by similarity score in descending order
         similarities.sort(key=lambda x: x[1], reverse=True)

@@ -254,7 +254,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     selected_chunks = []
     current_tokens = 0
     for chunk_id, similarity in similarities:
-        print(similarity)
         chunk = next((c for c in document_chunks_with_details if str(c.id) == chunk_id), None)
         if chunk and current_tokens + chunk.tokens <= max_knowledge_context_tokens:
             selected_chunks.append(
@@ -308,12 +307,9 @@ def delete_all_documents():
 
         # Delete each document
         for document in all_documents:
-            print("Deleting:" + document.title)
             db.session.delete(document)
 
         # Commit the transaction
         db.session.commit()
-        print("All documents have been deleted.")
     except Exception as e:
         db.session.rollback()
-        print(f"An error occurred: {e}")

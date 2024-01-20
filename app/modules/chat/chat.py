@@ -480,7 +480,6 @@ def interrupt_stream(conversation_id):
         abort(403)  # HTTP 403 Forbidden
 
     set_interruption_flag(conversation_id)
-    print(f"Interruption flag set in session for conversation {conversation_id}")
 
     return jsonify({"status": "success", "message": "Interruption signal received."})
 
@@ -489,7 +488,6 @@ def interrupt_stream(conversation_id):
 def upload_image():
     file = request.files.get("file")
     conversation_id = request.form.get("conversation_id")
-    print(f"Conversation ID: {conversation_id}")
     if file and allowed_file(file.filename) and conversation_id:
         try:
             image_uuid, webp_file_name = save_image(file.stream)

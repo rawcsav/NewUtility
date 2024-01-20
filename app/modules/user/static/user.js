@@ -435,7 +435,6 @@ function markImageAsDeleted(imageId) {
 
 function toggleUsageInfo(usageInfoId) {
   var usageInfoDiv = document.getElementById(usageInfoId);
-  console.log(usageInfoId);
   if (usageInfoDiv.style.display === "none") {
     usageInfoDiv.style.display = "block";
   } else {

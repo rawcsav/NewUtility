@@ -18,7 +18,6 @@ logger = setup_logging()
 
 def process_document(session, embedding_task, user_id):
     try:
-        print("working")
         text_pages = extract_text_from_file(embedding_task.temp_path)
         chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(text_pages, embedding_task.chunk_size)
 
@@ -63,7 +62,6 @@ def process_embedding_task(session, task_id):
         if not embedding_task:
             raise ValueError(f"EmbeddingTask for task ID '{task_id}' not found")
         task = session.query(Task).filter_by(id=task_id).one()
-        print(task)
 
         process_document(session, embedding_task, user_id=task.user_id)
         logger.info(f"Embedding task {task_id} processed successfully")

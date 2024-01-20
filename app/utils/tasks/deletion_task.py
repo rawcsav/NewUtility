@@ -55,7 +55,7 @@ def delete_entity(session, entity_type, entity_id):
         delete_local_files(entity_id, entity_type)
         session.delete(entity)
     except Exception as e:
-        print(f"Error deleting entity: {e}")
+        raise e
 
 
 def process_deletion_task(session, task_id):

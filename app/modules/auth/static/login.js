@@ -16,7 +16,6 @@ document
     var formData = new FormData(this);
     var remember = document.getElementById("remember").checked;
     formData.set("remember", remember ? "true" : "false");
-    console.log("Remember Me value:", remember.toString());
 
     fetch("/auth/login", {
       method: "POST",

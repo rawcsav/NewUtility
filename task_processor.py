@@ -56,11 +56,6 @@ def process_task(Session, task_id, task_processors):
 
 
 if __name__ == "__main__":
-    dotenv_path = ".env"
-    print(dotenv_path)
-    if os.path.exists(dotenv_path):
-        load_dotenv(dotenv_path)
-
     FLASK_ENV = os.getenv("FLASK_ENV")
     SQL_USERNAME = os.getenv("SQL_USERNAME")
     SQL_PASSWORD = os.getenv("SQL_PASSWORD")

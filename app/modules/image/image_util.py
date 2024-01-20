@@ -34,7 +34,6 @@ def download_compressed_image(download_dir, image_url, image_id):
         return webp_file_path
 
     except requests.RequestException as e:
-        print(f"Error downloading image: {e}")
         return None
 
 

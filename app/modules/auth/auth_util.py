@@ -110,7 +110,6 @@ def test_api_key_models(api_key, available_models):
         return "Error"
 
     if test_result == "True":
-        print(f"API Key: {api_key}, Available Models: {', '.join(available_models)}")
         return "gpt-4" if "gpt-4" in available_models else "gpt-3.5-turbo"
     elif test_result == "False":
         return "Error"

@@ -236,7 +236,9 @@ def process_audio_transcription(
         elif response_format in ["srt", "vtt"]:
             transcript = adjust_subtitle_timing(transcript, total_duration_ms, response_format)
         duration = get_audio_duration(file_path)
-        seconds = duration * 1000
+        seconds = int(duration / 1000)
+        print(seconds)
+        print(duration)
         whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
         create_transcription_job_segment(session, transcription_job.id, transcript, index, duration)
         return duration
@@ -477,11 +479,9 @@ def save_file_to_disk(content, file_extension, job_id, user_directory):
     if not os.path.exists(user_directory):
         os.makedirs(user_directory)
 
-    # Define the file path
     file_name = f"{job_id}.{file_extension}"
     file_path = os.path.join(user_directory, file_name)
 
-    # Write content to the file
     with open(file_path, "wb") as file:
         file.write(content.encode("utf-8"))
 

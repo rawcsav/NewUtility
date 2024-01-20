@@ -247,7 +247,6 @@ def chat_stream(
 ):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
-        print("No conversation found for user.")
         return
     if conversation.user_id != current_user.id:
         abort(403)
@@ -380,6 +379,5 @@ def delete_local_image(image_uuid):
     if os.path.isfile(image_file_path):
         try:
             os.remove(image_file_path)
-            print(f"Image file {image_uuid}.webp deleted successfully")
         except OSError as e:
-            print(f"Error: {image_file_path} : {e.strerror}")
+            raise e

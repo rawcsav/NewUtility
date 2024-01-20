@@ -13,7 +13,6 @@ function getCsrfToken() {
 
 // Function to display the loading template
 function showLoading() {
-  console.log("showLoading called");
   const loadingTemplate = document.getElementById("loader-template");
   if (loadingTemplate) {
     loadingTemplate.style.display = "block";
@@ -22,7 +21,6 @@ function showLoading() {
 
 // Function to hide the loading template
 function hideLoading() {
-  console.log("hideLoading called");
   const loadingTemplate = document.getElementById("loader-template");
   if (loadingTemplate) {
     loadingTemplate.style.display = "none";
@@ -210,7 +208,6 @@ function interruptAIResponse() {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log(data.message);
       isInterrupted = true;
       toggleButtonState();
     })
@@ -234,7 +231,6 @@ function handleFetchResponse(response, successMessage) {
   }
   return response.json().then((data) => {
     if (data.status === "success") {
-      console.log(successMessage);
       showToast(successMessage, "success");
     } else {
       throw new Error(data.message);
@@ -440,9 +436,7 @@ function createClipboardIcon(copyTarget) {
     }
     navigator.clipboard
       .writeText(textToCopy)
-      .then(() => {
-        console.log("Text copied to clipboard!");
-      })
+      .then(() => {})
       .catch((err) => {
         console.error("Failed to copy text:", err);
       });
@@ -1102,7 +1096,6 @@ function uploadImage(file, conversationId) {
       if (data.status === "success") {
         showToast("Image uploaded successfully", "success");
 
-        console.log("Uploaded image URL:", data.image_url);
         displayThumbnail(data.image_url);
       } else {
         showToast(data.message, "error");
@@ -1153,7 +1146,6 @@ function handleDrop(event) {
   event.preventDefault();
   const files = event.dataTransfer.files;
   if (files.length > 0) {
-    console.log("Dropped files:", files);
   }
 }
 
@@ -1164,7 +1156,6 @@ function handlePaste(event) {
     const item = items[index];
     if (item.kind === "file") {
       const blob = item.getAsFile();
-      console.log("Pasted file:", blob);
     }
   }
 }
@@ -1248,7 +1239,6 @@ function processStreamedResponse(response) {
 
     function readStreamedResponseChunk(reader) {
       if (isInterrupted) {
-        console.log("Response processing was interrupted.");
         finalizeStreamedResponse();
         let conversationId = document
           .getElementById("convo-title")
