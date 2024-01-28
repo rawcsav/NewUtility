@@ -160,7 +160,6 @@ def split_text(text_pages, max_tokens=512):
 def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
     embedding = response.data[0].embedding
-    # Check the dimension of the embedding
     if len(embedding) != 3072:
         raise ValueError(f"Expected embedding dimension to be 3072, but got {len(embedding)}")
     return embedding
@@ -188,7 +187,7 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
         embeddings.extend(batch_embeddings)
 
         for batch_embedding in batch_embeddings:
-            if len(batch_embedding) != 1536:
+            if len(batch_embedding) != 3072:
                 raise ValueError(f"Expected embedding dimension to be 3072, but got {len(batch_embedding)}")
 
     return embeddings
