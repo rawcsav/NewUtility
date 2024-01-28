@@ -266,10 +266,13 @@ def chat_stream(
         truncate_limit = preferences.get("truncate_limit")
         if truncate_limit:
             truncate_conversation(conversation_history, truncate_limit)
-
+        if preferences["model"] == "gpt-4-1106-preview":
+            model = "gpt-4-turbo-preview"
+        else:
+            model = preferences["model"]
         # Prepare the API request payload
         request_payload = {
-            "model": preferences["model"],
+            "model": model,
             "messages": conversation_history + [{"role": "user", "content": user_message_content}],
             "temperature": preferences["temperature"],
             "max_tokens": preferences["max_tokens"],

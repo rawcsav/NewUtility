@@ -19,7 +19,7 @@ from app.models.chat_models import ChatPreferences
 from app.utils.vector_cache import VectorCache
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
-EMBEDDING_MODEL = "text-embedding-ada-002"
+EMBEDDING_MODEL = "text-embedding-3-large"
 MAX_TOKENS_PER_BATCH = 8000  # Define the maximum tokens per batch
 WORDS_PER_PAGE = 500  # Define the number of words per page
 
@@ -161,8 +161,8 @@ def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwa
     response = client.embeddings.create(input=text, model=model, **kwargs)
     embedding = response.data[0].embedding
     # Check the dimension of the embedding
-    if len(embedding) != 1536:
-        raise ValueError(f"Expected embedding dimension to be 1536, but got {len(embedding)}")
+    if len(embedding) != 3072:
+        raise ValueError(f"Expected embedding dimension to be 3072, but got {len(embedding)}")
     return embedding
 
 
@@ -189,7 +189,7 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
 
         for batch_embedding in batch_embeddings:
             if len(batch_embedding) != 1536:
-                raise ValueError(f"Expected embedding dimension to be 1536, but got {len(batch_embedding)}")
+                raise ValueError(f"Expected embedding dimension to be 3072, but got {len(batch_embedding)}")
 
     return embeddings
 
@@ -209,6 +209,18 @@ def store_embeddings(session, document_id, embeddings, user_id):
 
     session.bulk_save_objects(embedding_models)
     session.commit()
+
+
+def cosine_similarity(vec_a, vec_b):
+    return np.dot(vec_a, vec_b)
+
+
+def get_associated_text(id):
+    embedding = DocumentEmbedding.query.filter_by(chunk_id=id).first()
+    if embedding:
+        chunk = DocumentChunk.query.filter_by(id=embedding.chunk_id).first()
+        return chunk.content if chunk else None
+    return None
 
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
@@ -254,9 +266,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     return selected_chunks
 
 
-# path/filename: context_wrapping.py
-
-
 def append_knowledge_context(user_query, user_id, client):
     user_preferences = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
 
@@ -270,23 +279,10 @@ def append_knowledge_context(user_query, user_id, client):
 
     # Find relevant sections
     relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences)
-
-    preface = (
-        "The following text excerpts are provided for context. Use this information to critically analyze "
-        "and fully answer the user query that follows. Cite the excerpts as needed.\n"
-        "=== Begin Knowledge Context ===\n"
-    )
-    ending = (
-        "=== End Knowledge Context ===\n"
-        "Provide your authoritative and nuanced answer using the text excerpts above. "
-        "Ensure comprehensive attention to detail and incorporate the specific text excerpts in your response. "
-        "Omit disclaimers, apologies, and AI self-references. Provide unbiased, holistic guidance and analysis. "
-        "Now, answer the user question below based on the context provided:\n"
-    )
     # Format the context with title, author, and page number
-    context = preface
+    context = ""
     chunk_associations = []
-    for chunk_id, title, author, pages, chunk_content, tokens, similarity in relevant_sections:
+    for chunk_id, title, author, pages, chunk_content, similarity, rank in relevant_sections:
         context_parts = []
         if title:
             context_parts.append(f"Title: {title}")
@@ -298,9 +294,7 @@ def append_knowledge_context(user_query, user_id, client):
 
         context += "\n".join(context_parts) + "\n\n"
 
-        chunk_associations.append((chunk_id, similarity))
-
-    context += ending
+        chunk_associations.append((chunk_id, rank))
 
     modified_query = context + user_query
     return modified_query, chunk_associations

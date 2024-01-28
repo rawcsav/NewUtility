@@ -10,7 +10,7 @@ def deserialize_embedding(embedding_bytes):
         raise ValueError("Failed to deserialize embedding: {}".format(e))
     if embedding_array.dtype != np.float32:
         raise ValueError("Unexpected embedding array dtype: {}".format(embedding_array.dtype))
-    if embedding_array.shape != (1536,):
+    if embedding_array.shape != (3072,):
         raise ValueError("Unexpected embedding array shape: {}".format(embedding_array.shape))
 
     return embedding_array
