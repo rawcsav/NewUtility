@@ -298,6 +298,7 @@ def chat_stream(
             else:
                 save_message(conversation_id, raw_prompt, "outgoing", preferences["model"], images=images)
         full_response = ""
+        print(prompt)
         try:
             response = client.chat.completions.create(**request_payload)
 
