@@ -402,7 +402,7 @@ def update_system_prompt(conversation_id):
     data = request.get_json()
     new_system_prompt = data.get("system_prompt")
 
-    if new_system_prompt.strip() is None or not new_system_prompt.strip() or len(new_system_prompt.strip()) >= 1000:
+    if new_system_prompt.strip() is None or not new_system_prompt.strip() or len(new_system_prompt.strip()) >= 2048:
         return (
             jsonify({"status": "error", "message": "System prompt must be provided. " "(Less than 1000 characters)."}),
             400,

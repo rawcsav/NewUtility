@@ -37,7 +37,7 @@ def chat_cost(session, user_id, api_key_id, model, input_tokens, completion_toke
 
 
 def embedding_cost(session, user_id, api_key_id, input_tokens: int):
-    total_cost = (input_tokens / 1000) * 0.0001
+    total_cost = (input_tokens / 1000) * 0.00002
     update_usage_and_costs(
         session=session, user_id=user_id, api_key_id=api_key_id, usage_type="embedding", cost=total_cost
     )

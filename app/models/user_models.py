@@ -35,9 +35,11 @@ class TierLimit(db.Model):
     max_audio_jobs = db.Column(db.Integer)
     audio_expiration = db.Column(db.Integer)  # in days
     max_chat_history = db.Column(db.Integer)  # number of conversations
+    max_chat_messages = db.Column(db.Integer)  # number of messages
     chat_expiration = db.Column(db.Integer)  # in days
     max_embed_file_size = db.Column(db.Integer)  # in bytes
     max_embed_concurrent_files = db.Column(db.Integer)
+    embed_dimensions = db.Column(db.Integer)
     embed_expiration = db.Column(db.Integer)  # in days
     image_limit_per_hour = db.Column(db.Integer)
     image_expiration = db.Column(db.Integer)  # in days
