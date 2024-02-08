@@ -207,6 +207,7 @@ function interruptAIResponse() {
     credentials: "same-origin",
   })
     .then((response) => response.json())
+    // eslint-disable-next-line no-unused-vars
     .then((data) => {
       isInterrupted = true;
       toggleButtonState();
@@ -1046,10 +1047,6 @@ function toggleImageUploadIcon(selectedModel) {
   imageUploadIcon.style.display = shouldEnable ? "block" : "none";
 
   if (shouldEnable) {
-    chatBox.addEventListener("dragover", handleDragOver);
-    chatBox.addEventListener("drop", handleDrop);
-    chatBox.addEventListener("paste", handlePaste);
-
     imageUploadIcon.onclick = function () {
       fileInput.click();
     };
@@ -1063,9 +1060,6 @@ function toggleImageUploadIcon(selectedModel) {
       }
     };
   } else {
-    chatBox.removeEventListener("dragover", handleDragOver);
-    chatBox.removeEventListener("drop", handleDrop);
-    chatBox.removeEventListener("paste", handlePaste);
     imageUploadIcon.onclick = null;
     fileInput.onchange = null;
     const thumbnailDiv = document.getElementById("thumbnail-div");
@@ -1136,28 +1130,6 @@ function displayThumbnail(imageUrl) {
 
   // Add the image div to the thumbnail div
   thumbnailDiv.appendChild(imageDiv);
-}
-
-function handleDragOver(event) {
-  event.preventDefault();
-}
-
-function handleDrop(event) {
-  event.preventDefault();
-  const files = event.dataTransfer.files;
-  if (files.length > 0) {
-  }
-}
-
-function handlePaste(event) {
-  const items = (event.clipboardData || event.originalEvent.clipboardData)
-    .items;
-  for (let index in items) {
-    const item = items[index];
-    if (item.kind === "file") {
-      const blob = item.getAsFile();
-    }
-  }
 }
 
 function setupChatCompletionForm() {

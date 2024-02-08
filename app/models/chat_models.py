@@ -67,4 +67,4 @@ class ChatPreferences(db.Model):
     voice_mode = db.Column(db.Boolean, default=False)
     voice_model = db.Column(db.String(50), default="alloy")
     knowledge_query_mode = db.Column(db.Boolean, default=False)
-    knowledge_context_tokens = db.Column(db.Integer, default=30)
+    knowledge_context_tokens = db.Column(db.Integer, default=5)

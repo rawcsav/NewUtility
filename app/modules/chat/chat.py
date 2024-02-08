@@ -136,7 +136,9 @@ def new_conversation():
         new_title = f"Convo #{max_number + 1}"
 
         # Create new conversation with the generated title
-        new_conversation = Conversation(user_id=user_id, title=new_title, system_prompt=form.system_prompt.data)
+        new_conversation = Conversation(
+            user_id=user_id, title=new_title, system_prompt=form.system_prompt.data, last_checked_time=datetime.utcnow()
+        )
         db.session.add(new_conversation)
 
         try:
@@ -468,6 +470,8 @@ def check_new_messages(conversation_id):
         }
         for message in new_messages
     ]
+    conversation.last_checked_time = datetime.utcnow()
+    db.session.commit()
 
     return jsonify({"status": "success", "new_messages": new_messages_dict})
 

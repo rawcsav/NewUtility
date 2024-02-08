@@ -192,7 +192,7 @@ class UpdateDocPreferencesForm(FlaskForm):
     selected = BooleanField("Selected", validators=[Optional()])
     knowledge_query_mode = BooleanField("Enable", validators=[Optional()])
     knowledge_context_tokens = FloatField(
-        "% Context", validators=[Optional(), NumberRange(min=1, max=80, message="Value must be between 1 and 80")]
+        "# Of Sections", validators=[Optional(), NumberRange(min=1, max=30, message="Value must be between 1 and 30")]
     )
 
 

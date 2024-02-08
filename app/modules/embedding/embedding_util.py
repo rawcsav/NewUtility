@@ -223,10 +223,13 @@ def get_associated_text(id):
 
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
+    # Fetch the context window size
     context_window_size = (
         db.session.query(ModelContextWindow.context_window_size).filter_by(model_name=user_preferences.model).scalar()
     )
-    max_knowledge_context_tokens = (user_preferences.knowledge_context_tokens / 100.0) * context_window_size
+
+    # max_knowledge_context_tokens is now the maximum number of sections
+    max_sections = user_preferences.knowledge_context_tokens
 
     # Fetch the document chunks and additional details for the user
     document_chunks_with_details = (
@@ -249,17 +252,25 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     # Get a descending list of similarities for the subset using the MIPS naive method
     similarities = VectorCache.mips_naive(query_embedding, subset_ids)
 
-    # Select chunks that fit within the max_knowledge_context_tokens limit
+    # Select chunks based on the max number of sections and token limit
     selected_chunks = []
+    sections_appended = 0
     current_tokens = 0
+
     for chunk_id, similarity in similarities:
+        if sections_appended >= max_sections:
+            # Stop if the maximum number of sections has been reached
+            break
+
         chunk = next((c for c in document_chunks_with_details if str(c.id) == chunk_id), None)
-        if chunk and current_tokens + chunk.tokens <= max_knowledge_context_tokens:
+        if chunk and current_tokens + chunk.tokens <= context_window_size:
             selected_chunks.append(
                 (chunk.id, chunk.title, chunk.author, chunk.pages, chunk.content, chunk.tokens, similarity)
             )
             current_tokens += chunk.tokens
-        else:
+            sections_appended += 1
+        elif chunk:
+            # Stop if adding this chunk will exceed the token limit of the context window
             break
 
     return selected_chunks
@@ -280,29 +291,35 @@ def append_knowledge_context(user_query, user_id, client):
     chunk_associations = []
 
     preface = (
-        "The following text excerpts are provided for context. Use this information to critically analyze "
-        "and fully answer the user query that follows. Cite the excerpts as needed.\n"
-        "=== Begin Knowledge Context ===\n"
+        "# The following excerpts have been provided for DIRECT and CRUCIAL contextual usage in answering the user's query. "
+        "\n\n"
+        "For the given/relevant topic, you are to act as though you are a world class expert, capable of providing nuanced and academically shrewd commentary, solutions, and responses. "
+        "**It's imperative that you use the provided text excerpts and sections as you critically analyze and properly answer the user query.** "
+        "\n\n"
+        "## Begin Knowledge Context\n\n"
     )
     ending = (
-        "=== End Knowledge Context ===\n"
-        "Provide your authoritative and nuanced answer using the text excerpts above. "
-        "Ensure comprehensive attention to detail and incorporate the specific text excerpts in your response. "
-        "Omit disclaimers, apologies, and AI self-references. Provide unbiased, holistic guidance and analysis. "
-        "Now, answer the user question below based on the context provided:\n"
+        "\n\n "
+        "## End Knowledge Context\n\n"
+        "**Remember, your response must authoritatively and nuancedly use the text excerpts above.** It's crucial to ensure "
+        "comprehensive attention to detail and to directly integrate specific text excerpts in your response. "
+        "**Omit disclaimers, apologies, and AI self-references.** Provide unbiased, holistic guidance and analysis. "
+        "**If the answer is NOT contained within the documents or they seem irrelevant, you must still attempt to integrate them.** "
+        "### Now, directly answer the user question below based on the context provided:\n\n"
     )
+
     # Format the context with title, author, and page number
     context = preface
     chunk_associations = []
     for chunk_id, title, author, pages, chunk_content, tokens, similarity in relevant_sections:
         context_parts = []
         if title:
-            context_parts.append(f"Title: {title}")
+            context_parts.append(f"**Title:** {title}")
         if author:
-            context_parts.append(f"Author: {author}")
+            context_parts.append(f"**Author:** {author}")
         if pages:
-            context_parts.append(f"Page: {pages}")
-        context_parts.append(f"Content: {chunk_content}")  # Include the chunk content
+            context_parts.append(f"**Page:** {pages}")
+        context_parts.append(f"**Content:**\n{chunk_content}")  # Include the chunk content
 
         context += "\n".join(context_parts) + "\n\n"
 

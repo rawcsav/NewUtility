@@ -192,16 +192,16 @@
               id="knowledge_context_tokens"
               name="knowledge_context_tokens"
               min="1"
-              max="80"
+              max="30"
               value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
-              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value + '%'"
+              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value"
             />
             <input
               type="text"
               id="knowledge_context_tokens_value"
               class="range-value-input"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}%"
-              oninput="document.getElementById('knowledge_context_tokens').value = this.value.replace('%', '')"
+              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
+              oninput="document.getElementById('knowledge_context_tokens').value = this.value"
             />
           </div>
           <ul class="docs-preference-list">
