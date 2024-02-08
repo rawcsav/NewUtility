@@ -270,7 +270,7 @@ def chat_stream(
             model = "gpt-4-turbo-preview"
         else:
             model = preferences["model"]
-        # Prepare the API request payload
+        print(conversation_history + [{"role": "user", "content": user_message_content}])
         request_payload = {
             "model": model,
             "messages": conversation_history + [{"role": "user", "content": user_message_content}],

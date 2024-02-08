@@ -625,14 +625,6 @@ pre {
   color: #ff7900;
 }
 
-p {
-  margin: 0;
-}
-
-.message-content p {
-  margin: 0;
-}
-
 .message i {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;

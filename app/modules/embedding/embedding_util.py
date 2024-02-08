@@ -291,21 +291,20 @@ def append_knowledge_context(user_query, user_id, client):
     chunk_associations = []
 
     preface = (
-        "# The following excerpts have been provided for DIRECT and CRUCIAL contextual usage in answering the user's query. "
-        "\n\n"
+        "## The following excerpts have been provided for DIRECT and CRUCIAL contextual usage in answering the user's query. "
+        "\n"
         "For the given/relevant topic, you are to act as though you are a world class expert, capable of providing nuanced and academically shrewd commentary, solutions, and responses. "
         "**It's imperative that you use the provided text excerpts and sections as you critically analyze and properly answer the user query.** "
-        "\n\n"
-        "## Begin Knowledge Context\n\n"
+        "\n"
+        "### Begin Knowledge Context\n\n"
     )
     ending = (
-        "\n\n "
         "## End Knowledge Context\n\n"
         "**Remember, your response must authoritatively and nuancedly use the text excerpts above.** It's crucial to ensure "
         "comprehensive attention to detail and to directly integrate specific text excerpts in your response. "
         "**Omit disclaimers, apologies, and AI self-references.** Provide unbiased, holistic guidance and analysis. "
         "**If the answer is NOT contained within the documents or they seem irrelevant, you must still attempt to integrate them.** "
-        "### Now, directly answer the user question below based on the context provided:\n\n"
+        "### Now, directly answer the user question below based on the context provided:"
     )
 
     # Format the context with title, author, and page number
@@ -316,9 +315,9 @@ def append_knowledge_context(user_query, user_id, client):
         if title:
             context_parts.append(f"**Title:** {title}")
         if author:
-            context_parts.append(f"**Author:** {author}")
+            context_parts.append(f"Author: {author}")
         if pages:
-            context_parts.append(f"**Page:** {pages}")
+            context_parts.append(f"Page: {pages}")
         context_parts.append(f"**Content:**\n{chunk_content}")  # Include the chunk content
 
         context += "\n".join(context_parts) + "\n\n"
