@@ -55,35 +55,35 @@
     </div>
   </div>
   <div class="right-column">
-    <div class="setup-container">
-      <div class="upload-container">
-        <h2>Upload Documents</h2>
-
-        <form id="uploadForm">
-          <input type="file" name="file" multiple id="fileInput" />
-        </form>
-        <div class="alerts uploadAlerts"></div>
-      </div>
-    </div>
     <div class="docs-container">
       <h4>Doc Selector</h4>
       <div id="uploaded-docs-section">
         <form id="docSelectionForm">
           <ul id="uploaded_docs_list">
-            {% for file in uploaded_files %}
-            <li>
+            {% for document in documents %}
+            <li id="document-{{ document.id }}">
               <input
                 type="checkbox"
                 name="selected_docs"
-                value="{{ file }}"
+                value="{{ document.id }}"
                 checked
               />
-              <div>{{ file }}</div>
-              <!-- New Delete Button -->
-              <button class="delete-btn" onclick="removeFile('{{ file }}')">
-                X
-              </button>
+              <div>{{ document.title }}</div>
+              <form
+                action="{{ url_for('embedding_bp.delete_document', document_id=document.id) }}"
+                method="post"
+              ></form>
             </li>
+            <div class="button-container">
+              <button
+                type="button"
+                class="btn-icon delete-btn"
+                data-doc-id="{{ document.id }}"
+                title="Delete Document"
+              >
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
             {% endfor %}
           </ul>
         </form>

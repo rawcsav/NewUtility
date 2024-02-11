@@ -1,4 +1,3 @@
-let isUploading = false;
 let controller = new AbortController();
 let signal = controller.signal;
 
@@ -9,12 +8,6 @@ function getCsrfToken() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  const fileInput = document.getElementById("fileInput");
-
-  fileInput.addEventListener("change", function () {
-    uploadDocuments();
-  });
-
   const queryInput = document.getElementById("query");
   queryInput.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
@@ -23,140 +16,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
-
-async function uploadDocuments() {
-  showAlert("Uploading...", "info", "upload");
-  updateQueryButtonStatus(true);
-
-  isUploading = true;
-
-  const formData = new FormData(document.querySelector("#uploadForm"));
-  const allowedFileTypes = ["docx", "pdf", "txt"];
-  const existingFiles = [
-    ...document.querySelectorAll("#uploaded_docs_list li"),
-  ].map((li) => li.textContent.trim());
-
-  // Create a new FormData instance to hold valid files
-  const filteredFormData = new FormData();
-
-  for (let [key, value] of formData.entries()) {
-    if (key === "file") {
-      const file = value;
-      const fileExtension = file.name.split(".").pop().toLowerCase();
-
-      if (!allowedFileTypes.includes(fileExtension)) {
-        showAlert(
-          `The file "${file.name}" is not an allowed type. Only 'docx', 'pdf', or 'txt' files are allowed.`,
-          "warning",
-          "upload",
-        );
-        continue;
-      }
-
-      if (existingFiles.includes(file.name)) {
-        showAlert(
-          `The file "${file.name}" is already uploaded. Skipping duplicate.`,
-          "warning",
-          "upload",
-        );
-        continue;
-      }
-
-      // If the file passes all checks, add it to the filtered FormData
-      filteredFormData.append(key, file);
-    } else {
-      // For other form fields, directly append to filteredFormData
-      filteredFormData.append(key, value);
-    }
-  }
-
-  if (filteredFormData.getAll("file").length === 0) {
-    showAlert("No valid files to upload.", "danger", "upload");
-    return;
-  }
-
-  try {
-    const response = await fetch("/cwd/upload", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": getCsrfToken(),
-      },
-      body: filteredFormData,
-    });
-
-    const data = await response.json();
-
-    if (data.status === "success") {
-      let uploadedCount = 0;
-      const docList = document.getElementById("uploaded_docs_list");
-
-      for (let msg of data.messages) {
-        if (msg.includes("processed successfully")) {
-          uploadedCount += 1;
-          const docNameWithExtension = msg.split(" ")[1];
-          const docName = docNameWithExtension.split(".")[0]; // Remove the extension
-
-          const listItem = document.createElement("li");
-
-          // Create and configure the delete button
-          const deleteButton = document.createElement("button");
-          deleteButton.className = "delete-btn";
-          deleteButton.textContent = "X";
-          deleteButton.onclick = function () {
-            removeFile(docNameWithExtension);
-          }; // Attach the removeFile function
-
-          // Add the checkbox and the document name (without extension)
-          listItem.innerHTML = `<input type="checkbox" name="selected_docs" value="${docNameWithExtension}" checked> ${docName}`;
-
-          // Append the delete button to the list item
-          listItem.appendChild(deleteButton);
-
-          // Finally, append the list item to the document list
-          docList.appendChild(listItem);
-        }
-      }
-
-      if (uploadedCount > 0) {
-        showAlert(
-          `${uploadedCount} files uploaded successfully.`,
-          "success",
-          "upload",
-        );
-      } else {
-        showAlert("No files uploaded successfully.", "danger", "upload");
-      }
-    } else {
-      for (let msg of data.messages) {
-        showAlert(msg, "danger", "upload");
-      }
-    }
-  } catch (error) {
-    showAlert(
-      "There was an error processing your request.",
-      "danger",
-      "upload",
-    );
-  }
-
-  // Reset the isUploading flag and update the query button's status
-  isUploading = false;
-}
-
-function updateQueryButtonStatus(isUploadingStatus = false) {
-  const queryInput = document.getElementById("query");
-  const queryButton = document.getElementById("queryButton");
-
-  if (isUploadingStatus || isUploading) {
-    queryInput.disabled = true;
-    queryButton.disabled = true;
-    queryInput.placeholder = "Uploading...";
-  } else {
-    queryInput.disabled = false;
-    queryButton.disabled = false;
-    queryInput.placeholder = "Enter your query here...";
-  }
-}
 
 let previousQuery = null;
 let previousResponse = null;
@@ -286,45 +145,44 @@ function interruptQuery() {
   document.getElementById("queryButton").disabled = false;
 }
 
-async function removeFile(fileName) {
-  try {
-    const response = await fetch(
-      `/cwd/remove_file?fileName=${encodeURIComponent(fileName)}`,
-      {
-        method: "DELETE",
-      },
-    );
+document.addEventListener("DOMContentLoaded", function () {
+  // Find all delete buttons
+  const deleteButtons = document.querySelectorAll(".delete-btn");
 
-    if (response.ok) {
-      // Log the fileName for debugging
-      console.log("Attempting to remove file with name:", fileName);
+  // Attach click event listeners to each delete button
+  deleteButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const documentId = this.getAttribute("data-doc-id");
+      console.log(`Attempting to delete document with ID: ${documentId}`); // For debugging
 
-      // Remove the list item from the DOM
-      const listItem = document.querySelector(`[data-file-name='${fileName}']`);
-
-      // Check if listItem exists before trying to remove it
-      if (listItem) {
-        listItem.remove();
-      } else {
-        console.warn("No listItem found with the given fileName.");
-        showAlert("Failed to locate the file in the UI.", "warning", "upload");
-      }
-    } else {
-      showAlert(
-        "Failed to delete the file. Please try again.",
-        "danger",
-        "upload",
-      );
-    }
-  } catch (err) {
-    console.error("Failed to delete the file", err);
-    showAlert(
-      "An error occurred while trying to delete the file.",
-      "danger",
-      "upload",
-    );
-  }
-}
+      // Attempt to delete the document from the server
+      fetch(`/embedding/delete/${documentId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRF-Token": getCsrfToken(),
+        },
+        body: JSON.stringify({ document_id: documentId }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Server failed to delete the document.");
+          }
+          // If the server responds OK, remove the document's UI element
+          console.log("Document deleted successfully from the server."); // For debugging
+          const listItem = this.closest("li");
+          if (listItem) {
+            listItem.remove(); // Immediately remove the element from the UI
+            console.log("Document removed from UI."); // For debugging
+          }
+        })
+        .catch((error) => {
+          console.error("Deletion error:", error);
+        });
+    });
+  });
+});
 
 function showAlert(message, type, context = "apiKey") {
   let alertsDiv;
@@ -344,7 +202,6 @@ function showAlert(message, type, context = "apiKey") {
     alertsDiv.textContent = message;
   } else {
     // For the other alerts, we append a new div with the message
-    alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
   }
 }
 
