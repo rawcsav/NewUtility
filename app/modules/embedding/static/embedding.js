@@ -237,55 +237,53 @@ saveButtons.forEach(function (saveButton) {
     }
   });
 });
-document
-  .getElementById("uploaded_docs_list")
-  .addEventListener("click", function (event) {
-    if (
-      event.target.classList.contains("delete-btn") ||
-      event.target.closest(".delete-btn")
-    ) {
-      var deleteButton = event.target.classList.contains("delete-btn")
-        ? event.target
-        : event.target.closest(".delete-btn");
-      var documentId = deleteButton.dataset.docId;
+document.addEventListener("click", function (event) {
+  if (
+    event.target.classList.contains("delete-btn") ||
+    event.target.closest(".delete-btn")
+  ) {
+    var deleteButton = event.target.classList.contains("delete-btn")
+      ? event.target
+      : event.target.closest(".delete-btn");
+    var documentId = deleteButton.dataset.docId;
 
-      if (confirm("Are you sure you want to delete this document?")) {
-        fetch(`/embedding/delete/${documentId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-CSRF-Token": getCsrfToken(),
-          },
-          body: JSON.stringify({ document_id: documentId }),
+    if (confirm("Are you sure you want to delete this document?")) {
+      fetch(`/embedding/delete/${documentId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRF-Token": getCsrfToken(),
+        },
+        body: JSON.stringify({ document_id: documentId }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Server returned an error response");
+          }
+          return response.json();
         })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Server returned an error response");
+        .then((data) => {
+          if (data.error) {
+            alert("Error deleting document: " + data.error);
+          } else {
+            updateUploadMessages("Document deleted successfully!", "success");
+            var listItem = deleteButton.closest("li");
+            if (listItem) {
+              listItem.remove();
             }
-            return response.json();
-          })
-          .then((data) => {
-            if (data.error) {
-              alert("Error deleting document: " + data.error);
-            } else {
-              updateUploadMessages("Document deleted successfully!", "success");
-              var listItem = deleteButton.closest("li");
-              if (listItem) {
-                listItem.remove();
-              }
-            }
-          })
-          .catch((error) => {
-            alert("An error occurred: " + error);
-            updateUploadMessages(
-              "Error deleting document: " + error.message,
-              "error",
-            );
-          });
-      }
+          }
+        })
+        .catch((error) => {
+          alert("An error occurred: " + error);
+          updateUploadMessages(
+            "Error deleting document: " + error.message,
+            "error",
+          );
+        });
     }
-  });
+  }
+});
 
 var editButtons = document.querySelectorAll(".btn-icon.edit-btn");
 editButtons.forEach(function (button) {

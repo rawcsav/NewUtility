@@ -1,5 +1,5 @@
 body {
-  font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
+  font-family: "Neue Haas Grotesk Display Pro", sans-serif;
   background-color: #b7b1b1;
   margin: 0;
   color: #333;
@@ -110,14 +110,14 @@ h4 {
   transition: all 0.5s ease;
 }
 
-input[type='text'] {
+input[type="text"] {
   padding: 8px;
   border: black 1px solid;
   font-size: 0.8em;
   border-radius: 8px 8px 8px 8px;
 }
 
-input[type='submit'],
+input[type="submit"],
 button {
   padding: 8px;
   font-size: 0.7em;
@@ -228,6 +228,7 @@ button {
   flex: 1; /* Change this line */
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 #uploaded_docs_list {
@@ -238,7 +239,7 @@ button {
   flex-grow: 1;
 }
 
-input[type='checkbox'] {
+input[type="checkbox"] {
   padding-left: 5px;
   margin-right: 10px;
 }
@@ -267,7 +268,7 @@ input[type='checkbox'] {
     0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
-#uploaded_docs_list li input[type='checkbox'] {
+#uploaded_docs_list li input[type="checkbox"] {
   margin-right: 10px;
 }
 
@@ -355,7 +356,7 @@ input[type='checkbox'] {
 #response_container pre {
   margin: 0;
   display: inline;
-  font-family: 'Helvetica Neue', serif;
+  font-family: "Helvetica Neue", serif;
   white-space: pre-wrap; /* This will make the content wrap */
   word-wrap: break-word;
 }
@@ -370,7 +371,7 @@ input[type='checkbox'] {
   margin: 0;
   font-size: 0.8em;
   display: inline;
-  font-family: 'Helvetica Neue', serif;
+  font-family: "Helvetica Neue", serif;
   white-space: pre-wrap; /* This will make the content wrap */
   word-wrap: break-word; /* This will break long words onto the next line */
 }
@@ -387,7 +388,7 @@ input[type='checkbox'] {
 }
 
 #user_query {
-  font-family: 'Helvetica Neue', serif;
+  font-family: "Helvetica Neue", serif;
   margin-bottom: 10px;
 }
 
@@ -398,7 +399,7 @@ input[type='checkbox'] {
 .history-entry pre {
   margin: 0;
   display: inline;
-  font-family: 'Helvetica Neue', serif;
+  font-family: "Helvetica Neue", serif;
   white-space: pre-wrap; /* This will make the content wrap */
   word-wrap: break-word;
 }
@@ -408,7 +409,7 @@ input[type='checkbox'] {
   margin: 10px 0;
 }
 
-#query-input-section input[type='text'] {
+#query-input-section input[type="text"] {
   min-width: 35%;
   max-width: 85%;
   margin-left: 0;
