@@ -68,6 +68,7 @@ class Config(object):
 
     USER_IMAGE_DIRECTORY = os.path.join(appdir, "static", "user_files", "temp_img")
     CHAT_IMAGE_DIRECTORY = os.path.join(appdir, "static", "user_files", "user_img")
+    CHAT_UPLOAD_DIR = os.path.join(appdir, "static", "user_files", "user_img")
     USER_AUDIO_DIRECTORY = os.path.join(appdir, "static", "user_files", "user_audio")
 
     @classmethod

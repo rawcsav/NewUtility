@@ -55,6 +55,7 @@ def create_app():
         from app.modules.chat import chat
         from app.modules.auth import auth
         from app.modules.audio import audio
+        from app.modules.cwd import cwd
         from .assets import compile_static_assets
 
         app.register_blueprint(home.home_bp)
@@ -64,6 +65,7 @@ def create_app():
         app.register_blueprint(embedding.embedding_bp)
         app.register_blueprint(chat.chat_bp)
         app.register_blueprint(audio.audio_bp)
+        app.register_blueprint(cwd.cwd_bp)
 
         compile_static_assets(assets)
 

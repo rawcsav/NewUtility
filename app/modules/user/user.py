@@ -9,7 +9,7 @@ from app import db
 from app.models.image_models import GeneratedImage
 from app.models.embedding_models import Document
 from app.models.chat_models import ChatPreferences
-from app.models.user_models import UserAPIKey, User
+from app.models.user_models import UserAPIKey, User, Role
 from app.modules.chat.chat import model_to_dict
 from app.utils.forms_util import (
     ChangeUsernameForm,
@@ -70,6 +70,7 @@ def dashboard():
 
     preferences_dict = model_to_dict(preferences)
     markdown_file_path = os.path.join(current_app.root_path, user_bp.static_folder, "user.md")
+    user_role = Role.query.filter_by(id=current_user.role_id).first().name if current_user.role_id else None
 
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
@@ -85,6 +86,7 @@ def dashboard():
         user_preferences_form=UserPreferencesForm(data=preferences_dict),
         doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
         tooltip=docs_content,
+        user_role=user_role,
     )
 
 

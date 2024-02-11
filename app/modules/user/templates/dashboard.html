@@ -189,6 +189,11 @@
               <li>
                 <a href="{{ url_for('audio_bp.audio_center') }}">Audio</a>
               </li>
+              {% if user_role == "Gang" %}
+              <li>
+                <a href="{{ url_for('cwd_bp.cwd_index') }}">CWD</a>
+              </li>
+              {% endif %}
             </ul>
           </div>
         </div>
