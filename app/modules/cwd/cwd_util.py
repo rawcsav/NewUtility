@@ -130,5 +130,3 @@ def ask(query, client, model: str = "gpt-4-turbo-preview"):
     except openai.OpenAIError as e:
         print(f"An OpenAI error occurred: {e}")
     yield "\n\nDocuments used:\n"
-    for title, pages in chunk_associations:
-        yield f"Title: {title}\n\nPage: {pages}\n"

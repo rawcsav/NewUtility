@@ -39,17 +39,14 @@ def cwd_index():
 def query_endpoint():
     client, error = initialize_openai_client(current_user.id)
     selected_docs = request.form.getlist("selected_docs")  # Assuming it's a list of document IDs
+    print(selected_docs)
     query = request.form.get("query")
+    # Document.query.filter_by(user_id=current_user.id).update({"selected": 0})
+    if selected_docs:
+        selected_docs_ids = [doc_id for doc_id in selected_docs]
+        Document.query.filter(Document.id.in_(selected_docs_ids)).update({"selected": 1}, synchronize_session="fetch")
 
-    with lock:  # Use the threading lock to ensure thread safety
-        Document.query.filter_by(user_id=current_user.id).update({"selected": 0})
-        if selected_docs:
-            selected_docs_ids = [doc_id for doc_id in selected_docs]  # Convert to int if necessary
-            Document.query.filter(Document.id.in_(selected_docs_ids)).update(
-                {"selected": 1}, synchronize_session="fetch"
-            )
-
-        db.session.commit()  # Commit the changes to the database
+    db.session.commit()  # Commit the changes to the database
 
     def generate():
         for content in ask(query, client):
