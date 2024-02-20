@@ -213,22 +213,40 @@ def update_docs_preferences():
     if form.validate_on_submit():
         form_data = request.form
         chat_preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+
+        # Update knowledge query mode
         chat_preferences.knowledge_query_mode = "knowledge_query_mode" in form_data
         if chat_preferences.knowledge_query_mode:
             VectorCache.load_user_vectors(current_user.id)
+
+        # Update knowledge context tokens
         chat_preferences.knowledge_context_tokens = int(form_data.get("knowledge_context_tokens", 0))
 
-        Document.query.filter_by(user_id=current_user.id).update({"selected": False})
+        # Update temperature if provided
+        if "temperature" in form_data:
+            try:
+                temperature = float(form_data.get("temperature"))
+                if 0.0 <= temperature <= 2.0:
+                    chat_preferences.temperature = temperature
+                else:
+                    return jsonify({"status": "error", "message": "Temperature must be between 0.0 and 1.0."})
+            except ValueError:
+                return jsonify({"status": "error", "message": "Invalid temperature value."})
 
+        # Update document selection
+        Document.query.filter_by(user_id=current_user.id).update({"selected": False})
         for key in form_data.keys():
             if key.startswith("document_selection_"):
                 doc_id = key.split("_")[-1]
                 document = Document.query.get(doc_id)
                 if document and document.user_id == current_user.id:
                     document.selected = True
+
         try:
             db.session.commit()
             return jsonify({"status": "success", "message": "Preferences updated successfully."})
         except Exception as e:
             db.session.rollback()
             return jsonify({"status": "error", "message": str(e)})
+
+    return jsonify({"status": "error", "message": "Invalid form submission."})

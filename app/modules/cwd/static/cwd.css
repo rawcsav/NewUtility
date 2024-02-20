@@ -228,7 +228,6 @@ button {
   flex: 1; /* Change this line */
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 #uploaded_docs_list {
@@ -477,4 +476,247 @@ input[type="checkbox"] {
 
 .alert-info {
   color: blue;
+}
+
+#update-preferences-form,
+#docs-preferences-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 10px;
+}
+
+#preference-submit,
+#docs-preferences-submit {
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.6em 1.3em;
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  --bg-color: #ffffff;
+  --main-color: #2a2a2a;
+  font-family: "Helvetica Neue", sans-serif;
+}
+
+#preference-submit:hover,
+#docs-preferences-submit:hover {
+  transform: translate(-0.05em, -0.05em);
+  box-shadow: 0.15em 0.15em;
+}
+
+#preference-submit:active,
+#docs-preferences-submit:active {
+  transform: translate(0.05em, 0.05em);
+  box-shadow: 0.05em 0.05em;
+}
+
+.docs_list li {
+  border-bottom: 1px solid #ddd;
+  padding: 5px;
+}
+
+#docs-preferences-form ul {
+  padding: 0;
+  margin: 0 0 25px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.knowledge-select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Input */
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.doc-info p,
+#title-edit,
+#author-edit {
+  font-size: 14px;
+  background-color: transparent;
+  margin: 0;
+  color: white;
+  padding: 0;
+}
+
+#author-edit {
+  font-style: italic;
+}
+
+#loader-template {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.doc-select input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.range-value-input {
+  text-align: center;
+  border: none;
+  background-color: #fafafa;
+  border-radius: 10px;
+  font-size: 12px;
+  width: 20%;
+  display: inline-block;
+  font-family: "Helvetica Neue", sans-serif;
+}
+
+#toast {
+  position: fixed;
+  bottom: 40px;
+  left: 15%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+  z-index: 1000;
+}
+
+#toast.success {
+  background-color: green;
+}
+
+#toast.error {
+  background-color: red;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 80%;
+  height: 3px;
+  border-radius: 5px;
+  background: #ff7900;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #2a2a2a;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 50%;
+  background: #2a2a2a;
+  cursor: pointer;
+}
+
+input[type="range"]::-ms-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2a2a2a;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+}
+
+pre {
+  position: relative;
+}
+
+.code-clipboard-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+}
+
+#chat-completion-form .input-group {
+  width: 60%;
+  border: 1px solid #141414;
+  background-color: #f8f8f8;
+  font-family: "Helvetica Neue", sans-serif;
+  border-radius: 16px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hamburger-menu {
+  color: #ff7900;
+}
+
+#full-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: calc(100% - 5px);
+  border-bottom: 5px solid #ff4500;
+}
+
+.message-input {
+  font-family: "Helvetica Neue", sans-serif;
+  height: auto;
+  resize: none;
+  overflow-y: auto;
+  background-color: #f8f8f8;
+  max-height: 80px;
+  line-height: 20px;
+  min-height: 20px;
+  margin-right: 20px;
+  margin-left: 10px;
+  border: none;
+  padding: 0;
+  width: 100%;
+  font-size: 1.1rem;
+  align-items: flex-start;
+  flex-grow: 1;
+}
+
+.message-input:focus {
+  outline: none;
+}
+
+#send-button {
+  margin: 0;
+  border: none;
+}
+
+.message-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
 }

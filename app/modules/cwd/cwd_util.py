@@ -8,7 +8,8 @@ from openai import RateLimitError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, wait_random_exponential
 
 from app import db
-from app.models.embedding_models import DocumentChunk, Document
+from app.models.chat_models import ChatPreferences
+from app.models.embedding_models import DocumentChunk, Document, ModelContextWindow
 from app.utils.vector_cache import VectorCache
 
 
@@ -17,10 +18,11 @@ def num_tokens(text: str, model: str = "gpt-4-turbo-preview") -> int:
     return len(encoding.encode(text))
 
 
-def find_relevant_sections(user_id, query_embedding):
-    # max_knowledge_context_tokens is now the maximum number of sections
-    max_sections = 20
+def find_relevant_sections(user_id, query_embedding, user_preferences):
+    context_window_size = 60000
 
+    # max_knowledge_context_tokens is now the maximum number of sections
+    max_sections = user_preferences.knowledge_context_tokens
     # Fetch the document chunks and additional details for the user
     document_chunks_with_details = (
         db.session.query(
@@ -49,11 +51,10 @@ def find_relevant_sections(user_id, query_embedding):
 
     for chunk_id, similarity in similarities:
         if sections_appended >= max_sections:
-            # Stop if the maximum number of sections has been reached
             break
 
         chunk = next((c for c in document_chunks_with_details if str(c.id) == chunk_id), None)
-        if chunk and current_tokens + chunk.tokens <= 60000:
+        if chunk and current_tokens + chunk.tokens <= context_window_size:
             selected_chunks.append(
                 (chunk.id, chunk.title, chunk.author, chunk.pages, chunk.content, chunk.tokens, similarity)
             )
@@ -61,7 +62,6 @@ def find_relevant_sections(user_id, query_embedding):
             sections_appended += 1
         elif chunk:
             break
-
     return selected_chunks
 
 
@@ -77,11 +77,12 @@ def get_embedding(text: str, client: openai.OpenAI, model="text-embedding-3-larg
 def append_knowledge_context(user_query, user_id, client):
     query_embedding = get_embedding(user_query, client)
     query_vector = np.array(query_embedding, dtype=np.float32)
+    user_preferences = user_preferences = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
 
-    # Find relevant sections
-    relevant_sections = find_relevant_sections(user_id, query_vector)
+    relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences=user_preferences)
     context = ""
     chunk_associations = []
+    doc_pages = {}  # Dictionary to hold document ID and a set of pages
 
     preface = "Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, say as such but still do your best to provide the most factual, nuanced assessment possible."
 
@@ -93,13 +94,17 @@ def append_knowledge_context(user_query, user_id, client):
             context_parts.append(f"Title: {title}")
         if pages:
             context_parts.append(f"Page: {pages}")
-        context_parts.append(f"Content:\n{chunk_content}")  # Include the chunk content
+            if title not in doc_pages:
+                doc_pages[title] = set()
+            doc_pages[title].add(pages)
+        context_parts.append(f"Content:\n{chunk_content}")
 
         context += "\n".join(context_parts) + "\n\n"
 
         chunk_associations.append((chunk_id, similarity))
+
     modified_query = context + user_query
-    return modified_query, chunk_associations
+    return modified_query, chunk_associations, doc_pages
 
 
 @retry(
@@ -107,12 +112,12 @@ def append_knowledge_context(user_query, user_id, client):
     wait=wait_exponential(multiplier=1, min=2, max=10),
     retry=retry_if_exception_type(RateLimitError),
 )
-def chat_completion_with_retry(messages, model, client):
-    return client.chat.completions.create(model=model, messages=messages, temperature=0.6, stream=True)
+def chat_completion_with_retry(messages, model, client, temperature):
+    return client.chat.completions.create(model=model, messages=messages, temperature=temperature, stream=True)
 
 
 def ask(query, client, model: str = "gpt-4-turbo-preview"):
-    modified_query, chunk_associations = append_knowledge_context(query, current_user.id, client)
+    modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
     messages = [
         {
             "role": "system",
@@ -120,8 +125,10 @@ def ask(query, client, model: str = "gpt-4-turbo-preview"):
         },
         {"role": "user", "content": modified_query},
     ]
+    preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+    temperature = preferences.temperature
     try:
-        for part in chat_completion_with_retry(messages, model, client):
+        for part in chat_completion_with_retry(messages, model, client, temperature):
             content = part.choices[0].delta.content
             if content:
                 yield content
@@ -129,4 +136,9 @@ def ask(query, client, model: str = "gpt-4-turbo-preview"):
         print(f"Rate limit exceeded. All retry attempts failed.")
     except openai.OpenAIError as e:
         print(f"An OpenAI error occurred: {e}")
-    yield "\n\nDocuments used:\n"
+
+    # Yielding the unique set of documents used along with all page numbers
+    documents_used_summary = "\n\nDocuments used:\n"
+    for title, pages in doc_pages.items():
+        documents_used_summary += f"{title}: Pages {', '.join(map(str, sorted(pages)))}\n"
+    yield documents_used_summary

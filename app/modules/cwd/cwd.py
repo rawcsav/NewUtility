@@ -3,12 +3,15 @@ from flask import Blueprint, render_template, request, jsonify, session
 from flask_login import current_user
 
 from app import db
+from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import Document
 from app.modules.auth.auth_util import initialize_openai_client
 import os
 from flask import request, stream_with_context, Blueprint, current_app
 
+from app.modules.chat.chat import model_to_dict
 from app.modules.cwd.cwd_util import ask
+from app.utils.forms_util import UpdateDocPreferencesForm
 from app.utils.vector_cache import VectorCache
 
 cwd_bp = Blueprint("cwd_bp", __name__, template_folder="templates", static_folder="static", url_prefix="/cwd")
@@ -31,20 +34,24 @@ def cwd_index():
         }
         for doc in user_documents
     ]
+
+    preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+    if not preferences:
+        preferences = ChatPreferences(user_id=current_user.id)
+        db.session.add(preferences)
+        db.session.commit()
+
+    preferences_dict = model_to_dict(preferences)
     VectorCache.load_user_vectors(current_user.id)
-    return render_template("cwd.html", documents=documents_data)
+    return render_template(
+        "cwd.html", documents=documents_data, doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict)
+    )
 
 
 @cwd_bp.route("/query", methods=["POST"])
 def query_endpoint():
     client, error = initialize_openai_client(current_user.id)
-    selected_docs = request.form.getlist("selected_docs")  # Assuming it's a list of document IDs
-    print(selected_docs)
     query = request.form.get("query")
-    # Document.query.filter_by(user_id=current_user.id).update({"selected": 0})
-    if selected_docs:
-        selected_docs_ids = [doc_id for doc_id in selected_docs]
-        Document.query.filter(Document.id.in_(selected_docs_ids)).update({"selected": 1}, synchronize_session="fetch")
 
     db.session.commit()  # Commit the changes to the database
 

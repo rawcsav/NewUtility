@@ -7,6 +7,34 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function showToast(message, type) {
+  let toast = document.getElementById("toast") || createToastElement();
+  toast.textContent = message;
+  toast.className = type;
+  showAndHideToast(toast);
+}
+
+function createToastElement() {
+  const toast = document.createElement("div");
+  toast.id = "toast";
+  document.body.appendChild(toast);
+  return toast;
+}
+
+function showAndHideToast(toast) {
+  Object.assign(toast.style, {
+    display: "block",
+    opacity: "1",
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 600);
+  }, 3000);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   const queryInput = document.getElementById("query");
   queryInput.addEventListener("keydown", function (event) {
@@ -16,6 +44,55 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+function setupFormSubmission(
+  formId,
+  submitUrl,
+  successCallback,
+  errorCallback,
+) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
+    submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
+  });
+}
+
+async function submitForm(formData, submitUrl) {
+  const response = await fetch(submitUrl, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCsrfToken(),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update preferences.");
+  }
+
+  return response.json();
+}
+
+function handleResponse(data) {
+  if (data.status === "success") {
+    showToast(data.message, "success");
+  } else {
+    showToast(data.message, "error");
+    console.error(data.errors);
+  }
+}
+
+setupFormSubmission(
+  "docs-preferences-form",
+  "/embedding/update-doc-preferences",
+  handleResponse,
+  (error) => showToast("Error: " + error.message, "error"),
+);
 
 let previousQuery = null;
 let previousResponse = null;
@@ -47,18 +124,10 @@ function addToQueryHistory(query, response) {
 
 async function queryDocument() {
   document.getElementById("interruptButton").disabled = false;
-  const checkboxes = document.querySelectorAll(
-    'input[name="selected_docs"]:checked',
-  );
-
-  if (checkboxes.length === 0) {
-    return;
-  }
 
   const query = document.getElementById("query").value.trim();
-
   if (query === "") {
-    showAlertInChatbox("Query cannot be empty.", "warning");
+    showToast("Query cannot be empty.", "warning");
     return;
   }
 
@@ -69,12 +138,6 @@ async function queryDocument() {
 
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "<pre></pre>";
-  // eslint-disable-next-line no-unused-vars
-  const preElement = resultsDiv.querySelector("pre");
-  const selectedDocs = [];
-  checkboxes.forEach((checkbox) => {
-    selectedDocs.push(checkbox.value);
-  });
 
   // Update previousQuery for the next iteration
   previousQuery = query;
@@ -83,14 +146,11 @@ async function queryDocument() {
   try {
     const response = await fetch("/cwd/query", {
       method: "POST",
-
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "X-CSRFToken": getCsrfToken(),
       },
-      body: `query=${encodeURIComponent(
-        query,
-      )}&selected_docs=${encodeURIComponent(selectedDocs.join(","))}`,
+      body: `query=${encodeURIComponent(query)}`,
       signal: signal,
     });
 
@@ -101,7 +161,6 @@ async function queryDocument() {
         document.getElementById("response_container");
       const resultsSpan = document.getElementById("results");
       responseLabelContainer.style.display = "block";
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { value, done } = await reader.read();
         if (done) {
@@ -120,13 +179,13 @@ async function queryDocument() {
       // Reset previousResponse for the next request
       previousResponse = "";
     } else {
-      showAlertInChatbox("Error occurred while querying.", "danger");
+      showToast("Error occurred while querying.", "error");
     }
   } catch (error) {
     if (error.name === "AbortError") {
-      showAlertInChatbox("Interrupted!", "warning");
+      showToast("Interrupted!", "warning");
     } else {
-      showAlertInChatbox("Error occurred while querying.", "danger");
+      showToast("Error occurred while querying.", "error");
     }
   }
 }
@@ -143,77 +202,4 @@ function interruptQuery() {
 
   document.getElementById("interruptButton").disabled = true;
   document.getElementById("queryButton").disabled = false;
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  // Find all delete buttons
-  const deleteButtons = document.querySelectorAll(".delete-btn");
-
-  // Attach click event listeners to each delete button
-  deleteButtons.forEach((button) => {
-    button.addEventListener("click", function () {
-      const documentId = this.getAttribute("data-doc-id");
-      console.log(`Attempting to delete document with ID: ${documentId}`); // For debugging
-
-      // Attempt to delete the document from the server
-      fetch(`/embedding/delete/${documentId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRF-Token": getCsrfToken(),
-        },
-        body: JSON.stringify({ document_id: documentId }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Server failed to delete the document.");
-          }
-          // If the server responds OK, remove the document's UI element
-          console.log("Document deleted successfully from the server."); // For debugging
-          const listItem = this.closest("li");
-          if (listItem) {
-            listItem.remove(); // Immediately remove the element from the UI
-            console.log("Document removed from UI."); // For debugging
-          }
-        })
-        .catch((error) => {
-          console.error("Deletion error:", error);
-        });
-    });
-  });
-});
-
-function showAlert(message, type, context = "apiKey") {
-  let alertsDiv;
-  switch (context) {
-    case "upload":
-      alertsDiv = document.querySelector(".uploadAlerts");
-      break;
-    case "query":
-      alertsDiv = document.getElementById("queryAlertInsideInput");
-      break;
-    default:
-      alertsDiv = document.querySelector(".apiKeyAlerts");
-  }
-
-  // For the alert inside the input box, we directly set the text content
-  if (context === "query") {
-    alertsDiv.textContent = message;
-  } else {
-    // For the other alerts, we append a new div with the message
-  }
-}
-
-function showAlertInChatbox(message, type) {
-  const resultsSpan = document.getElementById("results");
-  const responseLabel = document.getElementById("responseLabel"); // Fetching the element by ID
-
-  // Clear existing content
-  resultsSpan.textContent = "";
-
-  // Insert the alert message
-  resultsSpan.innerHTML = `<div class='alert alert-${type}'>${message}</div>`;
-
-  // Hide the 'Response:' label
 }

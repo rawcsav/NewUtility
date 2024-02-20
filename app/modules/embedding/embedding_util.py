@@ -55,7 +55,16 @@ def extract_text_from_pdf(filepath):
 
 def estimate_pages(text):
     words = word_tokenize(text)
-    pages = [(text[i : i + WORDS_PER_PAGE], i // WORDS_PER_PAGE + 1) for i in range(0, len(words), WORDS_PER_PAGE)]
+    # Calculate the total number of pages
+    num_pages = len(words) // WORDS_PER_PAGE + (1 if len(words) % WORDS_PER_PAGE > 0 else 0)
+    pages = []
+    for i in range(num_pages):
+        # Calculate the start and end indices for words in the current page
+        start_idx = i * WORDS_PER_PAGE
+        end_idx = start_idx + WORDS_PER_PAGE
+        # Slice the words for the current page and join them back into a string
+        page_text = " ".join(words[start_idx:end_idx])
+        pages.append((page_text, i + 1))
     return pages
 
 
@@ -259,7 +268,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
 
     for chunk_id, similarity in similarities:
         if sections_appended >= max_sections:
-            # Stop if the maximum number of sections has been reached
             break
 
         chunk = next((c for c in document_chunks_with_details if str(c.id) == chunk_id), None)

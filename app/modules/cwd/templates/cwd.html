@@ -56,36 +56,84 @@
   </div>
   <div class="right-column">
     <div class="docs-container">
-      <h4>Doc Selector</h4>
-      <div id="uploaded-docs-section">
-        <form id="docSelectionForm">
-          <ul id="uploaded_docs_list">
+      <div id="docs-settings-popup" class="docs-settings-popup">
+        <h3>Docs</h3>
+        <form id="docs-preferences-form">
+          {{ doc_preferences_form.hidden_tag() }}
+          <div class="knowledge-select form-group">
+            {{ doc_preferences_form.knowledge_query_mode.label }} {{
+            doc_preferences_form.knowledge_query_mode() }}
+          </div>
+          <div class="form-group">
+            {{ doc_preferences_form.knowledge_context_tokens.label }}
+            <input
+              type="range"
+              id="knowledge_context_tokens"
+              name="knowledge_context_tokens"
+              min="1"
+              max="30"
+              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
+              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value"
+            />
+            <input
+              type="text"
+              id="knowledge_context_tokens_value"
+              class="range-value-input"
+              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
+              oninput="document.getElementById('knowledge_context_tokens').value = this.value"
+            />
+          </div>
+          <div class="form-group">
+            {{ doc_preferences_form.temperature.label }}
+            <input
+              type="range"
+              id="temperature"
+              name="temperature"
+              min="0"
+              max="2"
+              step="0.1"
+              value="{{ doc_preferences_form.temperature.data }}"
+              oninput="document.getElementById('temperature-value').value = this.value"
+            />
+            <input
+              type="text"
+              id="temperature-value"
+              class="range-value-input"
+              value="{{ doc_preferences_form.temperature.data }}"
+              oninput="document.getElementById('temperature').value = this.value"
+            />
+          </div>
+          <ul class="docs-preference-list">
             {% for document in documents %}
-            <li id="document-{{ document.id }}">
-              <input
-                type="checkbox"
-                name="selected_docs"
-                value="{{ document.id }}"
-                checked
-              />
-              <div>{{ document.title }}</div>
-              <form
-                action="{{ url_for('embedding_bp.delete_document', document_id=document.id) }}"
-                method="post"
-              ></form>
+            <li id="document-{{ document.id }}" class="document-item">
+              <div class="doc-info">
+                <p id="title-edit">{{ document.title }}</p>
+                <p id="author-edit">{{ document.author }}</p>
+                <p>Tokens: {{ document.total_tokens }}</p>
+                <p>Chunks: {{ document.chunk_count }}</p>
+              </div>
+              <div class="doc-select">
+                <input
+                  type="checkbox"
+                  id="checkbox-{{ document.id }}"
+                  name="document_selection_{{ document.id }}"
+                  {%
+                  if
+                  document.selected
+                  %}checked{%
+                  endif
+                  %}
+                />
+              </div>
             </li>
-            <div class="button-container">
-              <button
-                type="button"
-                class="btn-icon delete-btn"
-                data-doc-id="{{ document.id }}"
-                title="Delete Document"
-              >
-                <i class="fa fa-trash"></i>
-              </button>
-            </div>
             {% endfor %}
           </ul>
+          <input
+            type="submit"
+            value="Save Preferences"
+            id="docs-preferences-submit"
+            class="button-send"
+          />
         </form>
       </div>
       <div id="docs-alerts"></div>
@@ -93,7 +141,5 @@
   </div>
 </div>
 {% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="{{ url_for('static', filename='dist/js/cwd.js') }}"></script>
 {% endblock %}{% endblock %}
