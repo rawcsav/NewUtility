@@ -85,6 +85,7 @@ h4 {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  height: 90%;
 }
 
 .left-column {
@@ -228,14 +229,19 @@ button {
   flex: 1; /* Change this line */
   display: flex;
   flex-direction: column;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
+#docs-settings-popup {
+  width: 60%;
+}
 #uploaded_docs_list {
   padding: 0;
   margin: 0;
-  max-height: 55vh;
   overflow-y: auto;
   flex-grow: 1;
+  max-height: 100%;
 }
 
 input[type="checkbox"] {
@@ -485,6 +491,7 @@ input[type="checkbox"] {
   align-items: flex-start;
   justify-content: flex-start;
   padding: 10px;
+  max-height: 100%;
 }
 
 #preference-submit,
