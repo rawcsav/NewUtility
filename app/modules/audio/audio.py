@@ -1,6 +1,5 @@
 import os
 from markdown2 import markdown
-
 from flask import Blueprint, jsonify, url_for, render_template, send_file, current_app, request
 from flask_login import login_required, current_user
 from openai import InternalServerError
