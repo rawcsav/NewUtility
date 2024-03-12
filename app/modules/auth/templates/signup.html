@@ -1,11 +1,8 @@
 {% extends 'base.html' %} {% block head %}
 <title>Sign Up | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/signup.css') }}"
-/>
-{% endblock %} {% block body %}
+{% endblock %} {% block styles %} {% assets "signup_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div id="left-column">
     <div id="title-container">
@@ -77,6 +74,6 @@
   </div>
 </div>
 {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %}
-<script src="{{ url_for('static', filename='dist/js/signup.js') }}"></script>
-{% endblock %}
+block scripts %} {% assets "signup_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}

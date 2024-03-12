@@ -261,7 +261,7 @@ class TranscriptionForm(FlaskForm):
             FileAllowed(["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"], "Invalid audio format!"),
         ],
     )
-    prompt_option = RadioField(
+    prompt_option = SelectField(
         "Prompt option",
         choices=[("none", "None"), ("manual", "Enter prompt manually"), ("generate", "Generate prompt based on idea")],
         default="none",
@@ -279,7 +279,7 @@ class TranslationForm(FlaskForm):
             FileAllowed(["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"], "Invalid audio format!"),
         ],
     )
-    prompt_option = RadioField(
+    prompt_option = SelectField(
         "Prompt option",
         choices=[("none", "None"), ("manual", "Enter prompt manually"), ("generate", "Generate prompt based on idea")],
         default="none",

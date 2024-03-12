@@ -124,6 +124,13 @@ class User(UserMixin, SoftDeleteMixin, db.Model, TimestampMixin):
         lazy="dynamic",
     )
 
+    notifications = db.relationship(
+        "Notification",
+        primaryjoin="and_(User.id==Notification.user_id, Notification.delete==False)",
+        backref="user",
+        lazy="dynamic",
+    )
+
     def __init__(self, username, email, password_hash, **kwargs):
         super(User, self).__init__(**kwargs)
         self.username = username
@@ -204,3 +211,14 @@ def initialize_roles_with_limits():
             limits.role_id = role.id
             db.session.add(limits)
     db.session.commit()
+
+
+class Notification(db.Model, SoftDeleteMixin, TimestampMixin):
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    type = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<Notification {self.id} - {self.message[:30]}>"

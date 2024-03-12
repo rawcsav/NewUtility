@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 import requests
 from PIL import Image
-from flask import url_for
 from app.models.image_models import GeneratedImage
 from app.utils.usage_util import dalle_cost
 
@@ -31,7 +30,7 @@ def download_compressed_image(download_dir, image_url, image_id):
 
         os.remove(temp_file_path)
 
-        return webp_file_path
+        return webp_file_name
 
     except requests.RequestException as e:
         return None
@@ -65,10 +64,5 @@ def save_image_to_db(session, user_id, prompt, model, size, quality, style, task
         task_id=task_id,
     )
     session.add(new_image)
-    session.flush()
+    session.commit()
     return new_image.id
-
-
-def download_and_store_image(download_dir, image_url, uuid):
-    local_image_url = download_compressed_image(download_dir, image_url, uuid)
-    return local_image_url

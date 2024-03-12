@@ -3,7 +3,7 @@ import os
 from flask import Blueprint, render_template, current_app
 from markdown2 import markdown
 
-home_bp = Blueprint("home_bp", __name__, template_folder="templates", static_folder="static", url_prefix="/")
+home_bp = Blueprint("home_bp", __name__, template_folder="templates", static_folder="static", url_prefix="/home")
 
 
 @home_bp.route("/")

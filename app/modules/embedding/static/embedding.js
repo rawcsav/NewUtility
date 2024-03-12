@@ -331,3 +331,108 @@ document.getElementById("file").addEventListener("change", function () {
     submitButton.style.display = "none";
   }
 });
+
+// Assuming you have already established a connection to the '/embeddings' namespace
+// eslint-disable-next-line no-undef
+var socket = io("/embedding");
+
+// Listen for task progress updates
+socket.on("task_progress", function (data) {
+  updateUploadMessages(data.message, "information");
+});
+
+// Listen for task completion
+socket.on("task_complete", function (data) {
+  updateUploadMessages(data.message, "success");
+  appendDocumentToList(data.document);
+});
+
+// Listen for task errors
+socket.on("task_update", function (data) {
+  if (data.status === "error") {
+    updateUploadMessages("Error: " + data.error, "error");
+  }
+});
+
+function appendDocumentToList(documentObj) {
+  // Assuming 'documentObj' has id, title, author, total_tokens, chunk_count, page_amount
+
+  var docsList = document.querySelector(".docs_list");
+  var listItem = document.createElement("li");
+  listItem.id = `document-${documentObj.document_id}`;
+
+  // Form for editing document details
+  var editForm = document.createElement("form");
+  editForm.className = "edit-document-form";
+  editForm.action = `/embedding/update_document/${documentObj.document_id}`; // Assuming a URL pattern
+  editForm.method = "post";
+
+  var hiddenInput = document.createElement("input");
+  hiddenInput.type = "hidden";
+  hiddenInput.name = "document_id";
+  hiddenInput.value = documentObj.document_id;
+
+  var titleInput = document.createElement("input");
+  titleInput.className = "editable";
+  titleInput.id = "title-edit";
+  titleInput.type = "text";
+  titleInput.name = "title";
+  titleInput.value = documentObj.title;
+  titleInput.readOnly = true;
+
+  var authorInput = document.createElement("input");
+  authorInput.className = "editable";
+  authorInput.id = "author-edit";
+  authorInput.type = "text";
+  authorInput.name = "author";
+  authorInput.value = documentObj.author;
+  authorInput.readOnly = true;
+
+  var totalTokensP = document.createElement("p");
+  totalTokensP.textContent = `Total Tokens:  ${documentObj.total_tokens}`;
+
+  var chunkCountP = document.createElement("p");
+  chunkCountP.textContent = `Chunk Count:  ${documentObj.chunk_count}`;
+
+  editForm.appendChild(hiddenInput);
+  editForm.appendChild(titleInput);
+  editForm.appendChild(authorInput);
+  editForm.appendChild(totalTokensP);
+  editForm.appendChild(chunkCountP);
+
+  // Button container
+  var buttonContainer = document.createElement("div");
+  buttonContainer.className = "button-container";
+
+  var editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "btn-icon edit-btn";
+  editButton.setAttribute("onclick", "enableEditing(this)");
+  editButton.title = "Edit Document";
+  editButton.innerHTML = `<i class="fa fa-edit"></i>`;
+
+  var saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.className = "btn-icon save-btn";
+  saveButton.title = "Save Changes";
+  saveButton.style.display = "none";
+  saveButton.innerHTML = `<i class="fa fa-save"></i>`;
+
+  var deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "btn-icon delete-btn";
+  deleteButton.setAttribute("data-doc-id", documentObj.document_id);
+  deleteButton.title = "Delete Document";
+  deleteButton.innerHTML = `<i class="fa fa-trash"></i>`;
+
+  buttonContainer.appendChild(editButton);
+  buttonContainer.appendChild(saveButton);
+  buttonContainer.appendChild(deleteButton);
+
+  // Append form and button container to the list item
+  listItem.appendChild(editForm);
+  listItem.appendChild(buttonContainer);
+
+  // Append the list item to the documents list
+  docsList.appendChild(listItem);
+}

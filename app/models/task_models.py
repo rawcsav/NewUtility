@@ -13,6 +13,10 @@ def after_update_listener(mapper, connection, target):
         task_id = result.inserted_primary_key[0]
 
         stmt = insert(DeletionTask).values(task_id=task_id, entity_type=target.__tablename__, entity_id=target.id)
+        from app.tasks.deletion_task import process_deletion_task
+
+        process_deletion_task.apply_async(kwargs={"task_id": task_id})
+
         connection.execute(stmt)
 
 

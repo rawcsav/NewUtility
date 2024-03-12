@@ -1,20 +1,11 @@
 {% extends 'base.html' %} {% block head %}
 <title>Dashboard | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/user.css') }}"
-/>
-{% endblock %} {% block body %}
-<div id="full-container">
+{% endblock %} {% block styles %} {% assets "user_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
+<div id="full-container" data-user-id="{{ user_id }}">
   <div id="left-column">
-    <div id="title-container">
-      <h1>New Utility</h1>
-    </div>
     <div class="lower-row">
-      <div class="section-title-div">
-        <h2 id="section-title">Dashboard</h2>
-      </div>
       <div class="profile-column">
         <div class="user-container">
           <h3>User Info</h3>
@@ -173,7 +164,6 @@
       <div class="utility-column">
         <div class="utility-container">
           <div class="redirect-links">
-            <h3>Utilities</h3>
             <ul>
               <li>
                 <a href="{{ url_for('image_bp.generate_image') }}">Images</a>
@@ -189,11 +179,9 @@
               <li>
                 <a href="{{ url_for('audio_bp.audio_center') }}">Audio</a>
               </li>
-              {% if user_role == "Gang" %}
               <li>
                 <a href="{{ url_for('cwd_bp.cwd_index') }}">CWD</a>
               </li>
-              {% endif %}
             </ul>
           </div>
         </div>
@@ -204,13 +192,13 @@
             <div class="image-history-item">
               {% if loop.index <= 2 %}
               <img
-                src="{{ url_for('static', filename='user_files/temp_img/' ~ image.id ~ '.webp') }}"
+                src="{{ url_for('image_bp.serve_generated_image', filename=image.id ~ '.webp', user_id=user_id) }}"
                 alt="Generated Image"
                 data-id="{{ image.id }}"
               />
               {% else %}
               <img
-                src="{{ url_for('static', filename='user_files/temp_img/' ~ image.id ~ '.webp') }}"
+                src="{{ url_for('image_bp.serve_generated_image', filename=image.id ~ '.webp', user_id=user_id) }}"
                 alt="Generated Image"
                 data-id="{{ image.id }}"
                 loading="lazy"
@@ -346,12 +334,6 @@
                 oninput="document.getElementById('top_p').value = this.value"
               />
             </div>
-            <input
-              type="submit"
-              value="Update Preferences"
-              id="preference-submit"
-              class="button-send"
-            />
           </form>
         </div>
         <div id="docs-edit-popup" class="docs-edit-popup">
@@ -477,12 +459,6 @@
               </li>
               {% endfor %}
             </ul>
-            <input
-              type="submit"
-              value="Save Preferences"
-              id="docs-preferences-submit"
-              class="button-send"
-            />
           </form>
         </div>
       </div>
@@ -490,6 +466,6 @@
   </div>
 </div>
 {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %}
-<script src="{{ url_for('static', filename='dist/js/user.js') }}"></script>
-{% endblock %}
+block scripts %} {% assets "user_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}

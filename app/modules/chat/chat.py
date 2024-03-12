@@ -1,25 +1,20 @@
 import os
 from datetime import datetime
 
-from flask import jsonify, Response, abort, session, current_app
+from flask import jsonify, Response, abort, session, current_app, send_from_directory
 from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
 from markdown2 import markdown
 from sqlalchemy.inspection import inspect
 
 from app import db
-from app.models.image_models import MessageImages
 from app.models.embedding_models import Document
 from app.models.chat_models import Conversation, Message, ChatPreferences
 from app.modules.chat.chat_util import (
     get_user_preferences,
     get_user_history,
     handle_stream,
-    allowed_file,
-    save_image,
-    get_image_url,
     retry_delete_messages,
-    delete_local_image,
     set_interruption_flag,
 )
 from app.modules.embedding.embedding_util import append_knowledge_context
@@ -76,15 +71,6 @@ def chat_index():
     preferences_dict = model_to_dict(preferences)
     user_preferences_form = UserPreferencesForm(data=preferences_dict)
 
-    if preferences.model == "gpt-4-vision-preview":
-        images_without_message_id = MessageImages.query.filter(
-            MessageImages.user_id == current_user.id, MessageImages.message_id.is_(None)
-        ).all()
-
-        image_urls = [image.image_url for image in images_without_message_id]
-    else:
-        image_urls = []
-
     user_documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
     documents_data = [
         {
@@ -105,7 +91,6 @@ def chat_index():
         user_preferences_form=user_preferences_form,
         chat_completion_form=chat_completion_form,
         conversation_history=conversation_history_data,
-        image_urls=image_urls,
         documents=documents_data,
         preferences_dict=preferences_dict,
         doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
@@ -196,25 +181,6 @@ def update_preferences():
         preferences.presence_penalty = form.presence_penalty.data
         preferences.top_p = form.top_p.data
 
-        if old_model == "gpt-4-vision-preview" and form.model.data != "gpt-4-vision-preview":
-            # Set the 'delete' column to True for all MessageImages records for the current user
-            MessageImages.query.filter_by(user_id=current_user.id).update({"delete": True})
-
-            # Get message IDs that have associated images and are not marked as deleted
-            message_ids_with_images = (
-                MessageImages.query.with_entities(MessageImages.message_id)
-                .filter(MessageImages.user_id == current_user.id, MessageImages.delete == False)
-                .all()
-            )
-
-            # Convert list of tuples to list of message IDs
-            message_ids_with_images = [message_id for (message_id,) in message_ids_with_images]
-
-            # Update the 'is_vision' column to False for messages that are not marked as deleted
-            if message_ids_with_images:
-                Message.query.filter(Message.id.in_(message_ids_with_images)).update(
-                    {Message.is_vision: False}, synchronize_session="fetch"
-                )
         try:
             db.session.commit()
             return jsonify({"status": "success", "message": "Preferences updated successfully."})
@@ -251,18 +217,9 @@ def chat_completion():
         return jsonify({"status": "error", "message": str(e)}), 500
 
     session["interruption"] = None
-
-    if preferences["model"] == "gpt-4-vision-preview":
-        images = MessageImages.query.filter(
-            MessageImages.user_id == current_user.id, MessageImages.message_id.is_(None), MessageImages.delete == False
-        ).all()
-        image_urls = [image.image_url for image in images]
-    else:
-        image_urls = []
-
     try:
         response, _ = handle_stream(
-            raw_prompt, prompt, client, user_id, conversation_id, image_urls, chunk_associations=chunk_associations
+            raw_prompt, prompt, client, user_id, conversation_id, chunk_associations=chunk_associations
         )
         return Response(response, content_type="text/plain", headers={"X-Accel-Buffering": "no"})
     except Exception as e:
@@ -294,33 +251,13 @@ def retry_message(message_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
     session["interruption"] = None
-    image_urls = (
-        [
-            image.image_url
-            for image in MessageImages.query.filter(
-                MessageImages.user_id == current_user.id,
-                MessageImages.message_id == message.id,
-                MessageImages.delete == False,
-            ).all()
-        ]
-        if message.is_vision
-        else []
-    )
-
     try:
         retry_delete_messages(conversation_id, message.id)
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
     try:
         response, _ = handle_stream(
-            raw_prompt,
-            prompt,
-            client,
-            user_id,
-            conversation_id,
-            image_urls,
-            retry=True,
-            chunk_associations=chunk_associations,
+            raw_prompt, prompt, client, user_id, conversation_id, retry=True, chunk_associations=chunk_associations
         )
         return Response(response, content_type="text/plain", headers={"X-Accel-Buffering": "no"})
     except Exception as e:
@@ -333,12 +270,7 @@ def get_conversation_messages(conversation_id):
     conversation, conversation_history = get_user_history(current_user.id, conversation_id)
     if conversation:
         messages = [
-            {
-                "content": message["content"],
-                "className": message["role"] + "-message",
-                "messageId": message["id"],
-                "img": message.get("img", []),
-            }
+            {"content": message["content"], "className": message["role"] + "-message", "messageId": message["id"]}
             for message in conversation_history
         ]
         conversation.last_checked_time = datetime.utcnow()
@@ -486,50 +418,3 @@ def interrupt_stream(conversation_id):
     set_interruption_flag(conversation_id)
 
     return jsonify({"status": "success", "message": "Interruption signal received."})
-
-
-@chat_bp.route("/upload-chat-image", methods=["POST"])
-def upload_image():
-    file = request.files.get("file")
-    conversation_id = request.form.get("conversation_id")
-    if file and allowed_file(file.filename) and conversation_id:
-        try:
-            image_uuid, webp_file_name = save_image(file.stream)
-            webp_url = get_image_url(webp_file_name)
-
-            new_image_entry = MessageImages(
-                id=image_uuid, image_url=webp_url, user_id=current_user.id, conversation_id=conversation_id
-            )
-            db.session.add(new_image_entry)
-            db.session.commit()
-
-            return (
-                jsonify(
-                    {
-                        "status": "success",
-                        "image_uuid": image_uuid,
-                        "image_url": webp_url,
-                        "conversation_id": conversation_id,
-                    }
-                ),
-                200,
-            )
-
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"status": "error", "message": f"Error processing image: {e}"}), 500
-    else:
-        return jsonify({"status": "error", "message": "Invalid file upload"}), 400
-
-
-@chat_bp.route("/delete-image/<string:image_uuid>", methods=["POST"])
-@login_required
-def delete_image(image_uuid):
-    image_record = MessageImages.query.filter_by(user_id=current_user.id, id=image_uuid, delete=False).first()
-    try:
-        image_record.delete = True
-        db.session.commit()
-        return jsonify({"status": "success", "message": "Image marked for deletion"})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500

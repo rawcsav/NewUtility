@@ -4,6 +4,22 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this,
+      args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
 function showToast(message, type) {
   let toast = document.getElementById("toast");
   if (!toast) {
@@ -95,10 +111,10 @@ handleFormSubmission("tts-form", "/audio/generate_tts", true); // Pass 'true' fo
 handleFormSubmission("transcription-form", "/audio/transcription");
 handleFormSubmission("translation-form", "/audio/translation");
 
+// Modify the handlePreferencesFormSubmission function to include debouncing
 function handlePreferencesFormSubmission(formId, endpoint) {
   const form = document.getElementById(formId);
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
+  const debouncedSubmit = debounce(function () {
     const formData = new FormData(form);
     fetch(endpoint, {
       method: "POST",
@@ -121,10 +137,11 @@ function handlePreferencesFormSubmission(formId, endpoint) {
           "error",
         );
       });
-  });
+  }, 2000); // 2000 milliseconds delay
+
+  form.addEventListener("input", debouncedSubmit);
 }
 
-// Handle form submissions for TTS and Whisper preferences
 handlePreferencesFormSubmission(
   "tts-preferences-form",
   "/audio/tts_preferences",
@@ -150,29 +167,43 @@ function setActiveButton(buttonElement) {
 }
 
 function displayUtility(utilityName) {
+  // Hide all utilities
   const utilities = document.querySelectorAll(".utility");
   utilities.forEach((utility) => {
     utility.style.display =
       utility.id === `${utilityName}-utility` ? "flex" : "none";
   });
 
+  // Handle TTS preferences form
   const ttsPreferencesForm = document.getElementById("tts-preferences-form");
+  if (ttsPreferencesForm)
+    ttsPreferencesForm.style.display = utilityName === "tts" ? "flex" : "none";
+
+  // Handle Whisper preferences form
   const whisperPreferencesForm = document.getElementById(
     "whisper-preferences-form",
   );
+  if (whisperPreferencesForm) {
+    whisperPreferencesForm.style.display =
+      utilityName === "transcription" || utilityName === "translation"
+        ? "flex"
+        : "none";
 
-  if (ttsPreferencesForm) ttsPreferencesForm.style.display = "none";
-  if (whisperPreferencesForm) whisperPreferencesForm.style.display = "none";
+    // Update the form title based on the utility
+    const formTitle = whisperPreferencesForm.querySelector("h3");
+    if (formTitle) {
+      formTitle.textContent =
+        utilityName.charAt(0).toUpperCase() + utilityName.slice(1); // Capitalize the first letter
+    }
 
-  if (utilityName === "tts") {
-    ttsPreferencesForm.style.display = "flex";
-  } else if (utilityName === "transcription" || utilityName === "translation") {
-    whisperPreferencesForm.style.display = "flex";
+    // Toggle the language option visibility
     const languageOption = whisperPreferencesForm.querySelector(
       ".form-group.language",
     );
-    languageOption.style.display =
-      utilityName === "transcription" ? "block" : "none";
+    if (languageOption) {
+      languageOption.style.display =
+        utilityName === "transcription" ? "block" : "none";
+    }
   }
 }
 
@@ -208,89 +239,120 @@ setupPromptToggle(
   "#manual-prompt-group",
   "#generate-prompt-group",
 );
+// eslint-disable-next-line no-unused-vars
 function toggleDetails(jobId, jobType) {
   var detailsElement = document.getElementById(jobType + "-details-" + jobId);
   var isVisible = detailsElement.style.display === "block";
   detailsElement.style.display = isVisible ? "none" : "block";
 }
 
-function appendTranscriptionJobToHistory(job) {
-  const historyList = document
-    .getElementById("transcription-history")
-    .querySelector("ul");
-  const newHistoryEntry = document.createElement("li");
-  newHistoryEntry.className = "history-entry";
-  newHistoryEntry.dataset.jobId = job.id;
-  newHistoryEntry.setAttribute(
-    "onclick",
-    `toggleDetails('${job.id}', 'transcription')`,
-  );
-  newHistoryEntry.innerHTML = `
-    <div class="history-summary">
-      ${job.created_at} - ${job.input_filename}
-    </div>
-    <div class="history-details" id="transcription-details-${job.id}" style="display: none">
+function appendJobHistory(job, jobType) {
+  // Base URL adjustment based on actual server setup is required
+  const baseUrl = window.location.origin;
+
+  // Determine the download URL based on job type
+  let downloadUrl;
+  switch (jobType) {
+    case "tts":
+      downloadUrl = `${baseUrl}/audio/download_tts/${job.output_filename}`;
+      break;
+    case "transcription":
+    case "translation":
+      downloadUrl = `${baseUrl}/audio/download_whisper/${job.id}`;
+      break;
+    default:
+      console.error("Invalid job type");
+      return;
+  }
+
+  // Generate the job-specific details, excluding 'language' for 'translation' jobs
+  let jobDetailsHtml = "";
+  if (jobType === "tts") {
+    jobDetailsHtml = `
+      <p>Model: ${job.model}</p>
+      <p>Speed: ${job.speed}</p>
+      <audio controls>
+          <source src="${downloadUrl}" type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+    `;
+  } else if (jobType === "transcription") {
+    jobDetailsHtml = `
       <p>Language: ${job.language}</p>
       <p>Model: ${job.model}</p>
       <p>Temperature: ${job.temperature}</p>
       <p>Prompt: ${job.prompt}</p>
-      <a href="${job.download_url}" download>
-        <i class="fas fa-download"></i> Download Transcription
-      </a>
-    </div>
-  `;
-  historyList.appendChild(newHistoryEntry);
-}
-
-function appendTranslationJobToHistory(job) {
-  const historyList = document
-    .getElementById("translation-history")
-    .querySelector("ul");
-  const newHistoryEntry = document.createElement("li");
-  newHistoryEntry.className = "history-entry";
-  newHistoryEntry.dataset.jobId = job.id;
-  newHistoryEntry.setAttribute(
-    "onclick",
-    `toggleDetails('${job.id}', 'translation')`,
-  );
-  newHistoryEntry.innerHTML = `
-    <div class="history-summary">
-      ${job.created_at} - ${job.input_filename}
-    </div>
-    <div class="history-details" id="translation-details-${job.id}" style="display: none">
+    `;
+  } else if (jobType === "translation") {
+    jobDetailsHtml = `
       <p>Model: ${job.model}</p>
       <p>Temperature: ${job.temperature}</p>
       <p>Prompt: ${job.prompt}</p>
-      <a href="${job.download_url}" download>
-        <i class="fas fa-download"></i> Download Translation
-      </a>
-    </div>
+    `;
+  }
+
+  // Create the history entry HTML
+  const historyEntryHtml = `
+    <li class="history-entry" data-job-id="${job.id}" onclick="toggleDetails('${
+      job.id
+    }', '${jobType}')">
+      <div class="history-summary">
+        <span class="history-title">${
+          jobType === "tts"
+            ? job.voice
+            : job.input_filename.substring(0, 10) +
+              (job.output_filename && job.output_filename.length > 10
+                ? "..."
+                : "")
+        }</span><br />
+        <span class="history-time">${job.created_at}</span>
+      </div>
+      <div class="history-details" id="${jobType}-details-${
+        job.id
+      }" style="display: none">
+        ${jobDetailsHtml}
+        <a href="${downloadUrl}" download>Download ${
+          jobType.charAt(0).toUpperCase() + jobType.slice(1)
+        }</a>
+      </div>
+    </li>
   `;
-  historyList.appendChild(newHistoryEntry);
+
+  // Identify the parent element based on job type and append the new history entry
+  const parentElementId = `${jobType}-history`;
+  const parentElement = document.getElementById(parentElementId);
+  if (parentElement) {
+    parentElement
+      .querySelector("ul")
+      .insertAdjacentHTML("beforeend", historyEntryHtml);
+  } else {
+    console.error("Parent element not found for job type:", jobType);
+  }
 }
 
-// Function to append a TTS job to the TTS history list
-function appendTtsJobToHistory(job) {
-  const historyList = document
-    .getElementById("tts-history")
-    .querySelector("ul");
-  const newHistoryEntry = document.createElement("li");
-  newHistoryEntry.className = "history-entry";
-  newHistoryEntry.dataset.jobId = job.id;
-  newHistoryEntry.setAttribute("onclick", `toggleDetails('${job.id}', 'tts')`);
-  newHistoryEntry.innerHTML = `
-    <div class="history-summary">
-      ${job.created_at} - ${job.voice}
-    </div>
-    <div class="history-details" id="tts-details-${job.id}" style="display: none">
-      <p>Model: ${job.model}</p>
-      <p>Speed: ${job.speed}</p>
-      <audio controls>
-        <source src="${job.download_url}" type="audio/mpeg" />
-        Your browser does not support the audio element.
-      </audio>
-      <a href="${job.download_url}" download>Download Audio</a>
-    </div>
-  `;
-  historyList.appendChild(newHistoryEntry);
+function updateAudioMessages(message, status) {
+  var messageDiv = document.getElementById("update-text");
+  messageDiv.innerHTML = message.replace(/\n/g, "<br>");
+  messageDiv.className = status;
 }
+
+// eslint-disable-next-line no-undef
+var socket = io("/audio");
+
+// Listen for task progress updates
+socket.on("task_progress", function (data) {
+  updateAudioMessages(data.message, "information");
+});
+
+// Listen for task completion
+socket.on("task_complete", function (data) {
+  updateAudioMessages(data.message, "success");
+  appendJobHistory(data.job_details, data.job_type);
+});
+
+// Listen for task errors
+socket.on("task_update", function (data) {
+  if (data.status === "error") {
+    updateAudioMessages("Error: " + data.error, "error");
+  }
+});

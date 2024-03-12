@@ -3,8 +3,8 @@ import os
 import openai
 from flask_login import current_user
 from pydub import AudioSegment
-
-from app import db
+from app.modules.user.user_util import get_user_audio_directory
+from app import db, socketio
 from app.models.audio_models import (
     TTSPreferences,
     WhisperPreferences,
@@ -16,14 +16,6 @@ from app.models.audio_models import (
 )
 from app.utils.usage_util import num_tokens_from_string, chat_cost, tts_cost, whisper_cost
 from config import appdir
-
-
-def user_subdirectory(user_id):
-    base_download_dir = os.path.join(appdir, "static", "user_files", "user_audio")
-    user_subdirectory_path = os.path.join(base_download_dir, str(user_id))
-    if not os.path.exists(user_subdirectory_path):
-        os.makedirs(user_subdirectory_path)
-    return user_subdirectory_path
 
 
 def ms_until_sound(sound, silence_threshold_in_decibels=-20.0, chunk_size=10):
@@ -68,34 +60,105 @@ def export_audio_chunk(chunk, directory, filename, index):
     return segment_filepath
 
 
-def preprocess_audio(filepath, user_directory):
+def preprocess_audio(filepath, user_directory, user_id, task_id):
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Starting audio file processing..."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
     max_size_in_bytes = 24 * 1024 * 1024
     supported_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
     original_format = os.path.splitext(filepath)[-1].lower().strip(".")
 
     if original_format not in supported_formats:
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": f"Unsupported format: {original_format}. Processing halted."},
+            room=str(user_id),
+            namespace="/audio",
+        )
         raise ValueError(f"Unsupported format: {original_format}")
+
     audio = AudioSegment.from_file(filepath, format=original_format)
     start_trim = ms_until_sound(audio)
     trimmed_audio = audio[start_trim:]
+
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": f"Audio trimmed from the start by {start_trim} milliseconds."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
     new_filename = f"trim_{os.path.splitext(os.path.basename(filepath))[0]}.mp3"
     new_filepath = os.path.join(user_directory, new_filename)
     trimmed_audio.export(new_filepath, format="mp3")
+
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Initial audio trimming and export completed."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
     if os.path.getsize(new_filepath) <= max_size_in_bytes:
         os.remove(filepath)
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": "Processing complete. File size within limits."},
+            room=str(user_id),
+            namespace="/audio",
+        )
         return [new_filepath]
 
     chunk_length_ms = 5 * 60 * 1000  # 5 minutes in milliseconds
     search_radius_ms = 20 * 1000  # 20 seconds in milliseconds
     chunks = []
     current_ms = 0
+    segment_index = 0
+
     while current_ms < len(trimmed_audio):
         next_split = find_nearest_silence(trimmed_audio, current_ms + chunk_length_ms, search_radius_ms)
         chunks.append(trimmed_audio[current_ms:next_split])
         current_ms = next_split
-    segment_filepaths = [export_audio_chunk(chunk, user_directory, new_filepath, i) for i, chunk in enumerate(chunks)]
+        segment_index += 1
+
+        socketio.emit(
+            "task_progress",
+            {
+                "task_id": task_id,
+                "message": f"Processing segment {segment_index}, length: {next_split - current_ms} milliseconds.",
+            },
+            room=str(user_id),
+            namespace="/audio",
+        )
+
+    segment_filepaths = []
+    for i, chunk in enumerate(chunks):
+        chunk_filename = f"chunk_{i}_{os.path.basename(new_filepath)}"
+        chunk_filepath = os.path.join(user_directory, chunk_filename)
+        chunk.export(chunk_filepath, format="mp3")
+        segment_filepaths.append(chunk_filepath)
+
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": f"Exported segment {i + 1}."},
+            room=str(user_id),
+            namespace="/audio",
+        )
+
     os.remove(filepath)
     os.remove(new_filepath)
+
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Audio file processing completed."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
     return segment_filepaths
 
 
@@ -170,8 +233,14 @@ def generate_prompt(session, client, instruction: str) -> str:
     return fictitious_prompt
 
 
-def determine_prompt(client, form_data):
+def determine_prompt(client, form_data, task_id, user_id):
     if "generate_prompt" in form_data and form_data["generate_prompt"]:
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": "Generating prompt..."},
+            room=str(user_id),
+            namespace="/audio",
+        )
         generated_prompt = generate_prompt(session=db.session, client=client, instruction=form_data["generate_prompt"])
         return generated_prompt
     elif "prompt" in form_data and form_data["prompt"]:
@@ -183,7 +252,7 @@ def determine_prompt(client, form_data):
 def generate_speech(
     session, client, api_key_id, user_id, model, voice, input_text, task_id, response_format="mp3", speed=1.0
 ):
-    download_dir = user_subdirectory(user_id)
+    download_dir = get_user_audio_directory(user_id)
     tts_job = create_tts_job(session, user_id, model, voice, response_format, speed, input_text, task_id)
     tts_filename = f"{tts_job.id}.{response_format}"
     tts_filepath = os.path.join(download_dir, tts_filename)
@@ -191,8 +260,14 @@ def generate_speech(
     session.commit()
     if not create_and_stream_tts_audio(client, model, voice, input_text, response_format, speed, tts_filepath):
         return {"error": "Failed to generate speech"}
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Calculating TTS cost..."},
+        room=str(user_id),
+        namespace="/audio",
+    )
     tts_cost(session=session, user_id=user_id, api_key_id=api_key_id, model_name=model, num_characters=len(input_text))
-    return tts_filepath
+    return tts_filepath, tts_job.id
 
 
 def create_and_stream_tts_audio(client, model, voice, input_text, response_format, speed, filepath):
@@ -243,6 +318,12 @@ def process_audio_transcription(
         create_transcription_job_segment(session, transcription_job.id, transcript, index, duration)
         return duration
     except openai.OpenAIError as e:
+        socketio.emit(
+            "task_update",
+            {"task_id": transcription_job.task_id, "message": f"Error during translation: {str(e)}"},
+            room=str(user_id),
+            namespace="/audio",
+        )
         return {"error": str(e)}
 
 
@@ -271,9 +352,24 @@ def transcribe_audio(
         input_filename=input_filename,
         task_id=task_id,
     )
+
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Starting transcription process..."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
     total_duration_ms = 0  # Initialize the total duration
     try:
         for index, file_path in enumerate(file_paths):
+            socketio.emit(
+                "task_progress",
+                {"task_id": task_id, "message": f"Processing segment {index + 1} of {len(file_paths)}..."},
+                room=str(user_id),
+                namespace="/audio",
+            )
+
             segment_duration = process_audio_transcription(
                 session,
                 user_id,
@@ -291,11 +387,26 @@ def transcribe_audio(
             )
             if isinstance(segment_duration, dict):
                 raise Exception(segment_duration["error"])
+
             total_duration_ms += segment_duration
+
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": "Transcription process completed successfully."},
+            room=str(user_id),
+            namespace="/audio",
+        )
         transcription_job.finished = True
         session.commit()
     except Exception as e:
+        socketio.emit(
+            "task_update",
+            {"task_id": task_id, "message": f"Error during transcription: {str(e)}"},
+            room=str(user_id),
+            namespace="/audio",
+        )
         session.rollback()
+
     return transcription_job.id
 
 
@@ -318,16 +429,24 @@ def process_audio_translation(
             translation = client.audio.translations.create(
                 model=model, file=audio_file, prompt=prompt, response_format=response_format, temperature=temperature
             )
+            print(translation)
             if response_format in ["json", "verbose_json"]:
                 translation = translation.model_dump_json()
             elif response_format in ["srt", "vtt"]:
-                transcript = adjust_subtitle_timing(translation, total_duration_ms, response_format)
+                translation = adjust_subtitle_timing(translation, total_duration_ms, response_format)
+
             duration = get_audio_duration(file_path)
             seconds = duration * 1000
             whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
-            create_translation_job_segment(session, translation_job.id, transcript, index, duration)
+            create_translation_job_segment(session, translation_job.id, translation, index, duration)
             return duration
     except openai.OpenAIError as e:
+        socketio.emit(
+            "task_update",
+            {"task_id": translation_job.task_id, "message": f"Error during translation: {str(e)}"},
+            room=str(user_id),
+            namespace="/audio",
+        )
         return {"error": str(e)}
 
 
@@ -354,13 +473,30 @@ def translate_audio(
         temperature=temperature,
         input_filename=input_filename,
     )
+
+    # Emitting socket update at the start of the translation process
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Starting translation process..."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
     total_duration_ms = 0
     try:
         for index, file_path in enumerate(file_paths):
-            segment_duration = process_audio_transcription(
+            # Emitting socket update for each segment being processed
+            socketio.emit(
+                "task_progress",
+                {"task_id": task_id, "message": f"Translating segment {index + 1} of {len(file_paths)}..."},
+                room=str(user_id),
+                namespace="/audio",
+            )
+
+            segment_duration = process_audio_translation(
                 session,
-                api_key_id,
                 user_id,
+                api_key_id,
                 client,
                 file_path,
                 translation_job,
@@ -373,11 +509,28 @@ def translate_audio(
             )
             if isinstance(segment_duration, dict):
                 raise Exception(segment_duration["error"])
+
             total_duration_ms += segment_duration
+
+        # Emitting socket update upon successful completion
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": "Translation process completed successfully."},
+            room=str(user_id),
+            namespace="/audio",
+        )
         translation_job.finished = True
         session.commit()
     except Exception as e:
+        # Emitting socket update in case of an error
+        socketio.emit(
+            "task_update",
+            {"task_id": task_id, "message": f"Error during translation: {str(e)}"},
+            room=str(user_id),
+            namespace="/audio",
+        )
         session.rollback()
+
     return translation_job.id
 
 

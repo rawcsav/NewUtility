@@ -8,7 +8,11 @@ def get_tunnel(SSH_HOST, SSH_USER, SSH_PASS, SQL_HOSTNAME, max_attempts=3):
     while attempt_count < max_attempts:
         try:
             tunnel = sshtunnel.SSHTunnelForwarder(
-                SSH_HOST, ssh_username=SSH_USER, ssh_password=SSH_PASS, remote_bind_address=(SQL_HOSTNAME, 3306)
+                SSH_HOST,
+                ssh_username=SSH_USER,
+                ssh_password=SSH_PASS,
+                ssh_port=2056,
+                remote_bind_address=("127.0.0.1", 3306),
             )
             tunnel.start()
             return tunnel

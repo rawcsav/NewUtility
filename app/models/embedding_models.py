@@ -40,7 +40,7 @@ class DocumentChunk(db.Model):
     chunk_index = db.Column(db.Integer, nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     tokens = db.Column(db.Integer, nullable=False)
-    pages = db.Column(db.Integer, nullable=True)
+    pages = db.Column(db.String(25), nullable=True)
     document = db.relationship("Document", back_populates="chunks")
     embedding = db.relationship(
         "DocumentEmbedding",

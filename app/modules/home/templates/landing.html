@@ -2,12 +2,9 @@
 <title>New Utility | RAWCSAV</title>
 <link href="https://www.newutility.rawcsav.com/" rel="canonical" />
 
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/home.css') }}"
-/>
-{% endblock %} {% block body %}
+{% endblock %} {% block styles %} {% assets "home_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div id="left-column">
     <div id="title-container">
@@ -73,6 +70,6 @@
   </div>
 </div>
 {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %}
-<script src="{{ url_for('static', filename='dist/js/home.js') }}"></script>
-{% endblock %}
+block scripts %} {% assets "home_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}
