@@ -71,6 +71,10 @@ class Config(object):
 
     DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
 
+    RABBITMQ_CLIENT_KEY = os.getenv("RABBITMQ_CLIENT_KEY")  # Path to your RabbitMQ client key
+    RABBITMQ_CLIENT_CERT = os.getenv("RABBITMQ_CLIENT_CERT")  # Path to your RabbitMQ client cert
+    RABBITMQ_CA_CERT = os.getenv("RABBITMQ_CA_CERT")
+
     @classmethod
     def init_app(cls, app):
         cloudinary.config(cloud_name=cls.CLOUD_NAME, api_key=cls.CLOUD_API_KEY, api_secret=cls.CLOUD_SECRET)
@@ -81,38 +85,7 @@ class DevelopmentConfig(Config):
     ASSETS_DEBUG = True
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False
-    broker_use_ssl = {
-        "keyfile": "/ssl/server_key.pem",
-        "certfile": "/ssl/server_sert.pem",
-        "ca_certs": "/ssl/ca_cert.pem",
-        "cert_reqs": ssl.CERT_REQUIRED,
-    }
-
-    @classmethod
-    def init_app(cls, app):
-        super().init_app(app)
-        app.tunnel = get_tunnel(
-            SSH_HOST=cls.SSH_HOST, SSH_USER=cls.SSH_USER, SSH_PASS=cls.SSH_PASS, SQL_HOSTNAME=cls.SQL_HOSTNAME
-        )
-
-        # Now that the tunnel is established, set the SQLALCHEMY_DATABASE_URI
-        app.config["SQLALCHEMY_DATABASE_URI"] = (
-            f'mysql+pymysql://{os.getenv("SQL_USERNAME")}:'
-            f'{quote_plus(os.getenv("SQL_PASSWORD"))}@127.0.0.1:'
-            f'{app.tunnel.local_bind_port}/{os.getenv("SQL_DB_NAME")}'
-        )
-
-
-class ProductionConfig(Config):
-    ASSETS_DEBUG = False
-    SESSION_COOKIE_SECURE = True
-    REMEMBER_COOKIE_SECURE = True
-    broker_use_ssl = {
-        "keyfile": "/etc/rabbitmq/ssl/server_KEY.pem",
-        "certfile": "/etc/rabbitmq/ssl/server_sert.pem",
-        "ca_certs": "/etc/rabbitmq/ssl/ca_cert.pem",
-        "cert_reqs": ssl.CERT_REQUIRED,
-    }
+    RABBITMQ_CA_CERT = "/Users/gavin/.certifications/rabbitmq_ca.pem"
 
     @classmethod
     def init_app(cls, app):
@@ -121,5 +94,42 @@ class ProductionConfig(Config):
         app.config["SQLALCHEMY_DATABASE_URI"] = (
             f"mysql+pymysql://{os.getenv('SQL_USERNAME')}:"
             f"{quote_plus(os.getenv('SQL_PASSWORD'))}@{os.getenv('SQL_HOSTNAME')}:"
-            f"3306/{os.getenv('SQL_DB_NAME')}"  # Assuming default MySQL port is used
+            f"3306/{os.getenv('SQL_DB_NAME')}"
         )
+
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {
+                "ssl": {
+                    "ca": "/Users/gavin/.certifications/mysql_ca_cert.pem",
+                    "cert": "/Users/gavin/.certifications/mysql_client_cert.pem",
+                    "key": "/Users/gavin/.certifications/mysql_client_key.pem",
+                }
+            }
+        }
+
+
+class ProductionConfig(Config):
+    ASSETS_DEBUG = False
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True
+    RABBITMQ_CA_CERT = "/app/certs/rabbitmq_ca.pem"
+
+    @classmethod
+    def init_app(cls, app):
+        super().init_app(app)  # Call the parent init_app
+        app.tunnel = None
+        app.config["SQLALCHEMY_DATABASE_URI"] = (
+            f"mysql+pymysql://{os.getenv('SQL_USERNAME')}:"
+            f"{quote_plus(os.getenv('SQL_PASSWORD'))}@{os.getenv('SQL_HOSTNAME')}:"
+            f"3306/{os.getenv('SQL_DB_NAME')}"
+        )
+
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {
+                "ssl": {
+                    "ca": "/app/certs/mysql_ca_cert.pem",
+                    "cert": "/app/certs/mysql_client_cert.pem",
+                    "key": "/app/certs/mysql_client_key.pem",
+                }
+            }
+        }

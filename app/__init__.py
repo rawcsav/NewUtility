@@ -1,4 +1,6 @@
 import os
+import ssl
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from flask_socketio import SocketIO
@@ -28,6 +30,7 @@ celery.conf.update(task_serializer="json", result_serializer="json", accept_cont
 def make_celery(app):
     celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
     celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
+    celery.conf.broker_use_ssl = {"ca_certs": app.config["RABBITMQ_CA_CERT"], "cert_reqs": ssl.CERT_REQUIRED}
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
@@ -36,8 +39,6 @@ def make_celery(app):
 
     celery.Task = ContextTask
 
-    if app.config.get("BROKER_USE_SSL"):
-        celery.conf.broker_use_ssl = app.config["BROKER_USE_SSL"]
     celery.conf.update(app.config)
     return celery
 
@@ -49,6 +50,7 @@ def create_app():
         app.config.from_object(DevelopmentConfig)
         DevelopmentConfig.init_app(app)
     else:
+        print(flask_env)
         app.config.from_object(ProductionConfig)
         ProductionConfig.init_app(app)
 
@@ -72,7 +74,9 @@ def create_app():
     mail.init_app(app)
     assets.init_app(app)  # Initialize Flask-Assets
     celery = make_celery(app)
+
     app.extensions["celery"] = celery  # Add Celery to Flask extensions
+    app.app_context().push()
 
     login_manager.init_app(app)
     login_manager.session_protection = "strong"

@@ -21,9 +21,7 @@ def num_tokens(text: str, model: str = "gpt-4-turbo-preview") -> int:
 def find_relevant_sections(user_id, query_embedding, user_preferences):
     context_window_size = 60000
 
-    # max_knowledge_context_tokens is now the maximum number of sections
     max_sections = user_preferences.knowledge_context_tokens
-    # Fetch the document chunks and additional details for the user
     document_chunks_with_details = (
         db.session.query(
             DocumentChunk.id,
