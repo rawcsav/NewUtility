@@ -242,23 +242,22 @@
 </style>
 <header>
   <nav class="menu-nav">
-    {% if current_user.is_authenticated %}
-    <i class="fas fa-envelope messages-icon"></i>
-    {% endif %}
     <i class="fas fa-toolbox toolbox-icon"></i>
     <i class="fas fa-bars hamburger-menu"></i>
     <div class="dropdown-menu">
-      <a
-        class="drop-item home-menu"
-        href="{{ url_for('home_bp.landing_page') }}"
-        >Home</a
-      >
       {% if current_user.is_authenticated %}
       <a
         class="drop-item dashboard-menu"
         href="{{ url_for('user_bp.dashboard') }}"
         >Dashboard</a
       >
+      {% else %}
+      <a
+        class="drop-item home-menu"
+        href="{{ url_for('home_bp.landing_page') }}"
+        >Home</a
+      >
+      {% endif %} {% if current_user.is_authenticated %}
       <a
         class="drop-item dashboard-category"
         href="{{ url_for('image_bp.generate_image') }}"

@@ -1,23 +1,24 @@
 body {
   font-family: "Neue Haas Grotesk Display Pro", sans-serif;
-  background-color: #b7b1b1;
+  background-color: #fafafa;
   margin: 0;
-  color: #333;
+  color: #242424;
   line-height: 1.6;
   height: 100vh;
   max-height: 100vh;
-  overflow-y: hidden;
 }
 
 .content-wrap {
-  height: 86vh;
-  max-height: 86vh;
-  padding-right: 20px;
-  padding-left: 20px;
+  height: calc(100% - 5px);
+  border-bottom: 5px solid #ff4500;
+  max-height: 100%;
+  overflow-y: auto;
   display: flex;
+  padding-left: 20px;
+  padding-right: 20px;
   justify-content: space-between;
+  align-items: flex-end;
   gap: 20px;
-  border-top: 1px solid #000;
 }
 
 .homepage-link {
@@ -36,37 +37,25 @@ body {
   transform: scale(1.05);
 }
 
-.custom-line {
-  border: none;
-  height: 2px;
-  background-color: black;
-  color: black;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  width: 100%;
-  clear: both;
-  display: block;
-}
-
 h1,
 h2,
 h3,
 h4 {
   margin-top: 10px;
-  color: #000;
+  color: #242424;
 }
 
 h1 {
   margin-bottom: 0;
   height: 9vh;
   font-size: 30px;
-  color: #000;
+  color: #242424;
   text-align: center;
 }
 
 h2 {
   font-size: 1.2em;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid #242424;
 }
 
 h3 {
@@ -84,13 +73,16 @@ h4 {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 20px;
   height: 90%;
+  margin-bottom: 5%;
 }
 
 .left-column {
   position: relative;
   flex: 4;
+  margin-bottom: 5%;
 }
 
 .custom-button {
@@ -100,8 +92,8 @@ h4 {
   left: calc(100% - 100px);
   font-size: 10px;
   background-color: darksalmon;
-  color: black;
-  border: 1px solid black;
+  color: #242424;
+  border: 1px solid #242424;
   padding: 3px 8px;
   text-wrap: none;
   text-overflow: ellipsis;
@@ -112,8 +104,8 @@ h4 {
 }
 
 input[type="text"] {
-  padding: 8px;
-  border: black 1px solid;
+  padding: 4px;
+  border: 1px solid #242424;
   font-size: 0.8em;
   border-radius: 8px 8px 8px 8px;
 }
@@ -137,7 +129,7 @@ button {
   margin-top: 0;
 }
 .api-modal-content {
-  background-color: white;
+  background-color: #242424;
   margin: 5% auto;
   padding: 20px;
   border-radius: 5px;
@@ -145,7 +137,7 @@ button {
   width: 20%;
 }
 .modal-content {
-  background-color: white;
+  background-color: #242424;
   margin: 5% auto;
   padding: 20px;
   border-radius: 5px;
@@ -229,13 +221,10 @@ button {
   flex: 1; /* Change this line */
   display: flex;
   flex-direction: column;
-  max-height: 100%;
+  max-height: 80%;
   overflow-y: auto;
 }
 
-#docs-settings-popup {
-  width: 60%;
-}
 #uploaded_docs_list {
   padding: 0;
   margin: 0;
@@ -263,18 +252,25 @@ input[type="checkbox"] {
   overflow-wrap: break-word;
 }
 
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 #docSelectionForm {
   flex-grow: 1;
   min-height: 56vh; /* Adjust this value as needed */
-  border: 1px solid #d3d3d3;
+  border: 1px solid #242424;
   border-radius: 10px; /* Adjust as needed */
-  box-shadow:
-    0 4px 8px 0 rgba(0, 0, 0, 0.2),
-    0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 #uploaded_docs_list li input[type="checkbox"] {
   margin-right: 10px;
+}
+
+li {
+  list-style-type: none;
 }
 
 .delete-btn {
@@ -311,7 +307,7 @@ input[type="checkbox"] {
 
 #query {
   border-radius: 12px;
-  box-shadow: 0 4px 6px #aaa;
+  box-shadow: 0 2px 3px #aaa;
   width: 90%;
 }
 
@@ -351,7 +347,7 @@ input[type="checkbox"] {
 #queryStatus {
   margin-top: 10px;
   font-size: 0.9em;
-  color: #000;
+  color: #242424;
 }
 
 .response {
@@ -384,7 +380,7 @@ input[type="checkbox"] {
 #query-input-section {
   min-width: 30%;
   max-width: 100%;
-  background-color: #b7b1b1;
+  background-color: #fafafa;
   z-index: 999;
   margin-left: 0;
   display: flex;
@@ -446,13 +442,8 @@ input[type="checkbox"] {
 #query-results-section {
   overflow-y: auto;
   height: 70vh;
-  padding-left: 5px;
-  margin-bottom: 30px;
   border: 1px solid #d3d3d3;
   border-radius: 10px; /* Adjust as needed */
-  box-shadow:
-    0 4px 8px 0 rgba(0, 0, 0, 0.2),
-    0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 #query-results-section p {
@@ -492,6 +483,12 @@ input[type="checkbox"] {
   justify-content: flex-start;
   padding: 10px;
   max-height: 100%;
+  gap: 10px;
+}
+
+.doc-select {
+  display: flex;
+  flex-direction: row-reverse;
 }
 
 #preference-submit,
@@ -504,11 +501,8 @@ input[type="checkbox"] {
   cursor: pointer;
   margin-bottom: 20px;
   border-radius: 5px;
-  border: 2px solid var(--main-color);
-  background-color: var(--bg-color);
-  box-shadow: 4px 4px var(--main-color);
-  --bg-color: #ffffff;
-  --main-color: #2a2a2a;
+  background-color: #fafafa;
+  color: #242424;
   font-family: "Helvetica Neue", sans-serif;
 }
 
@@ -560,8 +554,18 @@ input[type="checkbox"] {
   font-size: 14px;
   background-color: transparent;
   margin: 0;
-  color: white;
+  color: #242424;
   padding: 0;
+}
+
+#title-edit {
+  color: #f44336;
+  font-weight: bold;
+}
+
+#author-edit {
+  color: #ff7900;
+  font-weight: bold;
 }
 
 #author-edit {
@@ -579,9 +583,8 @@ input[type="checkbox"] {
 
 .range-value-input {
   text-align: center;
-  border: none;
-  background-color: #fafafa;
   border-radius: 10px;
+  border: 1px solid #242424;
   font-size: 12px;
   width: 20%;
   display: inline-block;

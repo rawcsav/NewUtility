@@ -1,0 +1,64 @@
+version: '3.11'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      FLASK_APP: ${FLASK_APP}
+      FLASK_ENV: production
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      SQL_HOSTNAME: ${SQL_HOSTNAME}
+      SQL_USERNAME: ${SQL_USERNAME}
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      SQL_DB_NAME: ${SQL_DB_NAME}
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - /Users/gavin/.certifications:/app/certs:ro  # Mount the SSL certificates
+    depends_on:
+      - mysql
+      - rabbitmq
+
+  mysql:
+    image: mysql:8.0.36
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SQL_PASSWORD}
+      MYSQL_DATABASE: ${SQL_DB_NAME}
+      MYSQL_USER: ${SQL_USERNAME}
+      MYSQL_PASSWORD: ${SQL_PASSWORD}
+    volumes:
+      - db_volume:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${CELERY_BROKER_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: "vhost"
+    ports:
+      - "5671:5671"
+      - "15671:15671"
+    volumes:
+      - rabbitmq_volume:/var/lib/rabbitmq
+
+  celery:
+    build: .
+    command: celery -A wsgi.celery worker --loglevel=info
+    environment:
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    volumes:
+      - .:/app
+      - /Users/gavin/.certifications:/app/certs:ro
+    depends_on:
+      - web
+      - rabbitmq
+
+volumes:
+  db_volume:
+  static_volume:
+  rabbitmq_volume:

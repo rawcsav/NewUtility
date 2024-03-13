@@ -65,11 +65,9 @@
     <meta name="msapplication-TileColor" content="#da532c" />
     <meta name="theme-color" content="#2bae66" />
     <meta name="background-color" content="#faf5e6" />
-    {% block head %} {% endblock %}
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='dist/css/common.css') }}"
-    />
+    {% block head %} {% endblock %} {% assets "common_style_bundle" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}" />
+    {% endassets %}
     <script
       src="https://kit.fontawesome.com/5c8c7a1eba.js"
       crossorigin="anonymous"
@@ -214,6 +212,12 @@
         alert("Show messages functionality not implemented.");
       });
     </script>
+    <script
+      src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+      integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+      crossorigin="anonymous"
+    ></script>
+
     {% block scripts %} {% endblock %} {% if not config['DEBUG'] %}
     <script
       async

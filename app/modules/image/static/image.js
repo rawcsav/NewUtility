@@ -56,264 +56,326 @@ function hideLoader() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  function toggleModelOptions(model) {
-    const numberOfImagesContainer = document.getElementById(
-      "number-of-images-container",
-    );
-    const dallE3Options = document.getElementById("dall-e-3-options");
+function toggleModelOptions(model) {
+  const numberOfImagesContainer = document.getElementById(
+    "number-of-images-container",
+  );
+  const dallE3Options = document.getElementById("dall-e-3-options");
 
-    if (model === "dall-e-3") {
-      dallE3Options.style.display = "flex";
-      numberOfImagesContainer.style.display = "none";
-    } else if (model === "dall-e-2") {
-      dallE3Options.style.display = "none";
-      numberOfImagesContainer.style.display = "flex";
-    }
+  if (model === "dall-e-3") {
+    dallE3Options.style.display = "flex";
+    numberOfImagesContainer.style.display = "none";
+  } else if (model === "dall-e-2") {
+    dallE3Options.style.display = "none";
+    numberOfImagesContainer.style.display = "flex";
   }
+}
 
-  function updateSizeOptions(model) {
-    const sizeSelect = document.getElementById("size");
-    sizeSelect.innerHTML = "";
-    const sizeOptions =
-      model === "dall-e-2"
-        ? ["256x256", "512x512", "1024x1024"]
-        : ["1024x1024", "1792x1024", "1024x1792"];
-    sizeOptions.forEach((size) => {
-      const option = document.createElement("option");
-      option.value = size;
-      option.text = size;
-      sizeSelect.appendChild(option);
-    });
-  }
-
-  function updateMaxImages(model) {
-    const nInput = document.getElementById("n");
-    nInput.max = model === "dall-e-2" ? 3 : 1;
-    nInput.value = Math.min(nInput.value, nInput.max);
-  }
-
-  function updatePromptLength(model) {
-    const promptInput = document.getElementById("prompt");
-    promptInput.maxLength = model === "dall-e-2" ? 1000 : 4000;
-  }
-
-  document.getElementById("model").addEventListener("change", function (event) {
-    const selectedModel = event.target.value;
-    updateSizeOptions(selectedModel);
-    updateMaxImages(selectedModel);
-    updatePromptLength(selectedModel);
-    toggleModelOptions(selectedModel);
+function updateSizeOptions(model) {
+  const sizeSelect = document.getElementById("size");
+  sizeSelect.innerHTML = "";
+  const sizeOptions =
+    model === "dall-e-2"
+      ? ["256x256", "512x512", "1024x1024"]
+      : ["1024x1024", "1792x1024", "1024x1792"];
+  sizeOptions.forEach((size) => {
+    const option = document.createElement("option");
+    option.value = size;
+    option.text = size;
+    sizeSelect.appendChild(option);
   });
+}
 
-  const currentSelectedModel = document.getElementById("model").value;
-  updateSizeOptions(currentSelectedModel);
-  updateMaxImages(currentSelectedModel);
-  updatePromptLength(currentSelectedModel);
-  toggleModelOptions(currentSelectedModel);
+function updateMaxImages(model) {
+  const nInput = document.getElementById("n");
+  nInput.max = model === "dall-e-2" ? 3 : 1;
+  nInput.value = Math.min(nInput.value, nInput.max);
+}
 
-  document
-    .getElementById("image-generation-form")
-    .addEventListener("submit", function (event) {
-      event.preventDefault();
-      showLoader(); // Start the loader immediately upon form submission
+function updatePromptLength(model) {
+  const promptInput = document.getElementById("prompt");
+  promptInput.maxLength = model === "dall-e-2" ? 1000 : 4000;
+}
 
-      var formData = new FormData(this);
+document.getElementById("model").addEventListener("change", function (event) {
+  const selectedModel = event.target.value;
+  updateSizeOptions(selectedModel);
+  updateMaxImages(selectedModel);
+  updatePromptLength(selectedModel);
+  toggleModelOptions(selectedModel);
+});
 
-      fetch("/image/", {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": getCsrfToken(),
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        body: formData,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Network response was not ok.");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          showToast("Image generation task has been queued.", "success"); // Display success message
-          // The loader will continue to show
-        })
-        .catch((error) => {
-          showToast("Error: " + error.message, "error"); // Display error message
-          // The loader will continue to show
-        });
-    });
-  function loadImageHistory() {
-    fetch("/image/history", {
-      method: "GET",
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        const carousel = document.getElementById("image-history-carousel");
-        carousel.innerHTML = "";
-        const limitedData = data.slice(-15);
+const currentSelectedModel = document.getElementById("model").value;
+updateSizeOptions(currentSelectedModel);
+updateMaxImages(currentSelectedModel);
+updatePromptLength(currentSelectedModel);
+toggleModelOptions(currentSelectedModel);
 
-        limitedData.forEach((item, index) => {
-          const imgThumbnail = document.createElement("img");
-          imgThumbnail.dataset.src = item.url;
-          imgThumbnail.dataset.id = item.id; // Add this line
-          imgThumbnail.className = "thumbnail lazy";
-          imgThumbnail.alt = `Image History ${index + 1}`;
-          imgThumbnail.onclick = () =>
-            displayImage(item.id, item.url, {
-              Prompt: item.prompt,
-              Model: item.model,
-              Size: item.size,
-              Quality: item.quality,
-              Style: item.style,
-              Created_at: item.created_at,
-            });
-          carousel.appendChild(imgThumbnail);
-        });
+document
+  .getElementById("image-generation-form")
+  .addEventListener("submit", function (event) {
+    event.preventDefault();
+    showLoader(); // Start the loader immediately upon form submission
 
-        initializeLazyLoading();
-      })
-      .catch((error) => {
-        console.error("Error loading image history:", error);
-      });
-  }
+    var formData = new FormData(this);
 
-  function displayImage(id, imageUrl, metadata) {
-    const imageContainer = document.getElementById("generated-images");
-    const infoContainer = document.getElementById("img-info-container");
-    var iconsContainer = document.getElementById("icons-container");
-
-    imageContainer.innerHTML = "";
-    infoContainer.innerHTML = "";
-    iconsContainer.innerHTML = "";
-
-    const img = document.createElement("img");
-    img.onload = function () {
-      resizeImage(img);
-    };
-    img.src = imageUrl;
-    img.alt = "Generated Image";
-    imageContainer.appendChild(img);
-    iconsContainer.innerHTML = "";
-    addDownloadAndOpenIcons(id, iconsContainer);
-    addMetadataToInfoContainer(metadata, infoContainer);
-  }
-
-  function addDownloadAndOpenIcons(id, container) {
-    var downloadLink = document.createElement("a");
-    downloadLink.href = `/image/download_image/${id}`;
-    downloadLink.innerHTML = '<i class="fas fa-download"></i>';
-    downloadLink.className = "image-icon download-icon";
-    container.appendChild(downloadLink);
-
-    var openLink = document.createElement("a");
-    openLink.href = `/static/user_files/temp_img/${id}.webp`;
-    openLink.target = "_blank";
-    openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
-    openLink.className = "image-icon open-icon";
-    container.appendChild(openLink);
-
-    var deleteLink = document.createElement("a");
-    deleteLink.href = "#"; // Prevent navigation
-    deleteLink.innerHTML = '<i class="fas fa-trash"></i>'; // Use appropriate trash icon class
-    deleteLink.className = "image-icon delete-icon";
-    deleteLink.addEventListener("click", function (event) {
-      event.preventDefault(); // Prevent the default anchor behavior
-      markImageAsDeleted(id); // Call the function to mark the image as deleted
-    });
-    container.appendChild(deleteLink);
-  }
-
-  function markImageAsDeleted(imageId) {
-    fetch(`/image/mark_delete/${imageId}`, {
+    fetch("/image/", {
       method: "POST",
       headers: {
         "X-CSRFToken": getCsrfToken(),
         "X-Requested-With": "XMLHttpRequest",
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ delete: true }),
+      body: formData,
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error("Network response was not ok.");
         }
         return response.json();
       })
-      .then((data) => {
-        if (data.status === "success") {
-          showToast("Image marked for deletion", "success");
-          // Remove the image from the history carousel
-          const thumbnailToRemove = document.querySelector(
-            `img[data-id="${imageId}"]`,
-          );
-          if (thumbnailToRemove) {
-            thumbnailToRemove.remove();
-          }
-          const displayedImage = document
-            .getElementById("generated-images")
-            .querySelector("img");
-          if (displayedImage && displayedImage.src.includes(imageId)) {
-            document.getElementById("generated-images").innerHTML = "";
-            document.getElementById("icons-container").innerHTML = "";
-            document.getElementById("img-info-container").innerHTML = "";
-          }
-        } else {
-          showToast("Failed to mark image for deletion", "error");
-        }
+      .then(() => {
+        updateImageMessages(
+          "Image generation task has been queued.",
+          "information",
+        ); // Display success message
       })
       .catch((error) => {
-        console.error("Error:", error);
-        showToast("Error: " + error.message, "error");
+        updateImageMessages("Error: " + error.message, "error"); // Display error message
       });
-  }
+  });
+function loadImageHistory() {
+  fetch("/image/history", {
+    method: "GET",
+    headers: {
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const carousel = document.getElementById("image-history-carousel");
+      carousel.innerHTML = "";
+      const limitedData = data.slice(-15);
 
-  function addMetadataToInfoContainer(metadata, container) {
-    const metadataList = document.createElement("ul");
-    metadataList.className = "image-metadata";
+      limitedData.forEach((item, index) => {
+        const imgThumbnail = document.createElement("img");
+        imgThumbnail.dataset.src = item.url;
+        imgThumbnail.dataset.id = item.id; // Add this line
+        imgThumbnail.className = "thumbnail lazy";
+        imgThumbnail.alt = `Image History ${index + 1}`;
+        imgThumbnail.onclick = () =>
+          displayImage(item.id, item.url, {
+            Prompt: item.prompt,
+            Model: item.model,
+            Size: item.size,
+            Quality: item.quality,
+            Style: item.style,
+            Created: item.created_at,
+          });
+        carousel.appendChild(imgThumbnail);
+      });
 
-    Object.entries(metadata).forEach(([key, value]) => {
-      const listItem = document.createElement("li");
-
-      // Create a span for the key with the 'metadata-key' class
-      const keySpan = document.createElement("span");
-      keySpan.textContent = `${key}: `;
-      keySpan.className = "metadata-key";
-      listItem.appendChild(keySpan);
-
-      // Create a span for the value and apply the 'metadata-value' class
-      const valueSpan = document.createElement("span");
-      valueSpan.textContent = value;
-      valueSpan.className = "metadata-value"; // Apply the CSS class
-      listItem.appendChild(valueSpan); // Append the value span to the list item
-
-      metadataList.appendChild(listItem);
+      initializeLazyLoading();
+    })
+    .catch((error) => {
+      console.error("Error loading image history:", error);
     });
+}
 
-    container.appendChild(metadataList);
-  }
+function displayImage(id, imageUrl, metadata) {
+  const imageContainer = document.getElementById("generated-images");
+  const infoContainer = document.getElementById("img-info-container");
+  var iconsContainer = document.getElementById("icons-container");
 
-  function initializeLazyLoading() {
-    const lazyImages = document.querySelectorAll(".lazy");
+  imageContainer.innerHTML = "";
+  infoContainer.innerHTML = "";
+  iconsContainer.innerHTML = "";
 
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const image = entry.target;
-          image.src = image.dataset.src;
-          image.classList.remove("lazy");
-          observer.unobserve(image);
+  const img = document.createElement("img");
+  img.onload = function () {
+    resizeImage(img);
+  };
+  img.src = imageUrl;
+  img.alt = "Generated Image";
+  imageContainer.appendChild(img);
+  iconsContainer.innerHTML = "";
+  addDownloadAndOpenIcons(id, imageUrl, iconsContainer);
+  addMetadataToInfoContainer(metadata, infoContainer);
+}
+
+function addDownloadAndOpenIcons(id, imageUrl, container) {
+  var downloadLink = document.createElement("a");
+  downloadLink.href = `/image/download_image/${id}`;
+  downloadLink.innerHTML = '<i class="fas fa-download"></i>';
+  downloadLink.className = "image-icon download-icon";
+  container.appendChild(downloadLink);
+
+  const openLink = document.createElement("a");
+  openLink.href = imageUrl;
+  openLink.target = "_blank";
+  openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+  openLink.className = "image-icon open-icon";
+  container.appendChild(openLink);
+
+  var deleteLink = document.createElement("a");
+  deleteLink.href = "#"; // Prevent navigation
+  deleteLink.innerHTML = '<i class="fas fa-trash"></i>'; // Use appropriate trash icon class
+  deleteLink.className = "image-icon delete-icon";
+  deleteLink.addEventListener("click", function (event) {
+    event.preventDefault(); // Prevent the default anchor behavior
+    markImageAsDeleted(id); // Call the function to mark the image as deleted
+  });
+  container.appendChild(deleteLink);
+}
+
+function markImageAsDeleted(imageId) {
+  fetch(`/image/mark_delete/${imageId}`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCsrfToken(),
+      "X-Requested-With": "XMLHttpRequest",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ delete: true }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.status === "success") {
+        showToast("Image marked for deletion", "success");
+        // Remove the image from the history carousel
+        const thumbnailToRemove = document.querySelector(
+          `img[data-id="${imageId}"]`,
+        );
+        if (thumbnailToRemove) {
+          thumbnailToRemove.remove();
         }
-      });
+        const displayedImage = document
+          .getElementById("generated-images")
+          .querySelector("img");
+        if (displayedImage && displayedImage.src.includes(imageId)) {
+          document.getElementById("generated-images").innerHTML = "";
+          document.getElementById("icons-container").innerHTML = "";
+          document.getElementById("img-info-container").innerHTML = "";
+        }
+      } else {
+        showToast("Failed to mark image for deletion", "error");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      showToast("Error: " + error.message, "error");
     });
+}
 
-    lazyImages.forEach((image) => {
-      imageObserver.observe(image);
+function addMetadataToInfoContainer(metadata, container) {
+  const metadataList = document.createElement("ul");
+  metadataList.className = "image-metadata";
+
+  Object.entries(metadata).forEach(([key, value]) => {
+    const listItem = document.createElement("li");
+
+    // Create a span for the key with the 'metadata-key' class
+    const keySpan = document.createElement("span");
+    keySpan.textContent = `${key}:  `;
+    keySpan.className = "metadata-key";
+    listItem.appendChild(keySpan);
+
+    // Create a span for the value and apply the 'metadata-value' class
+    const valueSpan = document.createElement("span");
+    valueSpan.textContent = value;
+    valueSpan.className = "metadata-value"; // Apply the CSS class
+    listItem.appendChild(valueSpan); // Append the value span to the list item
+
+    metadataList.appendChild(listItem);
+  });
+
+  container.appendChild(metadataList);
+}
+
+function initializeLazyLoading() {
+  const lazyImages = document.querySelectorAll(".lazy");
+
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const image = entry.target;
+        image.src = image.dataset.src;
+        image.classList.remove("lazy");
+        observer.unobserve(image);
+      }
     });
+  });
+
+  lazyImages.forEach((image) => {
+    imageObserver.observe(image);
+  });
+}
+
+function updateImageMessages(message, status) {
+  var messageDiv = document.getElementById("loader-text");
+  messageDiv.innerHTML = message.replace(/\n/g, "<br>");
+  messageDiv.className = status;
+}
+
+// eslint-disable-next-line no-undef
+var socket = io("/image");
+
+// Listen for task progress updates
+socket.on("task_progress", function (data) {
+  updateImageMessages(data.message, "information");
+});
+
+// Listen for task completion
+socket.on("task_complete", function (data) {
+  updateImageMessages(data.message, "success");
+  appendImage(data.image);
+});
+
+// Listen for task errors
+socket.on("task_update", function (data) {
+  if (data.status === "error") {
+    updateImageMessages("Error: " + data.error, "error");
   }
+});
+
+function fetchImage(filename, userId) {
+  const xhr = new XMLHttpRequest();
+  const url = `/image/user_urls/${userId}/${filename}`; // Updated URL pattern to include user_id in the path
+
+  xhr.open("GET", url, true);
+
+  xhr.onload = function () {
+    let imageContainer;
+    if (this.status === 200) {
+      const imageUrl = this.responseText;
+      imageContainer = document.getElementById("generated-images");
+      document.getElementById("generated-images").innerHTML = "";
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      img.alt = "Generated Image";
+      imageContainer.appendChild(img);
+    } else {
+      console.error("Error fetching image:", this.statusText);
+    }
+  };
+
+  xhr.onerror = function () {
+    console.error("Request failed");
+  };
+
+  xhr.send();
+}
+
+function appendImage(imageObject) {
+  hideLoader();
+  const { user_id, file_name } = imageObject;
+
+  fetchImage(file_name, user_id);
 
   loadImageHistory();
-});
+}
+loadImageHistory();

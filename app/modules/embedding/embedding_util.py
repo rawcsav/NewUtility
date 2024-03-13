@@ -4,6 +4,9 @@ import tempfile
 import unicodedata
 from typing import List
 
+from flask_login import current_user
+
+from app.modules.user.user_util import get_user_upload_directory
 import numpy as np
 import openai
 import tiktoken
@@ -25,16 +28,10 @@ WORDS_PER_PAGE = 500  # Define the number of words per page
 
 
 def save_temp(uploaded_file):
-    temp_dir = tempfile.mkdtemp()
+    temp_dir = get_user_upload_directory(current_user.id)
     temp_path = os.path.join(temp_dir, secure_filename(uploaded_file.filename))
     uploaded_file.save(temp_path)
     return temp_path
-
-
-def remove_temp(temp_path):
-    temp_dir = os.path.dirname(temp_path)
-    os.remove(temp_path)
-    os.rmdir(temp_dir)
 
 
 def count_tokens(string: str) -> int:
@@ -53,66 +50,41 @@ def extract_text_from_pdf(filepath):
     return page_texts
 
 
-def estimate_pages(text):
-    words = word_tokenize(text)
-    # Calculate the total number of pages
-    num_pages = len(words) // WORDS_PER_PAGE + (1 if len(words) % WORDS_PER_PAGE > 0 else 0)
-    pages = []
-    for i in range(num_pages):
-        # Calculate the start and end indices for words in the current page
-        start_idx = i * WORDS_PER_PAGE
-        end_idx = start_idx + WORDS_PER_PAGE
-        # Slice the words for the current page and join them back into a string
-        page_text = " ".join(words[start_idx:end_idx])
-        pages.append((page_text, i + 1))
-    return pages
+def preprocess_text(text):
+    text = re.sub(r"©.*?\n", "", text)
+    text = re.sub(r"\n", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"https?://\S+|www\.\S+", "", text)
+    text = re.sub(r"\S*@\S*\s?", "", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = "".join((c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"))
+    text = re.sub(r"[^\w\s.?!]", "", text)
+
+    return text.strip().lower()
 
 
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
     if ext == ".pdf":
         return extract_text_from_pdf(filepath)
-    elif ext in [".docx", ".txt"]:
-        if ext == ".docx":
-            text = docx2txt.process(filepath)
-        else:  # ext == ".txt"
-            with open(filepath, "r", encoding="utf-8") as file:
-                text = file.read()
-        # Estimate page numbers based on word count
-        return estimate_pages(text)
+    elif ext == ".docx":
+        text = docx2txt.process(filepath)
+        return [(text, None)]
+    elif ext == ".txt":
+        with open(filepath, "r", encoding="utf-8") as file:
+            text = file.read()
+        return [(text, None)]
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
 
-def preprocess_text(text):
-    # Remove copyright notices
-    text = re.sub(r"©.*?\n", "", text)
-    # Replace newlines with space
-    text = re.sub(r"\n", " ", text)
-    # Replace multiple spaces with a single space
-    text = re.sub(r"\s+", " ", text)
-    # Remove URLs
-    text = re.sub(r"https?://\S+|www\.\S+", "", text)
-    # Remove email addresses
-    text = re.sub(r"\S*@\S*\s?", "", text)
-    # Remove HTML tags
-    text = re.sub(r"<[^>]+>", "", text)
-    # Remove or replace words with accents
-    text = "".join((c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"))
-    # Remove punctuation
-    text = re.sub(r"[^\w\s.?!]", "", text)
-
-    return text.strip().lower()
-
-
 def split_text(text_pages, max_tokens=512):
-    # text_pages is a list of tuples (text, page_number)
     chunks = []
     chunk_pages = []  # List to hold the pages for each chunk
     current_chunk = []
     current_chunk_token_count = 0
     current_chunk_pages = set()  # Keep track of pages in the current chunk
-
+    page_number = None
     for text, page_number in text_pages:
         text = preprocess_text(text)
         sentences = sent_tokenize(text)
@@ -128,38 +100,33 @@ def split_text(text_pages, max_tokens=512):
                         current_sentence_chunk.append(word)
                         current_chunk_token_count += word_token_count
                     else:
-                        # When the current chunk is full, save it and start a new one
                         chunks.append(" ".join(current_sentence_chunk))
-                        chunk_pages.append(current_chunk_pages.copy())
+                        chunk_pages.append(current_chunk_pages.copy() if page_number is not None else None)
                         current_sentence_chunk = [word]
                         current_chunk_token_count = word_token_count
-                        current_chunk_pages = {page_number}
+                        current_chunk_pages = {page_number} if page_number is not None else set()
                 if current_sentence_chunk:
-                    # Add the remaining words from the long sentence as a new chunk
                     chunks.append(" ".join(current_sentence_chunk))
-                    chunk_pages.append(current_chunk_pages.copy())
-                # Reset for a new sentence
+                    chunk_pages.append(current_chunk_pages.copy() if page_number is not None else None)
                 current_chunk = []
                 current_chunk_token_count = 0
-                current_chunk_pages = {page_number}
+                current_chunk_pages = {page_number} if page_number is not None else set()
             elif current_chunk_token_count + sentence_token_count <= max_tokens:
                 current_chunk.append(sentence)
                 current_chunk_token_count += sentence_token_count
-                current_chunk_pages.add(page_number)
+                if page_number is not None:
+                    current_chunk_pages.add(page_number)
             else:
-                # If the current chunk is full, start a new chunk
                 chunks.append(" ".join(current_chunk))
-                chunk_pages.append(current_chunk_pages.copy())
+                chunk_pages.append(current_chunk_pages.copy() if page_number is not None else None)
                 current_chunk = [sentence]
                 current_chunk_token_count = sentence_token_count
-                current_chunk_pages = {page_number}
+                current_chunk_pages = {page_number} if page_number is not None else set()
 
-    # Add the last chunk if it's not empty
     if current_chunk:
         chunks.append(" ".join(current_chunk))
-        chunk_pages.append(current_chunk_pages)
+        chunk_pages.append(current_chunk_pages if page_number is not None else None)
 
-    # Calculate the token count for each chunk
     chunk_token_counts = [count_tokens(chunk) for chunk in chunks]
     total_tokens = sum(chunk_token_counts)
     return chunks, chunk_pages, total_tokens, chunk_token_counts
@@ -169,6 +136,7 @@ def split_text(text_pages, max_tokens=512):
 def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
     embedding = response.data[0].embedding
+    print(embedding[:10])
     if len(embedding) != 3072:
         raise ValueError(f"Expected embedding dimension to be 3072, but got {len(embedding)}")
     return embedding
@@ -278,7 +246,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
             current_tokens += chunk.tokens
             sections_appended += 1
         elif chunk:
-            # Stop if adding this chunk will exceed the token limit of the context window
             break
 
     return selected_chunks
@@ -298,22 +265,7 @@ def append_knowledge_context(user_query, user_id, client):
     context = ""
     chunk_associations = []
 
-    preface = (
-        "## The following excerpts have been provided for DIRECT and CRUCIAL contextual usage in answering the user's query. "
-        "\n"
-        "For the given/relevant topic, you are to act as though you are a world class expert, capable of providing nuanced and academically shrewd commentary, solutions, and responses. "
-        "**It's imperative that you use the provided text excerpts and sections as you critically analyze and properly answer the user query.** "
-        "\n"
-        "### Begin Knowledge Context\n\n"
-    )
-    ending = (
-        "## End Knowledge Context\n\n"
-        "**Remember, your response must authoritatively and nuancedly use the text excerpts above.** It's crucial to ensure "
-        "comprehensive attention to detail and to directly integrate specific text excerpts in your response. "
-        "**Omit disclaimers, apologies, and AI self-references.** Provide unbiased, holistic guidance and analysis. "
-        "**If the answer is NOT contained within the documents or they seem irrelevant, you must still attempt to integrate them.** "
-        "### Now, directly answer the user question below based on the context provided:"
-    )
+    preface = "Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, say as such but still do your best to provide the most factual, nuanced assessment possible.\n\n"
 
     # Format the context with title, author, and page number
     context = preface
@@ -321,17 +273,16 @@ def append_knowledge_context(user_query, user_id, client):
     for chunk_id, title, author, pages, chunk_content, tokens, similarity in relevant_sections:
         context_parts = []
         if title:
-            context_parts.append(f"**Title:** {title}")
+            context_parts.append(f"Title: {title}")
         if author:
             context_parts.append(f"Author: {author}")
         if pages:
             context_parts.append(f"Page: {pages}")
-        context_parts.append(f"**Content:**\n{chunk_content}")  # Include the chunk content
+        context_parts.append(f"Content:\n{chunk_content}")  # Include the chunk content
 
         context += "\n".join(context_parts) + "\n\n"
 
         chunk_associations.append((chunk_id, similarity))
-    context += ending
     modified_query = context + user_query
     return modified_query, chunk_associations
 

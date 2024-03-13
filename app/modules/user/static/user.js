@@ -115,6 +115,43 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
   });
 });
 
+// Debounce function to limit how often a function can run
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this,
+      args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+// Modify setupFormSubmission to support debounced submission
+function setupFormSubmission(
+  formId,
+  submitUrl,
+  successCallback,
+  errorCallback,
+) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  const debouncedSubmit = debounce(function () {
+    const formData = new FormData(form);
+    submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
+  }, 1000); // Debounce time of 1000 milliseconds
+
+  form.addEventListener("input", function (event) {
+    event.preventDefault();
+    debouncedSubmit();
+  });
+}
 function updateSelectedKeyVisual(selectedForm) {
   document.querySelectorAll(".key-list").forEach((keyItem) => {
     keyItem.classList.remove("selected-key");
@@ -313,23 +350,6 @@ function findOpenAIKeys(inputString) {
   return [...new Set(apiKeys)];
 }
 
-function setupFormSubmission(
-  formId,
-  submitUrl,
-  successCallback,
-  errorCallback,
-) {
-  const form = document.getElementById(formId);
-  if (!form) return;
-
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-
-    submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
-  });
-}
-
 function submitForm(formData, submitUrl) {
   return fetch(submitUrl, {
     method: "POST",
@@ -369,6 +389,10 @@ setupFormSubmission(
 );
 
 function addIconsToImage(id, container) {
+  const userId = document
+    .getElementById("full-container")
+    .getAttribute("data-user-id");
+
   if (container) {
     container.innerHTML = "";
     var downloadLink = document.createElement("a");
@@ -378,7 +402,7 @@ function addIconsToImage(id, container) {
     container.appendChild(downloadLink);
 
     var openLink = document.createElement("a");
-    openLink.href = `/static/user_files/temp_img/${id}.webp`;
+    openLink.href = `/image/user_images/${userId}/${id}.webp`;
     openLink.target = "_blank";
     openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
     openLink.className = "image-icon open-icon";

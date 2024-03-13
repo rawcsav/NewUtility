@@ -1,6 +1,8 @@
 import os
+import ssl
 from datetime import timedelta
 import cloudinary
+from urllib.parse import quote_plus
 
 from app.utils.tunnel_util import get_tunnel
 
@@ -27,6 +29,9 @@ class Config(object):
         "pool_reset_on_return": "rollback",
     }
 
+    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+    CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 
@@ -36,8 +41,12 @@ class Config(object):
 
     SQL_HOSTNAME = os.getenv("SQL_HOSTNAME")
     SQL_USERNAME = os.getenv("SQL_USERNAME")
-    SQL_PASSWORD = os.getenv("SQL_PASSWORD")
+    SQL_PASSWORD = quote_plus(os.getenv("SQL_PASSWORD"))  # URL-encode the password
     SQL_DB_NAME = os.getenv("SQL_DB_NAME")
+
+    SSH_HOST = os.getenv("SSH_HOST")
+    SSH_USER = os.getenv("SSH_USER")
+    SSH_PASS = os.getenv("SSH_PASS")
 
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587
@@ -45,10 +54,6 @@ class Config(object):
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_USERNAME")
-
-    SSH_HOST = os.getenv("SSH_HOST")
-    SSH_USER = os.getenv("SSH_USER")
-    SSH_PASS = os.getenv("SSH_PASS")
 
     CLOUD_NAME = os.getenv("CLOUD_NAME")
     CLOUD_API_KEY = os.getenv("CLOUDINARY_API_KEY")
@@ -66,10 +71,9 @@ class Config(object):
 
     DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
 
-    USER_IMAGE_DIRECTORY = os.path.join(appdir, "static", "user_files", "temp_img")
-    CHAT_IMAGE_DIRECTORY = os.path.join(appdir, "static", "user_files", "user_img")
-    CHAT_UPLOAD_DIR = os.path.join(appdir, "static", "user_files", "user_img")
-    USER_AUDIO_DIRECTORY = os.path.join(appdir, "static", "user_files", "user_audio")
+    RABBITMQ_CLIENT_KEY = os.getenv("RABBITMQ_CLIENT_KEY")  # Path to your RabbitMQ client key
+    RABBITMQ_CLIENT_CERT = os.getenv("RABBITMQ_CLIENT_CERT")  # Path to your RabbitMQ client cert
+    RABBITMQ_CA_CERT = os.getenv("RABBITMQ_CA_CERT")
 
     @classmethod
     def init_app(cls, app):
@@ -78,34 +82,54 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    ASSETS_DEBUG = True
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False
-
-    @classmethod
-    def init_app(cls, app):
-        super().init_app(app)
-        app.tunnel = get_tunnel(
-            SSH_HOST=cls.SSH_HOST, SSH_USER=cls.SSH_USER, SSH_PASS=cls.SSH_PASS, SQL_HOSTNAME=cls.SQL_HOSTNAME
-        )
-
-        # Now that the tunnel is established, set the SQLALCHEMY_DATABASE_URI
-        app.config["SQLALCHEMY_DATABASE_URI"] = (
-            f'mysql+pymysql://{os.getenv("SQL_USERNAME")}:'
-            f'{os.getenv("SQL_PASSWORD")}@127.0.0.1:'
-            f'{app.tunnel.local_bind_port}/{os.getenv("SQL_DB_NAME")}'
-        )
-
-
-class ProductionConfig(Config):
-    SESSION_COOKIE_SECURE = True
-    REMEMBER_COOKIE_SECURE = True
+    RABBITMQ_CA_CERT = "/Users/gavin/.certifications/rabbitmq_ca.pem"
 
     @classmethod
     def init_app(cls, app):
         super().init_app(app)  # Call the parent init_app
         app.tunnel = None
         app.config["SQLALCHEMY_DATABASE_URI"] = (
-            f"mysql+pymysql://{cls.SQL_USERNAME}:" f"{cls.SQL_PASSWORD}@{cls.SQL_HOSTNAME}/{cls.SQL_DB_NAME}"
+            f"mysql+pymysql://{os.getenv('SQL_USERNAME')}:"
+            f"{quote_plus(os.getenv('SQL_PASSWORD'))}@{os.getenv('SQL_HOSTNAME')}:"
+            f"3306/{os.getenv('SQL_DB_NAME')}"
         )
 
-        cloudinary.config(api_proxy="http://proxy.server:3128")
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {
+                "ssl": {
+                    "ca": "/Users/gavin/.certifications/mysql_ca_cert.pem",
+                    "cert": "/Users/gavin/.certifications/mysql_client_cert.pem",
+                    "key": "/Users/gavin/.certifications/mysql_client_key.pem",
+                }
+            }
+        }
+
+
+class ProductionConfig(Config):
+    ASSETS_DEBUG = False
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True
+    RABBITMQ_CA_CERT = "/app/certs/rabbitmq_ca.pem"
+
+    @classmethod
+    def init_app(cls, app):
+        super().init_app(app)  # Call the parent init_app
+        app.tunnel = None
+        app.config["SQLALCHEMY_DATABASE_URI"] = (
+            f"mysql+pymysql://{os.getenv('SQL_USERNAME')}:"
+            f"{quote_plus(os.getenv('SQL_PASSWORD'))}@{os.getenv('SQL_HOSTNAME')}:"
+            f"3306/{os.getenv('SQL_DB_NAME')}"
+        )
+
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {
+                "ssl": {
+                    "ca": "/app/certs/mysql_ca_cert.pem",
+                    "cert": "/app/certs/mysql_client_cert.pem",
+                    "key": "/app/certs/mysql_client_key.pem",
+                }
+            }
+        }

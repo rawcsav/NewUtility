@@ -1,19 +1,11 @@
 {% extends 'base.html' %} {% block head %}
 <title>CWD | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/cwd.css') }}"
-/>
-{% endblock %} {% block body %}
-<h1>Chat with Docs</h1>
+{% endblock %} {% block styles %} {% assets "cwd_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div class="content-wrap">
   <div class="left-column">
-    <button id="toggleRightColumn" class="custom-button">
-      Toggle Doc Center
-    </button>
     <div class="query-container" style="position: relative">
-      <h3>Query Text Document</h3>
       <div id="query-results-section">
         <div id="history-container">
           <!-- History will go here -->
@@ -57,13 +49,8 @@
   <div class="right-column">
     <div class="docs-container">
       <div id="docs-settings-popup" class="docs-settings-popup">
-        <h3>Docs</h3>
         <form id="docs-preferences-form">
           {{ doc_preferences_form.hidden_tag() }}
-          <div class="knowledge-select form-group">
-            {{ doc_preferences_form.knowledge_query_mode.label }} {{
-            doc_preferences_form.knowledge_query_mode() }}
-          </div>
           <div class="form-group">
             {{ doc_preferences_form.knowledge_context_tokens.label }}
             <input
@@ -104,6 +91,12 @@
             />
           </div>
           <ul class="docs-preference-list">
+            <li>
+              <div class="doc-select">
+                <input type="checkbox" id="select-all" />
+                <label for="select-all">Select All</label>
+              </div>
+            </li>
             {% for document in documents %}
             <li id="document-{{ document.id }}" class="document-item">
               <div class="doc-info">
@@ -128,18 +121,12 @@
             </li>
             {% endfor %}
           </ul>
-          <input
-            type="submit"
-            value="Save Preferences"
-            id="docs-preferences-submit"
-            class="button-send"
-          />
         </form>
       </div>
       <div id="docs-alerts"></div>
     </div>
   </div>
 </div>
-{% block scripts %}
-<script src="{{ url_for('static', filename='dist/js/cwd.js') }}"></script>
-{% endblock %}{% endblock %}
+{% block scripts %} {% assets "cwd_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}{% endblock %}

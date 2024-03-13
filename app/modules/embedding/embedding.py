@@ -1,16 +1,14 @@
 import os
-from datetime import datetime
-
 from flask import Blueprint, jsonify, render_template, request, session, current_app
 from flask_login import login_required, current_user
 from markdown2 import markdown
 from werkzeug.utils import secure_filename
-
+from app.tasks.embedding_task import process_embedding_task
 from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import EmbeddingTask, Task
-from app.modules.embedding.embedding_util import remove_temp, save_temp
+from app.modules.embedding.embedding_util import save_temp
 from app.utils.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm, UpdateDocPreferencesForm
 from app.utils.vector_cache import VectorCache
 
@@ -69,12 +67,10 @@ def upload_document():
 
         temp_path = save_temp(file)
 
-        # Create a new Task for document processing
         new_task = Task(type="Embedding", status="pending", user_id=current_user.id)
         db.session.add(new_task)
         db.session.flush()
 
-        # Create a new EmbeddingTask
         new_embedding_task = EmbeddingTask(
             task_id=new_task.id, title=title, author=author, chunk_size=chunk_size, temp_path=temp_path
         )
@@ -85,16 +81,10 @@ def upload_document():
         )
 
     db.session.commit()
-    return (
-        jsonify(
-            {
-                "status": "success",
-                "message": "Files uploaded successfully. Processing tasks created.",
-                "tasks": tasks_info,
-            }
-        ),
-        200,
-    )
+    for task_info in tasks_info:
+        process_embedding_task.apply_async(kwargs={"task_id": task_info["task_id"]})
+
+    return jsonify({"status": "success", "tasks": [{"task_id": task["task_id"]} for task in tasks_info]}), 200
 
 
 @embedding_bp.route("/status", methods=["GET"])

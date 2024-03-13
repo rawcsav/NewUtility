@@ -1,11 +1,8 @@
 {% extends 'base.html' %} {% block head %}
 <title>Chat | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/chat.css') }}"
-/>
-{% endblock %} {% block body %}
+{% endblock %} {% block styles %} {% assets "chat_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div class="container">
     <div id="chat-settings">
@@ -169,12 +166,6 @@
               oninput="document.getElementById('top_p').value = this.value"
             />
           </div>
-          <input
-            type="submit"
-            value="Update Preferences"
-            id="preference-submit"
-            class="button-send"
-          />
         </form>
       </div>
       <div id="docs-settings-popup" class="docs-settings-popup hidden">
@@ -229,12 +220,6 @@
             </li>
             {% endfor %}
           </ul>
-          <input
-            type="submit"
-            value="Save Preferences"
-            id="docs-preferences-submit"
-            class="button-send"
-          />
         </form>
       </div>
     </div>
@@ -311,7 +296,9 @@ block scripts %}
 <script type="text/javascript">
   let conversationHistory = {{ conversation_history|tojson|safe }};
 </script>
-<script src="{{ url_for('static', filename='dist/js/chat.js') }}"></script>
+{% assets "chat_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}
 <script>
   hljs.highlightAll();
 </script>

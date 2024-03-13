@@ -179,3 +179,7 @@ stylelint.config.js
 /app/static/user_files/user_img/*
 /app/static/user_files/user_audio/*
 !/app/static/dist/
+/ssl/
+/app/user_files/
+/ssl/
+ssl/

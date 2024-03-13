@@ -1,21 +1,11 @@
 {% extends 'base.html' %} {% block head %}
 <title>Images | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/image.css') }}"
-/>
-<style></style>
-{% endblock %} {% block body %}
+{% endblock %} {% block styles %} {% assets "image_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div id="left-column">
-    <div id="title-container">
-      <h1>New Utility</h1>
-    </div>
     <div class="main-row">
-      <div class="section-title-div">
-        <h2 id="section-title">Images</h2>
-      </div>
       <div class="img-mng-container">
         <div class="gen-form-container">
           <form id="image-generation-form" class="flex-form">
@@ -83,6 +73,6 @@
   </div>
 </div>
 {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %}
-<script src="{{ url_for('static', filename='dist/js/image.js') }}"></script>
-{% endblock %}
+block scripts %} {% assets "image_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}
