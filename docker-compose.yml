@@ -21,6 +21,8 @@ services:
     depends_on:
       - mysql
       - rabbitmq
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   mysql:
     image: mysql:8.0.36
@@ -57,6 +59,17 @@ services:
     depends_on:
       - web
       - rabbitmq
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      -
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_LABEL_ENABLE: "true"
 
 volumes:
   db_volume:
