@@ -130,6 +130,8 @@ def process_embedding_task(task_id):
         if not embedding_task:
             raise ValueError(f"EmbeddingTask for task ID '{task_id}' not found")
         task = session.query(Task).filter_by(id=task_id).one()
+        print(task.user_id)
+        print(embedding_task.author)
         process_document(session, embedding_task, user_id=task.user_id)
         # Success and completion updates are now handled within process_document
         return True

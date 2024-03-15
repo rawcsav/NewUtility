@@ -4,8 +4,6 @@ from datetime import timedelta
 import cloudinary
 from urllib.parse import quote_plus
 
-from app.utils.tunnel_util import get_tunnel
-
 basedir = os.path.abspath(os.path.dirname(__file__))
 appdir = os.path.abspath(os.path.join(os.path.dirname(__file__), "app"))
 
@@ -71,21 +69,16 @@ class Config(object):
 
     DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
 
-    RABBITMQ_CLIENT_KEY = os.getenv("RABBITMQ_CLIENT_KEY")  # Path to your RabbitMQ client key
-    RABBITMQ_CLIENT_CERT = os.getenv("RABBITMQ_CLIENT_CERT")  # Path to your RabbitMQ client cert
-    RABBITMQ_CA_CERT = os.getenv("RABBITMQ_CA_CERT")
-
     @classmethod
     def init_app(cls, app):
         cloudinary.config(cloud_name=cls.CLOUD_NAME, api_key=cls.CLOUD_API_KEY, api_secret=cls.CLOUD_SECRET)
 
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    FLASK_DEBUG = True
     ASSETS_DEBUG = True
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False
-    RABBITMQ_CA_CERT = "/Users/gavin/.certifications/rabbitmq_ca.pem"
 
     @classmethod
     def init_app(cls, app):
@@ -96,23 +89,13 @@ class DevelopmentConfig(Config):
             f"{quote_plus(os.getenv('SQL_PASSWORD'))}@{os.getenv('SQL_HOSTNAME')}:"
             f"3306/{os.getenv('SQL_DB_NAME')}"
         )
-
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {
-                "ssl": {
-                    "ca": "/Users/gavin/.certifications/mysql_ca_cert.pem",
-                    "cert": "/Users/gavin/.certifications/mysql_client_cert.pem",
-                    "key": "/Users/gavin/.certifications/mysql_client_key.pem",
-                }
-            }
-        }
 
 
 class ProductionConfig(Config):
+    FLASK_DEBUG = False
     ASSETS_DEBUG = False
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
-    RABBITMQ_CA_CERT = "/app/certs/rabbitmq_ca.pem"
 
     @classmethod
     def init_app(cls, app):
@@ -123,13 +106,3 @@ class ProductionConfig(Config):
             f"{quote_plus(os.getenv('SQL_PASSWORD'))}@{os.getenv('SQL_HOSTNAME')}:"
             f"3306/{os.getenv('SQL_DB_NAME')}"
         )
-
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {
-                "ssl": {
-                    "ca": "/app/certs/mysql_ca_cert.pem",
-                    "cert": "/app/certs/mysql_client_cert.pem",
-                    "key": "/app/certs/mysql_client_key.pem",
-                }
-            }
-        }

@@ -1,6 +1,4 @@
 import os
-import ssl
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from flask_socketio import SocketIO
@@ -30,7 +28,6 @@ celery.conf.update(task_serializer="json", result_serializer="json", accept_cont
 def make_celery(app):
     celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
     celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
-    celery.conf.broker_use_ssl = {"ca_certs": app.config["RABBITMQ_CA_CERT"], "cert_reqs": ssl.CERT_REQUIRED}
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
@@ -58,12 +55,12 @@ def create_app():
     if profile_env == "true":
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
 
-    assets = Environment()
+    assets = Environment(app)
     CSRFProtect(app)
     CORS(app)
     db.init_app(app)
 
-    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], cors_allowed_origins="*")
+    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], cors_allowed_origins="*", async_mode="gevent")
     socketio.on_namespace(GlobalNamespace("/global"))
     socketio.on_namespace(ImageNamespace("/image"))
     socketio.on_namespace(EmbeddingNamespace("/embedding"))

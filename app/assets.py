@@ -60,6 +60,31 @@ def compile_static_assets(assets):
     assets.register("cwd_js_bundle", cwd_js_bundle)
 
     if app.config["FLASK_ENV"] == "development":
+        common_style_bundle.build()
+        home_style_bundle.build()
+        signup_style_bundle.build()
+        login_style_bundle.build()
+        confirm_style_bundle.build()
+        reset_style_bundle.build()
+        user_style_bundle.build()
+        chat_style_bundle.build()
+        embedding_style_bundle.build()
+        image_style_bundle.build()
+        audio_style_bundle.build()
+        cwd_style_bundle.build()
+
+        # common_js_bundle.build()
+        home_js_bundle.build()
+        signup_js_bundle.build()
+        login_js_bundle.build()
+        confirm_js_bundle.build()
+        reset_js_bundle.build()
+        user_js_bundle.build()
+        chat_js_bundle.build()
+        embedding_js_bundle.build()
+        image_js_bundle.build()
+        audio_js_bundle.build()
+        cwd_js_bundle.build()
         assets.auto_build = True
         assets.debug = True
     else:

@@ -167,7 +167,7 @@ async function queryDocument() {
     const response = await fetch("/cwd/query", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "app/x-www-form-urlencoded",
         "X-CSRFToken": getCsrfToken(),
       },
       body: `query=${encodeURIComponent(query)}`,
