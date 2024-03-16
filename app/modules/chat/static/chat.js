@@ -90,6 +90,23 @@ function setActiveButton(activeButtonId) {
   }
 }
 
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this,
+      args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+// Modify setupFormSubmission to support debounced submission
 function setupFormSubmission(
   formId,
   submitUrl,
@@ -99,11 +116,14 @@ function setupFormSubmission(
   const form = document.getElementById(formId);
   if (!form) return;
 
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-
+  const debouncedSubmit = debounce(function () {
+    const formData = new FormData(form);
     submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
+  }, 1000); // Debounce time of 1000 milliseconds
+
+  form.addEventListener("input", function (event) {
+    event.preventDefault();
+    debouncedSubmit();
   });
 }
 
@@ -339,13 +359,6 @@ function updateStreamMessageContent(isUserMessage, chunk) {
   });
 }
 
-function getUuidFromUrl(url) {
-  let filename = url.split("/").pop();
-
-  // Split the filename by the '.' character to get the UUID
-  return filename.split(".").shift();
-}
-
 function applySyntaxHighlighting(element) {
   element.querySelectorAll("pre code").forEach((block) => {
     hljs.highlightBlock(block);
@@ -395,11 +408,8 @@ function resetStreamMessageGlobals() {
   window.incompleteMarkdownBuffer = "";
 }
 
-function appendMessageToChatBox(message, className, messageId, images = []) {
+function appendMessageToChatBox(message, className, messageId) {
   let messageDiv = createMessageDiv(message, className, messageId);
-  if (images.length > 0) {
-    appendThumbnailsToMessageElement(messageDiv, images);
-  }
   requestAnimationFrame(() => {
     chatBox.appendChild(messageDiv);
     scrollToBottom(chatBox);
@@ -496,33 +506,6 @@ function setupMessageEditing(content, messageId) {
   });
 }
 
-function appendThumbnailsToMessageElement(messageElement, imageUrls) {
-  if (!messageElement || !imageUrls) {
-    console.error("Invalid parameters for appendThumbnailsToMessageElement.");
-    return;
-  }
-
-  // Find the .message-content div within the message element
-  const contentDiv = messageElement.querySelector(".message-content");
-  if (!contentDiv) {
-    console.error("No .message-content div found within the message element.");
-    return;
-  }
-
-  // For each image URL
-  for (let imageUrl of imageUrls) {
-    // Create a new img element
-    let img = document.createElement("img");
-
-    // Set the src of the new img element to the image URL
-    img.src = imageUrl;
-    img.classList.add("thumbnail"); // Add CSS class for styling the thumbnails
-
-    // Append the new img element to the .message-content div
-    contentDiv.appendChild(img);
-  }
-}
-
 function saveMessageContent(messageId, newContent) {
   performFetch(`/chat/edit-message/${messageId}`, { content: newContent })
     .then((response) =>
@@ -603,38 +586,6 @@ function createEditIcon() {
   return editIcon;
 }
 
-function deleteImage(imageUrl) {
-  let imageUuid = getUuidFromUrl(imageUrl);
-  fetch(`/chat/delete-image/${imageUuid}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": getCsrfToken(),
-    },
-    credentials: "same-origin",
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Failed to delete image.");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      if (data.status === "success") {
-        showToast("Image deleted successfully.", "success");
-        const imageElement = document.querySelector(`img[src="${imageUrl}"]`);
-        if (imageElement) {
-          imageElement.parentNode.remove();
-        }
-      } else {
-        showToast("Failed to delete image: " + data.message, "error");
-      }
-    })
-    .catch((error) => {
-      console.error("Error deleting image:", error);
-    });
-}
-
 function createMessageContent(message, className) {
   let content = document.createElement("div");
   content.classList.add("message-content");
@@ -682,7 +633,6 @@ function selectConversation(conversationId) {
           message.content,
           message.className,
           message.messageId,
-          message.images || [], // Pass an empty array if no img are present
         );
       });
       updateCompletionConversationId(conversationId);
@@ -861,7 +811,6 @@ requestAnimationFrame(() => {
   setupChatCompletionForm();
   setupNewConversationForm();
   checkConversationHistory();
-  setupImageUpload();
 });
 window.isWaitingForResponse = false;
 
@@ -1004,7 +953,6 @@ function setupModelChangeListener() {
 
   modelDropdown.addEventListener("change", function () {
     updateMaxTokensBasedOnModel(this.value);
-    toggleImageUploadIcon(this.value);
   });
 
   updateMaxTokensBasedOnModel(modelDropdown.value);
@@ -1016,11 +964,6 @@ function updateMaxTokensBasedOnModel(selectedModel) {
 
   updateMaxTokensSlider(maxTokens);
   updateMaxTokensValueInput(maxTokens);
-}
-
-function setupImageUpload() {
-  const modelDropdown = document.getElementById("model");
-  toggleImageUploadIcon(modelDropdown.value);
 }
 
 function updateMaxTokensSlider(maxTokens) {
@@ -1036,100 +979,6 @@ function updateMaxTokensValueInput(maxTokens) {
   if (maxTokensValueInput) {
     maxTokensValueInput.value = maxTokens;
   }
-}
-
-function toggleImageUploadIcon(selectedModel) {
-  const imageUploadIcon = document.getElementById("image-upload-icon");
-  const chatBox = document.getElementById("chat-box");
-  const fileInput = document.getElementById("image-upload");
-
-  const shouldEnable = selectedModel === "gpt-4-vision-preview";
-  imageUploadIcon.style.display = shouldEnable ? "block" : "none";
-
-  if (shouldEnable) {
-    imageUploadIcon.onclick = function () {
-      fileInput.click();
-    };
-
-    fileInput.onchange = function (event) {
-      if (event.target.files && event.target.files[0]) {
-        const conversationId = document
-          .getElementById("convo-title")
-          .getAttribute("data-conversation-id");
-        uploadImage(event.target.files[0], conversationId);
-      }
-    };
-  } else {
-    imageUploadIcon.onclick = null;
-    fileInput.onchange = null;
-    const thumbnailDiv = document.getElementById("thumbnail-div");
-    thumbnailDiv.innerHTML = "";
-  }
-}
-
-function uploadImage(file, conversationId) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("conversation_id", conversationId);
-
-  fetch("/chat/upload-chat-image", {
-    method: "POST",
-    body: formData,
-    headers: {
-      "X-CSRFToken": getCsrfToken(),
-    },
-    credentials: "same-origin",
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      if (data.status === "success") {
-        showToast("Image uploaded successfully", "success");
-
-        displayThumbnail(data.image_url);
-      } else {
-        showToast(data.message, "error");
-      }
-    })
-    .catch((error) => {
-      console.error(
-        "There has been a problem with your fetch operation:",
-        error,
-      );
-      showToast(error.message, "error");
-    });
-}
-
-function displayThumbnail(imageUrl) {
-  const thumbnailDiv = document.getElementById("thumbnail-div");
-
-  // Create a new div to hold the image and the "x" icon
-  const imageDiv = document.createElement("div");
-  imageDiv.classList.add("image-div");
-
-  // Create the image element
-  const img = document.createElement("img");
-  img.src = imageUrl;
-  img.classList.add("thumbnail");
-
-  // Create the "x" icon
-  const xIcon = document.createElement("i");
-  xIcon.classList.add("fas", "fa-times", "delete-icon");
-  xIcon.addEventListener("click", function () {
-    imageDiv.remove();
-    deleteImage(imageUrl);
-  });
-
-  // Add the image and the "x" icon to the image div
-  imageDiv.appendChild(img);
-  imageDiv.appendChild(xIcon);
-
-  // Add the image div to the thumbnail div
-  thumbnailDiv.appendChild(imageDiv);
 }
 
 function setupChatCompletionForm() {
@@ -1153,16 +1002,8 @@ function handleChatCompletionFormSubmission(event, form) {
     return;
   }
   window.isWaitingForResponse = true;
-  const thumbnailDiv = document.getElementById("thumbnail-div");
-  const thumbnails = thumbnailDiv.getElementsByTagName("img");
-  let imageUrls = [];
-  for (let thumbnail of thumbnails) {
-    let imageUrl = thumbnail.src;
-    imageUrls.push(imageUrl);
-  }
-  submitChatMessage(messageToSend, form, imageUrls);
+  submitChatMessage(messageToSend, form);
   document.getElementById("message-input").value = "";
-  thumbnailDiv.innerHTML = "";
 }
 
 const throttledHandleChatCompletionFormSubmission = throttle(
@@ -1170,8 +1011,8 @@ const throttledHandleChatCompletionFormSubmission = throttle(
   2000,
 );
 
-function submitChatMessage(message, form, images = []) {
-  appendMessageToChatBox(message, "user-message", null, images);
+function submitChatMessage(message, form) {
+  appendMessageToChatBox(message, "user-message", null);
   showLoading();
   const formData = new FormData(form);
   formData.append("prompt", message);
@@ -1464,11 +1305,3 @@ function initializeEventListeners() {
 }
 
 initializeEventListeners();
-
-const deleteImageIcons = document.querySelectorAll(".delete-icon");
-deleteImageIcons.forEach(function (icon) {
-  icon.addEventListener("click", function () {
-    let imageUrl = icon.getAttribute("data-image-url");
-    deleteImage(imageUrl);
-  });
-});

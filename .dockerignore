@@ -1,14 +1,11 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
 *$py.class
 
 # C extensions
-*.so
-include/site/python3.11/greenlet/greenlet.h
+
 
 cert.pem
-*.pem
 key.pem
 # Distribution / packaging
 .Python
@@ -56,8 +53,7 @@ coverage.xml
 cover/
 
 # Translations
-*.mo
-*.pot
+
 
 # Django stuff:
 *.log
@@ -159,7 +155,6 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
-app/static/fonts
 # Cython debug symbols
 cython_debug/
 
@@ -169,17 +164,12 @@ pyvenv.cfg
 
 #Other
 .DS_Store
-pyproject.toml
 stylelint.config.js
-/app/static/fonts/
 /include/
-/app/static/user_files/temp_img/*
 /cert.pem
 /key.pem
-/app/static/user_files/user_img/*
-/app/static/user_files/user_audio/*
-!/app/static/dist/
 /ssl/
-/app/user_files/
-/ssl/
-ssl/
+.git
+.gitignore
+Dockerfile
+README.md

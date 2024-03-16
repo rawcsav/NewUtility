@@ -1,17 +1,10 @@
-import base64
-import os
-import uuid
 from urllib.parse import urlparse
-
-import requests
 import tiktoken
-from PIL import Image
-from flask import abort, stream_with_context, current_app, url_for
+from flask import abort, stream_with_context
 from flask_login import current_user
 
 from app import db
 from app.models.chat_models import MessageChunkAssociation, Conversation, Message, ChatPreferences
-from app.models.image_models import MessageImages
 from app.utils.usage_util import chat_cost, num_tokens_from_string
 
 MODEL_TOKEN_LIMITS = {
@@ -79,17 +72,6 @@ def get_user_conversation(user_id, conversation_id):
         for message in messages:
             message_content = message.content
 
-            # If the message has associated img, construct the image payload
-            if message.is_vision:
-                image_records = MessageImages.query.filter_by(message_id=message.id, delete=False).all()
-                # Only construct the payload if there are img
-                if message.is_vision and preferences["model"] == "gpt-4-vision-preview":
-                    image_urls = [image.image_url for image in image_records]
-                    image_payloads = get_image_payload(image_urls)
-                    # Combine text and image payloads into a list
-                    message_content = [{"type": "text", "text": message.content}]
-                    message_content.extend(image_payloads)
-
             conversation_history.append(
                 {"role": "assistant" if message.direction == "incoming" else "user", "content": message_content}
             )
@@ -116,10 +98,6 @@ def get_user_history(user_id, conversation_id):
                 "role": "assistant" if message.direction == "incoming" else "user",
                 "content": message.content,
             }
-
-            if message.is_vision and preferences["model"] == "gpt-4-vision-preview":
-                image_records = MessageImages.query.filter_by(message_id=message.id, delete=False).all()
-                message_dict["img"] = [image.image_url for image in image_records]
 
             conversation_history.append(message_dict)
 
@@ -165,7 +143,6 @@ def save_message(
     model,
     is_knowledge_query=False,
     is_error=False,
-    images=None,
     chunk_ids=None,  # Optional parameter for multiple chunk IDs (list)
     similarity_ranks=None,  # Optional parameter for multiple similarity rankings (list)
 ):
@@ -181,16 +158,6 @@ def save_message(
     db.session.flush()
 
     try:
-        if images:
-            for filename in images:
-                image_uuid = filename.rsplit("/", 1)[-1].rsplit(".", 1)[0]
-
-                image_record = MessageImages.query.filter_by(id=image_uuid).first()
-                if image_record:
-                    image_record.message_id = message.id
-                    message.is_vision = True
-                    db.session.add(image_record)
-
         if chunk_ids and similarity_ranks and (len(chunk_ids) == len(similarity_ranks)):
             message.is_knowledge_query = True
             for chunk_id, similarity_rank in zip(chunk_ids, similarity_ranks):
@@ -214,21 +181,6 @@ def is_development_url(url):
     return False
 
 
-def get_image_payload(images):
-    image_payloads = []
-    for image in images:
-        if is_development_url(image):
-            response = requests.get(image)
-            response.raise_for_status()
-            encoded_image = base64.b64encode(response.content).decode("utf-8")
-            image_payloads.append(
-                {"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{encoded_image}"}}
-            )
-        else:
-            image_payloads.append({"type": "image_url", "image_url": {"url": image}})
-    return image_payloads
-
-
 # Global dictionary to track interruptions, keyed by conversation_id
 interruption_flags = {}
 
@@ -245,9 +197,7 @@ def check_interruption_flag(conversation_id):
     return interruption_flags.get(conversation_id, False)
 
 
-def chat_stream(
-    raw_prompt, prompt, client, user_id, conversation_id, images=None, retry=False, chunk_associations=None
-):
+def chat_stream(raw_prompt, prompt, client, user_id, conversation_id, retry=False, chunk_associations=None):
     conversation, conversation_history = get_user_conversation(user_id, conversation_id)
     if not conversation:
         return
@@ -256,13 +206,7 @@ def chat_stream(
     else:
         clear_interruption_flag(conversation_id)
         preferences = get_user_preferences(user_id)
-
-        if preferences["model"] == "gpt-4-vision-preview" and images:
-            image_payloads = get_image_payload(images)
-            user_message_content = [{"type": "text", "text": prompt}]
-            user_message_content.extend(image_payloads)
-        else:
-            user_message_content = prompt
+        user_message_content = prompt
         truncate_limit = preferences.get("truncate_limit")
         if truncate_limit:
             truncate_conversation(conversation_history, truncate_limit)
@@ -291,12 +235,11 @@ def chat_stream(
                     raw_prompt,
                     "outgoing",
                     preferences["model"],
-                    images=images,
                     chunk_ids=[chunk_id for chunk_id, _ in chunk_associations],
                     similarity_ranks=[rank for _, rank in chunk_associations],
                 )
             else:
-                save_message(conversation_id, raw_prompt, "outgoing", preferences["model"], images=images)
+                save_message(conversation_id, raw_prompt, "outgoing", preferences["model"])
         full_response = ""
         try:
             response = client.chat.completions.create(**request_payload)
@@ -331,16 +274,12 @@ def chat_stream(
             yield error_message
 
 
-def handle_stream(
-    raw_prompt, prompt, client, user_id, conversation_id, images=None, retry=False, chunk_associations=None
-):
+def handle_stream(raw_prompt, prompt, client, user_id, conversation_id, retry=False, chunk_associations=None):
     full_response = ""
 
     def generate():
         nonlocal full_response
-        for content in chat_stream(
-            raw_prompt, prompt, client, user_id, conversation_id, images, retry, chunk_associations
-        ):
+        for content in chat_stream(raw_prompt, prompt, client, user_id, conversation_id, retry, chunk_associations):
             full_response += content
             yield content
 
@@ -360,30 +299,3 @@ def retry_delete_messages(conversation_id, message_id):
     except Exception as e:
         db.session.rollback()
         raise e
-
-
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def save_image(file_stream):
-    image_uuid = str(uuid.uuid4())
-    webp_file_name = f"{image_uuid}.webp"
-    webp_file_path = os.path.join(current_app.config["CHAT_IMAGE_DIRECTORY"], webp_file_name)
-    image = Image.open(file_stream).convert("RGB")
-    image.save(webp_file_path, "WEBP")
-    return image_uuid, webp_file_name
-
-
-def get_image_url(webp_file_name):
-    return url_for("static", filename=f"user_files/user_img/{webp_file_name}", _external=True)
-
-
-def delete_local_image(image_uuid):
-    image_file_path = os.path.join(current_app.config["CHAT_IMAGE_DIRECTORY"], f"{image_uuid}.webp")
-    if os.path.isfile(image_file_path):
-        try:
-            os.remove(image_file_path)
-        except OSError as e:
-            raise e

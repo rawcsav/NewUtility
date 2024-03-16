@@ -4,21 +4,19 @@ from flask import Blueprint, jsonify, url_for, render_template, send_file, curre
 from flask_login import login_required, current_user
 from openai import InternalServerError
 from werkzeug.utils import secure_filename
-from app import db
+from app import db, socketio
 from app.models.audio_models import TTSPreferences, WhisperPreferences, TTSJob, TranscriptionJob, TranslationJob
 from app.models.task_models import Task, TTSTask, TranslationTask, TranscriptionTask
 from app.modules.audio.audio_util import (
-    generate_speech,
-    transcribe_audio,
-    translate_audio,
     determine_prompt,
-    user_subdirectory,
     get_whisper_preferences,
     get_tts_preferences,
     save_file_to_disk,
 )
+from app.modules.user.user_util import get_user_audio_directory
 from app.utils.forms_util import TtsForm, TranscriptionForm, TranslationForm, TtsPreferencesForm, WhisperPreferencesForm
 from app.modules.auth.auth_util import initialize_openai_client
+from app.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 
 audio_bp = Blueprint("audio_bp", __name__, template_folder="templates", static_folder="static", url_prefix="/audio")
 
@@ -162,7 +160,7 @@ def generate_tts():
             )
             db.session.add(new_tts_task)
             db.session.commit()
-
+            process_tts_task.apply_async(kwargs={"task_id": new_task.id})
             return jsonify({"status": "success", "task_id": new_task.id})
 
         except Exception as e:
@@ -183,30 +181,40 @@ def transcription():
         client, error = initialize_openai_client(user_id)
         if error:
             return jsonify({"status": "error", "message": error})
-        download_dir = user_subdirectory(user_id)
-        audio_file = form.file.data
-        filename = secure_filename(audio_file.filename)
-        filepath = os.path.join(download_dir, filename)
-        audio_file.save(filepath)
-        prompt = determine_prompt(client, form.data)
         new_task = Task(type="Transcription", status="pending", user_id=user_id)
         db.session.add(new_task)
         db.session.flush()
-        new_transcription_task = TranscriptionTask(
-            task_id=new_task.id,
-            input_filename=filepath,
-            model=preferences["model"],
-            prompt=prompt,
-            response_format=preferences["response_format"],
-            temperature=preferences["temperature"],
-            language=preferences["language"],
+        download_dir = get_user_audio_directory(user_id)
+        audio_file = form.file.data
+        filename = secure_filename(audio_file.filename)
+        filepath = os.path.join(download_dir, filename)
+        socketio.emit(
+            "task_progress",
+            {"task_id": new_task.id, "message": f"Downloading {filename}..."},
+            room=str(user_id),
+            namespace="/audio",
         )
-        db.session.add_all([new_task, new_transcription_task])
-        db.session.commit()
+        try:
+            audio_file.save(filepath)
+            prompt = determine_prompt(client, form.data, new_task.id, user_id)
+            new_transcription_task = TranscriptionTask(
+                task_id=new_task.id,
+                input_filename=filepath,
+                model=preferences["model"],
+                prompt=prompt,
+                response_format=preferences["response_format"],
+                temperature=preferences["temperature"],
+                language=preferences["language"],
+            )
+            db.session.add_all([new_task, new_transcription_task])
+            db.session.commit()
+            process_transcription_task.apply_async(kwargs={"task_id": new_task.id})
 
-        return jsonify({"status": "success", "task_id": new_task.id})
+            return jsonify({"status": "success", "task_id": new_task.id})
 
-    return jsonify({"status": "error", "message": "Invalid form submission"})
+        finally:
+            if filepath and os.path.isfile(filepath):
+                os.remove(filepath)
 
 
 @audio_bp.route("/translation", methods=["GET", "POST"])
@@ -219,15 +227,21 @@ def translation():
         client, error = initialize_openai_client(user_id)
         if error:
             return jsonify({"status": "error", "message": error})
-        download_dir = user_subdirectory(user_id)
-        audio_file = form.file.data
-        filename = secure_filename(audio_file.filename)
-        filepath = os.path.join(download_dir, filename)
-        audio_file.save(filepath)
-        prompt = determine_prompt(client, form.data)
         new_task = Task(type="Translation", status="pending", user_id=user_id)
         db.session.add(new_task)
         db.session.flush()
+        download_dir = get_user_audio_directory(user_id)
+        audio_file = form.file.data
+        filename = secure_filename(audio_file.filename)
+        filepath = os.path.join(download_dir, filename)
+        socketio.emit(
+            "task_progress",
+            {"task_id": new_task.id, "message": f"Downloading {filename}..."},
+            room=str(user_id),
+            namespace="/audio",
+        )
+        audio_file.save(filepath)
+        prompt = determine_prompt(client, form.data, new_task.id, user_id)
         new_translation_task = TranslationTask(
             task_id=new_task.id,
             input_filename=filepath,
@@ -238,6 +252,7 @@ def translation():
         )
         db.session.add_all([new_task, new_translation_task])
         db.session.commit()
+        process_translation_task.apply_async(kwargs={"task_id": new_task.id})
 
         return jsonify({"status": "success", "task_id": new_task.id})
 
@@ -247,7 +262,7 @@ def translation():
 @audio_bp.route("/download_tts/<filename>")
 @login_required
 def download_tts(filename):
-    user_dir = user_subdirectory(current_user.id)
+    user_dir = get_user_audio_directory(current_user.id)
 
     secure_filename_path = secure_filename(filename)
 
@@ -270,7 +285,7 @@ def download_whisper(job_id):
     file_extension = {"json": "json", "verbose_json": "json", "text": "txt", "srt": "srt", "vtt": "vtt"}.get(
         job.response_format, "txt"
     )
-    user_directory = user_subdirectory(current_user.id)
+    user_directory = get_user_audio_directory(current_user.id)
     file_path = save_file_to_disk(concatenated_content, file_extension, job_id, user_directory)
     try:
         return send_file(file_path, as_attachment=True)

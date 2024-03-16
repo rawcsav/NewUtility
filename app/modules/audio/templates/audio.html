@@ -1,20 +1,11 @@
 {% extends 'base.html' %} {% block head %}
 <title>Audio | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/audio.css') }}"
-/>
-{% endblock %} {% block body %}
+{% endblock %} {% block styles %} {% assets "audio_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div id="left-column">
-    <div id="title-container">
-      <h1>New Utility</h1>
-    </div>
     <div class="main-row">
-      <div class="section-title-div">
-        <h2 id="section-title">Audio</h2>
-      </div>
       <div class="utility-toggle">
         <i class="fas fa-microphone-alt" data-utility="tts"></i>
         <i class="fas fa-file-audio" data-utility="transcription"></i>
@@ -24,7 +15,7 @@
         <div class="audio-utility-container">
           <div class="audio-preferences-container">
             <form id="tts-preferences-form" method="post">
-              <h3>Text-to-Speech Preferences</h3>
+              <h3>Text-to-Speech</h3>
               <div class="select-row">
                 <div class="form-group">
                   {{ tts_preferences_form.model.label }} {{
@@ -56,14 +47,9 @@
                   oninput="document.getElementById('speed').value = this.value"
                 />
               </div>
-              <input
-                type="submit"
-                value="Save TTS Preferences"
-                id="tts-pref-submit"
-              />
             </form>
             <form id="whisper-preferences-form" method="post">
-              <h3>Whisper Preferences</h3>
+              <h3>Whisper</h3>
               <div class="select-row">
                 <div class="form-group">
                   {{ whisper_preferences_form.model.label }} {{
@@ -98,17 +84,11 @@
                   oninput="document.getElementById('temperature').value = this.value"
                 />
               </div>
-              <input
-                type="submit"
-                value="Save Whisper Preferences"
-                id="whisper-pref-submit"
-              />
             </form>
           </div>
           <div class="utility-container">
             <div id="tts-utility" class="utility" style="display: flex">
               <form id="tts-form" method="post">
-                <h3>Text-to-Speech</h3>
                 <div class="form-group">
                   {{ tts_form.input.label(for='tts-input') }} {{
                   tts_form.input(id='tts-input', required=True) }}
@@ -130,7 +110,6 @@
                 method="post"
                 enctype="multipart/form-data"
               >
-                <h3>Transcription</h3>
                 <div class="form-group">
                   {{ transcription_form.file.label(for='transcription-file') }}
                   {{ transcription_form.file(id='transcription-file',
@@ -139,9 +118,8 @@
                 <div class="form-group">
                   {{ transcription_form.prompt_option.label }}
                   <div>
-                    {% for subfield in transcription_form.prompt_option %}
-                    <div class="radio">{{ subfield }} {{ subfield.label }}</div>
-                    {% endfor %}
+                    {{ transcription_form.prompt_option(class_='form-control')
+                    }}
                   </div>
                 </div>
                 <div
@@ -178,7 +156,6 @@
                 method="post"
                 enctype="multipart/form-data"
               >
-                <h3>Translation</h3>
                 <div class="form-group">
                   {{ translation_form.file.label(for='translation-file') }} {{
                   translation_form.file(id='translation-file', required=True,
@@ -187,9 +164,7 @@
                 <div class="form-group">
                   {{ translation_form.prompt_option.label }}
                   <div>
-                    {% for subfield in translation_form.prompt_option %}
-                    <div class="radio">{{ subfield }} {{ subfield.label }}</div>
-                    {% endfor %}
+                    {{ translation_form.prompt_option(class_='form-control') }}
                   </div>
                 </div>
                 <div
@@ -206,6 +181,7 @@
             </div>
           </div>
         </div>
+        <div id="update-text"></div>
       </div>
       <div id="history-column">
         {% set TTSJobs = TTSJobs|sort(attribute='created_at', reverse=true) %}
@@ -333,6 +309,6 @@
   </div>
 </div>
 {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %}
-<script src="{{ url_for('static', filename='dist/js/audio.js') }}"></script>
-{% endblock %}
+block scripts %} {% assets "audio_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}

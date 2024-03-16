@@ -3,7 +3,6 @@ from gevent import monkey
 monkey.patch_socket()
 monkey.patch_ssl()
 
-
 import os
 from dotenv import load_dotenv
 
@@ -19,5 +18,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    FLASK_DEBUG = True
-    socketio.run(app, host="localhost", port=8081, allow_unsafe_werkzeug=True, use_reloader=False)
+    socketio.run(app, host="0.0.0.0", port=8080)

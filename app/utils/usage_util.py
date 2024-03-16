@@ -93,7 +93,7 @@ def tts_cost(session, user_id, api_key_id, model_name: str, num_characters: int)
     # Choose the correct pricing based on the model name
     if model_name == "tts-1-hd":
         price_per_1k = price_per_1k_hd
-    elif model_name == "tts-1-standard":
+    elif model_name == "tts-1":
         price_per_1k = price_per_1k_standard
     else:
         raise ValueError("Unsupported model name")

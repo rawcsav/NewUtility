@@ -1,11 +1,8 @@
 {% extends 'base.html' %} {% block head %}
 <title>Confirm Email | New Utility</title>
-{% endblock %} {% block styles %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='dist/css/confirm.css') }}"
-/>
-{% endblock %} {% block body %}
+{% endblock %} {% block styles %} {% assets "confirm_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div id="left-column">
     <div id="title-container">
@@ -44,7 +41,7 @@
     </form>
   </div>
   {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock
-  %}{% block scripts %}
-  <script src="{{ url_for('static', filename='dist/js/confirm.js') }}"></script>
-  {% endblock %}
+  %}{% block scripts %} {% assets "confirm_js_bundle" %}
+  <script src="{{ ASSET_URL }}"></script>
+  {% endassets %} {% endblock %}
 </div>

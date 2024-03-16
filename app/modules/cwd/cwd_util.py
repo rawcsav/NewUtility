@@ -21,9 +21,7 @@ def num_tokens(text: str, model: str = "gpt-4-turbo-preview") -> int:
 def find_relevant_sections(user_id, query_embedding, user_preferences):
     context_window_size = 60000
 
-    # max_knowledge_context_tokens is now the maximum number of sections
     max_sections = user_preferences.knowledge_context_tokens
-    # Fetch the document chunks and additional details for the user
     document_chunks_with_details = (
         db.session.query(
             DocumentChunk.id,
@@ -92,10 +90,12 @@ def append_knowledge_context(user_query, user_id, client):
         context_parts = []
         if title:
             context_parts.append(f"Title: {title}")
-        if pages:
+        if author:
+            context_parts.append(f"Author: {author}")
+        if title not in doc_pages:
+            doc_pages[title] = set()
+        if pages:  # Add page number only if it exists
             context_parts.append(f"Page: {pages}")
-            if title not in doc_pages:
-                doc_pages[title] = set()
             doc_pages[title].add(pages)
         context_parts.append(f"Content:\n{chunk_content}")
 
@@ -128,6 +128,15 @@ def ask(query, client, model: str = "gpt-4-turbo-preview"):
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
     temperature = preferences.temperature
     try:
+        documents_used_summary = "\nDocuments used:\n"
+        for title, pages in doc_pages.items():
+            if pages:
+                documents_used_summary += f"{title}: Pages {', '.join(map(str, sorted(pages)))}, "
+            else:  # Handle documents without pages
+                documents_used_summary += f"{title}, "
+        yield documents_used_summary + "\n\n"
+
+        # Yield the AI response parts
         for part in chat_completion_with_retry(messages, model, client, temperature):
             content = part.choices[0].delta.content
             if content:
@@ -136,9 +145,3 @@ def ask(query, client, model: str = "gpt-4-turbo-preview"):
         print(f"Rate limit exceeded. All retry attempts failed.")
     except openai.OpenAIError as e:
         print(f"An OpenAI error occurred: {e}")
-
-    # Yielding the unique set of documents used along with all page numbers
-    documents_used_summary = "\n\nDocuments used:\n"
-    for title, pages in doc_pages.items():
-        documents_used_summary += f"{title}: Pages {', '.join(map(str, sorted(pages)))}\n"
-    yield documents_used_summary

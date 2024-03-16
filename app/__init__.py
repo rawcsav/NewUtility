@@ -1,22 +1,43 @@
 import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
-
+from flask_socketio import SocketIO
 from config import ProductionConfig, DevelopmentConfig
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
+from celery import Celery
 from flask_login import LoginManager
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask_assets import Environment
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.profiler import ProfilerMiddleware
+from app.utils.socket_util import GlobalNamespace, EmbeddingNamespace, ImageNamespace, AudioNamespace
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 mail = Mail()
+socketio = SocketIO()
 login_manager = LoginManager()
+celery = Celery(__name__)
+celery.conf.update(task_serializer="json", result_serializer="json", accept_content=["json"])
+
+
+# noinspection PyPropertyAccess
+def make_celery(app):
+    celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
+    celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+
+    celery.conf.update(app.config)
+    return celery
 
 
 def create_app():
@@ -26,23 +47,36 @@ def create_app():
         app.config.from_object(DevelopmentConfig)
         DevelopmentConfig.init_app(app)
     else:
+        print(flask_env)
         app.config.from_object(ProductionConfig)
         ProductionConfig.init_app(app)
 
     profile_env = os.getenv("FLASK_PROFILING", "false").lower()
     if profile_env == "true":
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
-    assets = Environment()
 
+    assets = Environment(app)
     CSRFProtect(app)
     CORS(app)
     db.init_app(app)
+
+    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], cors_allowed_origins="*", async_mode="gevent")
+    socketio.on_namespace(GlobalNamespace("/global"))
+    socketio.on_namespace(ImageNamespace("/image"))
+    socketio.on_namespace(EmbeddingNamespace("/embedding"))
+    socketio.on_namespace(AudioNamespace("/audio"))
+
     Migrate(app, db)
     bcrypt.init_app(app)
     mail.init_app(app)
     assets.init_app(app)  # Initialize Flask-Assets
+    celery = make_celery(app)
+
+    app.extensions["celery"] = celery  # Add Celery to Flask extensions
+    app.app_context().push()
 
     login_manager.init_app(app)
+    login_manager.session_protection = "strong"
     login_manager.login_view = "auth_bp.login"
     login_manager.login_message = "Please log in to access this page."
     login_manager.login_message_category = "info"
@@ -56,7 +90,6 @@ def create_app():
         from app.modules.auth import auth
         from app.modules.audio import audio
         from app.modules.cwd import cwd
-        from .assets import compile_static_assets
 
         app.register_blueprint(home.home_bp)
         app.register_blueprint(auth.auth_bp)
@@ -66,6 +99,7 @@ def create_app():
         app.register_blueprint(chat.chat_bp)
         app.register_blueprint(audio.audio_bp)
         app.register_blueprint(cwd.cwd_bp)
+        from .assets import compile_static_assets
 
         compile_static_assets(assets)
 
@@ -74,6 +108,11 @@ def create_app():
             if exception:
                 db.session.rollback()
             db.session.remove()
+
+        @app.route("/")
+        def root():
+            # Redirect the user from root to '/home'
+            return redirect(url_for("home_bp.landing_page"))
 
         db.create_all()
 
@@ -96,5 +135,4 @@ def create_app():
             Document,
         ]:
             event.listen(cls, "after_update", after_update_listener)
-
     return app

@@ -162,6 +162,10 @@ label {
   color: red;
 }
 
+.information {
+  color: blue;
+}
+
 #uploadForm {
   display: flex;
   flex-direction: column;

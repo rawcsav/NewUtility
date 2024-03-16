@@ -45,6 +45,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this,
+      args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+// Modify setupFormSubmission to support debounced submission
 function setupFormSubmission(
   formId,
   submitUrl,
@@ -54,11 +71,14 @@ function setupFormSubmission(
   const form = document.getElementById(formId);
   if (!form) return;
 
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-
+  const debouncedSubmit = debounce(function () {
+    const formData = new FormData(form);
     submitForm(formData, submitUrl).then(successCallback).catch(errorCallback);
+  }, 1000); // Debounce time of 1000 milliseconds
+
+  form.addEventListener("input", function (event) {
+    event.preventDefault();
+    debouncedSubmit();
   });
 }
 
@@ -147,7 +167,7 @@ async function queryDocument() {
     const response = await fetch("/cwd/query", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "app/x-www-form-urlencoded",
         "X-CSRFToken": getCsrfToken(),
       },
       body: `query=${encodeURIComponent(query)}`,
@@ -190,6 +210,34 @@ async function queryDocument() {
   }
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+  const selectAllCheckbox = document.getElementById("select-all");
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener("change", function () {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach((checkbox) => {
+        if (checkbox !== selectAllCheckbox) {
+          checkbox.checked = selectAllCheckbox.checked;
+        }
+      });
+    });
+  }
+});
+
+function selectAll() {
+  let selectAllCheckbox = document.getElementById("select-all");
+  let checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+  // Iterate over all checkboxes and set their checked state to match the "select all" checkbox
+  checkboxes.forEach((checkbox) => {
+    if (checkbox !== selectAllCheckbox) {
+      // Ensure we're not toggling the "select all" checkbox itself
+      checkbox.checked = selectAllCheckbox.checked;
+    }
+  });
+}
+
+// eslint-disable-next-line no-unused-vars
 function interruptQuery() {
   controller.abort();
   controller = new AbortController();
