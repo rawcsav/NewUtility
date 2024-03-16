@@ -1,8 +1,7 @@
 from gevent import monkey
 
-monkey.patch_all()
-
-
+monkey.patch_socket()
+monkey.patch_ssl()
 import os
 from dotenv import load_dotenv
 
