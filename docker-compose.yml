@@ -120,6 +120,7 @@ services:
     depends_on:
       - web
       - rabbitmq
+      - mysql
     networks:
       - appnet
 
