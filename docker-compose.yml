@@ -63,10 +63,9 @@ services:
     networks:
       - appnet
 
-
   celery:
     build: .
-    command: celery -A uwsgi.celery worker
+    command: celery -A uwsgi.celery worker --loglevel=debug
     environment:
       FLASK_APP: uwsgi.py
       FLASK_ENV: production
