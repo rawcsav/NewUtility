@@ -3,6 +3,7 @@ function getCsrfToken() {
     .querySelector('meta[name="csrf-token"]')
     .getAttribute("content");
 }
+
 function showToast(message, type) {
   let toast = document.getElementById("toast");
   if (!toast) {
@@ -10,10 +11,13 @@ function showToast(message, type) {
     toast.id = "toast";
     document.body.appendChild(toast);
   }
+
   toast.textContent = message;
   toast.className = type;
+
   toast.style.display = "block";
   toast.style.opacity = "1";
+
   setTimeout(() => {
     toast.style.opacity = "0";
     setTimeout(() => {
@@ -21,6 +25,7 @@ function showToast(message, type) {
     }, 600);
   }, 3000);
 }
+
 function resizeImage(image) {
   if (image.naturalWidth === 256 && image.naturalHeight === 256) {
     image.style.width = "256px";
@@ -30,15 +35,19 @@ function resizeImage(image) {
     image.style.height = "512px";
   }
 }
+
 function showLoader() {
   const imageContainer = document.getElementById("generated-images");
+
   imageContainer.innerHTML =
     document.getElementById("loader-template").innerHTML;
+
   const loader = imageContainer.querySelector(".loader");
   if (loader) {
     loader.style.display = "block";
   }
 }
+
 function hideLoader() {
   const imageContainer = document.getElementById("generated-images");
   const loader = imageContainer.querySelector(".loader");
@@ -46,11 +55,13 @@ function hideLoader() {
     loader.style.display = "none";
   }
 }
+
 function toggleModelOptions(model) {
   const numberOfImagesContainer = document.getElementById(
     "number-of-images-container",
   );
   const dallE3Options = document.getElementById("dall-e-3-options");
+
   if (model === "dall-e-3") {
     dallE3Options.style.display = "flex";
     numberOfImagesContainer.style.display = "none";
@@ -59,6 +70,7 @@ function toggleModelOptions(model) {
     numberOfImagesContainer.style.display = "flex";
   }
 }
+
 function updateSizeOptions(model) {
   const sizeSelect = document.getElementById("size");
   sizeSelect.innerHTML = "";
@@ -73,15 +85,18 @@ function updateSizeOptions(model) {
     sizeSelect.appendChild(option);
   });
 }
+
 function updateMaxImages(model) {
   const nInput = document.getElementById("n");
   nInput.max = model === "dall-e-2" ? 3 : 1;
   nInput.value = Math.min(nInput.value, nInput.max);
 }
+
 function updatePromptLength(model) {
   const promptInput = document.getElementById("prompt");
   promptInput.maxLength = model === "dall-e-2" ? 1000 : 4000;
 }
+
 document.getElementById("model").addEventListener("change", function (event) {
   const selectedModel = event.target.value;
   updateSizeOptions(selectedModel);
@@ -89,17 +104,21 @@ document.getElementById("model").addEventListener("change", function (event) {
   updatePromptLength(selectedModel);
   toggleModelOptions(selectedModel);
 });
+
 const currentSelectedModel = document.getElementById("model").value;
 updateSizeOptions(currentSelectedModel);
 updateMaxImages(currentSelectedModel);
 updatePromptLength(currentSelectedModel);
 toggleModelOptions(currentSelectedModel);
+
 document
   .getElementById("image-generation-form")
   .addEventListener("submit", function (event) {
     event.preventDefault();
-    showLoader();
+    showLoader(); // Start the loader immediately upon form submission
+
     var formData = new FormData(this);
+
     fetch("/image/", {
       method: "POST",
       headers: {
@@ -118,26 +137,29 @@ document
         updateImageMessages(
           "Image generation task has been queued.",
           "information",
-        );
+        ); // Display success message
       })
       .catch((error) => {
-        updateImageMessages("Error: " + error.message, "error");
+        updateImageMessages("Error: " + error.message, "error"); // Display error message
       });
   });
 function loadImageHistory() {
   fetch("/image/history", {
     method: "GET",
-    headers: { "X-Requested-With": "XMLHttpRequest" },
+    headers: {
+      "X-Requested-With": "XMLHttpRequest",
+    },
   })
     .then((response) => response.json())
     .then((data) => {
       const carousel = document.getElementById("image-history-carousel");
       carousel.innerHTML = "";
       const limitedData = data.slice(-15);
+
       limitedData.forEach((item, index) => {
         const imgThumbnail = document.createElement("img");
         imgThumbnail.dataset.src = item.url;
-        imgThumbnail.dataset.id = item.id;
+        imgThumbnail.dataset.id = item.id; // Add this line
         imgThumbnail.className = "thumbnail lazy";
         imgThumbnail.alt = `Image History ${index + 1}`;
         imgThumbnail.onclick = () =>
@@ -151,19 +173,23 @@ function loadImageHistory() {
           });
         carousel.appendChild(imgThumbnail);
       });
+
       initializeLazyLoading();
     })
     .catch((error) => {
       console.error("Error loading image history:", error);
     });
 }
+
 function displayImage(id, imageUrl, metadata) {
   const imageContainer = document.getElementById("generated-images");
   const infoContainer = document.getElementById("img-info-container");
   var iconsContainer = document.getElementById("icons-container");
+
   imageContainer.innerHTML = "";
   infoContainer.innerHTML = "";
   iconsContainer.innerHTML = "";
+
   const img = document.createElement("img");
   img.onload = function () {
     resizeImage(img);
@@ -175,28 +201,32 @@ function displayImage(id, imageUrl, metadata) {
   addDownloadAndOpenIcons(id, imageUrl, iconsContainer);
   addMetadataToInfoContainer(metadata, infoContainer);
 }
+
 function addDownloadAndOpenIcons(id, imageUrl, container) {
   var downloadLink = document.createElement("a");
   downloadLink.href = `/image/download_image/${id}`;
   downloadLink.innerHTML = '<i class="fas fa-download"></i>';
   downloadLink.className = "image-icon download-icon";
   container.appendChild(downloadLink);
+
   const openLink = document.createElement("a");
   openLink.href = imageUrl;
   openLink.target = "_blank";
   openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
   openLink.className = "image-icon open-icon";
   container.appendChild(openLink);
+
   var deleteLink = document.createElement("a");
-  deleteLink.href = "#";
-  deleteLink.innerHTML = '<i class="fas fa-trash"></i>';
+  deleteLink.href = "#"; // Prevent navigation
+  deleteLink.innerHTML = '<i class="fas fa-trash"></i>'; // Use appropriate trash icon class
   deleteLink.className = "image-icon delete-icon";
   deleteLink.addEventListener("click", function (event) {
-    event.preventDefault();
-    markImageAsDeleted(id);
+    event.preventDefault(); // Prevent the default anchor behavior
+    markImageAsDeleted(id); // Call the function to mark the image as deleted
   });
   container.appendChild(deleteLink);
 }
+
 function markImageAsDeleted(imageId) {
   fetch(`/image/mark_delete/${imageId}`, {
     method: "POST",
@@ -216,6 +246,7 @@ function markImageAsDeleted(imageId) {
     .then((data) => {
       if (data.status === "success") {
         showToast("Image marked for deletion", "success");
+        // Remove the image from the history carousel
         const thumbnailToRemove = document.querySelector(
           `img[data-id="${imageId}"]`,
         );
@@ -239,25 +270,35 @@ function markImageAsDeleted(imageId) {
       showToast("Error: " + error.message, "error");
     });
 }
+
 function addMetadataToInfoContainer(metadata, container) {
   const metadataList = document.createElement("ul");
   metadataList.className = "image-metadata";
+
   Object.entries(metadata).forEach(([key, value]) => {
     const listItem = document.createElement("li");
+
+    // Create a span for the key with the 'metadata-key' class
     const keySpan = document.createElement("span");
-    keySpan.textContent = `${key}:`;
+    keySpan.textContent = `${key}:  `;
     keySpan.className = "metadata-key";
     listItem.appendChild(keySpan);
+
+    // Create a span for the value and apply the 'metadata-value' class
     const valueSpan = document.createElement("span");
     valueSpan.textContent = value;
-    valueSpan.className = "metadata-value";
-    listItem.appendChild(valueSpan);
+    valueSpan.className = "metadata-value"; // Apply the CSS class
+    listItem.appendChild(valueSpan); // Append the value span to the list item
+
     metadataList.appendChild(listItem);
   });
+
   container.appendChild(metadataList);
 }
+
 function initializeLazyLoading() {
   const lazyImages = document.querySelectorAll(".lazy");
+
   const imageObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
@@ -268,32 +309,45 @@ function initializeLazyLoading() {
       }
     });
   });
+
   lazyImages.forEach((image) => {
     imageObserver.observe(image);
   });
 }
+
 function updateImageMessages(message, status) {
   var messageDiv = document.getElementById("loader-text");
   messageDiv.innerHTML = message.replace(/\n/g, "<br>");
   messageDiv.className = status;
 }
+
+// eslint-disable-next-line no-undef
 var socket = io("/image");
+
+// Listen for task progress updates
 socket.on("task_progress", function (data) {
   updateImageMessages(data.message, "information");
 });
+
+// Listen for task completion
 socket.on("task_complete", function (data) {
   updateImageMessages(data.message, "success");
   appendImage(data.image);
 });
+
+// Listen for task errors
 socket.on("task_update", function (data) {
   if (data.status === "error") {
     updateImageMessages("Error: " + data.error, "error");
   }
 });
+
 function fetchImage(filename, userId) {
   const xhr = new XMLHttpRequest();
-  const url = `/image/user_urls/${userId}/${filename}`;
+  const url = `/image/user_urls/${userId}/${filename}`; // Updated URL pattern to include user_id in the path
+
   xhr.open("GET", url, true);
+
   xhr.onload = function () {
     let imageContainer;
     if (this.status === 200) {
@@ -308,15 +362,20 @@ function fetchImage(filename, userId) {
       console.error("Error fetching image:", this.statusText);
     }
   };
+
   xhr.onerror = function () {
     console.error("Request failed");
   };
+
   xhr.send();
 }
+
 function appendImage(imageObject) {
   hideLoader();
   const { user_id, file_name } = imageObject;
+
   fetchImage(file_name, user_id);
+
   loadImageHistory();
 }
 loadImageHistory();

@@ -87,6 +87,7 @@ def compile_static_assets(assets):
         cwd_js_bundle.build()
         assets.auto_build = True
         assets.debug = True
+        print("building")
     else:
         assets.auto_build = False
         assets.debug = False
