@@ -44,8 +44,10 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - ./app:/newutil/app
       - ./app/static:/newutil/app/static
+      - dhparam:/etc/ssl/certs
     ports:
       - "80:80"
+      - "443:443"
     restart: unless-stopped
     depends_on:
       - web
@@ -127,6 +129,17 @@ volumes:
   certbot-etc:
   certbot-var:
   web-root:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/rawcsav/AIUtilsFlask/web-root/
+      o: bind
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/rawcsav/AIUtilsFlask/dhparam/
+      o: bind
 
 networks:
     appnet:
