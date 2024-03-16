@@ -127,11 +127,6 @@ volumes:
   certbot-etc:
   certbot-var:
   web-root:
-      driver: local
-      driver_opts:
-        type: none
-        device: ./web-root
-        o: bind
 
 networks:
     appnet:
