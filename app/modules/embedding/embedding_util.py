@@ -4,6 +4,7 @@ import tempfile
 import unicodedata
 from typing import List
 
+from nltk.data import find
 from flask_login import current_user
 
 from app.modules.user.user_util import get_user_upload_directory
@@ -25,6 +26,18 @@ ENCODING = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-3-large"
 MAX_TOKENS_PER_BATCH = 8000  # Define the maximum tokens per batch
 WORDS_PER_PAGE = 500  # Define the number of words per page
+
+
+def download_nltk_data():
+    try:
+        # Check if punkt tokenizer data is available
+        find("tokenizers/punkt")
+    except LookupError:
+        import nltk
+
+        print("Downloading NLTK 'punkt' tokenizer data...")
+        nltk.download("punkt")
+        print("'punkt' tokenizer data downloaded.")
 
 
 def save_temp(uploaded_file):
@@ -79,6 +92,7 @@ def extract_text_from_file(filepath):
 
 
 def split_text(text_pages, max_tokens=512):
+    download_nltk_data()
     chunks = []
     chunk_pages = []  # List to hold the pages for each chunk
     current_chunk = []
