@@ -57,6 +57,7 @@ services:
       - ./app/static:/newutil/app/static
       - ./config.py:/newutil/config.py
       - ./uwsgi.py:/newutil/uwsgi.py
+      - user_files_volume:/newutil/app/user_files/
     depends_on:
       - mysql
       - rabbitmq
@@ -88,6 +89,7 @@ services:
       - ./app/static:/newutil/app/static
       - ./config.py:/newutil/config.py
       - ./uwsgi.py:/newutil/uwsgi.py
+      - user_files_volume:/newutil/app/user_files/
     depends_on:
       - web
       - rabbitmq
@@ -142,6 +144,7 @@ volumes:
       type: none
       device: /home/rawcsav/AIUtilsFlask/dhparam/
       o: bind
+  user_files_volume:  # New volume for user files
 
 networks:
     appnet:

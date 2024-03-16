@@ -1,10 +1,9 @@
 import os
 
-from app import socketio
+from app import socketio, celery
 from app.models.task_models import Task, ImageTask
 from app.modules.image.image_util import generate_images, save_image_to_db, download_compressed_image
 from app.modules.auth.auth_util import task_client
-from celery import shared_task
 from app.tasks.task_logging import setup_logging
 from app.modules.user.user_util import get_user_gen_img_directory
 from app.utils.task_util import make_session
@@ -102,7 +101,7 @@ def process_image(session, image_task, user_id):
         raise e
 
 
-@shared_task
+@celery.task(time_limit=60)
 def process_image_task(task_id):
     session = make_session()
     try:

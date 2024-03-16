@@ -1,6 +1,5 @@
 import os
 
-from celery import shared_task
 
 from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import Task, EmbeddingTask
@@ -14,7 +13,7 @@ from app.modules.embedding.embedding_util import (
 from app.tasks.task_logging import setup_logging
 from app.utils.task_util import make_session
 from app.utils.usage_util import embedding_cost
-from app import socketio
+from app import socketio, celery
 
 # Configure logging for the embedding task
 logger = setup_logging()
@@ -118,7 +117,7 @@ def process_document(session, embedding_task, user_id):
         raise e
 
 
-@shared_task
+@celery.task(time_limit=200)
 def process_embedding_task(task_id):
     session = make_session()
     embedding_task = None

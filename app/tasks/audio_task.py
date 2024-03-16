@@ -1,9 +1,5 @@
 import os
-from datetime import datetime
-
-from celery import shared_task
-
-from app import socketio
+from app import socketio, celery
 from app.modules.user.user_util import get_user_audio_directory
 from app.models.task_models import Task, TTSTask, TranscriptionTask, TranslationTask
 from app.modules.audio.audio_util import generate_speech, preprocess_audio, transcribe_audio, translate_audio
@@ -70,7 +66,7 @@ def process_tts(session, tts_task, user_id):
         raise e
 
 
-@shared_task
+@celery.task(time_limit=200)
 def process_tts_task(task_id):
     session = make_session()
     try:
@@ -168,7 +164,7 @@ def process_translation(session, translation_task, user_id):
         raise e
 
 
-@shared_task
+@celery.task(time_limit=300)
 def process_translation_task(task_id):
     session = make_session()
     try:
@@ -253,7 +249,7 @@ def process_transcription(session, transcription_task, user_id):
         raise e
 
 
-@shared_task
+@celery.task(time_limit=300)
 def process_transcription_task(task_id):
     session = make_session()
     try:

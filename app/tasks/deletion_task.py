@@ -1,5 +1,5 @@
 import os
-from celery import shared_task
+from app import celery
 from app.models.audio_models import TranslationJob, TTSJob, TranscriptionJob
 from app.models.chat_models import Conversation
 from app.models.embedding_models import Document
@@ -59,7 +59,7 @@ def delete_entity(session, entity_type, entity_id, user_id):
         raise e
 
 
-@shared_task
+@celery.task(time_limit=60)
 def process_deletion_task(task_id):
     session = make_session()
     try:
