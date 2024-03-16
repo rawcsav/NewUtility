@@ -66,7 +66,7 @@ services:
 
   celery:
     build: .
-    command: celery -A uwsgi.celery worker --loglevel=debug
+    command: celery -A uwsgi.celery worker -l info --concurrency=2 --without-gossip --pool=gevent
     environment:
       FLASK_APP: uwsgi.py
       FLASK_ENV: production
