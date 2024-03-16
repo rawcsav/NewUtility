@@ -52,7 +52,6 @@ def cwd_index():
 def query_endpoint():
     client, error = initialize_openai_client(current_user.id)
     query = request.form.get("query")
-
     db.session.commit()  # Commit the changes to the database
 
     def generate():
