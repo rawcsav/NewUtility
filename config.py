@@ -1,5 +1,4 @@
 import os
-import ssl
 from datetime import timedelta
 import cloudinary
 from urllib.parse import quote_plus
@@ -56,16 +55,6 @@ class Config(object):
     CLOUD_NAME = os.getenv("CLOUD_NAME")
     CLOUD_API_KEY = os.getenv("CLOUDINARY_API_KEY")
     CLOUD_SECRET = os.getenv("CLOUDINARY_SECRET")
-
-    GOOGLE_SITE_KEY = os.getenv("GOOGLE_SITE_KEY")
-    GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
-    GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
-    GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
-    GOOGLE_CALLBACK_URI = os.getenv("GOOGLE_CALLBACK_URI")
-
-    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
-    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
-    GITHUB_CALLBACK_URI = os.getenv("GITHUB_CALLBACK_URI")
 
     DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
 
