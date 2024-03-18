@@ -60,7 +60,7 @@ def create_app():
     CORS(app)
     db.init_app(app)
 
-    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], cors_allowed_origins="*", async_mode="gevent")
+    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], async_mode="gevent")
     socketio.on_namespace(GlobalNamespace("/global"))
     socketio.on_namespace(ImageNamespace("/image"))
     socketio.on_namespace(EmbeddingNamespace("/embedding"))
@@ -111,7 +111,6 @@ def create_app():
 
         @app.route("/")
         def root():
-            # Redirect the user from root to '/home'
             return redirect(url_for("home_bp.landing_page"))
 
         db.create_all()
