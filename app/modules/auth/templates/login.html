@@ -1,5 +1,6 @@
 {% extends 'base.html' %} {% block head %}
 <title>Login | New Utility</title>
+<meta name="csrf-token" content="{{ csrf_token() }}" />
 {% endblock %} {% block styles %} {% assets "login_style_bundle" %}
 <link rel="stylesheet" href="{{ ASSET_URL }}" />
 {% endassets %} {% endblock %} {% block body %}
