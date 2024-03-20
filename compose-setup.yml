@@ -1,35 +1,6 @@
 version: '3.11'
 
 services:
-  mysql:
-    image: mysql:8.0.36
-    environment:
-      MYSQL_ROOT_PASSWORD: ${SQL_PASSWORD}
-      MYSQL_DATABASE: ${SQL_DB_NAME}
-      MYSQL_USER: remote_user
-      MYSQL_PASSWORD: ${SQL_PASSWORD}
-    volumes:
-      - db_volume:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
-    networks:
-      - appnet
-
-  rabbitmq:
-    image: "rabbitmq:3"
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: ${CELERY_BROKER_PASSWORD}
-      RABBITMQ_DEFAULT_VHOST: "vhost"
-      CELERY_BROKER_URL: "pyamqp://admin:${CELERY_BROKER_PASSWORD}@rabbitmq/vhost"
-    ports:
-      - "5672:5672"
-    volumes:
-      - rabbitmq_volume:/var/lib/rabbitmq
-    depends_on:
-      - mysql
-    networks:
-      - appnet
-
   web:
     build:
       context: .
@@ -64,6 +35,63 @@ services:
     networks:
       - appnet
 
+
+  nginx:
+    image: nginx:mainline-alpine
+    volumes:
+      - web-root:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - web
+    networks:
+      - appnet
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - nginx
+    command: certonly --webroot --webroot-path=/var/www/html --email gavin@rawcsav.com --agree-tos --no-eff-email --staging -d newutil.rawcsav.com -d www.newutil.rawcsav.com
+
+  mysql:
+    image: mysql:8.0.36
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SQL_PASSWORD}
+      MYSQL_DATABASE: ${SQL_DB_NAME}
+      MYSQL_USER: remote_user
+      MYSQL_PASSWORD: ${SQL_PASSWORD}
+    volumes:
+      - db_volume:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - appnet
+
+  rabbitmq:
+    image: "rabbitmq:3"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${CELERY_BROKER_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: "vhost"
+      CELERY_BROKER_URL: "pyamqp://admin:${CELERY_BROKER_PASSWORD}@rabbitmq/vhost"
+    ports:
+      - "5672:5672"
+    volumes:
+      - rabbitmq_volume:/var/lib/rabbitmq
+    depends_on:
+      - mysql
+    networks:
+      - appnet
+
+
   celery:
     build: .
     command: celery -A uwsgi.celery worker --loglevel=info --concurrency=2 --pool=solo
@@ -96,32 +124,6 @@ services:
       - mysql
     networks:
       - appnet
-
-  nginx:
-    image: nginx:mainline-alpine
-    volumes:
-      - web-root:/var/www/html
-      - ./nginx-conf:/etc/nginx/conf.d
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-    ports:
-      - "80:80"
-    restart: unless-stopped
-    depends_on:
-      - web
-    networks:
-      - appnet
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - web-root:/var/www/html
-    depends_on:
-      - nginx
-    command: certonly --webroot --webroot-path=/var/www/html --email gavin@rawcsav.com --agree-tos --no-eff-email --staging -d newutil.rawcsav.com -d www.newutil.rawcsav.com
 
 volumes:
   db_volume:
