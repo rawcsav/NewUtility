@@ -16,6 +16,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
 cloudinary==1.39.1
 cryptography==42.0.5
+cssmin==0.2.0
 distro==1.9.0
 dnspython==2.6.1
 docx2txt==0.8
