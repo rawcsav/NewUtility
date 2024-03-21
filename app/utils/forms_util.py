@@ -13,7 +13,6 @@ from wtforms import (
     DecimalField,
     SelectField,
 )
-from wtforms.fields.choices import RadioField
 from wtforms.fields.numeric import FloatField
 from wtforms.validators import DataRequired, Length, Regexp, Email, EqualTo, NumberRange, Optional
 

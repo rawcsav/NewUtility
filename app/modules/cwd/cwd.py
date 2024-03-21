@@ -1,14 +1,10 @@
 import threading
-from flask import Blueprint, render_template, request, jsonify, session
 from flask_login import current_user
-
 from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import Document
 from app.modules.auth.auth_util import initialize_openai_client
-import os
-from flask import request, stream_with_context, Blueprint, current_app
-
+from flask import request, stream_with_context, Blueprint, current_app, render_template
 from app.modules.chat.chat import model_to_dict
 from app.modules.cwd.cwd_util import ask
 from app.utils.forms_util import UpdateDocPreferencesForm

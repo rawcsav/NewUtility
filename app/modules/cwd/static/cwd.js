@@ -7,6 +7,21 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function handleSubmitOnEnter(event, textarea) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    if (textarea.value.trim() === "") {
+      event.preventDefault();
+      console.error("Cannot submit an empty message.");
+    } else if (isSubmitting) {
+      event.preventDefault();
+      console.error("Submission in progress.");
+    } else {
+      event.preventDefault();
+      triggerFormSubmission("chat-completion-form");
+    }
+  }
+}
+
 function showToast(message, type) {
   let toast = document.getElementById("toast") || createToastElement();
   toast.textContent = message;

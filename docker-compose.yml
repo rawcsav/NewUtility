@@ -1,4 +1,4 @@
-version: '3.11'
+version: '3.8'
 
 services:
   mysql:
@@ -66,7 +66,7 @@ services:
 
   celery:
     build: .
-    command: celery -A uwsgi.celery worker --loglevel=info --concurrency=2 --pool=solo
+    command: celery -A uwsgi.celery worker --loglevel=info --concurrency=2 --pool=eventlet
     environment:
       FLASK_APP: uwsgi.py
       FLASK_ENV: production

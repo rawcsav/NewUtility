@@ -1,5 +1,4 @@
 import os
-
 from flask import jsonify, Blueprint, render_template, send_file, url_for, current_app, request, send_from_directory
 from flask_login import login_required, current_user
 from werkzeug.exceptions import NotFound

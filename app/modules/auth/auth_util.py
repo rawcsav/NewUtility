@@ -2,13 +2,11 @@ import hashlib
 import os
 import random
 import re
-
+from openai import OpenAI
 import openai
 import requests
 from cryptography.fernet import Fernet
 from flask_login import current_user
-from openai import OpenAI
-
 from app import db
 from app.models.user_models import UserAPIKey, User
 
@@ -150,7 +148,7 @@ def initialize_openai_client(user_id):
         return None, "API Key not found."
 
     api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, max_retries=5, timeout=30.0)
     return client, None
 
 
@@ -161,5 +159,5 @@ def task_client(session, user_id):
     if not user_api_key:
         return None, "API Key not found."
     api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, max_retries=5, timeout=30.0)
     return client, key_id, None

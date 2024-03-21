@@ -5,8 +5,6 @@ import openai
 import tiktoken
 from flask_login import current_user
 from openai import RateLimitError
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, wait_random_exponential
-
 from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import DocumentChunk, Document, ModelContextWindow
@@ -63,7 +61,6 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     return selected_chunks
 
 
-@retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
 def get_embedding(text: str, client: openai.OpenAI, model="text-embedding-3-large", **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
     embedding = response.data[0].embedding
@@ -107,11 +104,6 @@ def append_knowledge_context(user_query, user_id, client):
     return modified_query, chunk_associations, doc_pages
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type(RateLimitError),
-)
 def chat_completion_with_retry(messages, model, client, temperature):
     return client.chat.completions.create(model=model, messages=messages, temperature=temperature, stream=True)
 

@@ -7,7 +7,6 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
-from celery import Celery
 from flask_login import LoginManager
 from flask import Flask, redirect, url_for
 from flask_assets import Environment
@@ -18,26 +17,11 @@ from app.utils.socket_util import GlobalNamespace, EmbeddingNamespace, ImageName
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 mail = Mail()
-socketio = SocketIO()
+socketio = SocketIO(message_queue="amqp://", async_mode="eventlet")
 login_manager = LoginManager()
-celery = Celery(__name__)
-celery.conf.update(task_serializer="json", result_serializer="json", accept_content=["json"])
 
 
 # noinspection PyPropertyAccess
-def make_celery(app):
-    celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
-    celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-
-    celery.conf.update(app.config)
-    return celery
 
 
 def create_app():
@@ -60,8 +44,7 @@ def create_app():
     CORS(app)
     db.init_app(app)
 
-    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], cors_allowed_origins="*", async_mode="gevent")
-    socketio.on_namespace(GlobalNamespace("/global"))
+    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], async_mode="eventlet")
     socketio.on_namespace(ImageNamespace("/image"))
     socketio.on_namespace(EmbeddingNamespace("/embedding"))
     socketio.on_namespace(AudioNamespace("/audio"))
@@ -70,10 +53,6 @@ def create_app():
     bcrypt.init_app(app)
     mail.init_app(app)
     assets.init_app(app)  # Initialize Flask-Assets
-    celery = make_celery(app)
-
-    app.extensions["celery"] = celery  # Add Celery to Flask extensions
-    app.app_context().push()
 
     login_manager.init_app(app)
     login_manager.session_protection = "strong"
@@ -99,7 +78,7 @@ def create_app():
         app.register_blueprint(chat.chat_bp)
         app.register_blueprint(audio.audio_bp)
         app.register_blueprint(cwd.cwd_bp)
-        from .assets import compile_static_assets
+        from app.utils.assets_util import compile_static_assets
 
         compile_static_assets(assets)
 

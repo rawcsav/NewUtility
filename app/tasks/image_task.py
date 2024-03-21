@@ -1,6 +1,5 @@
-import os
-
-from app import socketio, celery
+from app import socketio
+from app.tasks.celery_task import celery
 from app.models.task_models import Task, ImageTask
 from app.modules.image.image_util import generate_images, save_image_to_db, download_compressed_image
 from app.modules.auth.auth_util import task_client

@@ -1,5 +1,4 @@
 import os
-from flask_login import current_user
 from config import appdir
 
 USER_DIRECTORY = os.path.join(appdir, "user_files")

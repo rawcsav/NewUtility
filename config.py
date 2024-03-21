@@ -14,7 +14,6 @@ class Config(object):
     PERMANENT_SESSION_LIFETIME = timedelta(days=30)
 
     ASSETS_DEBUG = False
-    ASSETS_AUTO_BUILD = True
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
@@ -28,6 +27,12 @@ class Config(object):
 
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
     CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+    CELERY_IMPORTS = (
+        "app.tasks.audio_task",
+        "app.tasks.image_task",
+        "app.tasks.deletion_task",
+        "app.tasks.embedding_task",
+    )
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
@@ -65,7 +70,6 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     FLASK_DEBUG = True
-    ASSETS_DEBUG = True
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False
 
@@ -82,7 +86,6 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     FLASK_DEBUG = False
-    ASSETS_DEBUG = False
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
 

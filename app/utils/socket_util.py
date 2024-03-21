@@ -1,6 +1,5 @@
-# namespaces.py
 from flask_socketio import emit, disconnect, join_room
-from flask_socketio.namespace import Namespace
+from flask_socketio import Namespace
 from flask_login import current_user
 
 

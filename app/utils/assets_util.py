@@ -1,4 +1,3 @@
-from flask import current_app as app
 from flask_assets import Bundle
 
 
@@ -59,7 +58,7 @@ def compile_static_assets(assets):
     assets.register("audio_js_bundle", audio_js_bundle)
     assets.register("cwd_js_bundle", cwd_js_bundle)
 
-    if app.config["FLASK_ENV"] == "development":
+    if assets.config["FLASK_ENV"] == "development":
         common_style_bundle.build()
         home_style_bundle.build()
         signup_style_bundle.build()
@@ -85,11 +84,7 @@ def compile_static_assets(assets):
         image_js_bundle.build()
         audio_js_bundle.build()
         cwd_js_bundle.build()
-        assets.auto_build = True
-        assets.debug = True
-        print("building")
     else:
-        assets.auto_build = False
-        assets.debug = False
+        pass
 
     return assets

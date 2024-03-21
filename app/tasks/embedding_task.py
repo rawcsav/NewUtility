@@ -13,7 +13,8 @@ from app.modules.embedding.embedding_util import (
 from app.tasks.task_logging import setup_logging
 from app.utils.task_util import make_session
 from app.utils.usage_util import embedding_cost
-from app import socketio, celery
+from app import socketio
+from app.tasks.celery_task import celery
 
 # Configure logging for the embedding task
 logger = setup_logging()

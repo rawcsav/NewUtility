@@ -1,5 +1,6 @@
 import os
-from app import socketio, celery
+from app import socketio
+from app.tasks.celery_task import celery
 from app.modules.user.user_util import get_user_audio_directory
 from app.models.task_models import Task, TTSTask, TranscriptionTask, TranslationTask
 from app.modules.audio.audio_util import generate_speech, preprocess_audio, transcribe_audio, translate_audio

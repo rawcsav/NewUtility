@@ -2,7 +2,6 @@ from flask import current_app
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import QueuePool
-from app import db
 
 
 def make_engine_with_pool_options():

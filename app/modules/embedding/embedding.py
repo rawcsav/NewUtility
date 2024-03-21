@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 from app.tasks.embedding_task import process_embedding_task
 from app import db
 from app.models.chat_models import ChatPreferences
-from app.models.embedding_models import Document, DocumentChunk
+from app.models.embedding_models import Document
 from app.models.task_models import EmbeddingTask, Task
 from app.modules.embedding.embedding_util import save_temp
 from app.utils.forms_util import DocumentUploadForm, EditDocumentForm, DeleteDocumentForm, UpdateDocPreferencesForm

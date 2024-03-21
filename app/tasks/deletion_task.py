@@ -1,5 +1,5 @@
 import os
-from app import celery
+from app.tasks.celery_task import celery
 from app.models.audio_models import TranslationJob, TTSJob, TranscriptionJob
 from app.models.chat_models import Conversation
 from app.models.embedding_models import Document

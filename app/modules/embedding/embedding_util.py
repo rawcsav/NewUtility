@@ -1,6 +1,5 @@
 import os
 import re
-import tempfile
 import unicodedata
 from typing import List
 
@@ -14,7 +13,6 @@ import tiktoken
 from docx2txt import docx2txt
 from nltk.tokenize import word_tokenize, sent_tokenize
 from pypdf import PdfReader
-from tenacity import retry, stop_after_attempt, wait_random_exponential
 from werkzeug.utils import secure_filename
 
 from app import db
@@ -146,7 +144,6 @@ def split_text(text_pages, max_tokens=512):
     return chunks, chunk_pages, total_tokens, chunk_token_counts
 
 
-@retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
 def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
     embedding = response.data[0].embedding
