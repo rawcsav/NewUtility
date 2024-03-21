@@ -15,4 +15,4 @@ EXPOSE 8080
 ENV FLASK_APP=uwsgi.py
 
 # Start uWSGI
-CMD ["python", "uwsgi.py"]
+CMD ["uwsgi", "--ini", "uwsgi.ini"]
