@@ -63,6 +63,8 @@ services:
       - rabbitmq
     networks:
       - appnet
+    ports:
+      - "8080:8080"
 
   celery:
     build: .
