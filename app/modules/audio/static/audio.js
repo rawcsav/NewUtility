@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       const formData = new FormData(form);
+      console.log(formData);
       fetch(endpoint, {
         method: "POST",
         body: formData,
@@ -112,11 +113,13 @@ document.addEventListener("DOMContentLoaded", function () {
   handleFormSubmission("transcription-form", "/audio/transcription");
   handleFormSubmission("translation-form", "/audio/translation");
 
-  // Modify the handlePreferencesFormSubmission function to include debouncing
   function handlePreferencesFormSubmission(formId, endpoint) {
     const form = document.getElementById(formId);
+    console.log("Form elements:", form.elements); // Add this line to log the form elements
+
     const debouncedSubmit = debounce(function () {
       const formData = new FormData(form);
+      console.log(formData);
       fetch(endpoint, {
         method: "POST",
         body: formData,
@@ -244,6 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // eslint-disable-next-line no-unused-vars
   function toggleDetails(jobId, jobType) {
+    console.log("Toggling details for job:", jobId, jobType); // eslint-disable-line no-console
     var detailsElement = document.getElementById(jobType + "-details-" + jobId);
     var isVisible = detailsElement.style.display === "block";
     detailsElement.style.display = isVisible ? "none" : "block";
@@ -295,39 +299,40 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Create the history entry HTML
-    const historyEntryHtml = `
-    <li class="history-entry" data-job-id="${job.id}" onclick="toggleDetails('${
+    const historyEntry = document.createElement("li");
+    historyEntry.className = "history-entry";
+    historyEntry.dataset.jobId = job.id;
+    historyEntry.dataset.jobType = jobType;
+    historyEntry.innerHTML = `
+    <div class="history-summary">
+      <span class="history-title">${
+        jobType === "tts"
+          ? job.voice
+          : job.input_filename.substring(0, 10) +
+            (job.output_filename && job.output_filename.length > 10
+              ? "..."
+              : "")
+      }</span><br />
+      <span class="history-time">${job.created_at}</span>
+    </div>
+    <div class="history-details" id="${jobType}-details-${
       job.id
-    }', '${jobType}')">
-      <div class="history-summary">
-        <span class="history-title">${
-          jobType === "tts"
-            ? job.voice
-            : job.input_filename.substring(0, 10) +
-              (job.output_filename && job.output_filename.length > 10
-                ? "..."
-                : "")
-        }</span><br />
-        <span class="history-time">${job.created_at}</span>
-      </div>
-      <div class="history-details" id="${jobType}-details-${
-        job.id
-      }" style="display: none">
-        ${jobDetailsHtml}
-        <a href="${downloadUrl}" download>Download ${
-          jobType.charAt(0).toUpperCase() + jobType.slice(1)
-        }</a>
-      </div>
-    </li>
+    }" style="display: none">
+      ${jobDetailsHtml}
+      <a href="${downloadUrl}" download>Download ${
+        jobType.charAt(0).toUpperCase() + jobType.slice(1)
+      }</a>
+    </div>
   `;
+    historyEntry.addEventListener("click", function () {
+      toggleDetails(job.id, jobType);
+    });
 
     // Identify the parent element based on job type and append the new history entry
     const parentElementId = `${jobType}-history`;
     const parentElement = document.getElementById(parentElementId);
     if (parentElement) {
-      parentElement
-        .querySelector("ul")
-        .insertAdjacentHTML("beforeend", historyEntryHtml);
+      parentElement.querySelector("ul").appendChild(historyEntry);
     } else {
       console.error("Parent element not found for job type:", jobType);
     }
@@ -350,7 +355,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // Listen for task completion
   socket.on("task_complete", function (data) {
     updateAudioMessages(data.message, "success");
-    appendJobHistory(data.job_details, data.job_type);
+    appendJobHistory(data.job_details, data.job_type, function (entry) {
+      entry.addEventListener("click", function () {
+        toggleDetails(data.job_details.id, data.job_type);
+      });
+    });
   });
 
   // Listen for task errors
@@ -358,5 +367,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (data.status === "error") {
       updateAudioMessages("Error: " + data.error, "error");
     }
+  });
+  document.querySelectorAll(".history-entry").forEach((entry) => {
+    const jobId = entry.dataset.jobId;
+    const jobType = entry.dataset.jobType; // Make sure to add a 'data-job-type' attribute to your existing history entries in the HTML
+    entry.addEventListener("click", function () {
+      toggleDetails(jobId, jobType);
+    });
   });
 });

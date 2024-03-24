@@ -193,7 +193,7 @@
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
-              onclick="toggleDetails('{{ job.id }}', 'tts')"
+              data-job-type="tts"
             >
               <div class="history-summary">
                 <span class="history-title">{{ job.voice }}</span><br /><span
@@ -234,35 +234,10 @@
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
-              onclick="toggleDetails('{{ job.id }}', 'transcription')"
+              data-job-type="transcription"
             >
-              <div class="history-summary">
-                <span class="history-title"
-                  >{{ job.input_filename[:10] }}{% if job.output_filename|length
-                  > 10 %}...{% endif %}</span
-                >
-                <br /><span class="history-time"
-                  >{{ job.created_at.strftime('%d-%m-%Y %H:%M') }}</span
-                >
-              </div>
-              <div
-                class="history-details"
-                id="transcription-details-{{ job.id }}"
-                style="display: none"
-              >
-                <p>Language: {{ job.language }}</p>
-                <p>Model: {{ job.model }}</p>
-                <p>Temperature: {{ job.temperature }}</p>
-                <p>Prompt: {{ job.prompt }}</p>
-                <a
-                  href="{{ url_for('audio_bp.download_whisper', job_id=job.id) }}"
-                  download
-                >
-                  <i class="fas fa-download"></i> Download Transcription
-                </a>
-              </div>
+              {% endif %} {% endfor %}
             </li>
-            {% endif %} {% endfor %}
           </ul>
         </div>
         {% set TranslationJobs = TranslationJobs|sort(attribute='created_at',
@@ -274,34 +249,10 @@
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
-              onclick="toggleDetails('{{ job.id }}', 'translation')"
+              data-job-type="translation"
             >
-              <div class="history-summary">
-                <span class="history-title"
-                  >{{ job.input_filename[:10] }}{% if job.output_filename|length
-                  > 10 %}...{% endif %}</span
-                >
-                <br /><span class="history-time"
-                  >{{ job.created_at.strftime('%d-%m-%Y %H:%M') }}</span
-                >
-              </div>
-              <div
-                class="history-details"
-                id="translation-details-{{ job.id }}"
-                style="display: none"
-              >
-                <p>Model: {{ job.model }}</p>
-                <p>Temperature: {{ job.temperature }}</p>
-                <p>Prompt: {{ job.prompt }}</p>
-                <a
-                  href="{{ url_for('audio_bp.download_whisper', job_id=job.id) }}"
-                  download
-                >
-                  <i class="fas fa-download"></i> Download Translation
-                </a>
-              </div>
+              {% endif %} {% endfor %}
             </li>
-            {% endif %} {% endfor %}
           </ul>
         </div>
       </div>

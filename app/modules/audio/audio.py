@@ -3,6 +3,7 @@ from markdown2 import markdown
 from flask import Blueprint, jsonify, url_for, render_template, send_file, current_app, request
 from flask_login import login_required, current_user
 from openai import InternalServerError
+from werkzeug.exceptions import NotFound
 from werkzeug.utils import secure_filename
 from app import db, socketio
 from app.models.audio_models import TTSPreferences, WhisperPreferences, TTSJob, TranscriptionJob, TranslationJob
@@ -63,9 +64,14 @@ def audio_center():
 @audio_bp.route("/tts_preferences", methods=["POST"])
 @login_required
 def tts_preferences():
-    tts_prefs = TTSPreferences.query.filter_by(user_id=current_user.id).first()
-    form = TtsPreferencesForm(obj=tts_prefs)
+    try:
+        tts_prefs = TTSPreferences.query.filter_by(user_id=current_user.id).first_or_404()
+    except NotFound:
+        tts_prefs = TTSPreferences(user_id=current_user.id)
+        db.session.add(tts_prefs)
+        db.session.commit()
 
+    form = TtsPreferencesForm(obj=tts_prefs)
     if form.validate_on_submit():
         tts_prefs.model = form.model.data
         tts_prefs.voice = form.voice.data
@@ -101,9 +107,13 @@ def tts_preferences():
 @audio_bp.route("/whisper_preferences", methods=["POST"])
 @login_required
 def whisper_preferences():
-    whisper_prefs = WhisperPreferences.query.filter_by(user_id=current_user.id).first()
+    try:
+        whisper_prefs = WhisperPreferences.query.filter_by(user_id=current_user.id).first_or_404()
+    except NotFound:
+        whisper_prefs = WhisperPreferences(user_id=current_user.id)
+        db.session.add(whisper_prefs)
+        db.session.commit()
     form = WhisperPreferencesForm(obj=whisper_prefs)
-
     if form.validate_on_submit():
         whisper_prefs.model = form.model.data
         whisper_prefs.language = form.language.data
@@ -185,9 +195,14 @@ def transcription():
         db.session.add(new_task)
         db.session.flush()
         download_dir = get_user_audio_directory(user_id)
+        print(download_dir)
         audio_file = form.file.data
+        print(audio_file)
         filename = secure_filename(audio_file.filename)
+        print(filename)
         filepath = os.path.join(download_dir, filename)
+        print(filepath)
+        audio_file.save(filepath)
         socketio.emit(
             "task_progress",
             {"task_id": new_task.id, "message": f"Downloading {filename}..."},
@@ -195,7 +210,6 @@ def transcription():
             namespace="/audio",
         )
         try:
-            audio_file.save(filepath)
             prompt = determine_prompt(client, form.data, new_task.id, user_id)
             new_transcription_task = TranscriptionTask(
                 task_id=new_task.id,
@@ -208,7 +222,7 @@ def transcription():
             )
             db.session.add_all([new_task, new_transcription_task])
             db.session.commit()
-            process_transcription_task.apply_async(kwargs={"task_id": new_task.id})
+            process_transcription_task.apply(kwargs={"task_id": new_task.id})
 
             return jsonify({"status": "success", "task_id": new_task.id})
 
@@ -252,7 +266,7 @@ def translation():
         )
         db.session.add_all([new_task, new_translation_task])
         db.session.commit()
-        process_translation_task.apply_async(kwargs={"task_id": new_task.id})
+        process_translation_task.apply(kwargs={"task_id": new_task.id})
 
         return jsonify({"status": "success", "task_id": new_task.id})
 
