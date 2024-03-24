@@ -193,7 +193,7 @@
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
-              onclick="toggleDetails('{{ job.id }}', 'tts')"
+              data-job-type="tts"
             >
               <div class="history-summary">
                 <span class="history-title">{{ job.voice }}</span><br /><span
@@ -234,7 +234,7 @@
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
-              onclick="toggleDetails('{{ job.id }}', 'transcription')"
+              data-job-type="transcription"
             >
               <div class="history-summary">
                 <span class="history-title"
@@ -274,7 +274,7 @@
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
-              onclick="toggleDetails('{{ job.id }}', 'translation')"
+              data-job-type="translation"
             >
               <div class="history-summary">
                 <span class="history-title"
