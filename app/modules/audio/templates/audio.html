@@ -230,13 +230,13 @@
         <div id="transcription-history">
           <h3>Transcription History</h3>
           <ul>
-            {% for job in TranscriptionJobs %} {% if job.finished %}
+            {% for job in TranscriptionJobs %}
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
               data-job-type="transcription"
             >
-              {% endif %} {% endfor %}
+              {% endfor %}
             </li>
           </ul>
         </div>
@@ -245,13 +245,13 @@
         <div id="translation-history">
           <h3>Translation History</h3>
           <ul>
-            {% for job in TranslationJobs %} {% if job.finished %}
+            {% for job in TranslationJobs %}
             <li
               class="history-entry"
               data-job-id="{{ job.id }}"
               data-job-type="translation"
             >
-              {% endif %} {% endfor %}
+              {% endfor %}
             </li>
           </ul>
         </div>
