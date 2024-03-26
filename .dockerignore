@@ -7,6 +7,9 @@ __pycache__/
 
 cert.pem
 key.pem
+*.pem
+*.cert
+*.key
 # Distribution / packaging
 .Python
 build/
@@ -169,6 +172,8 @@ stylelint.config.js
 /cert.pem
 /key.pem
 /ssl/
+/cloudflared/*
+/cloudflared
 .git
 .gitignore
 Dockerfile

@@ -183,3 +183,10 @@ stylelint.config.js
 /app/user_files/
 /ssl/
 ssl/
+/cloudflared/*
+*cert.pem
+*key.pem
+*.pem
+*.key
+*.crt
+*.csr

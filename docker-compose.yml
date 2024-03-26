@@ -131,6 +131,16 @@ services:
     command: certonly --webroot --webroot-path=/var/www/html --email gavin@rawcsav.com --agree-tos --no-eff-email --force-renewal -d newutil.rawcsav.com -d www.newutil.rawcsav.com
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run ${CLOUDFLARED_TUNNEL_ID}
+    volumes:
+      - ./cloudflared:/etc/cloudflared
+    depends_on:
+      - nginx
+    networks:
+      - appnet
+
 volumes:
   db_volume:
   rabbitmq_volume:
