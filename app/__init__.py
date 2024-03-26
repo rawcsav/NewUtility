@@ -44,7 +44,7 @@ def create_app():
     CORS(app)
     db.init_app(app)
 
-    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], async_mode="eventlet")
+    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], async_mode="eventlet", cors_allowed_origins="*")
     socketio.on_namespace(ImageNamespace("/image"))
     socketio.on_namespace(EmbeddingNamespace("/embedding"))
     socketio.on_namespace(AudioNamespace("/audio"))
