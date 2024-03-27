@@ -55,7 +55,6 @@ def create_app():
     assets.init_app(app)  # Initialize Flask-Assets
 
     login_manager.init_app(app)
-    login_manager.session_protection = "strong"
     login_manager.login_view = "auth_bp.login"
     login_manager.login_message = "Please log in to access this page."
     login_manager.login_message_category = "info"
