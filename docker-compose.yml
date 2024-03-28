@@ -99,67 +99,11 @@ services:
     networks:
       - appnet
 
-  nginx:
-    image: nginx:mainline-alpine
-    volumes:
-      - web-root:/var/www/html
-      - ./nginx:/etc/nginx/conf.d/
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - ./app:/newutil/app
-      - ./app/static:/newutil/app/static
-      - dhparam:/etc/ssl/certs
-    ports:
-      - "80:80"
-      - "443:443"
-    restart: unless-stopped
-    depends_on:
-      - web
-    networks:
-      - appnet
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - web-root:/var/www/html
-    depends_on:
-      - nginx
-    command: certonly --webroot --webroot-path=/var/www/html --email gavin@rawcsav.com --agree-tos --no-eff-email --force-renewal -d newutil.rawcsav.com -d www.newutil.rawcsav.com
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run ${CLOUDFLARED_TUNNEL_ID}
-    volumes:
-      - ./cloudflared:/etc/cloudflared
-    depends_on:
-      - nginx
-    networks:
-      - appnet
-
 volumes:
   db_volume:
   rabbitmq_volume:
-  certbot-etc:
-  certbot-var:
-  web-root:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/rawcsav/AIUtilsFlask/web-root/
-      o: bind
-  dhparam:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/rawcsav/AIUtilsFlask/dhparam/
-      o: bind
   user_files_volume:  # New volume for user files
 
 networks:
     appnet:
-        driver: "bridge"
+      external: true
