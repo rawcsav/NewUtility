@@ -485,7 +485,7 @@ function retryMessage(messageId) {
       throw new Error("Failed to retry message.");
     }
     const contentType = response.headers.get("Content-Type");
-    if (contentType && contentType.includes("text/plain")) {
+    if (contentType && contentType.includes("text/event-stream")) {
       processStreamedResponse(response);
     }
   });
@@ -1035,7 +1035,7 @@ function fetchChatCompletionResponse(formData) {
 
 function processChatCompletionResponse(response) {
   const contentType = response.headers.get("Content-Type");
-  if (contentType && contentType.includes("text/plain")) {
+  if (contentType && contentType.includes("text/event-stream")) {
     hideLoading(); // Hide the loader when the response is processed
     toggleButtonState();
     processStreamedResponse(response);
