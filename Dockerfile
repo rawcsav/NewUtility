@@ -1,3 +1,4 @@
+# Use an intermediate build stage to install dependencies
 FROM python:3.10 as builder
 WORKDIR /build
 COPY requirements.txt .
@@ -5,22 +6,36 @@ RUN python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
     /venv/bin/pip install --no-cache-dir -r requirements.txt
 
+# Start from a slim version of the Python image for the final image
 FROM python:3.10-slim
-RUN useradd -m appuser && \
-    chown -R appuser:appuser /home/appuser
-USER appuser
-WORKDIR /home/appuser/newutil
 
-COPY --from=builder /venv /venv
-COPY --chown=appuser:appuser . .
+# Create a non-root user but set the working directory to match the original setup
+RUN useradd -m appuser
 
+# Switch to root to perform privileged operations
 USER root
+
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y ffmpeg && \
     rm -rf /var/lib/apt/lists/*
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /venv /venv
+
+# Set the working directory to /newutil to match the original setup
+WORKDIR /newutil
+
+# Copy your application code and adjust ownership
+COPY --chown=appuser:appuser . .
+
+# Ensure the non-root user has access to the necessary directories
+RUN chown -R appuser:appuser /newutil
+
+# Switch back to the non-root user for running the application
 USER appuser
 
-# Expose the port the app runs on
+# Expose the application port
 EXPOSE 8080
 
 # Set environment variables
