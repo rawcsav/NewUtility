@@ -221,7 +221,7 @@ def chat_completion():
         response, _ = handle_stream(
             raw_prompt, prompt, client, user_id, conversation_id, chunk_associations=chunk_associations
         )
-        return Response(response, content_type="text/plain", headers={"X-Accel-Buffering": "no"})
+        return Response(response, content_type="text/event-stream", headers={"X-Accel-Buffering": "no"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
@@ -259,7 +259,7 @@ def retry_message(message_id):
         response, _ = handle_stream(
             raw_prompt, prompt, client, user_id, conversation_id, retry=True, chunk_associations=chunk_associations
         )
-        return Response(response, content_type="text/plain", headers={"X-Accel-Buffering": "no"})
+        return Response(response, content_type="text/event-stream", headers={"X-Accel-Buffering": "no"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 

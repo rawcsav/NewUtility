@@ -54,6 +54,6 @@ def query_endpoint():
         for content in ask(query, client):
             yield content
 
-    response = current_app.response_class(stream_with_context(generate()), content_type="text/plain")
+    response = current_app.response_class(stream_with_context(generate()), content_type="text/event-stream")
     response.headers["X-Accel-Buffering"] = "no"
     return response
