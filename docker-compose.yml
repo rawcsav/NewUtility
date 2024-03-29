@@ -11,8 +11,6 @@ services:
     volumes:
       - db_volume:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
-    networks:
-      - appnet
 
   rabbitmq:
     image: "rabbitmq:3"
