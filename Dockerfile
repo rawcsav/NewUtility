@@ -13,6 +13,3 @@ RUN apt-get update && \
 EXPOSE 8080
 
 ENV FLASK_APP=uwsgi.py
-
-# Start uWSGI
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "uwsgi:app", "--bind", "0.0.0.0:8080"]
