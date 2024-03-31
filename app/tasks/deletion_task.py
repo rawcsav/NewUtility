@@ -55,6 +55,7 @@ def delete_entity(session, entity_type, entity_id, user_id):
     try:
         delete_local_files(entity_id, entity_type, user_id)
         session.delete(entity)
+        session.commit()
     except Exception as e:
         raise e
 

@@ -191,7 +191,7 @@ class UpdateDocPreferencesForm(FlaskForm):
     selected = BooleanField("Selected", validators=[Optional()])
     knowledge_query_mode = BooleanField("Enable", validators=[Optional()])
     knowledge_context_tokens = FloatField(
-        "# Of Sections", validators=[Optional(), NumberRange(min=1, max=30, message="Value must be between 1 and 30")]
+        "# Of Sections", validators=[Optional(), NumberRange(min=1, max=60, message="Value must be between 1 and 60")]
     )
     # Adding the optional temperature field with a specified range
     temperature = DecimalField(
