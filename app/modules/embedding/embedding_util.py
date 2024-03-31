@@ -1,7 +1,7 @@
 import os
 import re
 import unicodedata
-from typing import List
+from typing import List, Tuple, Set
 
 from nltk.data import find
 from flask_login import current_user
@@ -49,18 +49,6 @@ def count_tokens(string: str) -> int:
     num_tokens = len(ENCODING.encode(string))
     return num_tokens
 
-
-def extract_text_from_pdf(filepath):
-    page_texts = []
-    with open(filepath, "rb") as file:
-        reader = PdfReader(file)
-        for page_number, page in enumerate(reader.pages, start=1):
-            page_text = page.extract_text()
-            if page_text:
-                page_texts.append((page_text, page_number))
-    return page_texts
-
-
 def preprocess_text(text):
     text = re.sub(r"©.*?\n", "", text)
     text = re.sub(r"\n", " ", text)
@@ -72,77 +60,6 @@ def preprocess_text(text):
     text = re.sub(r"[^\w\s.?!]", "", text)
 
     return text.strip().lower()
-
-
-def extract_text_from_file(filepath):
-    ext = os.path.splitext(filepath)[1].lower()
-    if ext == ".pdf":
-        return extract_text_from_pdf(filepath)
-    elif ext == ".docx":
-        text = docx2txt.process(filepath)
-        return [(text, None)]
-    elif ext == ".txt":
-        with open(filepath, "r", encoding="utf-8") as file:
-            text = file.read()
-        return [(text, None)]
-    else:
-        raise ValueError(f"Unsupported file type: {ext}")
-
-
-def split_text(text_pages, max_tokens=512):
-    download_nltk_data()
-    chunks = []
-    chunk_pages = []  # List to hold the pages for each chunk
-    current_chunk = []
-    current_chunk_token_count = 0
-    current_chunk_pages = set()  # Keep track of pages in the current chunk
-    page_number = None
-    for text, page_number in text_pages:
-        text = preprocess_text(text)
-        sentences = sent_tokenize(text)
-
-        for sentence in sentences:
-            sentence_token_count = count_tokens(sentence)
-            if sentence_token_count > max_tokens:
-                words = word_tokenize(sentence)
-                current_sentence_chunk = []
-                for word in words:
-                    word_token_count = count_tokens(word)
-                    if current_chunk_token_count + word_token_count <= max_tokens:
-                        current_sentence_chunk.append(word)
-                        current_chunk_token_count += word_token_count
-                    else:
-                        chunks.append(" ".join(current_sentence_chunk))
-                        chunk_pages.append(current_chunk_pages.copy() if page_number is not None else None)
-                        current_sentence_chunk = [word]
-                        current_chunk_token_count = word_token_count
-                        current_chunk_pages = {page_number} if page_number is not None else set()
-                if current_sentence_chunk:
-                    chunks.append(" ".join(current_sentence_chunk))
-                    chunk_pages.append(current_chunk_pages.copy() if page_number is not None else None)
-                current_chunk = []
-                current_chunk_token_count = 0
-                current_chunk_pages = {page_number} if page_number is not None else set()
-            elif current_chunk_token_count + sentence_token_count <= max_tokens:
-                current_chunk.append(sentence)
-                current_chunk_token_count += sentence_token_count
-                if page_number is not None:
-                    current_chunk_pages.add(page_number)
-            else:
-                chunks.append(" ".join(current_chunk))
-                chunk_pages.append(current_chunk_pages.copy() if page_number is not None else None)
-                current_chunk = [sentence]
-                current_chunk_token_count = sentence_token_count
-                current_chunk_pages = {page_number} if page_number is not None else set()
-
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
-        chunk_pages.append(current_chunk_pages if page_number is not None else None)
-
-    chunk_token_counts = [count_tokens(chunk) for chunk in chunks]
-    total_tokens = sum(chunk_token_counts)
-    return chunks, chunk_pages, total_tokens, chunk_token_counts
-
 
 def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
@@ -197,17 +114,6 @@ def store_embeddings(session, document_id, embeddings, user_id):
     session.bulk_save_objects(embedding_models)
     session.commit()
 
-
-def cosine_similarity(vec_a, vec_b):
-    return np.dot(vec_a, vec_b)
-
-
-def get_associated_text(id):
-    embedding = DocumentEmbedding.query.filter_by(chunk_id=id).first()
-    if embedding:
-        chunk = DocumentChunk.query.filter_by(id=embedding.chunk_id).first()
-        return chunk.content if chunk else None
-    return None
 
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
@@ -311,3 +217,101 @@ def delete_all_documents():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
+
+class TextExtractor:
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.last_page_number = None
+
+    def extract_text_from_pdf(self):
+        with open(self.filepath, "rb") as file:
+            reader = PdfReader(file)
+            for page_number, page in enumerate(reader.pages, start=1):
+                page_text = page.extract_text()
+                if page_text:
+                    yield (page_text, page_number)
+            self.last_page_number = page_number
+
+    def extract_text_from_file(self):
+        ext = os.path.splitext(self.filepath)[1].lower()
+        if ext == ".pdf":
+            yield from self.extract_text_from_pdf()
+        elif ext == ".docx":
+            text = docx2txt.process(self.filepath)
+            yield (text, None)  # Assuming docx doesn't provide page numbers
+            self.last_page_number = None  # Reset or handle as needed for DOCX
+        elif ext == ".txt":
+            with open(self.filepath, "r", encoding="utf-8") as file:
+                for line_number, line in enumerate(file, start=1):
+                    yield (line.strip(), None)
+            self.last_page_number = line_number
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
+
+    def get_final_page_amount(self):
+        return self.last_page_number
+
+class TextSplitter:
+    def __init__(self, max_tokens: int = 512):
+        self.max_tokens = max_tokens
+        self.chunks = []
+        self.chunk_pages = []
+        self.current_chunk = []
+        self.current_chunk_token_count = 0
+        self.current_chunk_pages = set()
+        download_nltk_data()
+
+    def add_text(self, text: str, page_number: int = None):
+        text = preprocess_text(text)
+        sentences = sent_tokenize(text)
+
+        for sentence in sentences:
+            sentence_token_count = count_tokens(sentence)
+            if sentence_token_count > self.max_tokens:
+                words = word_tokenize(sentence)
+                self._process_long_sentence(words, page_number)
+            elif self.current_chunk_token_count + sentence_token_count <= self.max_tokens:
+                self._add_sentence_to_current_chunk(sentence, page_number)
+            else:
+                self._finalize_current_chunk(page_number)
+                self._add_sentence_to_current_chunk(sentence, page_number)
+
+    def _process_long_sentence(self, words: List[str], page_number: int):
+        current_sentence_chunk = []
+        for word in words:
+            word_token_count = count_tokens(word)
+            if self.current_chunk_token_count + word_token_count <= self.max_tokens:
+                current_sentence_chunk.append(word)
+                self.current_chunk_token_count += word_token_count
+            else:
+                self.chunks.append(" ".join(current_sentence_chunk))
+                self.chunk_pages.append(self.current_chunk_pages.copy() if page_number is not None else None)
+                current_sentence_chunk = [word]
+                self.current_chunk_token_count = word_token_count
+                self.current_chunk_pages = {page_number} if page_number is not None else set()
+        if current_sentence_chunk:
+            self.chunks.append(" ".join(current_sentence_chunk))
+            self.chunk_pages.append(self.current_chunk_pages.copy() if page_number is not None else None)
+        self.current_chunk = []
+        self.current_chunk_token_count = 0
+        self.current_chunk_pages = {page_number} if page_number is not None else set()
+
+    def _add_sentence_to_current_chunk(self, sentence: str, page_number: int):
+        self.current_chunk.append(sentence)
+        self.current_chunk_token_count += count_tokens(sentence)
+        if page_number is not None:
+            self.current_chunk_pages.add(page_number)
+
+    def _finalize_current_chunk(self, page_number: int = None):
+        if self.current_chunk:
+            self.chunks.append(" ".join(self.current_chunk))
+            self.chunk_pages.append(self.current_chunk_pages.copy() if page_number is not None else None)
+        self.current_chunk = []
+        self.current_chunk_token_count = 0
+        self.current_chunk_pages = set()
+
+    def finalize(self) -> Tuple[List[str], List[Set[int]], int, List[int]]:
+        self._finalize_current_chunk()
+        chunk_token_counts = [count_tokens(chunk) for chunk in self.chunks]
+        total_tokens = sum(chunk_token_counts)
+        return self.chunks, self.chunk_pages, total_tokens, chunk_token_counts

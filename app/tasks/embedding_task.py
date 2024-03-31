@@ -5,10 +5,8 @@ from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import Task, EmbeddingTask
 from app.modules.auth.auth_util import task_client
 from app.modules.embedding.embedding_util import (
-    extract_text_from_file,
-    split_text,
     get_embedding_batch,
-    store_embeddings,
+    store_embeddings, TextSplitter, TextExtractor,
 )
 from app.tasks.task_logging import setup_logging
 from app.utils.task_util import make_session
@@ -16,7 +14,6 @@ from app.utils.usage_util import embedding_cost
 from app import socketio
 from app.tasks.celery_task import celery
 
-# Configure logging for the embedding task
 logger = setup_logging()
 
 
@@ -29,9 +26,19 @@ def process_document(session, embedding_task, user_id):
             room=str(user_id),
             namespace="/embedding",
         )
+        logger.info(f"Processing document {embedding_task.id}: {embedding_task.title}")
 
-        text_pages = extract_text_from_file(embedding_task.temp_path)
-        chunks, chunk_pages, total_tokens, chunk_token_counts = split_text(text_pages, embedding_task.chunk_size)
+        extractor = TextExtractor(embedding_task.temp_path)
+        text_pages = extractor.extract_text_from_file()
+
+        text_splitter = TextSplitter(max_tokens=embedding_task.chunk_size)
+        logger.info(f"Splitting text into chunks of {embedding_task.chunk_size} tokens")
+        # Add extracted text to the TextSplitter
+        for text, page_number in text_pages:
+            text_splitter.add_text(text, page_number)
+
+        # Finalize text splitting and get results
+        chunks, chunk_pages, total_tokens, chunk_token_counts = text_splitter.finalize()
 
         new_document = Document(
             user_id=user_id,
@@ -43,7 +50,7 @@ def process_document(session, embedding_task, user_id):
         session.add(new_document)
         session.flush()
 
-        # Emit progress update
+        # Emit progress update for processing document chunks
         socketio.emit(
             "task_progress",
             {"task_id": embedding_task.task_id, "message": f"Processing document chunks for {embedding_task.title}..."},
@@ -51,10 +58,10 @@ def process_document(session, embedding_task, user_id):
             namespace="/embedding",
         )
 
+        # Process chunks as before
         for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
-            pages_str = None  # Default to None
-            if pages is not None:  # Correctly check if pages is not None
-                # Convert each integer page number to a string before joining
+            pages_str = None
+            if pages is not None:
                 pages_str = ",".join(map(str, pages))
             chunk = DocumentChunk(
                 document_id=new_document.id,
@@ -85,7 +92,7 @@ def process_document(session, embedding_task, user_id):
             room=str(user_id),
             namespace="/embedding",
         )
-        # Emit final completion event with document details
+        final_page_count = extractor.last_page_number
         socketio.emit(
             "task_complete",
             {
@@ -97,7 +104,7 @@ def process_document(session, embedding_task, user_id):
                     "author": embedding_task.author,
                     "chunk_count": len(chunks),
                     "document_id": new_document.id,
-                    "page_amount": len(text_pages),
+                    "page_amount": final_page_count,
                     "total_tokens": total_tokens,
                 },
             },
