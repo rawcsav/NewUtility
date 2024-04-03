@@ -103,7 +103,7 @@ services:
 
   celerybeat:
     build: .
-    command: celery -A uwsgi.celery beat --loglevel=info
+    command: celery -A uwsgi.celery beat --loglevel=info -s /newutil/celerybeat-schedule/celerybeat-schedule
     environment:
       FLASK_APP: uwsgi.py
       FLASK_ENV: production
