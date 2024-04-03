@@ -6,7 +6,7 @@ from app.models.task_models import Task, EmbeddingTask
 from app.modules.auth.auth_util import task_client
 from app.modules.embedding.embedding_util import (
     get_embedding_batch,
-    store_embeddings, TextSplitter, TextExtractor,
+    store_embeddings, TextSplitter, TextExtractor, extract_uuid_from_path,
 )
 from app.tasks.task_logging import setup_logging
 from app.utils.task_util import make_session
@@ -39,8 +39,10 @@ def process_document(session, embedding_task, user_id):
 
         # Finalize text splitting and get results
         chunks, chunk_pages, total_tokens, chunk_token_counts = text_splitter.finalize()
+        file_uuid = extract_uuid_from_path(embedding_task.temp_path)
 
         new_document = Document(
+            id=file_uuid,
             user_id=user_id,
             task_id=embedding_task.task_id,
             title=embedding_task.title,

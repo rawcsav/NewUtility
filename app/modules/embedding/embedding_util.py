@@ -1,6 +1,7 @@
 import os
 import re
 import unicodedata
+import uuid
 from typing import List, Tuple, Set
 
 from nltk.data import find
@@ -38,9 +39,19 @@ def download_nltk_data():
         print("'punkt' tokenizer data downloaded.")
 
 
+def extract_uuid_from_path(temp_path):
+    file_name = os.path.basename(temp_path)
+    match = re.match(r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})", file_name)
+    if match:
+        return match.group(1)
+    else:
+        raise ValueError("UUID not found in temp_path")
+
 def save_temp(uploaded_file):
     temp_dir = get_user_upload_directory(current_user.id)
-    temp_path = os.path.join(temp_dir, secure_filename(uploaded_file.filename))
+    file_extension = os.path.splitext(uploaded_file.filename)[1]
+    uuid_filename = f"{uuid.uuid4()}{file_extension}"
+    temp_path = os.path.join(temp_dir, secure_filename(uuid_filename))
     uploaded_file.save(temp_path)
     return temp_path
 

@@ -3,6 +3,8 @@ from datetime import timedelta
 import cloudinary
 from urllib.parse import quote_plus
 
+from celery.schedules import crontab
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 appdir = os.path.abspath(os.path.join(os.path.dirname(__file__), "app"))
 
@@ -32,7 +34,15 @@ class Config(object):
         "app.tasks.image_task",
         "app.tasks.deletion_task",
         "app.tasks.embedding_task",
+        "app.tasks.celerybeat_task",
     )
+
+    CELERY_BEAT_SCHEDULE = {
+        'periodic_check': {
+            'task': 'app.tasks.celerybeat_task.cleanup_documents',  # Use the correct path to your task function
+            'schedule': crontab(hour='0, 12', minute=0),  # At minute 0 past hour 0 and 12.
+        },
+    }
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"

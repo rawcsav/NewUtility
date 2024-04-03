@@ -6,7 +6,8 @@ from app.models.embedding_models import Document
 from app.models.image_models import GeneratedImage, MessageImages
 from app.models.task_models import Task, DeletionTask
 from app.models.user_models import UserAPIKey, User
-from app.modules.user.user_util import get_user_gen_img_directory, get_user_chat_img_directory, get_user_audio_directory
+from app.modules.user.user_util import get_user_gen_img_directory, get_user_chat_img_directory, \
+    get_user_audio_directory, get_user_upload_directory
 from app.tasks.task_logging import setup_logging
 from app.utils.task_util import make_session
 
@@ -14,15 +15,20 @@ logger = setup_logging()
 
 
 def delete_local_files(entity_id, entity_type, user_id):
-    if entity_type == "generated_images":
-        dir_to_check = get_user_gen_img_directory(user_id)
-    elif entity_type == "message_images":
-        dir_to_check = get_user_chat_img_directory(user_id)
-    elif entity_type in ["tts_jobs", "transcription_jobs", "translation_jobs"]:
-        dir_to_check = get_user_audio_directory(user_id)
-    else:
-        return  # Return if the entity type does not match
+    # Map entity types to their directory retrieval functions
+    dir_retrieval_funcs = {
+        "generated_images": get_user_gen_img_directory,
+        "message_images": get_user_chat_img_directory,
+        "tts_jobs": get_user_audio_directory,
+        "transcription_jobs": get_user_audio_directory,
+        "translation_jobs": get_user_audio_directory,
+        "documents": get_user_upload_directory
+    }
 
+    # Retrieve the directory based on the entity type
+    dir_to_check = dir_retrieval_funcs.get(entity_type, lambda user_id: None)(user_id)
+    if not dir_to_check:
+        return
     for root, dirs, files in os.walk(dir_to_check):
         for filename in files:
             if entity_id in filename:

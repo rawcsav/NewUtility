@@ -101,10 +101,46 @@ services:
     networks:
       - internal
 
+  celerybeat:
+    build: .
+    command: celery -A uwsgi.celery beat --loglevel=info
+    environment:
+      FLASK_APP: uwsgi.py
+      FLASK_ENV: production
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
+      FLASK_DEBUG: False
+      SQL_HOSTNAME: mysql
+      SQL_USERNAME: remote_user
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      SQL_DB_NAME: ${SQL_DB_NAME}
+      CELERY_BROKER_URL: "pyamqp://admin:${CELERY_BROKER_PASSWORD}@rabbitmq/vhost"
+      CRYPT_KEY: ${CRYPT_KEY}
+      CLOUD_NAME: ${CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    volumes:
+      - ./app:/newutil/app
+      - ./app/static:/newutil/app/static
+      - ./config.py:/newutil/config.py
+      - ./uwsgi.py:/newutil/uwsgi.py
+      - user_files_volume:/newutil/app/user_files/
+      - celerybeat-schedule:/newutil/celerybeat-schedule
+    depends_on:
+      - web
+      - rabbitmq
+      - mysql
+      - celery
+    networks:
+      - internal
+
 volumes:
   db_volume:
   rabbitmq_volume:
-  user_files_volume:  # New volume for user files
+  user_files_volume:
+  celerybeat-schedule:
 
 networks:
     internal:

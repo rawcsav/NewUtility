@@ -4,11 +4,11 @@ from flask import Flask
 
 celery = Celery(__name__)
 
-
 def make_celery(app: Flask, socketio: SocketIO) -> Celery:
     celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
     celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
     celery.conf.imports = app.config["CELERY_IMPORTS"]
+    celery.conf.beat_schedule= app.config["CELERY_BEAT_SCHEDULE"]
 
     TaskBase = celery.Task
 
