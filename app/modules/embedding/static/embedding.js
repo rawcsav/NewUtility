@@ -82,6 +82,11 @@ function createDocumentForms(fileList) {
           <label>Max Tokens per Chunk (default is 512):</label>
           <input type="number" name="chunk_size" min="1" value="512" />
         </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="advanced_preprocessing" /> Enable Advanced Preprocessing
+        </label>
+      </div>
       `;
     documentForms.push(formHtml);
   }
@@ -98,9 +103,8 @@ function onSubmit(event) {
     formData.append("title", data.title);
     formData.append("author", data.author || ""); // Use empty string if author is not provided
     formData.append("chunk_size", data.chunk_size);
+    formData.append("advanced_preprocessing", data.advanced_preprocessing);
   });
-
-  // Use FormData to capture all form inputs for the AJAX request
 
   // Send the AJAX request to the upload endpoint
   fetch(uploadForm.action, {
@@ -147,11 +151,13 @@ function saveFormData(index) {
   const file = fileInput.files[index];
   let title = formData.get("title");
   title = title || file.name; // Use file name if title is not provided
+  let advanced_preprocessing = formData.get("advanced_preprocessing") === "on"; // Check if advanced preprocessing is enabled
   documentData[index] = {
     file: file,
     title: title,
     author: formData.get("author"),
     chunk_size: formData.get("chunk_size"),
+    advanced_preprocessing: advanced_preprocessing, // Store advanced preprocessing setting
   };
 }
 
@@ -163,6 +169,8 @@ function restoreFormData(index) {
     form.querySelector('input[name="title"]').value = data.title || "";
     form.querySelector('input[name="author"]').value = data.author || ""; // Use empty string if author is not provided
     form.querySelector('input[name="chunk_size"]').value = data.chunk_size;
+    form.querySelector('input[name="advanced_preprocessing"]').checked =
+      data.advanced_preprocessing;
   }
 }
 

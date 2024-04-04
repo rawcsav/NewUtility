@@ -57,6 +57,8 @@ def upload_document():
     titles = request.form.getlist("title")
     authors = request.form.getlist("author")
     chunk_sizes = request.form.getlist("chunk_size")
+    advanced_preprocessings = request.form.getlist("advanced_preprocessing")  # Capture advanced preprocessing options
+
 
     tasks_info = []  # To keep track of created tasks and associated file info
 
@@ -64,6 +66,7 @@ def upload_document():
         title = titles[i] if i < len(titles) else secure_filename(file.filename)
         author = authors[i] if i < len(authors) else ""
         chunk_size = int(chunk_sizes[i]) if i < len(chunk_sizes) else 512
+        advanced_preprocessing = advanced_preprocessings[i] == 'true' if i < len(advanced_preprocessings) else False  # Convert to boolean
 
         temp_path = save_temp(file)
 
@@ -72,7 +75,7 @@ def upload_document():
         db.session.flush()
 
         new_embedding_task = EmbeddingTask(
-            task_id=new_task.id, title=title, author=author, chunk_size=chunk_size, temp_path=temp_path
+            task_id=new_task.id, title=title, author=author, chunk_size=chunk_size, temp_path=temp_path, advanced_preprocessing=advanced_preprocessing
         )
         db.session.add(new_embedding_task)
 

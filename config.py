@@ -40,7 +40,7 @@ class Config(object):
     CELERY_BEAT_SCHEDULE = {
         'periodic_check': {
             'task': 'app.tasks.celerybeat_task.cleanup_documents',  # Use the correct path to your task function
-            'schedule': crontab(hour='0, 12', minute=0),  # At minute 0 past hour 0 and 12.
+            'schedule': crontab(minute=0, hour='*/3'),  # At minute 0 past hour 0 and 12.
         },
     }
 

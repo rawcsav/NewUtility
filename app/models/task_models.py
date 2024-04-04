@@ -50,6 +50,7 @@ class EmbeddingTask(db.Model):
     author = db.Column(db.String(255))
     chunk_size = db.Column(db.Integer)
     temp_path = db.Column(db.String(255))
+    advanced_preprocessing = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f"<EmbeddingTask {self.id} - {self.title}>"

@@ -1,8 +1,9 @@
+import concurrent
 import os
 import re
 import unicodedata
 import uuid
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Generator
 
 from nltk.data import find
 from flask_login import current_user
@@ -12,6 +13,7 @@ import numpy as np
 import openai
 import tiktoken
 from docx2txt import docx2txt
+from concurrent import futures
 from nltk.tokenize import word_tokenize, sent_tokenize
 from pypdf import PdfReader
 from werkzeug.utils import secure_filename
@@ -61,16 +63,26 @@ def count_tokens(string: str) -> int:
     return num_tokens
 
 def preprocess_text(text):
-    text = re.sub(r"©.*?\n", "", text)
+    text = re.sub(r"\n(?=[a-z])", " ", text)
     text = re.sub(r"\n", " ", text)
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r"https?://\S+|www\.\S+", "", text)
     text = re.sub(r"\S*@\S*\s?", "", text)
     text = re.sub(r"<[^>]+>", "", text)
-    text = "".join((c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"))
-    text = re.sub(r"[^\w\s.?!]", "", text)
-
     return text.strip().lower()
+
+def gpt_preprocess(text, client):
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo-0125",
+        messages=[
+            {"role": "system", "content": "Your task is to identify and correct formatting issues, including incorrect capitalization, missing or misplaced punctuation, irregular spacing, improper line breaks, and OCR-specific errors such as misinterpreted characters and broken words. You should not add to or infer content beyond the original text. Your output must be the corrected text only, with no additional commentary or metadata. Focus on enhancing readability, ensuring the text adheres to standard writing conventions, and addressing the unique challenges presented by OCR text."},
+            {"role": "user", "content": f"Please help clean the following input text. It was originally extracted from a PDF and has numerous formatting errors and extraction artifacts. Please remove things like extraneous whitespace, unusual line breaks, extraneous word hyphenations, odd table formatting, and special characters that do not belong. The text should be cleaned up and ready for further processing. Output absolutely nothing besides the formatted text. The text is as follows:{text}"},
+        ],
+        temperature=0,
+    )
+    response = completion.choices[0].message
+    return response
+
 
 def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
@@ -263,15 +275,19 @@ class TextExtractor:
         return self.last_page_number
 
 class TextSplitter:
-    def __init__(self, max_tokens: int = 512):
+    def __init__(self, max_tokens: int = 512, client=None, use_gpt_preprocessing=False):
         self.max_tokens = max_tokens
+        self.batch_size = 3500 // max_tokens
+        self.temp_chunks = []
+        self.use_gpt_preprocessing = use_gpt_preprocessing
+        self.client = client
         self.chunks = []
         self.chunk_pages = []
         self.current_chunk = []
         self.current_chunk_token_count = 0
         self.current_chunk_pages = set()
         download_nltk_data()
-
+        print(use_gpt_preprocessing)
     def add_text(self, text: str, page_number: int = None):
         text = preprocess_text(text)
         sentences = sent_tokenize(text)
@@ -313,16 +329,43 @@ class TextSplitter:
         if page_number is not None:
             self.current_chunk_pages.add(page_number)
 
-    def _finalize_current_chunk(self, page_number: int = None):
+
+    def _finalize_current_chunk(self, page_number: int = None, force_process: bool = False):
         if self.current_chunk:
-            self.chunks.append(" ".join(self.current_chunk))
+            final_chunk = " ".join(self.current_chunk)
+            if self.use_gpt_preprocessing and self.client is not None:
+                self.temp_chunks.append(final_chunk)
+                if len(self.temp_chunks) >= self.batch_size:
+                    self._process_all_chunks()
+            else:
+                self.chunks.append(final_chunk)
             self.chunk_pages.append(self.current_chunk_pages.copy() if page_number is not None else None)
-        self.current_chunk = []
-        self.current_chunk_token_count = 0
-        self.current_chunk_pages = set()
+            self.current_chunk = []
+            self.current_chunk_token_count = 0
+            self.current_chunk_pages = set()
+
+    def _process_all_chunks(self):
+        # Process the accumulated chunks in temp storage
+        processed_chunks = self._process_batch(self.temp_chunks, self.client)
+        # Add processed chunks to the final list
+        self.chunks.extend(processed_chunks)
+        # Clear temp storage since these chunks have been processed
+        self.temp_chunks = []
+
+    def _process_batch(self, batch: List[str], client: openai.OpenAI) -> Generator[str, None, None]:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(gpt_preprocess, text, client) for text in batch]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    yield future.result().content
+                except Exception as e:
+                    print(f"An error occurred during preprocessing: {e}")
+                    yield None
 
     def finalize(self) -> Tuple[List[str], List[Set[int]], int, List[int]]:
         self._finalize_current_chunk()
+        if self.temp_chunks:
+            self._process_all_chunks()
         chunk_token_counts = [count_tokens(chunk) for chunk in self.chunks]
         total_tokens = sum(chunk_token_counts)
         return self.chunks, self.chunk_pages, total_tokens, chunk_token_counts

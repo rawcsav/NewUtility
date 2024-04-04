@@ -137,6 +137,7 @@ class EditDocumentForm(FlaskForm):
 class ChatCompletionForm(FlaskForm):
     prompt = TextAreaField("Prompt", validators=[DataRequired()])
     conversation_id = HiddenField("Conversation ID", validators=[DataRequired()])
+    advanced_preprocessing = BooleanField("Enable Advanced Preprocessing", default=False)  # Added field
     submit = SubmitField("Get Completion")
 
 

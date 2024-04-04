@@ -2,7 +2,7 @@ import hashlib
 import os
 import random
 import re
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 import openai
 import requests
 from cryptography.fernet import Fernet
@@ -160,4 +160,14 @@ def task_client(session, user_id):
         return None, "API Key not found."
     api_key = decrypt_api_key(user_api_key.encrypted_api_key)
     client = OpenAI(api_key=api_key, max_retries=5, timeout=30.0)
+    return client, key_id, None
+
+def async_task_client(session, user_id):
+    user = session.query(User).filter_by(id=user_id).first()
+    key_id = user.selected_api_key_id
+    user_api_key = session.query(UserAPIKey).filter_by(user_id=user_id, id=key_id, delete=False).first()
+    if not user_api_key:
+        return None, "API Key not found."
+    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
+    client = AsyncOpenAI(api_key=api_key, max_retries=5, timeout=30.0)
     return client, key_id, None
