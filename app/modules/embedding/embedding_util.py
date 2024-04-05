@@ -79,6 +79,7 @@ def gpt_preprocess(text, client):
             {"role": "user", "content": f"Please help clean the following input text. It was originally extracted from a PDF and has numerous formatting errors and extraction artifacts. Please remove things like extraneous whitespace, unusual line breaks, extraneous word hyphenations, odd table formatting, and special characters that do not belong. The text should be cleaned up and ready for further processing. Output absolutely nothing besides the formatted text. The text is as follows:{text}"},
         ],
         temperature=0,
+        max_tokens=4090,
     )
     response = completion.choices[0].message
     return response
@@ -98,27 +99,37 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
     current_batch = []
     current_tokens = 0
 
+    # Function to process a single batch of texts concurrently
+    def process_batch(batch):
+        # This uses a list comprehension to process all texts in the batch concurrently
+        # through the `get_embedding` function.
+        return [get_embedding(text, client, model, **kwargs) for text in batch]
+
+    # Collect texts into batches based on token limits
     for text in texts:
         text = text.replace("\n", " ")
         token_estimate = count_tokens(text)
         if current_tokens + token_estimate > MAX_TOKENS_PER_BATCH:
-            batch_embeddings = [get_embedding(single_text, client, model, **kwargs) for single_text in current_batch]
-            embeddings.extend(batch_embeddings)
-            current_batch = []
-            current_tokens = 0
+            if current_batch:  # Ensure there is something to process
+                embeddings.append(current_batch)  # Prepare batch for processing
+            current_batch = [text]  # Start a new batch
+            current_tokens = token_estimate
+        else:
+            current_batch.append(text)
+            current_tokens += token_estimate
 
-        current_batch.append(text)
-        current_tokens += token_estimate
+    if current_batch:  # Check if there's a last batch to process
+        embeddings.append(current_batch)  # Prepare last batch for processing
 
-    if current_batch:
-        batch_embeddings = [get_embedding(single_text, client, model, **kwargs) for single_text in current_batch]
-        embeddings.extend(batch_embeddings)
+    # Process all batches concurrently and flatten the result
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Map each batch to the executor for concurrent processing
+        results = list(executor.map(process_batch, embeddings))
+        # Flatten the list of lists to a single list of embeddings
+        final_embeddings = [item for sublist in results for item in sublist]
 
-        for batch_embedding in batch_embeddings:
-            if len(batch_embedding) != 3072:
-                raise ValueError(f"Expected embedding dimension to be 3072, but got {len(batch_embedding)}")
+    return final_embeddings
 
-    return embeddings
 
 
 def store_embeddings(session, document_id, embeddings, user_id):
@@ -277,7 +288,7 @@ class TextExtractor:
 class TextSplitter:
     def __init__(self, max_tokens: int = 512, client=None, use_gpt_preprocessing=False):
         self.max_tokens = max_tokens
-        self.batch_size = 3500 // max_tokens
+        self.batch_size = 4000 // max_tokens
         self.temp_chunks = []
         self.use_gpt_preprocessing = use_gpt_preprocessing
         self.client = client

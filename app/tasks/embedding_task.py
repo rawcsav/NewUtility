@@ -1,4 +1,5 @@
 import concurrent
+from concurrent import futures
 import os
 
 
@@ -162,5 +163,4 @@ def process_embedding_task(task_id):
             except Exception as e:
                 pass
         session.remove()
-
 
