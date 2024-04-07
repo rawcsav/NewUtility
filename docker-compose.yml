@@ -117,8 +117,6 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
-    user:
-      999:999
     volumes:
       - ./app:/newutil/app
       - ./app/static:/newutil/app/static
