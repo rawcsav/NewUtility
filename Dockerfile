@@ -12,9 +12,15 @@ RUN apt-get update && \
 RUN groupadd -r newutil && \
     useradd --no-log-init -r -g newutil newutil && \
     chown -R newutil:newutil /newutil
+# Copy the entrypoint script and grant execution permissions
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Switch to the non-root user
 USER newutil
+
+# Switch to the non-root user
 
 # Set environment variables
 ENV FLASK_APP=uwsgi.py
