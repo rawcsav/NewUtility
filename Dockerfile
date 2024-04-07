@@ -10,7 +10,7 @@ RUN apt-get update && \
 
 COPY . /newutil
 RUN groupadd -r newutil && newutil --no-log-init -r -g newutil newutil \
-    && chown -R newutil:newutil /rawcon \
+    && chown -R newutil:newutil /newutil \
 
 
 ENV FLASK_APP=uwsgi.py
