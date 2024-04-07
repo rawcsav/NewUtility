@@ -22,8 +22,6 @@ services:
       RABBITMQ_DEFAULT_PASS: ${CELERY_BROKER_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: "vhost"
       CELERY_BROKER_URL: "pyamqp://admin:${CELERY_BROKER_PASSWORD}@rabbitmq/vhost"
-    ports:
-      - "5672:5672"
     volumes:
       - rabbitmq_volume:/var/lib/rabbitmq
     depends_on:
@@ -65,8 +63,6 @@ services:
     networks:
       - appnet
       - internal
-    ports:
-      - "8080:8080"
 
   celery:
     build: .
