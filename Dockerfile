@@ -1,7 +1,7 @@
 FROM python:3.10
 
 WORKDIR /newutil
-COPY requirements.txt /rawcon/
+COPY requirements.txt /newutil/
 
 RUN apt-get update && \
     apt-get install -y ffmpeg && \
