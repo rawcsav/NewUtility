@@ -8,11 +8,15 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY . /newutil
-RUN groupadd -r newutil && newutil --no-log-init -r -g newutil newutil \
-    && chown -R newutil:newutil /newutil \
+# Create a group and user 'newutil'
+RUN groupadd -r newutil && \
+    useradd --no-log-init -r -g newutil newutil && \
+    chown -R newutil:newutil /newutil
 
+# Switch to the non-root user
+USER newutil
 
+# Set environment variables
 ENV FLASK_APP=uwsgi.py
 
 # Start uWSGI
