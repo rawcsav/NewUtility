@@ -10,6 +10,8 @@ RUN apt-get update && \
 COPY . /newutil
 RUN groupadd -r newutil && newutil --no-log-init -r -g newutil newutil \
     && chown -R newutil:newutil /rawcon \
+    pip install --no-cache-dir -r requirements.txt
+
 
 ENV FLASK_APP=uwsgi.py
 
