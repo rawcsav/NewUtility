@@ -214,7 +214,6 @@ def chat_stream(raw_prompt, prompt, client, user_id, conversation_id, retry=Fals
             model = "gpt-4-turbo-preview"
         else:
             model = preferences["model"]
-        print(prompt)
         request_payload = {
             "model": model,
             "messages": conversation_history + [{"role": "user", "content": user_message_content}],

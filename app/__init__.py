@@ -31,7 +31,6 @@ def create_app():
         app.config.from_object(DevelopmentConfig)
         DevelopmentConfig.init_app(app)
     else:
-        print(flask_env)
         app.config.from_object(ProductionConfig)
         ProductionConfig.init_app(app)
 

@@ -3,13 +3,14 @@ from app import socketio
 from app.tasks.celery_task import celery
 from app.modules.user.user_util import get_user_audio_directory
 from app.models.task_models import Task, TTSTask, TranscriptionTask, TranslationTask
-from app.modules.audio.audio_util import generate_speech, preprocess_audio, transcribe_audio, translate_audio
+from app.modules.audio.audio_util import generate_speech, preprocess_audio, transcribe_audio, translate_audio, \
+    wait_for_file
 from app.modules.auth.auth_util import task_client
-from app.tasks.task_logging import setup_logging
+from app.utils.logging_util import configure_logging
+from app.utils.socket_util import emit_task_update
 from app.utils.task_util import make_session
 
-logger = setup_logging()
-
+logger = configure_logging()
 
 def process_tts(session, tts_task, user_id):
     try:
@@ -17,12 +18,7 @@ def process_tts(session, tts_task, user_id):
         client, key_id, error = task_client(session, user_id)
         if error:
             raise Exception(error)
-        socketio.emit(
-            "task_progress",
-            {"task_id": tts_task.task_id, "message": "Generating speech..."},
-            room=str(user_id),
-            namespace="/audio",
-        )
+        emit_task_update("/audio", tts_task.task_id, user_id, "processing", "Generating speech...")
         tts_filepath, job_id = generate_speech(
             session=session,
             client=client,
@@ -57,12 +53,7 @@ def process_tts(session, tts_task, user_id):
         )
         return tts_filepath
     except Exception as e:
-        socketio.emit(
-            "task_update",
-            {"task_id": tts_task.task_id, "status": "error", "error": str(e)},
-            room=str(user_id),
-            namespace="/audio",
-        )
+        emit_task_update("/audio", tts_task.task_id, user_id, "error", f"Error during TTS processing for task_id={tts_task.task_id}: {e}")
         logger.error(f"Error during TTS processing for task_id={tts_task.task_id}: {e}")
         raise e
 
@@ -73,12 +64,7 @@ def process_tts_task(task_id):
     try:
         task = session.query(Task).filter_by(id=task_id).one()
         tts_task = session.query(TTSTask).filter_by(task_id=task_id).first()
-        socketio.emit(
-            "task_progress",
-            {"task_id": task.id, "message": f"Beginning TTS task..."},
-            room=str(task.user_id),
-            namespace="/audio",
-        )
+        emit_task_update("/audio", task_id, task.user_id, "processing", "Generating speech...")
         if task and tts_task and task.status:
             try:
                 success = process_tts(session, tts_task, user_id=task.user_id)
@@ -102,42 +88,37 @@ def process_tts_task(task_id):
 def process_translation(session, translation_task, user_id):
     try:
         logger.info(f"Starting translation processing for task_id={translation_task.task_id}")
+        emit_task_update("/audio", translation_task.task_id, user_id, "processing", f"Beginning translation of {translation_task.original_filename}...")
         client, key_id, error = task_client(session, user_id)
         if error:
             raise Exception(error)
 
-        input_filename = translation_task.input_filename
+        task_id = translation_task.task_id
         download_dir = get_user_audio_directory(user_id)
-        socketio.emit(
-            "task_progress",
-            {
-                "task_id": translation_task.task_id,
-                "message": f"Beginning translation of {os.path.basename(input_filename)}...",
-            },
-            room=str(user_id),
-            namespace="/audio",
-        )
+        filepath = translation_task.input_filename
+
         # Preprocess audio and translate
-        segment_filepaths = preprocess_audio(input_filename, download_dir, user_id, translation_task.task_id)
-        file_id = translate_audio(
+        segment_filepaths = preprocess_audio(filepath, download_dir, user_id, task_id)
+        file_id, total_duration = translate_audio(
             session=session,
             user_id=user_id,
             api_key_id=key_id,
             client=client,
             file_paths=segment_filepaths,
-            input_filename=input_filename,
+            original_filename=translation_task.original_filename,
+            input_filename=filepath,
             model=translation_task.model,
             prompt=translation_task.prompt,
             response_format=translation_task.response_format,
             temperature=translation_task.temperature,
             task_id=translation_task.task_id,
         )
-        logger.info(f"Translation processing completed for task_id={translation_task.task_id}")
+        logger.info(f"Translation processing completed for task_id={task_id}")
         socketio.emit(
             "task_complete",
             {
                 "task_id": translation_task.task_id,
-                "message": f"Translation processing for {os.path.basename(translation_task.input_filename)} completed!",
+                "message": f"Translation processing for {translation_task.original_filename} completed!",
                 "status": "completed",
                 "job_type": "translation",
                 "job_details": {
@@ -146,7 +127,7 @@ def process_translation(session, translation_task, user_id):
                     "prompt": translation_task.prompt,
                     "response_format": translation_task.response_format,
                     "temperature": translation_task.temperature,
-                    "input_filename": os.path.basename(translation_task.input_filename),
+                    "original_filename": translation_task.original_filename,
                     "created_at": "Just now",
                 },
             },
@@ -155,12 +136,7 @@ def process_translation(session, translation_task, user_id):
         )
         return file_id
     except Exception as e:
-        socketio.emit(
-            "task_update",
-            {"task_id": translation_task.task_id, "status": "error", "error": str(e)},
-            room=str(user_id),
-            namespace="/audio",
-        )
+        emit_task_update("/audio", translation_task.task_id, user_id, "error", f"Error during translation processing for task_id={translation_task.task_id}: {e}")
         logger.error(f"Error during translation processing for task_id={translation_task.task_id}: {e}")
         raise e
 
@@ -199,29 +175,35 @@ def process_transcription(session, transcription_task, user_id):
         if error:
             raise Exception(error)
 
-        input_filename = transcription_task.input_filename
+        task_id = transcription_task.task_id
         download_dir = get_user_audio_directory(user_id)
-        segment_filepaths = preprocess_audio(input_filename, download_dir, user_id, transcription_task.task_id)
-        file_id = transcribe_audio(
+        filepath = transcription_task.input_filename
+
+        if not wait_for_file(filepath):
+            raise Exception(f"File {filepath} not ready for processing.")
+
+        segment_filepaths = preprocess_audio(filepath, download_dir, user_id, task_id)
+        file_id, total_duration = transcribe_audio(
             session=session,
             user_id=user_id,
             api_key_id=key_id,
             client=client,
             file_paths=segment_filepaths,
-            input_filename=input_filename,
+            input_filename=filepath,
+            original_filename=transcription_task.original_filename,
             model=transcription_task.model,
             prompt=transcription_task.prompt,
             response_format=transcription_task.response_format,
             temperature=transcription_task.temperature,
             language=transcription_task.language,
-            task_id=transcription_task.task_id,
+            task_id=task_id,
         )
-        logger.info(f"Transcription processing completed for task_id={transcription_task.task_id}")
+        logger.info(f"Transcription processing completed for task_id={task_id}")
         socketio.emit(
             "task_complete",
             {
-                "task_id": transcription_task.task_id,
-                "message": f"Transcription processing for {os.path.basename(transcription_task.input_filename)} completed!",
+                "task_id": task_id,
+                "message": f"Transcription processing for {os.path.basename(transcription_task.original_filename)} completed!",
                 "status": "completed",
                 "job_type": "transcription",
                 "job_details": {
@@ -231,7 +213,7 @@ def process_transcription(session, transcription_task, user_id):
                     "prompt": transcription_task.prompt,
                     "response_format": transcription_task.response_format,
                     "temperature": transcription_task.temperature,
-                    "input_filename": os.path.basename(transcription_task.input_filename),
+                    "original_filename": transcription_task.original_filename,
                     "created_at": "Just now",
                 },
             },
@@ -240,12 +222,7 @@ def process_transcription(session, transcription_task, user_id):
         )
         return file_id
     except Exception as e:
-        socketio.emit(
-            "task_update",
-            {"task_id": transcription_task.task_id, "status": "error", "error": str(e)},
-            room=str(user_id),
-            namespace="/audio",
-        )
+        emit_task_update("/audio", transcription_task.task_id, user_id, "error", f"Error during transcription processing for task_id={transcription_task.task_id}: {e}")
         logger.error(f"Error during transcription processing for task_id={transcription_task.task_id}: {e}")
         raise e
 

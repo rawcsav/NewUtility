@@ -1,4 +1,8 @@
+import concurrent
 import os
+import time
+from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
 import openai
 from flask_login import current_user
@@ -15,26 +19,34 @@ from app.models.audio_models import (
     TranslationJobSegment,
 )
 from app.utils.usage_util import num_tokens_from_string, chat_cost, tts_cost, whisper_cost
-from config import appdir
+from app.utils.logging_util import configure_logging
+
+logger = configure_logging()
 
 
 def ms_until_sound(sound, silence_threshold_in_decibels=-20.0, chunk_size=10):
-    trim_ms = 0
+    trim_ms = 0  # ms
 
-    assert chunk_size > 0, "Chunk size must be positive"
-
-    while sound[trim_ms : trim_ms + chunk_size].dBFS < silence_threshold_in_decibels and trim_ms < len(sound):
+    assert chunk_size > 0  # to avoid infinite loop
+    while sound[trim_ms:trim_ms+chunk_size].dBFS < silence_threshold_in_decibels and trim_ms < len(sound):
         trim_ms += chunk_size
 
     return trim_ms
 
+def trim_start(filepath, original_format):
+    path = Path(filepath)
+    directory = path.parent
+    filename = path.name
+    audio = AudioSegment.from_file(filepath, format=original_format)
+    start_trim = ms_until_sound(audio)
+    trimmed = audio[start_trim:]
+    new_filename = directory / f"trimmed_{filename}"
+    trimmed.export(new_filename, format="mp3")
+    return trimmed, new_filename
 
 def find_nearest_silence(
     audio_segment, target_ms, search_radius_ms=20000, silence_thresh=-40, min_silence_len_ms=1000, seek_step_ms=100
 ):
-    """
-    Find the nearest point of silence within a specified radius around a target timestamp in an audio segment.
-    """
     start_search_ms = max(0, target_ms - search_radius_ms)
     end_search_ms = min(len(audio_segment), target_ms + search_radius_ms)
     best_silence_start = target_ms  # Default to the target if no silence is found
@@ -43,22 +55,71 @@ def find_nearest_silence(
     for timestamp in range(start_search_ms, end_search_ms, seek_step_ms):
         if timestamp + min_silence_len_ms > len(audio_segment):
             break  # Avoid checking beyond the end of the audio_segment
-        segment = audio_segment[timestamp : timestamp + min_silence_len_ms]
+        segment = audio_segment[timestamp: timestamp + min_silence_len_ms]
         if segment.dBFS < silence_thresh:
             delta = abs(timestamp - target_ms)
             if delta < smallest_delta:
                 best_silence_start = timestamp
                 smallest_delta = delta
-
+    logger.info(f"Nearest silence found at {best_silence_start} ms.")  # Added logging for nearest silence found
     return best_silence_start
 
 
-def export_audio_chunk(chunk, directory, filename, index):
-    segment_filename = f"{filename}_segment_{index}.mp3"
-    segment_filepath = os.path.join(directory, segment_filename)
-    chunk.export(segment_filepath, format="mp3")
-    return segment_filepath
+def process_and_export_segment(chunk, chunk_filepath, segment_index):
+    logger.info(f"Exporting segment {segment_index}: {chunk_filepath}")
+    chunk.export(chunk_filepath, format="mp3")
+    return chunk_filepath
 
+
+def split_and_export_chunks(audio, filepath, user_directory, user_id, task_id):
+    logger.info("Splitting and exporting audio segments...")
+    chunk_length_ms = 10 * 60 * 1000  # 5 minutes in milliseconds
+    search_radius_ms = 20 * 1000  # 20 seconds in milliseconds
+    current_ms = 0
+    segment_filepaths = []
+
+    while current_ms < len(audio):
+        next_split = find_nearest_silence(audio, current_ms + chunk_length_ms, search_radius_ms)
+        if next_split == -1 or next_split >= len(audio):
+            next_split = len(audio)
+        chunk = audio[current_ms:next_split]
+        current_ms = next_split
+
+        segment_index = len(segment_filepaths)
+        original_path = Path(filepath)
+        chunk_filename = f"chunk_{segment_index:03}_{original_path.stem}.mp3"
+        chunk_filepath = os.path.join(user_directory, chunk_filename)
+
+        # Process and export each segment sequentially
+        exported_path = process_and_export_segment(chunk, chunk_filepath, segment_index)
+        segment_filepaths.append(exported_path)
+
+    logger.info("All segments exported.")
+    return segment_filepaths
+
+def file_is_ready(filepath):
+    if not os.path.exists(filepath):
+        return False
+
+    try:
+        with open(filepath, "rb") as f:
+            return True
+    except IOError:
+        return False
+
+
+def wait_for_file(filepath, timeout=30):
+
+    logger.info(f"Checking readiness of file: {filepath}")
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        if file_is_ready(filepath):
+            logger.info(f"File {filepath} is ready.")
+            return True
+        logger.debug(f"File {filepath} not ready yet, retrying...")
+        time.sleep(1)
+    logger.warning(f"Timeout reached while waiting for file {filepath}.")
+    return False
 
 def preprocess_audio(filepath, user_directory, user_id, task_id):
     socketio.emit(
@@ -81,20 +142,7 @@ def preprocess_audio(filepath, user_directory, user_id, task_id):
         )
         raise ValueError(f"Unsupported format: {original_format}")
 
-    audio = AudioSegment.from_file(filepath, format=original_format)
-    start_trim = ms_until_sound(audio)
-    trimmed_audio = audio[start_trim:]
-
-    socketio.emit(
-        "task_progress",
-        {"task_id": task_id, "message": f"Audio trimmed from the start by {start_trim} milliseconds."},
-        room=str(user_id),
-        namespace="/audio",
-    )
-
-    new_filename = f"trim_{os.path.splitext(os.path.basename(filepath))[0]}.mp3"
-    new_filepath = os.path.join(user_directory, new_filename)
-    trimmed_audio.export(new_filepath, format="mp3")
+    trimmed_audio, trimmed_filepath = trim_start(filepath, original_format)
 
     socketio.emit(
         "task_progress",
@@ -103,54 +151,10 @@ def preprocess_audio(filepath, user_directory, user_id, task_id):
         namespace="/audio",
     )
 
-    if os.path.getsize(new_filepath) <= max_size_in_bytes:
-        os.remove(filepath)
-        socketio.emit(
-            "task_progress",
-            {"task_id": task_id, "message": "Processing complete. File size within limits."},
-            room=str(user_id),
-            namespace="/audio",
-        )
-        return [new_filepath]
-
-    chunk_length_ms = 5 * 60 * 1000  # 5 minutes in milliseconds
-    search_radius_ms = 20 * 1000  # 20 seconds in milliseconds
-    chunks = []
-    current_ms = 0
-    segment_index = 0
-
-    while current_ms < len(trimmed_audio):
-        next_split = find_nearest_silence(trimmed_audio, current_ms + chunk_length_ms, search_radius_ms)
-        chunks.append(trimmed_audio[current_ms:next_split])
-        current_ms = next_split
-        segment_index += 1
-
-        socketio.emit(
-            "task_progress",
-            {
-                "task_id": task_id,
-                "message": f"Processing segment {segment_index}, length: {next_split - current_ms} milliseconds.",
-            },
-            room=str(user_id),
-            namespace="/audio",
-        )
-
-    segment_filepaths = []
-    for i, chunk in enumerate(chunks):
-        chunk_filename = f"chunk_{i}_{os.path.basename(new_filepath)}"
-        chunk_filepath = os.path.join(user_directory, chunk_filename)
-        chunk.export(chunk_filepath, format="mp3")
-        segment_filepaths.append(chunk_filepath)
-
-        socketio.emit(
-            "task_progress",
-            {"task_id": task_id, "message": f"Exported segment {i + 1}."},
-            room=str(user_id),
-            namespace="/audio",
-        )
+    segment_filepaths = split_and_export_chunks(trimmed_audio, trimmed_filepath, user_directory, user_id, task_id)
 
     os.remove(filepath)
-    os.remove(new_filepath)
+    os.remove(trimmed_filepath)
 
     socketio.emit(
         "task_progress",
@@ -281,50 +285,87 @@ def create_and_stream_tts_audio(client, model, voice, input_text, response_forma
         return False
 
 
-def process_audio_transcription(
-    session,
-    user_id,
-    api_key_id,
-    client,
-    file_path,
-    transcription_job,
-    model,
-    language,
-    prompt,
-    response_format,
-    temperature,
-    index,
-    total_duration_ms=0,
-):
+def process_audio_job(session, task_id, user_id, api_key_id, client, file_paths, job, model, prompt, response_format, temperature, language=None, job_type='transcription'):
     try:
-        with open(file_path, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model=model,
-                file=audio_file,
-                language=language,
-                prompt=prompt,
-                response_format=response_format,
-                temperature=temperature,
+        total_duration_ms = 0
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(
+                process_audio_segment,
+                session, user_id, api_key_id, client, file_path, job, model, language, prompt, response_format, temperature, index, total_duration_ms, job_type
+            ) for index, file_path in enumerate(file_paths)]
+
+            for future in concurrent.futures.as_completed(futures):
+                segment_duration = future.result()
+                if isinstance(segment_duration, dict):
+                    raise Exception(segment_duration["error"])
+                total_duration_ms += segment_duration
+        socketio.emit(
+                "task_progress",
+                {"task_id": task_id, "message": f"Transcription process completed successfully in {1000 * total_duration_ms}s."},
+                room=str(user_id),
+                namespace="/audio",
             )
-        if response_format in ["json", "verbose_json"]:
-            transcript = transcript.model_dump_json()
-        elif response_format in ["srt", "vtt"]:
-            transcript = adjust_subtitle_timing(transcript, total_duration_ms, response_format)
-        duration = get_audio_duration(file_path)
-        seconds = int(duration / 1000)
-        print(seconds)
-        print(duration)
-        whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
-        create_transcription_job_segment(session, transcription_job.id, transcript, index, duration)
-        return duration
-    except openai.OpenAIError as e:
+        session.commit()
+
+        return total_duration_ms
+
+    except Exception as e:
+        # Emit task update in case of an error
         socketio.emit(
             "task_update",
-            {"task_id": transcription_job.task_id, "message": f"Error during translation: {str(e)}"},
+            {"task_id": job.task_id, "message": f"Error during {job_type}: {str(e)}"},
             room=str(user_id),
             namespace="/audio",
         )
+        raise e
+def process_audio_segment(session, user_id, api_key_id, client, file_path, job, model, language, prompt, response_format, temperature, index, total_duration_ms, job_type):
+    try:
+        with open(file_path, "rb") as audio_file:
+            if job_type == 'transcription':
+                result = client.audio.transcriptions.create(
+                    model=model,
+                    file=audio_file,
+                    language=language,
+                    prompt=prompt,
+                    response_format=response_format,
+                    temperature=temperature,
+                )
+            elif job_type == 'translation':
+                result = client.audio.translations.create(
+                    model=model,
+                    file=audio_file,
+                    prompt=prompt,
+                    response_format=response_format,
+                    temperature=temperature,
+                )
+            else:
+                raise ValueError("Invalid job type")
+
+            if response_format in ["json", "verbose_json"]:
+                result = result.model_dump_json()
+            elif response_format in ["srt", "vtt"]:
+                result = adjust_subtitle_timing(result, total_duration_ms, response_format)
+
+            duration = get_audio_duration(file_path)
+            seconds = int(duration / 1000)
+            whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
+            create_job_segment(session, job.id, result, index, duration, job_type)
+            os.remove(file_path)
+
+            return duration
+    except openai.OpenAIError as e:
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
         return {"error": str(e)}
+
+def process_audio_transcription(*args, **kwargs):
+    return process_audio_job(*args, **kwargs, job_type='transcription')
+
+def process_audio_translation(*args, **kwargs):
+    return process_audio_job(*args, **kwargs, language=None, job_type='translation')
 
 
 def transcribe_audio(
@@ -334,6 +375,7 @@ def transcribe_audio(
     client,
     file_paths,
     input_filename,
+    original_filename,
     response_format,
     temperature,
     task_id,
@@ -341,16 +383,18 @@ def transcribe_audio(
     language=None,
     prompt=None,
 ):
-    transcription_job = create_transcription_job(
+    transcription_job = create_job(
         session=session,
+        job_type="transcription",
         user_id=user_id,
+        task_id=task_id,
         prompt=prompt,
         model=model,
-        language=language,
         response_format=response_format,
         temperature=temperature,
         input_filename=input_filename,
-        task_id=task_id,
+        original_filename=original_filename,
+        language=language
     )
 
     socketio.emit(
@@ -360,44 +404,30 @@ def transcribe_audio(
         namespace="/audio",
     )
 
-    total_duration_ms = 0  # Initialize the total duration
     try:
-        for index, file_path in enumerate(file_paths):
-            socketio.emit(
+        total_duration_ms = process_audio_transcription(
+            session=session,
+            task_id=task_id,
+            user_id=user_id,
+            api_key_id=api_key_id,
+            client=client,
+            file_paths=file_paths,
+            job=transcription_job,
+            model=model,
+            prompt=prompt,
+            response_format=response_format,
+            temperature=temperature,
+            language=language
+        )
+        socketio.emit(
                 "task_progress",
-                {"task_id": task_id, "message": f"Processing segment {index + 1} of {len(file_paths)}..."},
+                {"task_id": task_id, "message": "Transcription process completed successfully."},
                 room=str(user_id),
                 namespace="/audio",
             )
-
-            segment_duration = process_audio_transcription(
-                session,
-                user_id,
-                api_key_id,
-                client,
-                file_path,
-                transcription_job,
-                model,
-                language,
-                prompt,
-                response_format,
-                temperature,
-                index,
-                total_duration_ms,
-            )
-            if isinstance(segment_duration, dict):
-                raise Exception(segment_duration["error"])
-
-            total_duration_ms += segment_duration
-
-        socketio.emit(
-            "task_progress",
-            {"task_id": task_id, "message": "Transcription process completed successfully."},
-            room=str(user_id),
-            namespace="/audio",
-        )
         transcription_job.finished = True
         session.commit()
+        return transcription_job.id, total_duration_ms
     except Exception as e:
         socketio.emit(
             "task_update",
@@ -406,48 +436,8 @@ def transcribe_audio(
             namespace="/audio",
         )
         session.rollback()
+        raise e
 
-    return transcription_job.id
-
-
-def process_audio_translation(
-    session,
-    user_id,
-    api_key_id,
-    client,
-    file_path,
-    translation_job,
-    model,
-    prompt,
-    response_format,
-    temperature,
-    index,
-    total_duration_ms=0,
-):
-    try:
-        with open(file_path, "rb") as audio_file:
-            translation = client.audio.translations.create(
-                model=model, file=audio_file, prompt=prompt, response_format=response_format, temperature=temperature
-            )
-            print(translation)
-            if response_format in ["json", "verbose_json"]:
-                translation = translation.model_dump_json()
-            elif response_format in ["srt", "vtt"]:
-                translation = adjust_subtitle_timing(translation, total_duration_ms, response_format)
-
-            duration = get_audio_duration(file_path)
-            seconds = duration * 1000
-            whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
-            create_translation_job_segment(session, translation_job.id, translation, index, duration)
-            return duration
-    except openai.OpenAIError as e:
-        socketio.emit(
-            "task_update",
-            {"task_id": translation_job.task_id, "message": f"Error during translation: {str(e)}"},
-            room=str(user_id),
-            namespace="/audio",
-        )
-        return {"error": str(e)}
 
 
 def translate_audio(
@@ -457,14 +447,16 @@ def translate_audio(
     client,
     file_paths,
     input_filename,
+    original_filename,
     task_id,
     model="whisper-1",
     prompt=None,
     response_format="text",
     temperature=0.0,
 ):
-    translation_job = create_translation_job(
+    translation_job = create_job(
         session=session,
+        job_type="translation",
         user_id=user_id,
         task_id=task_id,
         prompt=prompt,
@@ -472,55 +464,40 @@ def translate_audio(
         response_format=response_format,
         temperature=temperature,
         input_filename=input_filename,
+        original_filename=original_filename,
     )
 
-    # Emitting socket update at the start of the translation process
     socketio.emit(
         "task_progress",
         {"task_id": task_id, "message": "Starting translation process..."},
         room=str(user_id),
         namespace="/audio",
     )
-
-    total_duration_ms = 0
     try:
-        for index, file_path in enumerate(file_paths):
-            # Emitting socket update for each segment being processed
-            socketio.emit(
+        total_duration_ms = process_audio_translation(
+                session=session,
+                task_id=task_id,
+                user_id=user_id,
+                api_key_id=api_key_id,
+                client=client,
+                file_paths=file_paths,
+                job=translation_job,
+                model=model,
+                prompt=prompt,
+                response_format=response_format,
+                temperature=temperature
+            )
+
+        socketio.emit(
                 "task_progress",
-                {"task_id": task_id, "message": f"Translating segment {index + 1} of {len(file_paths)}..."},
+                {"task_id": task_id, "message": "Translation process completed successfully."},
                 room=str(user_id),
                 namespace="/audio",
             )
-
-            segment_duration = process_audio_translation(
-                session,
-                user_id,
-                api_key_id,
-                client,
-                file_path,
-                translation_job,
-                model,
-                prompt,
-                response_format,
-                temperature,
-                index,
-                total_duration_ms,
-            )
-            if isinstance(segment_duration, dict):
-                raise Exception(segment_duration["error"])
-
-            total_duration_ms += segment_duration
-
-        # Emitting socket update upon successful completion
-        socketio.emit(
-            "task_progress",
-            {"task_id": task_id, "message": "Translation process completed successfully."},
-            room=str(user_id),
-            namespace="/audio",
-        )
         translation_job.finished = True
         session.commit()
+        return translation_job.id, total_duration_ms
+
     except Exception as e:
         # Emitting socket update in case of an error
         socketio.emit(
@@ -530,8 +507,7 @@ def translate_audio(
             namespace="/audio",
         )
         session.rollback()
-
-    return translation_job.id
+        raise e
 
 
 def create_tts_job(session, user_id, model, voice, response_format, speed, input_text, task_id, output_filename=None):
@@ -550,55 +526,67 @@ def create_tts_job(session, user_id, model, voice, response_format, speed, input
     return job
 
 
-def create_transcription_job(
-    session, user_id, prompt, model, language, response_format, temperature, task_id, input_filename
-):
-    job = TranscriptionJob(
-        user_id=user_id,
-        task_id=task_id,
-        prompt=prompt,
-        model=model,
-        language=language,
-        response_format=response_format,
-        temperature=temperature,
-        input_filename=input_filename,
-    )
+def create_job(session, job_type, user_id, task_id, prompt, model, response_format, temperature, input_filename,
+               original_filename, language=None):
+    # Map job_type strings to the corresponding SQLAlchemy model classes
+    job_type_map = {
+        "transcription": TranscriptionJob,
+        "translation": TranslationJob,
+    }
+
+    job_model = job_type_map.get(job_type)
+    if not job_model:
+        raise ValueError(f"Invalid job type: {job_type}")
+
+    # Prepare the job details
+    job_kwargs = {
+        "user_id": user_id,
+        "task_id": task_id,
+        "prompt": prompt,
+        "model": model,
+        "response_format": response_format,
+        "temperature": temperature,
+        "input_filename": input_filename,
+        "original_filename": original_filename,
+    }
+
+    # Add language to the job parameters if it's provided
+    if language is not None:
+        job_kwargs["language"] = language
+
+    # Create and add the job to the session using the dynamically selected model
+    job = job_model(**job_kwargs)
     session.add(job)
     session.commit()
+
     return job
 
 
-def create_translation_job(session, user_id, prompt, model, response_format, temperature, task_id, input_filename):
-    job = TranslationJob(
-        user_id=user_id,
-        task_id=task_id,
-        prompt=prompt,
-        model=model,
-        response_format=response_format,
-        temperature=temperature,
-        input_filename=input_filename,
-    )
-    session.add(job)
-    session.commit()
-    return job
+def create_job_segment(session, job_id, content, index, duration, job_type):
+    try:
+        if job_type == 'transcription':
+            segment = TranscriptionJobSegment(
+                transcription_job_id=job_id,
+                output_content=content,
+                job_index=index,
+                duration=duration
+            )
+        elif job_type == 'translation':
+            segment = TranslationJobSegment(
+                translation_job_id=job_id,
+                output_content=content,
+                job_index=index,
+                duration=duration
+            )
+        else:
+            raise ValueError("Invalid job type specified.")
 
-
-def create_transcription_job_segment(session, transcription_job_id, transcription, job_index, duration):
-    segment = TranscriptionJobSegment(
-        transcription_job_id=transcription_job_id, output_content=transcription, job_index=job_index, duration=duration
-    )
-    session.add(segment)
-    session.commit()
-    return segment
-
-
-def create_translation_job_segment(session, translation_job_id, translation, job_index, duration):
-    segment = TranslationJobSegment(
-        translation_job_id=translation_job_id, output_content=translation, job_index=job_index, duration=duration
-    )
-    session.add(segment)
-    session.commit()
-    return segment
+        session.add(segment)
+        session.commit()
+        return segment
+    except Exception as e:
+        session.rollback()
+        raise e
 
 
 def get_tts_preferences(user_id):

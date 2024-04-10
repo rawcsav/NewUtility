@@ -17,6 +17,7 @@ develop-eggs/
 downloads/
 eggs/
 .eggs/
+newutil.log
 lib/
 bin/
 lib64/

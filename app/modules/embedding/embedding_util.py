@@ -22,7 +22,9 @@ from app import db
 from app.models.embedding_models import ModelContextWindow, Document, DocumentChunk, DocumentEmbedding
 from app.models.chat_models import ChatPreferences
 from app.utils.vector_cache import VectorCache
+from app.utils.logging_util import configure_logging
 
+logger = configure_logging()
 ENCODING = tiktoken.get_encoding("cl100k_base")
 EMBEDDING_MODEL = "text-embedding-3-large"
 MAX_TOKENS_PER_BATCH = 8000  # Define the maximum tokens per batch
@@ -36,9 +38,9 @@ def download_nltk_data():
     except LookupError:
         import nltk
 
-        print("Downloading NLTK 'punkt' tokenizer data...")
+        logger.info("Downloading NLTK 'punkt' tokenizer data...")
         nltk.download("punkt")
-        print("'punkt' tokenizer data downloaded.")
+        logger.info("'punkt' tokenizer data downloaded.")
 
 
 def extract_uuid_from_path(temp_path):
@@ -88,7 +90,6 @@ def gpt_preprocess(text, client):
 def get_embedding(text: str, client: openai.OpenAI, model=EMBEDDING_MODEL, **kwargs) -> List[float]:
     response = client.embeddings.create(input=text, model=model, **kwargs)
     embedding = response.data[0].embedding
-    print(embedding[:10])
     if len(embedding) != 3072:
         raise ValueError(f"Expected embedding dimension to be 3072, but got {len(embedding)}")
     return embedding
@@ -298,7 +299,6 @@ class TextSplitter:
         self.current_chunk_token_count = 0
         self.current_chunk_pages = set()
         download_nltk_data()
-        print(use_gpt_preprocessing)
     def add_text(self, text: str, page_number: int = None):
         text = preprocess_text(text)
         sentences = sent_tokenize(text)
@@ -370,7 +370,7 @@ class TextSplitter:
                 try:
                     yield future.result().content
                 except Exception as e:
-                    print(f"An error occurred during preprocessing: {e}")
+                    logger.error(f"An error occurred during preprocessing: {e}")
                     yield None
 
     def finalize(self) -> Tuple[List[str], List[Set[int]], int, List[int]]:
