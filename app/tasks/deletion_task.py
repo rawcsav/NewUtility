@@ -8,10 +8,10 @@ from app.models.task_models import Task, DeletionTask
 from app.models.user_models import UserAPIKey, User
 from app.modules.user.user_util import get_user_gen_img_directory, get_user_chat_img_directory, \
     get_user_audio_directory, get_user_upload_directory
-from app.tasks.task_logging import setup_logging
+from app.utils.logging_util import configure_logging
 from app.utils.task_util import make_session
 
-logger = setup_logging()
+logger = configure_logging()
 
 
 def delete_local_files(entity_id, entity_type, user_id):

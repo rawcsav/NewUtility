@@ -9,6 +9,9 @@ from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import DocumentChunk, Document, ModelContextWindow
 from app.utils.vector_cache import VectorCache
+from app.utils.logging_util import configure_logging
+
+logger = configure_logging()
 
 
 def num_tokens(text: str, model: str = "gpt-4-turbo-preview") -> int:
@@ -134,6 +137,6 @@ def ask(query, client, model: str = "gpt-4-turbo-preview"):
             if content:
                 yield content
     except RateLimitError as e:
-        print(f"Rate limit exceeded. All retry attempts failed.")
+        logger.error(f"Rate limit exceeded. All retry attempts failed.")
     except openai.OpenAIError as e:
-        print(f"An OpenAI error occurred: {e}")
+        logger.error(f"An OpenAI error occurred: {e}")

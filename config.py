@@ -38,9 +38,21 @@ class Config(object):
     )
 
     CELERY_BEAT_SCHEDULE = {
-        'periodic_check': {
+        'periodic_document_check': {
             'task': 'app.tasks.celerybeat_task.cleanup_documents',  # Use the correct path to your task function
-            'schedule': crontab(minute=0, hour='*/3'),  # At minute 0 past hour 0 and 12.
+            'schedule': crontab(minute="1", hour='*/3'),  # At minute 0 past hour 0 and 12.
+        },
+        'periodic_tts_check': {
+            'task': 'app.tasks.celerybeat_task.cleanup_tts',  # Use the correct path to your task function
+            'schedule': crontab(minute="2", hour='*/3'),  # At minute 0 past hour 0 and 12.
+        },
+        'periodic_translation_check': {
+            'task': 'app.tasks.celerybeat_task.cleanup_translation',  # Use the correct path to your task function
+            'schedule': crontab(minute="3", hour='*/3'),  # At minute 0 past hour 0 and 12.
+        },
+        'periodic_transcription_check': {
+            'task': 'app.tasks.celerybeat_task.cleanup_transcription',  # Use the correct path to your task function
+            'schedule': crontab(minute="4", hour='*/3'),  # At minute 0 past hour 0 and 12.
         },
     }
 

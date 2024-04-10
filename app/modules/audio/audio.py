@@ -15,7 +15,8 @@ from app.modules.audio.audio_util import (
     save_file_to_disk,
 )
 from app.modules.user.user_util import get_user_audio_directory
-from app.utils.forms_util import TtsForm, TranscriptionForm, TranslationForm, TtsPreferencesForm, WhisperPreferencesForm
+from app.utils.forms_util import TtsForm, TranscriptionForm, TranslationForm, TtsPreferencesForm, \
+    WhisperPreferencesForm, DeleteDocumentForm
 from app.modules.auth.auth_util import initialize_openai_client
 from app.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 
@@ -191,45 +192,43 @@ def transcription():
         client, error = initialize_openai_client(user_id)
         if error:
             return jsonify({"status": "error", "message": error})
+
         new_task = Task(type="Transcription", status="pending", user_id=user_id)
         db.session.add(new_task)
-        db.session.flush()
+        db.session.flush()  # Ensure new_task.id is generated
+
         download_dir = get_user_audio_directory(user_id)
-        print(download_dir)
         audio_file = form.file.data
-        print(audio_file)
-        filename = secure_filename(audio_file.filename)
-        print(filename)
-        filepath = os.path.join(download_dir, filename)
-        print(filepath)
-        audio_file.save(filepath)
+        original_filename = secure_filename(audio_file.filename)
+        # Use task.id for the filename while preserving the original extension
+        filename = f"{new_task.id}{os.path.splitext(original_filename)[1]}"
         socketio.emit(
             "task_progress",
             {"task_id": new_task.id, "message": f"Downloading {filename}..."},
             room=str(user_id),
             namespace="/audio",
         )
+        filepath = os.path.join(download_dir, filename)
+        audio_file.save(filepath)
         try:
             prompt = determine_prompt(client, form.data, new_task.id, user_id)
             new_transcription_task = TranscriptionTask(
                 task_id=new_task.id,
                 input_filename=filepath,
+                original_filename=original_filename,
                 model=preferences["model"],
                 prompt=prompt,
                 response_format=preferences["response_format"],
                 temperature=preferences["temperature"],
                 language=preferences["language"],
             )
-            db.session.add_all([new_task, new_transcription_task])
+            db.session.add(new_transcription_task)
             db.session.commit()
-            process_transcription_task.apply(kwargs={"task_id": new_task.id})
-
+            result = process_transcription_task.apply_async(kwargs={"task_id": new_task.id})
             return jsonify({"status": "success", "task_id": new_task.id})
-
-        finally:
-            if filepath and os.path.isfile(filepath):
-                os.remove(filepath)
-
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": str(e)})
 
 @audio_bp.route("/translation", methods=["GET", "POST"])
 @login_required
@@ -246,31 +245,36 @@ def translation():
         db.session.flush()
         download_dir = get_user_audio_directory(user_id)
         audio_file = form.file.data
-        filename = secure_filename(audio_file.filename)
-        filepath = os.path.join(download_dir, filename)
+        original_filename = secure_filename(audio_file.filename)
+
+        filename = f"{new_task.id}{os.path.splitext(original_filename)[1]}"
         socketio.emit(
             "task_progress",
             {"task_id": new_task.id, "message": f"Downloading {filename}..."},
             room=str(user_id),
             namespace="/audio",
         )
+        filepath = os.path.join(download_dir, filename)
         audio_file.save(filepath)
-        prompt = determine_prompt(client, form.data, new_task.id, user_id)
-        new_translation_task = TranslationTask(
-            task_id=new_task.id,
-            input_filename=filepath,
-            model=preferences["model"],
-            prompt=prompt,
-            response_format=preferences["response_format"],
-            temperature=preferences["temperature"],
-        )
-        db.session.add_all([new_task, new_translation_task])
-        db.session.commit()
-        process_translation_task.apply(kwargs={"task_id": new_task.id})
 
-        return jsonify({"status": "success", "task_id": new_task.id})
-
-    return jsonify({"status": "error", "message": "Invalid form submission"})
+        try:
+            prompt = determine_prompt(client, form.data, new_task.id, user_id)
+            new_translation_task = TranslationTask(
+                task_id=new_task.id,
+                input_filename=filepath,
+                original_filename=original_filename,
+                model=preferences["model"],
+                prompt=prompt,
+                response_format=preferences["response_format"],
+                temperature=preferences["temperature"],
+            )
+            db.session.add_all([new_task, new_translation_task])
+            db.session.commit()
+            result = process_translation_task.apply_async(kwargs={"task_id": new_task.id})
+            return jsonify({"status": "success", "task_id": new_task.id})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": str(e)})
 
 
 @audio_bp.route("/download_tts/<filename>")
@@ -308,3 +312,6 @@ def download_whisper(job_id):
             os.remove(file_path)
         except Exception as error:
             raise InternalServerError(f"Unable to delete file: {error}")
+
+
+

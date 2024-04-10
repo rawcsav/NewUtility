@@ -238,8 +238,8 @@
             >
               <div class="history-summary">
                 <span class="history-title"
-                  >{{ job.input_filename[:10] }}{% if job.output_filename|length
-                  > 10 %}...{% endif %}</span
+                  >{{ job.original_filename[:10] }}{% if
+                  job.output_filename|length > 10 %}...{% endif %}</span
                 >
                 <br /><span class="history-time"
                   >{{ job.created_at.strftime('%d-%m-%Y %H:%M') }}</span
@@ -278,8 +278,8 @@
             >
               <div class="history-summary">
                 <span class="history-title"
-                  >{{ job.input_filename[:10] }}{% if job.output_filename|length
-                  > 10 %}...{% endif %}</span
+                  >{{ job.original_filename[:10] }}{% if
+                  job.output_filename|length > 10 %}...{% endif %}</span
                 >
                 <br /><span class="history-time"
                   >{{ job.created_at.strftime('%d-%m-%Y %H:%M') }}</span

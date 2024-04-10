@@ -2,19 +2,22 @@ from flask_socketio import emit, disconnect, join_room
 from flask_socketio import Namespace
 from flask_login import current_user
 
+from app.utils.logging_util import configure_logging
+
+logger = configure_logging()
 
 class GlobalNamespace(Namespace):
     def on_connect(self):
         # Check if the user is authenticated
         if not current_user.is_authenticated:
-            print("Anonymous user attempted to connect to the global namespace. Disconnecting.")
+            logger.info("Anonymous user attempted to connect to the global namespace. Disconnecting.")
             disconnect()
         else:
-            print(f"Authenticated user {current_user.id} connected to the global namespace")
+            logger.info(f"Authenticated user {current_user.id} connected to the global namespace")
             join_room(str(current_user.id))
 
     def on_disconnect(self):
-        print("Client disconnected from the global namespace")
+        logger.info("Client disconnected from the global namespace")
 
 
 class EmbeddingNamespace(Namespace):
@@ -26,7 +29,7 @@ class EmbeddingNamespace(Namespace):
             join_room(str(current_user.id))
 
     def on_disconnect(self):
-        print("Client disconnected from the embedding namespace")
+        logger.info("Client disconnected from the embedding namespace")
 
 
 class ImageNamespace(Namespace):
@@ -34,11 +37,11 @@ class ImageNamespace(Namespace):
         if not current_user.is_authenticated:
             disconnect()
         else:
-            print(f"Authenticated user {current_user.id} connected to the image namespace")
+            logger.info(f"Authenticated user {current_user.id} connected to the image namespace")
             join_room(str(current_user.id))
 
     def on_disconnect(self):
-        print("Client disconnected from the image namespace")
+        logger.info("Client disconnected from the image namespace")
 
 
 class AudioNamespace(Namespace):
@@ -46,8 +49,17 @@ class AudioNamespace(Namespace):
         if not current_user.is_authenticated:
             disconnect()
         else:
-            print(f"Authenticated user {current_user.id} connected to the audio namespace")
+            logger.info(f"Authenticated user {current_user.id} connected to the audio namespace")
             join_room(str(current_user.id))
 
     def on_disconnect(self):
-        print("Client disconnected from the audio namespace")
+        logger.info("Client disconnected from the audio namespace")
+
+
+
+def emit_task_update(namespace, task_id, user_id, status, message=None):
+    payload = {"task_id": task_id, "status": status}
+    if message:
+        payload["message"] = message
+
+    emit("task_update", payload, room=str(user_id), namespace=namespace)

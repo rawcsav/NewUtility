@@ -46,7 +46,6 @@ def generate_image():
             )
             db.session.add(new_image_task)
             db.session.commit()
-            print(new_task.id)
             process_image_task.apply_async(kwargs={"task_id": new_task.id}, countdown=5)  # Add a delay of 5 seconds
         except Exception as e:
             error_message = str(e)

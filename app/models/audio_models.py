@@ -63,6 +63,7 @@ class TranscriptionJob(db.Model, SoftDeleteMixin, TimestampMixin):
     language = db.Column(db.String(2), nullable=True)
     response_format = db.Column(db.Enum("json", "text", "srt", "verbose_json", "vtt"), nullable=False)
     temperature = db.Column(db.Float, nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
     input_filename = db.Column(db.String(255), nullable=False)
     finished = db.Column(db.Boolean, nullable=False, default=False)
     segments = db.relationship(
@@ -101,6 +102,7 @@ class TranslationJob(db.Model, SoftDeleteMixin, TimestampMixin):
     model = db.Column(db.Enum("whisper-1"), nullable=False)
     response_format = db.Column(db.Enum("json", "text", "srt", "verbose_json", "vtt"), nullable=False)
     temperature = db.Column(db.Float, nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
     input_filename = db.Column(db.String(255), nullable=False)
     finished = db.Column(db.Boolean, nullable=False, default=False)
     segments = db.relationship(

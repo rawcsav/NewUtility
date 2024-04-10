@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <span class="history-title">${
         jobType === "tts"
           ? job.voice
-          : job.input_filename.substring(0, 10) +
+          : job.original_filename.substring(0, 10) +
             (job.output_filename && job.output_filename.length > 10
               ? "..."
               : "")
