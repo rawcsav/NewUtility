@@ -9,6 +9,7 @@ def make_celery(app: Flask, socketio: SocketIO) -> Celery:
     celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
     celery.conf.imports = app.config["CELERY_IMPORTS"]
     celery.conf.beat_schedule= app.config["CELERY_BEAT_SCHEDULE"]
+    celery.broker_connection_retry_on_startup = True
 
     TaskBase = celery.Task
 
