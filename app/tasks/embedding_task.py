@@ -1,17 +1,12 @@
-import concurrent
-from concurrent import futures
 import os
-
-
 from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import Task, EmbeddingTask
-from app.modules.auth.auth_util import task_client, async_task_client
+from app.modules.auth.auth_util import task_client
 from app.modules.embedding.embedding_util import (
     get_embedding_batch,
     store_embeddings, TextSplitter, TextExtractor, extract_uuid_from_path,
 )
 from app.utils.logging_util import configure_logging
-from app.utils.socket_util import emit_task_update
 from app.utils.task_util import make_session
 from app.utils.usage_util import embedding_cost
 from app import socketio
@@ -22,7 +17,12 @@ logger = configure_logging()
 
 def process_document(session, embedding_task, user_id):
     try:
-        emit_task_update("/embedding", embedding_task.task_id, user_id, "processing", f"Extracting text from {embedding_task.title}...")
+        socketio.emit(
+            "task_progress",
+            {"task_id": embedding_task.task_id, "message": f"Extracting text from {embedding_task.title}..."},
+            room=str(user_id),
+            namespace="/embedding",
+        )
         logger.info(f"Processing document {embedding_task.id}: {embedding_task.title}")
 
         extractor = TextExtractor(embedding_task.temp_path)
@@ -52,7 +52,12 @@ def process_document(session, embedding_task, user_id):
         session.flush()
 
         # Emit progress update for processing document chunks
-        emit_task_update("/embedding", embedding_task.task_id, user_id, "processing", f"Processing document chunks for {embedding_task.title}...")
+        socketio.emit(
+            "task_progress",
+            {"task_id": embedding_task.task_id, "message": f"Processing document chunks for {embedding_task.title}..."},
+            room=str(user_id),
+            namespace="/embedding",
+        )
         # Process chunks as before
         for i, (chunk_content, pages) in enumerate(zip(chunks, chunk_pages)):
             pages_str = None
@@ -68,11 +73,21 @@ def process_document(session, embedding_task, user_id):
             session.add(chunk)
         session.commit()
         # Emit progress update
-        emit_task_update("/embedding", embedding_task.task_id, user_id, "processing", f"Generating embeddings for {embedding_task.title}...")
+        socketio.emit(
+            "task_progress",
+            {"task_id": embedding_task.task_id, "message": f"Generating embeddings for {embedding_task.title}..."},
+            room=str(user_id),
+            namespace="/embedding",
+        )
         embeddings = get_embedding_batch(chunks, client)
         store_embeddings(session, new_document.id, embeddings, user_id)
         embedding_cost(session=session, user_id=user_id, api_key_id=key_id, input_tokens=total_tokens)
-        emit_task_update("/embedding", embedding_task.task_id, user_id, "processing", f"Calculating cost of {embedding_task.title}...")
+        socketio.emit(
+            "task_progress",
+            {"task_id": embedding_task.task_id, "message": f"Calculating cost of {embedding_task.title}..."},
+            room=str(user_id),
+            namespace="/embedding",
+        )
         final_page_count = extractor.last_page_number
         socketio.emit(
             "task_complete",
@@ -97,7 +112,12 @@ def process_document(session, embedding_task, user_id):
         logger.info(f"Error processing document {embedding_task.id}: {e}")
         os.remove(embedding_task.temp_path)
         # Emit error event
-        emit_task_update("/embedding", embedding_task.task_id, user_id, "error", f"Error: {str(e)}")
+        socketio.emit(
+            "task_update",
+            {"task_id": embedding_task.task_id, "status": "error", "error": str(e)},
+            room=str(user_id),
+            namespace="/embedding",
+        )
         raise e
 
 
@@ -118,7 +138,12 @@ def process_embedding_task(task_id):
         return True
     except Exception as e:
         session.rollback()
-        emit_task_update("/embedding", task_id, task.user_id, "error", f"Error: {str(e)}")
+        socketio.emit(
+            "task_update",
+            {"task_id": task_id, "status": "error", "error": str(e)},
+            room=str(task.user_id),
+            namespace="/embedding",
+        )
         return False
     finally:
         if embedding_task:
