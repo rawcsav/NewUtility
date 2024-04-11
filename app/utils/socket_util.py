@@ -54,12 +54,3 @@ class AudioNamespace(Namespace):
 
     def on_disconnect(self):
         logger.info("Client disconnected from the audio namespace")
-
-
-
-def emit_task_update(namespace, task_id, user_id, status, message=None):
-    payload = {"task_id": task_id, "status": status}
-    if message:
-        payload["message"] = message
-
-    emit("task_update", payload, room=str(user_id), namespace=namespace)

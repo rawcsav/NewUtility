@@ -5,7 +5,6 @@ from app.modules.image.image_util import generate_images, save_image_to_db, down
 from app.modules.auth.auth_util import task_client
 from app.modules.user.user_util import get_user_gen_img_directory
 from app.utils.logging_util import configure_logging
-from app.utils.socket_util import emit_task_update
 from app.utils.task_util import make_session
 
 
@@ -28,11 +27,21 @@ def process_image(session, image_task, user_id):
 
         logger.info(f"Request parameters for image generation: {request_params}")
         user_image_directory = get_user_gen_img_directory(user_id)
-        emit_task_update("/image", image_task.task_id, user_id, "processing", "Generating image...")
+        socketio.emit(
+            "task_progress",
+            {"task_id": image_task.task_id, "message": f"Visualizing {image_task.prompt}..."},
+            room=str(user_id),
+            namespace="/image",
+        )
         image_data = generate_images(
             session=session, user_id=user_id, api_key_id=key_id, client=client, request_params=request_params
         )
-        emit_task_update("/image", image_task.task_id, user_id, "processing", "Adding the final touches...")
+        socketio.emit(
+            "task_progress",
+            {"task_id": image_task.task_id, "message": f"Adding the final touches..."},
+            room=str(user_id),
+            namespace="/image",
+        )
         if not image_data:
             logger.error(f"No image data received for task_id={image_task.task_id}")
             return
@@ -82,7 +91,12 @@ def process_image(session, image_task, user_id):
 
     except Exception as e:
         logger.error(f"Error processing image for task_id={image_task.task_id}: {e}")
-        emit_task_update("/image", image_task.task_id, user_id, "error", f"Error: {str(e)}")
+        socketio.emit(
+            "task_update",
+            {"task_id": image_task.task_id, "status": "error", "error": str(e)},
+            room=str(user_id),
+            namespace="/image",
+        )
         raise e
 
 
@@ -95,7 +109,12 @@ def process_image_task(task_id):
         if task and image_task:
             try:
                 logger.info(f"Processing image task {task_id} for user {task.user_id}")
-                emit_task_update("image", image_task.task_id, task.user_id, "processing", "Preparing the studio...")
+                socketio.emit(
+                    "task_progress",
+                    {"task_id": image_task.task_id, "message": f"Preparing the studio..."},
+                    room=str(task.user_id),
+                    namespace="/image",
+                )
                 success = process_image(session, image_task, task.user_id)
                 if success:
                     logger.info(f"Task {task_id} status updated to completed")
@@ -106,7 +125,12 @@ def process_image_task(task_id):
             except Exception as e:
                 session.rollback()
                 logger.error(f"Error processing image task {task_id}: {e}")
-                emit_task_update("/image", image_task.task_id, task.user_id, "error", f"Error: {str(e)}")
+                socketio.emit(
+                    "task_update",
+                    {"task_id": image_task.task_id, "status": "error", "error": str(e)},
+                    room=str(task.user_id),
+                    namespace="/image",
+                )
                 return False
         else:
             logger.error(f"Task {task_id} is not pending or image task not found")

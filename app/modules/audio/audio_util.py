@@ -1,7 +1,6 @@
 import concurrent
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import openai
@@ -33,16 +32,35 @@ def ms_until_sound(sound, silence_threshold_in_decibels=-20.0, chunk_size=10):
 
     return trim_ms
 
-def trim_start(filepath, original_format):
+
+def trim_start(filepath, original_format, target_format='mp3', target_bitrate='64k', sample_rate=22050):
+    silence_threshold_in_decibels = -20.0
     path = Path(filepath)
     directory = path.parent
-    filename = path.name
-    audio = AudioSegment.from_file(filepath, format=original_format)
-    start_trim = ms_until_sound(audio)
-    trimmed = audio[start_trim:]
-    new_filename = directory / f"trimmed_{filename}"
-    trimmed.export(new_filename, format="mp3")
-    return trimmed, new_filename
+    filename = path.stem  # Changed to use stem to exclude file extension
+
+    # Use a smaller chunk of the audio for initial silence detection to save memory
+    start_trim = 0
+    chunk_size = 10 * 1000  # 10 seconds in milliseconds
+    with open(filepath, 'rb') as f:
+        audio_chunk = AudioSegment.from_file(f, format=original_format, start_second=0, duration=chunk_size / 1000)
+        while audio_chunk.dBFS < silence_threshold_in_decibels and start_trim < len(audio_chunk):
+            start_trim += chunk_size
+            f.seek(0)  # Reset file pointer to the beginning for each new chunk
+            audio_chunk = AudioSegment.from_file(f, format=original_format, start_second=start_trim / 1000,
+                                                 duration=chunk_size / 1000)
+
+    # Once silence is detected, load only the necessary part of the audio
+    audio = AudioSegment.from_file(filepath, format=original_format)[start_trim:]
+
+    # Adjust sample rate for further compression
+    audio = audio.set_frame_rate(sample_rate)
+
+    # Determine new filename and export with compression
+    new_filename = directory / f"trim_{filename}.{target_format}"
+    audio.export(new_filename, bitrate=target_bitrate, format=target_format)
+    os.remove(filepath)
+    return audio, new_filename
 
 def find_nearest_silence(
     audio_segment, target_ms, search_radius_ms=20000, silence_thresh=-40, min_silence_len_ms=1000, seek_step_ms=100
@@ -82,6 +100,8 @@ def split_and_export_chunks(audio, filepath, user_directory, user_id, task_id):
         next_split = find_nearest_silence(audio, current_ms + chunk_length_ms, search_radius_ms)
         if next_split == -1 or next_split >= len(audio):
             next_split = len(audio)
+
+        # Load only the required chunk into memory
         chunk = audio[current_ms:next_split]
         current_ms = next_split
 
@@ -90,36 +110,16 @@ def split_and_export_chunks(audio, filepath, user_directory, user_id, task_id):
         chunk_filename = f"chunk_{segment_index:03}_{original_path.stem}.mp3"
         chunk_filepath = os.path.join(user_directory, chunk_filename)
 
-        # Process and export each segment sequentially
-        exported_path = process_and_export_segment(chunk, chunk_filepath, segment_index)
-        segment_filepaths.append(exported_path)
+        # Process and export the chunk
+        process_and_export_segment(chunk, chunk_filepath, segment_index)
+        segment_filepaths.append(chunk_filepath)
+
+        # Free up memory by removing the processed chunk
+        chunk.clear()
 
     logger.info("All segments exported.")
     return segment_filepaths
 
-def file_is_ready(filepath):
-    if not os.path.exists(filepath):
-        return False
-
-    try:
-        with open(filepath, "rb") as f:
-            return True
-    except IOError:
-        return False
-
-
-def wait_for_file(filepath, timeout=30):
-
-    logger.info(f"Checking readiness of file: {filepath}")
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        if file_is_ready(filepath):
-            logger.info(f"File {filepath} is ready.")
-            return True
-        logger.debug(f"File {filepath} not ready yet, retrying...")
-        time.sleep(1)
-    logger.warning(f"Timeout reached while waiting for file {filepath}.")
-    return False
 
 def preprocess_audio(filepath, user_directory, user_id, task_id):
     socketio.emit(
@@ -128,8 +128,18 @@ def preprocess_audio(filepath, user_directory, user_id, task_id):
         room=str(user_id),
         namespace="/audio",
     )
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+    file_size = os.path.getsize(filepath)
+    if file_size > MAX_FILE_SIZE:
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": f"File {os.path.basename(filepath)} is too large ({file_size} bytes) to process."},
+            room=str(user_id),
+            namespace="/audio",
+        )
+        raise ValueError(f"File {filepath} is too large ({file_size} bytes) to process.")
 
-    max_size_in_bytes = 24 * 1024 * 1024
+
     supported_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
     original_format = os.path.splitext(filepath)[-1].lower().strip(".")
 
@@ -151,7 +161,20 @@ def preprocess_audio(filepath, user_directory, user_id, task_id):
         namespace="/audio",
     )
 
-    segment_filepaths = split_and_export_chunks(trimmed_audio, trimmed_filepath, user_directory, user_id, task_id)
+    # Check the size of the trimmed file
+    trimmed_file_size = os.path.getsize(trimmed_filepath)
+    MAX_CHUNK_SIZE = 24 * 1024 * 1024  # 24 MB
+    if trimmed_file_size <= MAX_CHUNK_SIZE:
+        socketio.emit(
+            "task_progress",
+            {"task_id": task_id, "message": "Trimmed audio file is small enough to be processed directly."},
+            room=str(user_id),
+            namespace="/audio",
+        )
+        return [trimmed_filepath]  # Return the trimmed file path in a list to maintain consistency
+    else:
+        # Proceed with splitting and exporting chunks if the file is larger than 24MB
+        segment_filepaths = split_and_export_chunks(trimmed_audio, trimmed_filepath, user_directory, user_id, task_id)
 
     os.remove(filepath)
     os.remove(trimmed_filepath)
@@ -323,14 +346,17 @@ def process_audio_segment(session, user_id, api_key_id, client, file_path, job, 
     try:
         with open(file_path, "rb") as audio_file:
             if job_type == 'transcription':
-                result = client.audio.transcriptions.create(
-                    model=model,
-                    file=audio_file,
-                    language=language,
-                    prompt=prompt,
-                    response_format=response_format,
-                    temperature=temperature,
-                )
+                try:
+                    result = client.audio.transcriptions.create(
+                        model=model,
+                        file=audio_file,
+                        language=language,
+                        prompt=prompt,
+                        response_format=response_format,
+                        temperature=temperature,
+                    )
+                except openai.OpenAIError as e:
+                    logger.info(f"Error: {e}")
             elif job_type == 'translation':
                 result = client.audio.translations.create(
                     model=model,
@@ -360,6 +386,7 @@ def process_audio_segment(session, user_id, api_key_id, client, file_path, job, 
         except Exception:
             pass
         return {"error": str(e)}
+
 
 def process_audio_transcription(*args, **kwargs):
     return process_audio_job(*args, **kwargs, job_type='transcription')
