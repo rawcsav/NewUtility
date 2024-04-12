@@ -111,7 +111,7 @@ def chat_completion_with_retry(messages, model, client, temperature):
     return client.chat.completions.create(model=model, messages=messages, temperature=temperature, stream=True)
 
 
-def ask(query, client, model: str = "gpt-4-turbo-preview"):
+def ask(query, client, model: str = "gpt-4-turbo"):
     modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
     messages = [
         {
