@@ -7,21 +7,6 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
-function handleSubmitOnEnter(event, textarea) {
-  if (event.key === "Enter" && !event.shiftKey) {
-    if (textarea.value.trim() === "") {
-      event.preventDefault();
-      console.error("Cannot submit an empty message.");
-    } else if (isSubmitting) {
-      event.preventDefault();
-      console.error("Submission in progress.");
-    } else {
-      event.preventDefault();
-      triggerFormSubmission("chat-completion-form");
-    }
-  }
-}
-
 function showToast(message, type) {
   let toast = document.getElementById("toast") || createToastElement();
   toast.textContent = message;
@@ -58,8 +43,26 @@ document.addEventListener("DOMContentLoaded", function () {
       queryDocument();
     }
   });
+  const systemPromptTextarea = document.getElementById("system_prompt");
+  if (systemPromptTextarea) {
+    systemPromptTextarea.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        triggerFormSubmission("docs-preferences-form");
+      }
+    });
+  }
 });
 
+function triggerFormSubmission(formId) {
+  const form = document.getElementById(formId);
+  if (form) {
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.click();
+    }
+  }
+}
 function debounce(func, wait, immediate) {
   let timeout;
   return function () {
@@ -157,8 +160,20 @@ function addToQueryHistory(query, response) {
   document.getElementById("response_container").style.display = "none";
 }
 
+let isQueryRunning = false;
+
+function toggleQuery() {
+  if (!isQueryRunning) {
+    queryDocument();
+  } else {
+    interruptQuery();
+  }
+}
+
 async function queryDocument() {
-  document.getElementById("interruptButton").disabled = false;
+  isQueryRunning = true;
+  document.getElementById("queryIcon").classList.remove("nuicon-paper-plane");
+  document.getElementById("queryIcon").classList.add("nuicon-pause");
 
   const query = document.getElementById("query").value.trim();
   if (query === "") {
@@ -178,14 +193,26 @@ async function queryDocument() {
   previousQuery = query;
   previousResponse = "";
 
+  const imageUploadElement = document.getElementById("image-upload");
+  const uploadedImages = imageUploadElement.files;
+
+  const base64Images = await Promise.all(
+    Array.from(uploadedImages).map(encodeImageAsBase64),
+  );
+
+  const requestBody = {
+    query: query,
+    images: base64Images,
+  };
+
   try {
     const response = await fetch("/cwd/query", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
         "X-CSRFToken": getCsrfToken(),
       },
-      body: `query=${encodeURIComponent(query)}`,
+      body: JSON.stringify(requestBody),
       signal: signal,
     });
 
@@ -237,7 +264,42 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
+  const resetPreferencesButton = document.getElementById("resetPreferences");
+  if (resetPreferencesButton) {
+    resetPreferencesButton.addEventListener("click", async () => {
+      const form = document.getElementById("docs-preferences-form");
+      const formData = new FormData(form);
+      formData.append("reset", true);
+      try {
+        const response = await submitForm(
+          formData,
+          "/embedding/update-doc-preferences",
+        );
+        handleResponse(response);
+        if (response.status === "success") {
+          // Load default values
+          loadDefaultValues();
+        }
+      } catch (error) {
+        showToast("Error: " + error.message, "error");
+      }
+    });
+  }
 });
+
+function loadDefaultValues() {
+  // Set default values for form fields
+  document.getElementById("top_k").value = 10;
+  document.getElementById("top_k_value").value = 10;
+  document.getElementById("threshold").value = 0.5;
+  document.getElementById("threshold_value").value = 0.5;
+  document.getElementById("temperature").value = 1.0;
+  document.getElementById("temperature-value").value = 1.0;
+  document.getElementById("top_p").value = 1.0;
+  document.getElementById("top-p-value").value = 1.0;
+  document.getElementById("system_prompt").value =
+    "You are a helpful academic literary assistant. Provide in -depth guidance, suggestions, code snippets, and explanations as needed to help the user. Leverage your expertise and intuition to offer innovative and effective solutions.Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. Use the provided text excerpts directly to aid in your responses.";
+}
 
 function selectAll() {
   let selectAllCheckbox = document.getElementById("select-all");
@@ -252,7 +314,6 @@ function selectAll() {
   });
 }
 
-// eslint-disable-next-line no-unused-vars
 function interruptQuery() {
   controller.abort();
   controller = new AbortController();
@@ -263,6 +324,54 @@ function interruptQuery() {
     resultsSpan.removeChild(resultsSpan.lastChild);
   }
 
-  document.getElementById("interruptButton").disabled = true;
-  document.getElementById("queryButton").disabled = false;
+  isQueryRunning = false;
+  document.getElementById("queryIcon").classList.remove("nuicon-pause");
+  document.getElementById("queryIcon").classList.add("nuicon-paper-plane");
 }
+
+document;
+const advancedSettingsToggle = document.getElementById("showAdvancedSettings");
+const advancedSettings = document.getElementById("advancedSettings");
+
+advancedSettingsToggle.addEventListener("click", function (event) {
+  event.preventDefault(); // Prevent default behavior
+
+  if (advancedSettings.style.display === "none") {
+    advancedSettings.style.display = "block";
+    advancedSettingsToggle.innerHTML = "Hide Advanced Settings";
+  } else {
+    advancedSettings.style.display = "none";
+    advancedSettingsToggle.innerHTML = "Show Advanced Settings";
+  }
+});
+
+function encodeImageAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function generateImagePreviews(files) {
+  const imagePreviewsContainer = document.getElementById("image-previews");
+  imagePreviewsContainer.innerHTML = "";
+
+  Array.from(files).forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.classList.add("image-preview");
+      imagePreviewsContainer.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document
+  .getElementById("image-upload")
+  .addEventListener("change", function (e) {
+    generateImagePreviews(e.target.files);
+  });

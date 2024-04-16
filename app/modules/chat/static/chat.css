@@ -166,12 +166,12 @@ label {
   margin: 20px 0 0;
 }
 
-.fa-clipboard,
+.nuicon-clipboard,
 .retry-icon {
   cursor: pointer;
 }
 
-.fa-clipboard:hover,
+.nuicon-clipboard:hover,
 .retry-icon:hover {
   transform: scale(1.1);
 }
@@ -377,10 +377,10 @@ pre {
   color: red;
 }
 
-.fa-edit {
+i {
   cursor: pointer;
 }
-.fa-edit:hover {
+i:hover {
   transform: scale(1.05);
 }
 
@@ -845,7 +845,7 @@ pre {
   transition: background-color 0.3s; /* Smooth transition for background */
 }
 
-.new-convo-button i.fa-comments {
+.new-convo-button i {
   color: #5b5b5b; /* Icon color */
   font-size: 20px; /* Icon size */
 }

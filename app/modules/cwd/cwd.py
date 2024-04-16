@@ -47,11 +47,13 @@ def cwd_index():
 @cwd_bp.route("/query", methods=["POST"])
 def query_endpoint():
     client, error = initialize_openai_client(current_user.id)
-    query = request.form.get("query")
+    data = request.get_json()
+    query = data.get("query")
+    images = data.get("images", [])
     db.session.commit()  # Commit the changes to the database
 
     def generate():
-        for content in ask(query, client):
+        for content in ask(query, images, client):
             yield content
 
     response = current_app.response_class(stream_with_context(generate()), content_type="text/event-stream")

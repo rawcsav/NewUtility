@@ -157,8 +157,7 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
         db.session.query(ModelContextWindow.context_window_size).filter_by(model_name=user_preferences.model).scalar()
     )
 
-    # max_knowledge_context_tokens is now the maximum number of sections
-    max_sections = user_preferences.knowledge_context_tokens
+    max_sections = user_preferences.top_k
 
     # Fetch the document chunks and additional details for the user
     document_chunks_with_details = (

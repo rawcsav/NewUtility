@@ -13,16 +13,11 @@ from app.utils.logging_util import configure_logging
 
 logger = configure_logging()
 
-
-def num_tokens(text: str, model: str = "gpt-4-turbo-preview") -> int:
-    encoding = tiktoken.encoding_for_model(model)
-    return len(encoding.encode(text))
-
-
 def find_relevant_sections(user_id, query_embedding, user_preferences):
-    context_window_size = 60000
+    context_window_size = 120000
+    max_sections = user_preferences.top_k
+    threshold = user_preferences.threshold
 
-    max_sections = user_preferences.knowledge_context_tokens
     document_chunks_with_details = (
         db.session.query(
             DocumentChunk.id,
@@ -43,12 +38,15 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
     # Get a descending list of similarities for the subset using the MIPS naive method
     similarities = VectorCache.mips_naive(query_embedding, subset_ids)
 
-    # Select chunks based on the max number of sections and token limit
+    # Filter out any similarities below the threshold
+    filtered_similarities = [(chunk_id, sim) for chunk_id, sim in similarities if sim >= threshold]
+
+    # Select chunks based on the max number of sections, token limit, and similarity threshold
     selected_chunks = []
     sections_appended = 0
     current_tokens = 0
 
-    for chunk_id, similarity in similarities:
+    for chunk_id, similarity in filtered_similarities:
         if sections_appended >= max_sections:
             break
 
@@ -61,6 +59,7 @@ def find_relevant_sections(user_id, query_embedding, user_preferences):
             sections_appended += 1
         elif chunk:
             break
+
     return selected_chunks
 
 
@@ -75,7 +74,7 @@ def get_embedding(text: str, client: openai.OpenAI, model="text-embedding-3-larg
 def append_knowledge_context(user_query, user_id, client):
     query_embedding = get_embedding(user_query, client)
     query_vector = np.array(query_embedding, dtype=np.float32)
-    user_preferences = user_preferences = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
+    user_preferences  = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
 
     relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences=user_preferences)
     context = ""
@@ -107,21 +106,30 @@ def append_knowledge_context(user_query, user_id, client):
     return modified_query, chunk_associations, doc_pages
 
 
-def chat_completion_with_retry(messages, model, client, temperature):
-    return client.chat.completions.create(model=model, messages=messages, temperature=temperature, stream=True)
+def chat_completion_with_retry(messages, model, client, temperature, top_p):
+    return client.chat.completions.create(model=model, messages=messages, temperature=temperature, top_p=top_p, stream=True)
 
 
-def ask(query, client, model: str = "gpt-4-turbo"):
+def ask(query, images, client, model: str = "gpt-4-turbo"):
     modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
+    preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
+    temperature = preferences.temperature
+    top_p = preferences.top_p
+    system_prompt = preferences.cwd_system_prompt
     messages = [
         {
             "role": "system",
-            "content": "You are a helpful academic literary assistant. Provide in-depth guidance, suggestions, code snippets, and explanations as needed to help the user. Leverage your expertise and intuition to offer innovative and effective solutions. Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. Use the provided text excerpts directly to aid in your responses.",
+            "content": system_prompt,
         },
-        {"role": "user", "content": modified_query},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": modified_query},
+                *[{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}} for image in images]
+            ],
+        },
     ]
-    preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
-    temperature = preferences.temperature
+
     try:
         documents_used_summary = "\nDocuments used:\n"
         for title, pages in doc_pages.items():
@@ -132,7 +140,7 @@ def ask(query, client, model: str = "gpt-4-turbo"):
         yield documents_used_summary + "\n\n"
 
         # Yield the AI response parts
-        for part in chat_completion_with_retry(messages, model, client, temperature):
+        for part in chat_completion_with_retry(messages, model, client, temperature, top_p):
             content = part.choices[0].delta.content
             if content:
                 yield content
@@ -140,3 +148,5 @@ def ask(query, client, model: str = "gpt-4-turbo"):
         logger.error(f"Rate limit exceeded. All retry attempts failed.")
     except openai.OpenAIError as e:
         logger.error(f"An OpenAI error occurred: {e}")
+
+

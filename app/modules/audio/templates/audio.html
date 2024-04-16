@@ -7,9 +7,9 @@
   <div id="left-column">
     <div class="main-row">
       <div class="utility-toggle">
-        <i class="fas fa-microphone-alt" data-utility="tts"></i>
-        <i class="fas fa-file-audio" data-utility="transcription"></i>
-        <i class="fas fa-language" data-utility="translation"></i>
+        <i class="nuicon-microphone" data-utility="tts"></i>
+        <i class="nuicon-file-audio" data-utility="transcription"></i>
+        <i class="nuicon-language" data-utility="translation"></i>
       </div>
       <div id="audio-column">
         <div class="audio-utility-container">
@@ -258,7 +258,7 @@
                   href="{{ url_for('audio_bp.download_whisper', job_id=job.id) }}"
                   download
                 >
-                  <i class="fas fa-download"></i> Download Transcription
+                  <i class="nuicon-download"></i> Download Transcription
                 </a>
               </div>
             </li>
@@ -297,7 +297,7 @@
                   href="{{ url_for('audio_bp.download_whisper', job_id=job.id) }}"
                   download
                 >
-                  <i class="fas fa-download"></i> Download Translation
+                  <i class="nuicon-download"></i> Download Translation
                 </a>
               </div>
             </li>

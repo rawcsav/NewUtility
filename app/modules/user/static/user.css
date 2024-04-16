@@ -677,10 +677,10 @@ output {
   color: red;
 }
 
-.fa-edit {
+i {
   cursor: pointer;
 }
-.fa-edit:hover {
+i:hover {
   transform: scale(1.05);
 }
 

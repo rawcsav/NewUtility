@@ -219,3 +219,190 @@
   font-style: normal;
   font-display: swap;
 }
+
+@font-face {
+  font-family: "nufont";
+  src: url("../../fonts/nufont.eot?tqomum");
+  src:
+    url("../../fonts/nufont.eot?tqomum#iefix") format("embedded-opentype"),
+    url("../../fonts/nufont.ttf?tqomum") format("truetype"),
+    url("../../fonts/nufont.woff?tqomum") format("woff"),
+    url("../../fonts/nufont.svg?tqomum#nufont") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="nuicon-"],
+[class*=" nuicon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "nufont" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.nuicon-microphone:before {
+  content: "\e900";
+}
+.nuicon-user-gear:before {
+  content: "\e901";
+}
+.nuicon-user:before {
+  content: "\e902";
+}
+.nuicon-user-pen:before {
+  content: "\e903";
+}
+.nuicon-high-definition:before {
+  content: "\e904";
+}
+.nuicon-question:before {
+  content: "\e905";
+}
+.nuicon-bars:before {
+  content: "\e906";
+}
+.nuicon-microchip:before {
+  content: "\e907";
+}
+.nuicon-history:before {
+  content: "\e908";
+}
+.nuicon-usage:before {
+  content: "\e909";
+}
+.nuicon-expand:before {
+  content: "\e90a";
+}
+.nuicon-style:before {
+  content: "\e90b";
+}
+.nuicon-file-signature:before {
+  content: "\e90c";
+}
+.nuicon-file-pen:before {
+  content: "\e90d";
+}
+.nuicon-file-lines:before {
+  content: "\e90e";
+}
+.nuicon-file-image:before {
+  content: "\e90f";
+}
+.nuicon-expand-arrows:before {
+  content: "\e910";
+}
+.nuicon-refresh:before {
+  content: "\e911";
+}
+.nuicon-square-check:before {
+  content: "\e912";
+}
+.nuicon-square-pen:before {
+  content: "\e913";
+}
+.nuicon-key:before {
+  content: "\e914";
+}
+.nuicon-sparkles:before {
+  content: "\e915";
+}
+.nuicon-sliders:before {
+  content: "\e916";
+}
+.nuicon-paintbrush:before {
+  content: "\e917";
+}
+.nuicon-paper-plane:before {
+  content: "\e918";
+}
+.nuicon-language:before {
+  content: "\e919";
+}
+.nuicon-cloud-arrow-up:before {
+  content: "\e91a";
+}
+.nuicon-comments:before {
+  content: "\e91b";
+}
+.nuicon-comment-lines:before {
+  content: "\e91c";
+}
+.nuicon-wand-magic-sparkles:before {
+  content: "\e91d";
+}
+.nuicon-floppy-disk:before {
+  content: "\e91e";
+}
+.nuicon-clipboard:before {
+  content: "\e91f";
+}
+.nuicon-link:before {
+  content: "\e920";
+}
+.nuicon-gears:before {
+  content: "\e921";
+}
+.nuicon-arrow-up:before {
+  content: "\e922";
+}
+.nuicon-arrow-right:before {
+  content: "\e923";
+}
+.nuicon-arrow-left:before {
+  content: "\e924";
+}
+.nuicon-arrow-down:before {
+  content: "\e925";
+}
+.nuicon-check:before {
+  content: "\e926";
+}
+.nuicon-pen:before {
+  content: "\e927";
+}
+.nuicon-pen-line:before {
+  content: "\e928";
+}
+.nuicon-images:before {
+  content: "\e929";
+}
+.nuicon-image:before {
+  content: "\e92a";
+}
+.nuicon-image-landscape:before {
+  content: "\e92b";
+}
+.nuicon-volume-high:before {
+  content: "\e92c";
+}
+.nuicon-download:before {
+  content: "\e92d";
+}
+.nuicon-trash-can:before {
+  content: "\e92e";
+}
+.nuicon-xmark:before {
+  content: "\e92f";
+}
+.nuicon-envelope:before {
+  content: "\e930";
+}
+.nuicon-file-audio:before {
+  content: "\e931";
+}
+.nuicon-gear-complex:before {
+  content: "\e932";
+}
+
+.nuicon-pause:before {
+  content: "\e933";
+}

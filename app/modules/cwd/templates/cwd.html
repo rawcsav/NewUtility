@@ -23,7 +23,6 @@
     </div>
     <div class="input-container">
       <div id="query-input-section">
-        <!-- Wrap the input in a div -->
         <div class="input-wrapper">
           <input
             type="text"
@@ -31,45 +30,63 @@
             name="query"
             placeholder="Enter your query here..."
           />
-          <button id="queryButton" onclick="queryDocument()">
-            <img
-              class="submit-arrow"
-              src="https://res.cloudinary.com/dn9bcrimg/image/upload/v1694930458/right-arrow-svgrepo-com_drke3l.svg"
-              alt="Submit Arrow"
-            />
+          <button id="queryButton" onclick="toggleQuery()">
+            <i id="queryIcon" class="nuicon-paper-plane"></i>
           </button>
         </div>
-        <button id="interruptButton" onclick="interruptQuery()">
-          Interrupt
-        </button>
       </div>
-      <div class="alerts queryAlerts"></div>
     </div>
   </div>
   <div class="right-column">
-    <div class="docs-container">
-      <div id="docs-settings-popup" class="docs-settings-popup">
-        <form id="docs-preferences-form">
-          {{ doc_preferences_form.hidden_tag() }}
-          <div class="form-group">
-            {{ doc_preferences_form.knowledge_context_tokens.label }}
-            <input
-              type="range"
-              id="knowledge_context_tokens"
-              name="knowledge_context_tokens"
-              min="1"
-              max="60"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
-              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value"
-            />
-            <input
-              type="text"
-              id="knowledge_context_tokens_value"
-              class="range-value-input"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
-              oninput="document.getElementById('knowledge_context_tokens').value = this.value"
-            />
-          </div>
+    <div id="docs-settings-popup" class="docs-settings-popup">
+      <form id="docs-preferences-form">
+        {{ doc_preferences_form.hidden_tag() }}
+        <div class="form-group">
+          {{ doc_preferences_form.top_k.label }}
+          <input
+            type="range"
+            id="top_k"
+            name="top_k"
+            min="1"
+            max="60"
+            value="{{ doc_preferences_form.top_k.data }}"
+            oninput="document.getElementById('top_k').value = this.value"
+          />
+          <input
+            type="text"
+            id="top_k_value"
+            class="range-value-input"
+            value="{{ doc_preferences_form.top_k.data }}"
+            oninput="document.getElementById('top_k').value = this.value"
+          />
+        </div>
+        <div class="form-group">
+          {{ doc_preferences_form.threshold.label }}
+          <input
+            type="range"
+            id="threshold"
+            name="threshold"
+            min="0.0"
+            max="1.0"
+            step="0.1"
+            value="{{ doc_preferences_form.threshold.data }}"
+            oninput="document.getElementById('threshold').value = this.value"
+          />
+          <input
+            type="text"
+            id="threshold_value"
+            class="range-value-input"
+            value="{{ doc_preferences_form.threshold.data }}"
+            oninput="document.getElementById('threshold').value = this.value"
+          />
+        </div>
+
+        <button id="showAdvancedSettings">
+          <i class="nuicon nuicon-gears"></i>
+        </button>
+
+        <!-- Wrap the settings you want to hide/show in a container -->
+        <div id="advancedSettings" style="display: none">
           <div class="form-group">
             {{ doc_preferences_form.temperature.label }}
             <input
@@ -90,40 +107,80 @@
               oninput="document.getElementById('temperature').value = this.value"
             />
           </div>
-          <ul class="docs-preference-list">
-            <li>
-              <div class="doc-select">
-                <input type="checkbox" id="select-all" />
-                <label for="select-all">Select All</label>
-              </div>
-            </li>
-            {% for document in documents %}
-            <li id="document-{{ document.id }}" class="document-item">
-              <div class="doc-info">
-                <p id="title-edit">{{ document.title }}</p>
-                <p id="author-edit">{{ document.author }}</p>
-                <p>Tokens: {{ document.total_tokens }}</p>
-                <p>Chunks: {{ document.chunk_count }}</p>
-              </div>
-              <div class="doc-select">
-                <input
-                  type="checkbox"
-                  id="checkbox-{{ document.id }}"
-                  name="document_selection_{{ document.id }}"
-                  {%
-                  if
-                  document.selected
-                  %}checked{%
-                  endif
-                  %}
-                />
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
-        </form>
-      </div>
-      <div id="docs-alerts"></div>
+          <div class="form-group">
+            {{ doc_preferences_form.top_p.label }}
+            <input
+              type="range"
+              id="top_p"
+              name="top_p"
+              min="0"
+              max="1"
+              step="0.01"
+              value="{{ doc_preferences_form.top_p.data }}"
+              oninput="document.getElementById('top-p-value').value = this.value"
+            />
+            <input
+              type="text"
+              id="top-p-value"
+              class="range-value-input"
+              value="{{doc_preferences_form.top_p.data }}"
+              oninput="document.getElementById('top_p').value = this.value"
+            />
+          </div>
+          <div class="form-group">
+            <label for="system_prompt">System Prompt</label>
+            <textarea id="system_prompt" name="system_prompt" rows="3">
+{{ doc_preferences_form.cwd_system_prompt.data }}</textarea
+            >
+          </div>
+          <button type="button" id="resetPreferences">Reset to Defaults</button>
+        </div>
+        <ul class="docs-preference-list">
+          <li>
+            <div class="doc-select">
+              <input type="checkbox" id="select-all" />
+              <label for="select-all">Select All</label>
+            </div>
+          </li>
+          {% for document in documents %}
+          <li id="document-{{ document.id }}" class="document-item">
+            <div class="doc-info">
+              <p id="title-edit">{{ document.title }}</p>
+              <p id="author-edit">{{ document.author }}</p>
+              <p>Tokens: {{ document.total_tokens }}</p>
+              <p>Chunks: {{ document.chunk_count }}</p>
+            </div>
+            <div class="doc-select">
+              <input
+                type="checkbox"
+                id="checkbox-{{ document.id }}"
+                name="document_selection_{{ document.id }}"
+                {%
+                if
+                document.selected
+                %}checked{%
+                endif
+                %}
+              />
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </form>
+    </div>
+    <div id="image-upload-section">
+      <label for="image-upload">
+        <i class="nuicon-file-image"></i>
+      </label>
+      <input
+        type="file"
+        id="image-upload"
+        name="image-upload"
+        multiple
+        accept="image/*"
+        style="display: none"
+      />
+      <div id="image-previews"></div>
     </div>
   </div>
 </div>

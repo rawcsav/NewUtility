@@ -32,7 +32,6 @@ def model_to_dict(model):
 @chat_bp.route("/", methods=["GET"])
 @login_required
 def chat_index():
-    # Create form instances
     new_conversation_form = NewConversationForm()
     chat_completion_form = ChatCompletionForm()
     markdown_file_path = os.path.join(current_app.root_path, chat_bp.static_folder, "chat.md")
@@ -120,7 +119,6 @@ def new_conversation():
 
         new_title = f"Convo #{max_number + 1}"
 
-        # Create new conversation with the generated title
         new_conversation = Conversation(
             user_id=user_id, title=new_title, system_prompt=form.system_prompt.data, last_checked_time=datetime.utcnow()
         )

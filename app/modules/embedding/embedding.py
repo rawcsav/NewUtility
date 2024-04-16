@@ -187,13 +187,13 @@ def update_knowledge_query_mode():
     return jsonify({"status": "success"})
 
 
-@embedding_bp.route("/update-knowledge-context-tokens", methods=["POST"])
+@embedding_bp.route("/update-top-k", methods=["POST"])
 @login_required
-def update_knowledge_context_tokens():
+def update_top_k():
     data = request.get_json()
-    knowledge_context_tokens = float(data["knowledge_context_tokens"])
+    top_k = float(data["top_k"])
     chat_preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
-    chat_preferences.knowledge_context_tokens = knowledge_context_tokens
+    chat_preferences.top_k = top_k
     db.session.commit()
 
     return jsonify({"status": "success"})
@@ -212,10 +212,22 @@ def update_docs_preferences():
         if chat_preferences.knowledge_query_mode:
             VectorCache.load_user_vectors(current_user.id)
 
-        # Update knowledge context tokens
-        chat_preferences.knowledge_context_tokens = int(form_data.get("knowledge_context_tokens", 0))
 
-        # Update temperature if provided
+        chat_preferences.top_k = int(form_data.get("top_k", 0))
+
+        if "threshold" in form_data:
+            try:
+                threshold = float(form_data.get("threshold"))
+                if 0.0 <= threshold <= 1.0:
+                    chat_preferences.threshold = threshold
+                else:
+                    return jsonify({"status": "error", "message": "Threshold must be between 0.0 and 1.0."})
+            except ValueError:
+                return jsonify({"status": "error", "message": "Invalid threshold value."})
+
+        if "system_prompt" in form_data:
+            chat_preferences.cwd_system_prompt = form_data.get("system_prompt")
+
         if "temperature" in form_data:
             try:
                 temperature = float(form_data.get("temperature"))
@@ -226,7 +238,17 @@ def update_docs_preferences():
             except ValueError:
                 return jsonify({"status": "error", "message": "Invalid temperature value."})
 
-        # Update document selection
+        if "top_p" in form_data:
+            try:
+                top_p = float(form_data.get("top_p"))
+                if 0.0 <= top_p <= 1.0:
+                    chat_preferences.top_p = top_p
+                else:
+                    return jsonify({"status": "error", "message": "Top P must be between 0.0 and 1.0."})
+            except ValueError:
+                return jsonify({"status": "error", "message": "Invalid top P value."})
+
+
         Document.query.filter_by(user_id=current_user.id).update({"selected": False})
         for key in form_data.keys():
             if key.startswith("document_selection_"):
@@ -235,6 +257,14 @@ def update_docs_preferences():
                 if document and document.user_id == current_user.id:
                     document.selected = True
 
+        if "reset" in form_data:
+            # Reset preferences to default values
+            chat_preferences.knowledge_query_mode = False
+            chat_preferences.top_k = 10
+            chat_preferences.threshold = 0.5
+            chat_preferences.cwd_system_prompt = "You are a helpful academic literary assistant. Provide in -depth guidance, suggestions, code snippets, and explanations as needed to help the user. Leverage your expertise and intuition to offer innovative and effective solutions.Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. Use the provided text excerpts directly to aid in your responses."
+            chat_preferences.temperature = 1.0
+            chat_preferences.top_p = 1.0
         try:
             db.session.commit()
             return jsonify({"status": "success", "message": "Preferences updated successfully."})

@@ -417,21 +417,21 @@ function appendDocumentToList(documentObj) {
   editButton.className = "btn-icon edit-btn";
   editButton.setAttribute("onclick", "enableEditing(this)");
   editButton.title = "Edit Document";
-  editButton.innerHTML = `<i class="fa fa-edit"></i>`;
+  editButton.innerHTML = `<i class="nuicon-file-pen"></i>`;
 
   var saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.className = "btn-icon save-btn";
   saveButton.title = "Save Changes";
   saveButton.style.display = "none";
-  saveButton.innerHTML = `<i class="fa fa-save"></i>`;
+  saveButton.innerHTML = `<i class="nuicon-check"></i>`;
 
   var deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.className = "btn-icon delete-btn";
   deleteButton.setAttribute("data-doc-id", documentObj.document_id);
   deleteButton.title = "Delete Document";
-  deleteButton.innerHTML = `<i class="fa fa-trash"></i>`;
+  deleteButton.innerHTML = `<i class="nuicon-trash-can"></i>`;
 
   buttonContainer.appendChild(editButton);
   buttonContainer.appendChild(saveButton);

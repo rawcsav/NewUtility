@@ -10,13 +10,13 @@
         <h3>GPT</h3>
         <div id="options">
           <button id="show-history-btn" class="options-button active">
-            <i class="fas fa-history"></i>
+            <i class="nuicon-history"></i>
           </button>
           <button id="show-preferences-btn" class="options-button">
-            <i class="fas fa-cog"></i>
+            <i class="nuicon-gear-complex"></i>
           </button>
           <button id="docs-preferences-btn" class="options-button">
-            <i class="fa-regular fa-file-lines"></i>
+            <i class="nuicon-file-lines"></i>
           </button>
         </div>
       </div>
@@ -34,13 +34,13 @@
               <span
                 class="edit-conversation-title"
                 data-conversation-id="{{ conversation.id }}"
-                ><i class="fas fa-edit"></i
+                ><i class="nuicon-pen-line"></i
               ></span>
               <span
                 class="delete-conversation"
                 data-conversation-id="{{ conversation.id }}"
               >
-                <i class="fas fa-trash-alt"></i>
+                <i class="nuicon-trash-can"></i>
               </span>
             </div>
           </div>
@@ -54,7 +54,7 @@
         >
           {{ new_conversation_form.system_prompt(class_="hidden") }}
           <button type="submit" class="button-send">
-            <i class="fa fa-comments" aria-hidden="true"></i>
+            <i class="nuicon-comments" aria-hidden="true"></i>
           </button>
         </form>
       </div>
@@ -177,22 +177,22 @@
             doc_preferences_form.knowledge_query_mode() }}
           </div>
           <div class="form-group">
-            {{ doc_preferences_form.knowledge_context_tokens.label }}
+            {{ doc_preferences_form.top_k.label }}
             <input
               type="range"
-              id="knowledge_context_tokens"
-              name="knowledge_context_tokens"
+              id="top_k"
+              name="top_k"
               min="1"
               max="60"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
-              oninput="document.getElementById('knowledge_context_tokens_value').value = this.value"
+              value="{{ doc_preferences_form.top_k.data }}"
+              oninput="document.getElementById('top_k_value').value = this.value"
             />
             <input
               type="text"
-              id="knowledge_context_tokens_value"
+              id="top_k_value"
               class="range-value-input"
-              value="{{ doc_preferences_form.knowledge_context_tokens.data }}"
-              oninput="document.getElementById('knowledge_context_tokens').value = this.value"
+              value="{{ doc_preferences_form.top_k.data }}"
+              oninput="document.getElementById('top_k').value = this.value"
             />
           </div>
           <ul class="docs-preference-list">
@@ -245,7 +245,7 @@
             {% for image_url in image_urls %}
             <div class="image-div">
               <img src="{{ image_url }}" class="thumbnail" alt="thumbnail" />
-              <i class="fas fa-times delete-icon"></i>
+              <i class="nuicon-xmark"></i>
             </div>
             {% endfor %}
           </div>
@@ -263,7 +263,7 @@
               style="display: none"
             />
             <button id="image-upload-icon" type="button" style="display: none">
-              <i class="fa fa-file-image-o"></i>
+              <i class="nuicon-images"></i>
             </button>
             <textarea
               rows="1"
@@ -277,7 +277,7 @@
               class="button-send"
               data-state="send"
             >
-              <i class="fas fa-paper-plane"></i>
+              <i class="nuicon-paper-plane"></i>
               <span class="sr-only">Send Message</span>
             </button>
           </div>

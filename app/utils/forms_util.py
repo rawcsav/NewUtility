@@ -188,16 +188,21 @@ class NewConversationForm(FlaskForm):
 
 
 class UpdateDocPreferencesForm(FlaskForm):
+    default_prompt = "You are a helpful academic literary assistant. Provide in -depth guidance, suggestions, code snippets, and explanations as needed to help the user. Leverage your expertise and intuition to offer innovative and effective solutions.Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. Use the provided text excerpts directly to aid in your responses."
+    cwd_system_prompt = StringField("System Prompt", default=default_prompt)
     document_id = StringField("Document ID", validators=[Optional()])
     selected = BooleanField("Selected", validators=[Optional()])
-    knowledge_query_mode = BooleanField("Enable", validators=[Optional()])
-    knowledge_context_tokens = FloatField(
-        "# Of Sections", validators=[Optional(), NumberRange(min=1, max=60, message="Value must be between 1 and 60")]
+    knowledge_query_mode = BooleanField("Enable", validators=[Optional()], default=False)
+    top_k = FloatField(
+        "# Of Sections", validators=[Optional(), NumberRange(min=1, max=60, message="Value must be between 1 and 60")], default=10
     )
-    # Adding the optional temperature field with a specified range
+    threshold = FloatField(
+        "Threshold", validators=[Optional(), NumberRange(min=0.0, max=1.0, message="Value must be between 0.0 and 1.0")], default=0.5
+    )
     temperature = DecimalField(
         "Temperature", validators=[NumberRange(min=0, max=2), Optional()], places=1, default=Decimal("0.7")
     )
+    top_p = DecimalField("Top P", validators=[NumberRange(min=0, max=1)], places=2, default=Decimal("1.00"))
 
 
 class TtsPreferencesForm(FlaskForm):

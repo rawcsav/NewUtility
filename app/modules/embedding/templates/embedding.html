@@ -39,7 +39,7 @@
           enctype="multipart/form-data"
         >
           <label for="file" class="file-upload-btn"
-            ><i class="fa-solid fa-cloud-arrow-up"></i>Upload</label
+            ><i class="nuicon-cloud-arrow-up"></i>Upload</label
           >
           <p id="file-types-list">
             Accepted file types: <span class="file-type">.txt</span>,
@@ -59,15 +59,15 @@
           <div id="document-forms-container"></div>
           <div id="pagination-controls">
             <button type="button" id="prev-button" aria-label="Previous page">
-              <i class="fas fa-arrow-left"></i>
+              <i class="nuicon-arrow-left"></i>
             </button>
             <span id="current-page">1</span> / <span id="total-pages">1</span>
             <button type="button" id="next-button" aria-label="Next page">
-              <i class="fas fa-arrow-right"></i>
+              <i class="nuicon-arrow-right"></i>
             </button>
           </div>
           <button type="submit" class="doc-submit-btn">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>Submit Docs
+            <i class="nuicon-wand-magic-sparkles"></i>Submit Docs
           </button>
           <div id="uploadStatus"></div>
         </form>
@@ -118,7 +118,7 @@
                 onclick="enableEditing(this)"
                 title="Edit Document"
               >
-                <i class="fa fa-edit"></i>
+                <i class="nuicon-pen-line"></i>
               </button>
               <button
                 type="button"
@@ -126,7 +126,7 @@
                 title="Save Changes"
                 style="display: none"
               >
-                <i class="fa fa-edit"></i>
+                <i class="nuicon-check"></i>
               </button>
               <button
                 type="button"
@@ -134,7 +134,7 @@
                 data-doc-id="{{ document.id }}"
                 title="Delete Document"
               >
-                <i class="fa fa-trash"></i>
+                <i class="nuicon-trash-can"></i>
               </button>
             </div>
           </li>
