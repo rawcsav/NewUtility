@@ -67,6 +67,7 @@ services:
   celery:
     build: .
     command: celery -A uwsgi.celery worker --loglevel=info --concurrency=2 --pool=eventlet --prefetch-multiplier=0 --max-tasks-per-child=100 --autoscale=50,5 --without-heartbeat --without-gossip --without-mingle
+    restart: unless-stopped
     environment:
       FLASK_APP: uwsgi.py
       FLASK_ENV: production
@@ -100,6 +101,7 @@ services:
   celerybeat:
     build: .
     command: celery -A uwsgi.celery beat --loglevel=info -s /newutil/celerybeat-schedule/celerybeat-schedule
+    restart: unless-stopped
     environment:
       FLASK_APP: uwsgi.py
       FLASK_ENV: production
