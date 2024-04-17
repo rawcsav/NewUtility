@@ -66,7 +66,7 @@ services:
 
   celery:
     build: .
-    command: celery -A uwsgi.celery worker g--loglevel=INFO --concurrency=1
+    command: celery -A uwsgi.celery worker --loglevel=INFO --concurrency=1
     restart: unless-stopped
     environment:
       FLASK_APP: uwsgi.py
