@@ -224,7 +224,7 @@ def transcription():
             )
             db.session.add(new_transcription_task)
             db.session.commit()
-            result = process_transcription_task.apply_async(kwargs={"task_id": new_task.id})
+            process_transcription_task.delay(new_task.id) # Trigger the Celery task
             return jsonify({"status": "success", "task_id": new_task.id})
         except Exception as e:
             db.session.rollback()
