@@ -224,7 +224,7 @@ def transcription():
             )
             db.session.add(new_transcription_task)
             db.session.commit()
-            process_transcription_task.delay(new_task.id) # Trigger the Celery task
+            result = process_transcription_task.apply_async(kwargs={"task_id": new_task.id})
             return jsonify({"status": "success", "task_id": new_task.id})
         except Exception as e:
             db.session.rollback()
@@ -312,6 +312,5 @@ def download_whisper(job_id):
             os.remove(file_path)
         except Exception as error:
             raise InternalServerError(f"Unable to delete file: {error}")
-
 
 
