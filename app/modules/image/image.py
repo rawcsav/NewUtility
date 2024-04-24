@@ -45,8 +45,14 @@ def generate_image():
 
             # Create a new ImageTask
             new_image_task = ImageTask(
-                task_id=new_task.id, prompt=prompt, model=model, size=size, quality=quality, style=style, n=n
+                task_id=new_task.id, prompt=prompt, model=model, size=size, n=n
             )
+
+            # Add quality and style only if the model is DALL-E-3
+            if model.startswith("dall-e-3"):
+                new_image_task.quality = quality
+                new_image_task.style = style
+
             db.session.add(new_image_task)
             db.session.commit()
             process_image_task.apply_async(kwargs={"task_id": new_task.id}, countdown=5)  # Add a delay of 5 seconds

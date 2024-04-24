@@ -17,9 +17,12 @@ def process_image(session, image_task, user_id):
             "prompt": image_task.prompt,
             "n": image_task.n,
             "size": image_task.size,
-            "quality": image_task.quality,
-            "style": image_task.style,
         }
+
+        if image_task.model.startswith("dall-e-3"):
+            request_params["quality"] = image_task.quality
+            request_params["style"] = image_task.style
+
         client, key_id, error = task_client(session, user_id)
         if error:
             logger.error(f"Client error for user {user_id}: {error}")
