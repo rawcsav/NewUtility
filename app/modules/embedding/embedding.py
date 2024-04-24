@@ -3,6 +3,8 @@ from flask import Blueprint, jsonify, render_template, request, session, current
 from flask_login import login_required, current_user
 from markdown2 import markdown
 from werkzeug.utils import secure_filename
+
+from app.modules.auth.auth_util import requires_selected_api_key
 from app.tasks.embedding_task import process_embedding_task
 from app import db
 from app.models.chat_models import ChatPreferences
@@ -19,6 +21,7 @@ embedding_bp = Blueprint(
 
 
 @embedding_bp.route("/", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def embeddings_center():
     markdown_file_path = os.path.join(current_app.root_path, embedding_bp.static_folder, "embedding.md")
@@ -43,6 +46,7 @@ def embeddings_center():
 
 
 @embedding_bp.route("/upload", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def upload_document():
     form = DocumentUploadForm()
@@ -91,6 +95,7 @@ def upload_document():
 
 
 @embedding_bp.route("/status", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def get_processing_status():
     uploaded_files_info = session.get("uploaded_files_info", [])
@@ -103,6 +108,7 @@ def get_processing_status():
 
 
 @embedding_bp.route("/delete/<string:document_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def delete_document(document_id):
     form = DeleteDocumentForm()
@@ -124,6 +130,7 @@ def delete_document(document_id):
 
 
 @embedding_bp.route("/update", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_document():
     form = EditDocumentForm()
@@ -156,6 +163,7 @@ def update_document():
 
 
 @embedding_bp.route("/update-document-selection", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_document_selection():
     data = request.get_json()
@@ -174,6 +182,7 @@ def update_document_selection():
 
 
 @embedding_bp.route("/update-knowledge-query-mode", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_knowledge_query_mode():
     data = request.get_json()
@@ -188,6 +197,7 @@ def update_knowledge_query_mode():
 
 
 @embedding_bp.route("/update-top-k", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_top_k():
     data = request.get_json()
@@ -200,6 +210,7 @@ def update_top_k():
 
 
 @embedding_bp.route("/update-doc-preferences", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_docs_preferences():
     form = UpdateDocPreferencesForm()

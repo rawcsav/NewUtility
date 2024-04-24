@@ -22,7 +22,7 @@ While my experiments with CSS Flexbox might not directly affect users, any compr
 - Quality selection for DALL-E 3: standard, HD.
 
 ### Document Embedding and Management
-- Upload documents for chat embedding: `.txt`, `.pdf`, `.docx`.
+- Upload documents for chat embedding: `.txt` or `.pdf`.
 - Edit document metadata for better context in retrieval.
 - Manage embedded documents: select for chat, delete.
 - Adjust context token percentage for knowledge retrieval in chat.

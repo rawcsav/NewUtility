@@ -6,7 +6,7 @@ from flask import render_template, flash, request, Blueprint
 from flask_login import login_required, current_user
 from markdown2 import markdown
 from sqlalchemy.inspection import inspect
-
+from app.modules.auth.auth_util import requires_selected_api_key
 from app import db
 from app.models.embedding_models import Document
 from app.models.chat_models import Conversation, Message, ChatPreferences
@@ -30,6 +30,7 @@ def model_to_dict(model):
 
 
 @chat_bp.route("/", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def chat_index():
     new_conversation_form = NewConversationForm()
@@ -98,6 +99,7 @@ def chat_index():
 
 
 @chat_bp.route("/new-conversation", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def new_conversation():
     form = NewConversationForm()
@@ -145,6 +147,7 @@ def new_conversation():
 
 
 @chat_bp.route("/delete-conversation/<string:conversation_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def delete_conversation(conversation_id):
     conversation_to_delete = Conversation.query.get_or_404(conversation_id)
@@ -166,6 +169,7 @@ def delete_conversation(conversation_id):
 
 
 @chat_bp.route("/update-preferences", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_preferences():
     form = UserPreferencesForm()
@@ -188,6 +192,7 @@ def update_preferences():
 
 
 @chat_bp.route("/completion", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def chat_completion():
     form = ChatCompletionForm()
@@ -225,6 +230,7 @@ def chat_completion():
 
 
 @chat_bp.route("/retry-message/<string:message_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def retry_message(message_id):
     message = Message.query.get_or_404(message_id)
@@ -263,6 +269,7 @@ def retry_message(message_id):
 
 
 @chat_bp.route("/conversation/<string:conversation_id>", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def get_conversation_messages(conversation_id):
     conversation, conversation_history = get_user_history(current_user.id, conversation_id)
@@ -279,6 +286,7 @@ def get_conversation_messages(conversation_id):
 
 
 @chat_bp.route("/update-conversation-title/<string:conversation_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_conversation_title(conversation_id):
     data = request.get_json()
@@ -303,6 +311,7 @@ def update_conversation_title(conversation_id):
 
 
 @chat_bp.route("/conversation/<string:conversation_id>/messages", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def get_paginated_messages(conversation_id):
     page = request.args.get("page", 1, type=int)
@@ -329,6 +338,7 @@ def get_paginated_messages(conversation_id):
 
 
 @chat_bp.route("/update-system-prompt/<string:conversation_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_system_prompt(conversation_id):
     data = request.get_json()
@@ -355,6 +365,7 @@ def update_system_prompt(conversation_id):
 
 
 @chat_bp.route("/edit-message/<string:message_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def edit_message(message_id):
     data = request.get_json()
@@ -377,6 +388,7 @@ def edit_message(message_id):
 
 
 @chat_bp.route("/check-new-messages/<string:conversation_id>", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def check_new_messages(conversation_id):
     # Get the conversation from the database

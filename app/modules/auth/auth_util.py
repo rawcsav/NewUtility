@@ -2,6 +2,8 @@ import hashlib
 import os
 import random
 import re
+
+from flask_socketio import emit
 from openai import OpenAI, AsyncOpenAI
 import openai
 import requests
@@ -124,9 +126,12 @@ def get_unique_nickname(user_id, nickname):
 
 
 def create_and_save_api_key(user_id, api_key, nickname, label):
+    # Encrypt and hash the API key
     api_key_identifier = api_key[:6]
     encrypted_api_key = encrypt_api_key(api_key)
     api_key_token = hash_api_key(api_key)
+
+    # Create the API key object
     new_key = UserAPIKey(
         user_id=user_id,
         encrypted_api_key=encrypted_api_key,
@@ -135,8 +140,19 @@ def create_and_save_api_key(user_id, api_key, nickname, label):
         api_key_token=api_key_token,
         label=label,
     )
+
+    # Add to the session
     db.session.add(new_key)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e  # Handle or log the exception appropriately
+    existing_keys_count = UserAPIKey.query.filter_by(user_id=user_id, delete=False).count()
+    if existing_keys_count == 1:
+        current_user.selected_api_key_id = new_key.id
+        db.session.commit()
+
     return new_key
 
 
@@ -162,12 +178,36 @@ def task_client(session, user_id):
     client = OpenAI(api_key=api_key, max_retries=5, timeout=30.0)
     return client, key_id, None
 
-def async_task_client(session, user_id):
-    user = session.query(User).filter_by(id=user_id).first()
-    key_id = user.selected_api_key_id
-    user_api_key = session.query(UserAPIKey).filter_by(user_id=user_id, id=key_id, delete=False).first()
-    if not user_api_key:
-        return None, "API Key not found."
-    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-    client = AsyncOpenAI(api_key=api_key, max_retries=5, timeout=30.0)
-    return client, key_id, None
+
+from functools import wraps
+from flask import redirect, url_for, jsonify, flash
+from flask_login import current_user
+
+
+def requires_selected_api_key(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if not current_user.selected_api_key_id:
+            flash("Please select an API key.", "warning")
+            return redirect(url_for("user_bp.dashboard"))
+        return func(*args, **kwargs)
+    return decorated_function
+
+
+def requires_unlimited_api_key(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if not current_user.selected_api_key_id:
+            return redirect(url_for("user_bp.dashboard"))
+
+        user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=current_user.selected_api_key_id,
+                                                  delete=False).first()
+        if user_api_key.label != "gpt-4":
+            return jsonify({"status": "error", "message": "Access denied. Your API key has limited access."}), 403
+
+        return func(*args, **kwargs)
+
+    return decorated_function
+
+
+

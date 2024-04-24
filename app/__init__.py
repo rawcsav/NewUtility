@@ -12,7 +12,7 @@ from flask import Flask, redirect, url_for
 from flask_assets import Environment
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.profiler import ProfilerMiddleware
-from app.utils.socket_util import GlobalNamespace, EmbeddingNamespace, ImageNamespace, AudioNamespace
+from app.utils.socket_util import GlobalNamespace, EmbeddingNamespace, ImageNamespace, AudioNamespace, CWDNamespace
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -47,6 +47,8 @@ def create_app():
     socketio.on_namespace(ImageNamespace("/image"))
     socketio.on_namespace(EmbeddingNamespace("/embedding"))
     socketio.on_namespace(AudioNamespace("/audio"))
+    socketio.on_namespace(CWDNamespace("/cwd"))
+
 
     Migrate(app, db)
     bcrypt.init_app(app)

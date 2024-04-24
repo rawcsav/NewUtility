@@ -116,7 +116,7 @@ class GenerateImageForm(FlaskForm):
 class DocumentUploadForm(FlaskForm):
     file = FileField(
         "Document",
-        validators=[FileRequired(), FileAllowed(["pdf", "doc", "docx", "txt"], "Text, pdf, or doc files only!")],
+        validators=[FileRequired(), FileAllowed(["pdf", "txt"], "Text or PDF files only!")],
     )
     title = StringField("Document Title", validators=[Optional()])
     author = StringField("Author Name", validators=[Optional()])
@@ -145,15 +145,24 @@ class UserPreferencesForm(FlaskForm):
     model = SelectField(
         "Model",
         choices=[
+            ("gpt-4-turbo", "GPT-4 Turbo"),
+            ("gpt-4-turbo-2024-04-09", "GPT-4 Turbo 2024-04-09"),
+            ("gpt-4-turbo-preview", "GPT-4 Turbo Preview"),
+            ("gpt-4-0125-preview", "GPT-4 0125 Preview"),
             ("gpt-4-1106-preview", "GPT-4 1106 Preview"),
             ("gpt-4-vision-preview", "GPT-4 Vision Preview"),
+            ("gpt-4-1106-vision-preview", "GPT-4 1106 Vision Preview"),
             ("gpt-4", "GPT-4"),
-            ("gpt-4-32k", "GPT-4 32k"),
             ("gpt-4-0613", "GPT-4 0613"),
+            ("gpt-4-32k", "GPT-4 32k"),
             ("gpt-4-32k-0613", "GPT-4 32k 0613"),
-            ("gpt-3.5-turbo-1106", "GPT-3.5 Turbo 1106"),
+            ("gpt-3.5-turbo-0125", "GPT-3.5 Turbo 0125"),
             ("gpt-3.5-turbo", "GPT-3.5 Turbo"),
+            ("gpt-3.5-turbo-1106", "GPT-3.5 Turbo 1106"),
+            ("gpt-3.5-turbo-instruct", "GPT-3.5 Turbo Instruct"),
             ("gpt-3.5-turbo-16k", "GPT-3.5 Turbo 16k"),
+            ("gpt-3.5-turbo-0613", "GPT-3.5 Turbo 0613"),
+            ("gpt-3.5-turbo-16k-0613", "GPT-3.5 Turbo 16k 0613")
         ],
     )
     max_tokens = IntegerField("Max Tokens")
@@ -175,7 +184,7 @@ class UserPreferencesForm(FlaskForm):
 
 class NewConversationForm(FlaskForm):
     default_prompt = (
-        "You are Jack, a large language model trained by OpenAI, "
+        "You are RAWCBOT, a large language model trained by OpenAI, "
         "based on the GPT-4 architecture. You are chatting with the user "
         "via the RAWCSAV interface. This means you should "
         "use proper machine-readable markdown format where it is relevant. "
@@ -194,7 +203,7 @@ class UpdateDocPreferencesForm(FlaskForm):
     selected = BooleanField("Selected", validators=[Optional()])
     knowledge_query_mode = BooleanField("Enable", validators=[Optional()], default=False)
     top_k = FloatField(
-        "# Of Sections", validators=[Optional(), NumberRange(min=1, max=60, message="Value must be between 1 and 60")], default=10
+        "Sections", validators=[Optional(), NumberRange(min=1, max=60, message="Value must be between 1 and 60")], default=10
     )
     threshold = FloatField(
         "Threshold", validators=[Optional(), NumberRange(min=0.0, max=1.0, message="Value must be between 0.0 and 1.0")], default=0.5

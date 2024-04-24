@@ -222,12 +222,12 @@
 
 @font-face {
   font-family: "nufont";
-  src: url("../../fonts/nufont.eot?tqomum");
+  src: url("../../fonts/nufont.eot?mrmryi");
   src:
-    url("../../fonts/nufont.eot?tqomum#iefix") format("embedded-opentype"),
-    url("../../fonts/nufont.ttf?tqomum") format("truetype"),
-    url("../../fonts/nufont.woff?tqomum") format("woff"),
-    url("../../fonts/nufont.svg?tqomum#nufont") format("svg");
+    url("../../fonts/nufont.eot?mrmryi#iefix") format("embedded-opentype"),
+    url("../../fonts/nufont.ttf?mrmryi") format("truetype"),
+    url("../../fonts/nufont.woff?mrmryi") format("woff"),
+    url("../../fonts/nufont.svg?mrmryi#nufont") format("svg");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -249,8 +249,26 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.nuicon-microphone:before {
+.nuicon-user-robot-xmarks:before {
   content: "\e900";
+}
+.nuicon-user-robot:before {
+  content: "\e935";
+}
+.nuicon-user-tie:before {
+  content: "\e936";
+}
+.nuicon-external-link:before {
+  content: "\e937";
+}
+.nuicon-clock:before {
+  content: "\e938";
+}
+.nuicon-microphone:before {
+  content: "\e934";
+}
+.nuicon-pause:before {
+  content: "\e933";
 }
 .nuicon-user-gear:before {
   content: "\e901";
@@ -401,8 +419,4 @@
 }
 .nuicon-gear-complex:before {
   content: "\e932";
-}
-
-.nuicon-pause:before {
-  content: "\e933";
 }

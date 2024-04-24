@@ -5,7 +5,7 @@ import openai
 import tiktoken
 from flask_login import current_user
 from openai import RateLimitError
-from app import db
+from app import db, socketio
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import DocumentChunk, Document, ModelContextWindow
 from app.utils.vector_cache import VectorCache
@@ -74,12 +74,12 @@ def get_embedding(text: str, client: openai.OpenAI, model="text-embedding-3-larg
 def append_knowledge_context(user_query, user_id, client):
     query_embedding = get_embedding(user_query, client)
     query_vector = np.array(query_embedding, dtype=np.float32)
-    user_preferences  = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
+    user_preferences = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
 
     relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences=user_preferences)
     context = ""
     chunk_associations = []
-    doc_pages = {}  # Dictionary to hold document ID and a set of pages
+    doc_pages = {}  # Dictionary to hold document ID and a list of pages
 
     preface = "Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, say as such but still do your best to provide the most factual, nuanced assessment possible."
 
@@ -92,19 +92,31 @@ def append_knowledge_context(user_query, user_id, client):
         if author:
             context_parts.append(f"Author: {author}")
         if title not in doc_pages:
-            doc_pages[title] = set()
-        if pages:  # Add page number only if it exists
-            context_parts.append(f"Page: {pages}")
-            doc_pages[title].add(pages)
+            doc_pages[title] = {}  # Dictionary to hold page numbers and their similarity scores
+        if pages:
+            # Split the pages string by the comma
+            page_numbers = pages.split(',')
+            for page in page_numbers:
+                # Add each page number only if it exists and has not been included yet
+                if page and page not in doc_pages[title]:
+                    doc_pages[title][page] = similarity
+                else:
+                    # Update the similarity score if the page already exists and has a higher similarity
+                    if similarity > doc_pages[title][page]:
+                        doc_pages[title][page] = similarity
         context_parts.append(f"Content:\n{chunk_content}")
 
         context += "\n".join(context_parts) + "\n\n"
 
         chunk_associations.append((chunk_id, similarity))
 
+    # Sort the pages in doc_pages by their page numbers
+    for title in doc_pages:
+        sorted_pages = sorted(doc_pages[title].items(), key=lambda x: int(x[0]))
+        doc_pages[title] = [page for page, _ in sorted_pages]
+
     modified_query = context + user_query
     return modified_query, chunk_associations, doc_pages
-
 
 def chat_completion_with_retry(messages, model, client, temperature, top_p):
     return client.chat.completions.create(model=model, messages=messages, temperature=temperature, top_p=top_p, stream=True)
@@ -131,13 +143,13 @@ def ask(query, images, client, model: str = "gpt-4-turbo"):
     ]
 
     try:
-        documents_used_summary = "\nDocuments used:\n"
+        documents_used_summary = ""
         for title, pages in doc_pages.items():
             if pages:
                 documents_used_summary += f"{title}: Pages {', '.join(map(str, sorted(pages)))}, "
             else:  # Handle documents without pages
                 documents_used_summary += f"{title}, "
-        yield documents_used_summary + "\n\n"
+        socketio.emit('documents_used', {"message": documents_used_summary}, room=str(current_user.id), namespace="/cwd" )
 
         # Yield the AI response parts
         for part in chat_completion_with_retry(messages, model, client, temperature, top_p):

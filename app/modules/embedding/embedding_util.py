@@ -12,7 +12,6 @@ from app.modules.user.user_util import get_user_upload_directory
 import numpy as np
 import openai
 import tiktoken
-from docx2txt import docx2txt
 from concurrent import futures
 from nltk.tokenize import word_tokenize, sent_tokenize
 from pypdf import PdfReader
@@ -270,10 +269,6 @@ class TextExtractor:
         ext = os.path.splitext(self.filepath)[1].lower()
         if ext == ".pdf":
             yield from self.extract_text_from_pdf()
-        elif ext == ".docx":
-            text = docx2txt.process(self.filepath)
-            yield (text, None)  # Assuming docx doesn't provide page numbers
-            self.last_page_number = None  # Reset or handle as needed for DOCX
         elif ext == ".txt":
             with open(self.filepath, "r", encoding="utf-8") as file:
                 for line_number, line in enumerate(file, start=1):

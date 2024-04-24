@@ -8,15 +8,24 @@ from app.models.chat_models import MessageChunkAssociation, Conversation, Messag
 from app.utils.usage_util import chat_cost, num_tokens_from_string
 
 MODEL_TOKEN_LIMITS = {
-    "gpt-4-1106-preview": 4096,
-    "gpt-4-vision-preview": 4096,
+    "gpt-4-turbo": 128000,
+    "gpt-4-turbo-2024-04-09": 128000,
+    "gpt-4-turbo-preview": 128000,
+    "gpt-4-0125-preview": 128000,
+    "gpt-4-1106-preview": 128000,
+    "gpt-4-vision-preview": 128000,
+    "gpt-4-1106-vision-preview": 128000,
     "gpt-4": 8192,
-    "gpt-4-32k": 32768,
     "gpt-4-0613": 8192,
+    "gpt-4-32k": 32768,
     "gpt-4-32k-0613": 32768,
+    "gpt-3.5-turbo-0125": 16385,
+    "gpt-3.5-turbo": 16385,
     "gpt-3.5-turbo-1106": 16385,
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-16k": 4096,
+    "gpt-3.5-turbo-instruct": 4096,
+    "gpt-3.5-turbo-16k": 16385,
+    "gpt-3.5-turbo-0613": 4096,
+    "gpt-3.5-turbo-16k-0613": 16385
 }
 
 ENCODING = tiktoken.get_encoding("cl100k_base")
@@ -211,7 +220,7 @@ def chat_stream(raw_prompt, prompt, client, user_id, conversation_id, retry=Fals
         if truncate_limit:
             truncate_conversation(conversation_history, truncate_limit)
         if preferences["model"] == "gpt-4-1106-preview":
-            model = "gpt-4-turbo-preview"
+            model = "gpt-4-turbo"
         else:
             model = preferences["model"]
         request_payload = {

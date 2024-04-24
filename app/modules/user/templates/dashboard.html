@@ -4,6 +4,14 @@
 <link rel="stylesheet" href="{{ ASSET_URL }}" />
 {% endassets %} {% endblock %} {% block body %}
 <div id="full-container" data-user-id="{{ user_id }}">
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div id="notification-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
   <div id="left-column">
     <div class="lower-row">
       <div class="profile-column">

@@ -4,6 +4,19 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function fadeOutNotifications() {
+  const notifications = document.querySelectorAll(".alert");
+  notifications.forEach((notification) => {
+    notification.classList.add("fade-out");
+    setTimeout(() => {
+      notification.remove();
+    }, 600);
+  });
+}
+
+// Call the fadeOutNotifications function after a certain duration (e.g., 5 seconds)
+setTimeout(fadeOutNotifications, 5000);
+
 function showToast(message, type) {
   let toast = document.getElementById("toast");
   if (!toast) {

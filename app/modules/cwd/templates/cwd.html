@@ -3,45 +3,59 @@
 {% endblock %} {% block styles %} {% assets "cwd_style_bundle" %}
 <link rel="stylesheet" href="{{ ASSET_URL }}" />
 {% endassets %} {% endblock %} {% block body %}
-<div class="content-wrap">
-  <div class="left-column">
-    <div class="query-container" style="position: relative">
-      <div id="query-results-section">
-        <div id="history-container">
-          <!-- History will go here -->
-        </div>
-        <div id="current-query">
-          <p style="display: none">
-            <strong>Query: </strong><span id="user_query"></span>
-          </p>
-          <div id="response_container" style="display: none">
-            <strong>Response: </strong>
-            <pre><span id="results"></span></pre>
+<form id="docs-preferences-form">
+  {{ doc_preferences_form.hidden_tag() }}
+
+  <div class="side-menu">
+    <button id="docsToggle" class="menu-item" type="button">
+      <i class="nuicon-file-lines"></i>
+    </button>
+    <button id="settingsToggle" class="menu-item" type="button">
+      <i class="nuicon-gears"></i>
+    </button>
+    <button id="imageUploadToggle" class="menu-item" type="button">
+      <i class="nuicon-file-image"></i>
+    </button>
+    <button id="systemPromptToggle" class="menu-item" type="button">
+      <i class="nuicon-comment-lines"></i>
+    </button>
+    <div id="docsPanel" class="panel">
+      <ul class="docs-preference-list">
+        <li>
+          <div class="doc-select">
+            <input type="checkbox" id="select-all" />
+            <label for="select-all">Select All</label>
           </div>
-        </div>
-      </div>
+        </li>
+        {% for document in documents %}
+        <li id="document-{{ document.id }}" class="document-item">
+          <div class="doc-info">
+            <p id="title-edit">{{ document.title }}</p>
+            <p id="author-edit">{{ document.author }}</p>
+            <p>Tokens: {{ document.total_tokens }}</p>
+            <p>Chunks: {{ document.chunk_count }}</p>
+          </div>
+          <div class="doc-select">
+            <input
+              type="checkbox"
+              id="checkbox-{{ document.id }}"
+              name="document_selection_{{ document.id }}"
+              {%
+              if
+              document.selected
+              %}checked{%
+              endif
+              %}
+            />
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
-    <div class="input-container">
-      <div id="query-input-section">
-        <div class="input-wrapper">
-          <input
-            type="text"
-            id="query"
-            name="query"
-            placeholder="Enter your query here..."
-          />
-          <button id="queryButton" onclick="toggleQuery()">
-            <i id="queryIcon" class="nuicon-paper-plane"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="right-column">
-    <div id="docs-settings-popup" class="docs-settings-popup">
-      <form id="docs-preferences-form">
-        {{ doc_preferences_form.hidden_tag() }}
-        <div class="form-group">
+
+    <div id="settingsPanel" class="panel">
+      <div id="advancedSettings">
+        <div class="form-group slider-group">
           {{ doc_preferences_form.top_k.label }}
           <input
             type="range"
@@ -50,17 +64,15 @@
             min="1"
             max="60"
             value="{{ doc_preferences_form.top_k.data }}"
-            oninput="document.getElementById('top_k').value = this.value"
           />
           <input
             type="text"
             id="top_k_value"
             class="range-value-input"
             value="{{ doc_preferences_form.top_k.data }}"
-            oninput="document.getElementById('top_k').value = this.value"
           />
         </div>
-        <div class="form-group">
+        <div class="form-group slider-group">
           {{ doc_preferences_form.threshold.label }}
           <input
             type="range"
@@ -70,117 +82,117 @@
             max="1.0"
             step="0.1"
             value="{{ doc_preferences_form.threshold.data }}"
-            oninput="document.getElementById('threshold').value = this.value"
           />
           <input
             type="text"
             id="threshold_value"
             class="range-value-input"
             value="{{ doc_preferences_form.threshold.data }}"
-            oninput="document.getElementById('threshold').value = this.value"
           />
         </div>
-
-        <button id="showAdvancedSettings">
-          <i class="nuicon nuicon-gears"></i>
-        </button>
-
-        <!-- Wrap the settings you want to hide/show in a container -->
-        <div id="advancedSettings" style="display: none">
-          <div class="form-group">
-            {{ doc_preferences_form.temperature.label }}
-            <input
-              type="range"
-              id="temperature"
-              name="temperature"
-              min="0"
-              max="2"
-              step="0.1"
-              value="{{ doc_preferences_form.temperature.data }}"
-              oninput="document.getElementById('temperature-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="temperature-value"
-              class="range-value-input"
-              value="{{ doc_preferences_form.temperature.data }}"
-              oninput="document.getElementById('temperature').value = this.value"
-            />
-          </div>
-          <div class="form-group">
-            {{ doc_preferences_form.top_p.label }}
-            <input
-              type="range"
-              id="top_p"
-              name="top_p"
-              min="0"
-              max="1"
-              step="0.01"
-              value="{{ doc_preferences_form.top_p.data }}"
-              oninput="document.getElementById('top-p-value').value = this.value"
-            />
-            <input
-              type="text"
-              id="top-p-value"
-              class="range-value-input"
-              value="{{doc_preferences_form.top_p.data }}"
-              oninput="document.getElementById('top_p').value = this.value"
-            />
-          </div>
-          <div class="form-group">
-            <label for="system_prompt">System Prompt</label>
-            <textarea id="system_prompt" name="system_prompt" rows="3">
-{{ doc_preferences_form.cwd_system_prompt.data }}</textarea
-            >
-          </div>
-          <button type="button" id="resetPreferences">Reset to Defaults</button>
+        <div class="form-group slider-group">
+          {{ doc_preferences_form.temperature.label }}
+          <input
+            type="range"
+            id="temperature"
+            name="temperature"
+            min="0"
+            max="2"
+            step="0.1"
+            value="{{ doc_preferences_form.temperature.data }}"
+          />
+          <input
+            type="text"
+            id="temperature-value"
+            class="range-value-input"
+            value="{{ doc_preferences_form.temperature.data }}"
+          />
         </div>
-        <ul class="docs-preference-list">
-          <li>
-            <div class="doc-select">
-              <input type="checkbox" id="select-all" />
-              <label for="select-all">Select All</label>
-            </div>
-          </li>
-          {% for document in documents %}
-          <li id="document-{{ document.id }}" class="document-item">
-            <div class="doc-info">
-              <p id="title-edit">{{ document.title }}</p>
-              <p id="author-edit">{{ document.author }}</p>
-              <p>Tokens: {{ document.total_tokens }}</p>
-              <p>Chunks: {{ document.chunk_count }}</p>
-            </div>
-            <div class="doc-select">
-              <input
-                type="checkbox"
-                id="checkbox-{{ document.id }}"
-                name="document_selection_{{ document.id }}"
-                {%
-                if
-                document.selected
-                %}checked{%
-                endif
-                %}
-              />
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
-      </form>
+        <div class="form-group slider-group">
+          {{ doc_preferences_form.top_p.label }}
+          <input
+            type="range"
+            id="top_p"
+            name="top_p"
+            min="0"
+            max="1"
+            step="0.01"
+            value="{{ doc_preferences_form.top_p.data }}"
+          />
+          <input
+            type="text"
+            id="top-p-value"
+            class="range-value-input"
+            value="{{doc_preferences_form.top_p.data }}"
+          />
+        </div>
+        <button type="button" id="resetPreferences">Reset to Defaults</button>
+      </div>
     </div>
-    <div id="image-upload-section">
-      <label for="image-upload">
-        <i class="nuicon-file-image"></i>
-      </label>
-      <input
-        type="file"
-        id="image-upload"
-        name="image-upload"
-        multiple
-        accept="image/*"
-        style="display: none"
-      />
-      <div id="image-previews"></div>
+    <div id="imageUploadPanel" class="panel">
+      <div class="image-upload-container">
+        <label for="image-upload" class="image-upload-label">
+          <i class="nuicon-file-image"></i> Select Images
+        </label>
+        <input
+          type="file"
+          id="image-upload"
+          accept="image/*"
+          multiple
+          max="5"
+          style="display: none"
+        />
+      </div>
+    </div>
+    <div id="systemPromptPanel" class="panel">
+      <div class="form-group">
+        <label for="system_prompt">System Prompt</label>
+        <textarea id="system_prompt" name="system_prompt" rows="3">
+{{ doc_preferences_form.cwd_system_prompt.data }}</textarea
+        >
+      </div>
+    </div>
+  </div>
+</form>
+<div class="content-wrap">
+  <div class="top-row">
+    <div class="query-container" style="position: relative">
+      <div id="query-results-section">
+        <div id="history-container">
+          <!-- History will go here -->
+        </div>
+
+        <div id="current-query">
+          <p style="display: none">
+            <i class="nuicon-user-tie"></i>
+            <span id="user_query"></span>
+          </p>
+          <div id="loader-template" style="display: none">
+            {% include 'chat_loading.html' %}
+          </div>
+          <div id="response_container" style="display: none">
+            <i class="nuicon-user-robot"></i>
+            <pre><span id="results"></span><span id="documents-used"></span>
+</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-row">
+    <div id="image-previews" class="image-preview-container"></div>
+    <div id="query-input-section">
+      <div class="input-wrapper">
+        <textarea
+          rows="1"
+          id="query"
+          name="query"
+          placeholder="Enter your query here..."
+        ></textarea>
+        <button id="queryButton" onclick="toggleQuery()">
+          <i id="queryIcon" class="nuicon-paper-plane"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>
