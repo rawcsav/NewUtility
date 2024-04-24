@@ -68,10 +68,6 @@
     {% block head %} {% endblock %} {% assets "common_style_bundle" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}" />
     {% endassets %}
-    <script
-      src="https://kit.fontawesome.com/5c8c7a1eba.js"
-      crossorigin="anonymous"
-    ></script>
     <style>
       * {
         transition: all 0.3s ease;
@@ -162,6 +158,11 @@
       </div>
     </div>
     {% include 'footer.html' %}
+    <script
+      src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+      integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+      crossorigin="anonymous"
+    ></script>
     <script>
       const dropdown = document.querySelector(".dropdown-menu");
       const hamburgerMenu = document.querySelector(".hamburger-menu");
@@ -206,11 +207,6 @@
         }
       });
     </script>
-    <script
-      src="https://cdn.socket.io/4.7.4/socket.io.min.js"
-      integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
-      crossorigin="anonymous"
-    ></script>
 
     {% block scripts %} {% endblock %} {% if not config['DEBUG'] %}
     <script

@@ -3,6 +3,8 @@ from flask import Blueprint, jsonify, render_template, request, session, current
 from flask_login import login_required, current_user
 from markdown2 import markdown
 from werkzeug.utils import secure_filename
+
+from app.modules.auth.auth_util import requires_selected_api_key
 from app.tasks.embedding_task import process_embedding_task
 from app import db
 from app.models.chat_models import ChatPreferences
@@ -19,6 +21,7 @@ embedding_bp = Blueprint(
 
 
 @embedding_bp.route("/", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def embeddings_center():
     markdown_file_path = os.path.join(current_app.root_path, embedding_bp.static_folder, "embedding.md")
@@ -43,6 +46,7 @@ def embeddings_center():
 
 
 @embedding_bp.route("/upload", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def upload_document():
     form = DocumentUploadForm()
@@ -91,6 +95,7 @@ def upload_document():
 
 
 @embedding_bp.route("/status", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def get_processing_status():
     uploaded_files_info = session.get("uploaded_files_info", [])
@@ -103,6 +108,7 @@ def get_processing_status():
 
 
 @embedding_bp.route("/delete/<string:document_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def delete_document(document_id):
     form = DeleteDocumentForm()
@@ -124,6 +130,7 @@ def delete_document(document_id):
 
 
 @embedding_bp.route("/update", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_document():
     form = EditDocumentForm()
@@ -156,6 +163,7 @@ def update_document():
 
 
 @embedding_bp.route("/update-document-selection", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_document_selection():
     data = request.get_json()
@@ -174,6 +182,7 @@ def update_document_selection():
 
 
 @embedding_bp.route("/update-knowledge-query-mode", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_knowledge_query_mode():
     data = request.get_json()
@@ -187,19 +196,21 @@ def update_knowledge_query_mode():
     return jsonify({"status": "success"})
 
 
-@embedding_bp.route("/update-knowledge-context-tokens", methods=["POST"])
+@embedding_bp.route("/update-top-k", methods=["POST"])
+@requires_selected_api_key
 @login_required
-def update_knowledge_context_tokens():
+def update_top_k():
     data = request.get_json()
-    knowledge_context_tokens = float(data["knowledge_context_tokens"])
+    top_k = float(data["top_k"])
     chat_preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
-    chat_preferences.knowledge_context_tokens = knowledge_context_tokens
+    chat_preferences.top_k = top_k
     db.session.commit()
 
     return jsonify({"status": "success"})
 
 
 @embedding_bp.route("/update-doc-preferences", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def update_docs_preferences():
     form = UpdateDocPreferencesForm()
@@ -212,10 +223,22 @@ def update_docs_preferences():
         if chat_preferences.knowledge_query_mode:
             VectorCache.load_user_vectors(current_user.id)
 
-        # Update knowledge context tokens
-        chat_preferences.knowledge_context_tokens = int(form_data.get("knowledge_context_tokens", 0))
 
-        # Update temperature if provided
+        chat_preferences.top_k = int(form_data.get("top_k", 0))
+
+        if "threshold" in form_data:
+            try:
+                threshold = float(form_data.get("threshold"))
+                if 0.0 <= threshold <= 1.0:
+                    chat_preferences.threshold = threshold
+                else:
+                    return jsonify({"status": "error", "message": "Threshold must be between 0.0 and 1.0."})
+            except ValueError:
+                return jsonify({"status": "error", "message": "Invalid threshold value."})
+
+        if "system_prompt" in form_data:
+            chat_preferences.cwd_system_prompt = form_data.get("system_prompt")
+
         if "temperature" in form_data:
             try:
                 temperature = float(form_data.get("temperature"))
@@ -226,7 +249,17 @@ def update_docs_preferences():
             except ValueError:
                 return jsonify({"status": "error", "message": "Invalid temperature value."})
 
-        # Update document selection
+        if "top_p" in form_data:
+            try:
+                top_p = float(form_data.get("top_p"))
+                if 0.0 <= top_p <= 1.0:
+                    chat_preferences.top_p = top_p
+                else:
+                    return jsonify({"status": "error", "message": "Top P must be between 0.0 and 1.0."})
+            except ValueError:
+                return jsonify({"status": "error", "message": "Invalid top P value."})
+
+
         Document.query.filter_by(user_id=current_user.id).update({"selected": False})
         for key in form_data.keys():
             if key.startswith("document_selection_"):
@@ -235,6 +268,14 @@ def update_docs_preferences():
                 if document and document.user_id == current_user.id:
                     document.selected = True
 
+        if "reset" in form_data:
+            # Reset preferences to default values
+            chat_preferences.knowledge_query_mode = False
+            chat_preferences.top_k = 10
+            chat_preferences.threshold = 0.5
+            chat_preferences.cwd_system_prompt = "You are a helpful academic literary assistant. Provide in -depth guidance, suggestions, code snippets, and explanations as needed to help the user. Leverage your expertise and intuition to offer innovative and effective solutions.Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. Use the provided text excerpts directly to aid in your responses."
+            chat_preferences.temperature = 1.0
+            chat_preferences.top_p = 1.0
         try:
             db.session.commit()
             return jsonify({"status": "success", "message": "Preferences updated successfully."})

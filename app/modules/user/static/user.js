@@ -4,6 +4,19 @@ function getCsrfToken() {
     .getAttribute("content");
 }
 
+function fadeOutNotifications() {
+  const notifications = document.querySelectorAll(".alert");
+  notifications.forEach((notification) => {
+    notification.classList.add("fade-out");
+    setTimeout(() => {
+      notification.remove();
+    }, 600);
+  });
+}
+
+// Call the fadeOutNotifications function after a certain duration (e.g., 5 seconds)
+setTimeout(fadeOutNotifications, 5000);
+
 function showToast(message, type) {
   let toast = document.getElementById("toast");
   if (!toast) {
@@ -80,7 +93,9 @@ document.querySelectorAll(".retest-api-key-form").forEach((form) => {
   form.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    var refreshButton = form.querySelector(".retest-key-button i.fa-sync-alt");
+    var refreshButton = form.querySelector(
+      ".retest-key-button i.nuicon-refresh",
+    );
     if (refreshButton) {
       refreshButton.classList.add("spinning");
     }
@@ -397,20 +412,20 @@ function addIconsToImage(id, container) {
     container.innerHTML = "";
     var downloadLink = document.createElement("a");
     downloadLink.href = `/image/download_image/${id}`;
-    downloadLink.innerHTML = '<i class="fas fa-download"></i>';
+    downloadLink.innerHTML = '<i class="nuicon-download"></i>';
     downloadLink.className = "image-icon download-icon";
     container.appendChild(downloadLink);
 
     var openLink = document.createElement("a");
     openLink.href = `/image/user_images/${userId}/${id}.webp`;
     openLink.target = "_blank";
-    openLink.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+    openLink.innerHTML = '<i class="nuicon-link"></i>';
     openLink.className = "image-icon open-icon";
     container.appendChild(openLink);
 
     var deleteLink = document.createElement("a");
     deleteLink.href = "#"; // Prevent navigation
-    deleteLink.innerHTML = '<i class="fas fa-trash"></i>'; // Use appropriate trash icon class
+    deleteLink.innerHTML = '<i class="nuicon-trash-can"></i>'; // Use appropriate trash icon class
     deleteLink.className = "image-icon delete-icon";
     deleteLink.addEventListener("click", function (event) {
       event.preventDefault(); // Prevent the default anchor behavior

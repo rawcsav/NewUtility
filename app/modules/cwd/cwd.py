@@ -1,9 +1,9 @@
 import threading
-from flask_login import current_user
+from flask_login import current_user, login_required
 from app import db
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import Document
-from app.modules.auth.auth_util import initialize_openai_client
+from app.modules.auth.auth_util import initialize_openai_client, requires_selected_api_key
 from flask import request, stream_with_context, Blueprint, current_app, render_template
 from app.modules.chat.chat import model_to_dict
 from app.modules.cwd.cwd_util import ask
@@ -16,6 +16,8 @@ lock = threading.Lock()
 
 
 @cwd_bp.route("/cwd_index")
+@requires_selected_api_key
+@login_required
 def cwd_index():
     # Get the list of uploaded files for the current user
     user_documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
@@ -43,15 +45,18 @@ def cwd_index():
         "cwd.html", documents=documents_data, doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict)
     )
 
-
+@requires_selected_api_key
+@login_required
 @cwd_bp.route("/query", methods=["POST"])
 def query_endpoint():
     client, error = initialize_openai_client(current_user.id)
-    query = request.form.get("query")
+    data = request.get_json()
+    query = data.get("query")
+    images = data.get("images", [])
     db.session.commit()  # Commit the changes to the database
 
     def generate():
-        for content in ask(query, client):
+        for content in ask(query, images, client):
             yield content
 
     response = current_app.response_class(stream_with_context(generate()), content_type="text/event-stream")

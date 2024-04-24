@@ -203,12 +203,12 @@ function toggleButtonState() {
   const icon = button.querySelector("i");
 
   if (currentState === "send") {
-    icon.classList.remove("fa-paper-plane");
-    icon.classList.add("fa-pause");
+    icon.classList.remove("nuicon-paper-plane");
+    icon.classList.add("nuicon-pause");
     button.setAttribute("data-state", "pause");
   } else {
-    icon.classList.remove("fa-pause");
-    icon.classList.add("fa-paper-plane");
+    icon.classList.remove("nuicon-pause");
+    icon.classList.add("nuicon-paper-plane");
     button.setAttribute("data-state", "send");
   }
 }
@@ -435,7 +435,7 @@ function createMessageDiv(message, className, messageId) {
 
 function createClipboardIcon(copyTarget) {
   let clipboardIcon = document.createElement("i");
-  clipboardIcon.classList.add("fas", "fa-clipboard", "clipboard-icon");
+  clipboardIcon.classList.add("nuicon-clipboard", "clipboard-icon");
   clipboardIcon.addEventListener("click", function (event) {
     event.stopPropagation();
 
@@ -532,7 +532,7 @@ function createMessageHeader(className, messageId) {
 
   if (className === "user-message") {
     let retryIcon = document.createElement("i");
-    retryIcon.classList.add("fas", "fa-redo", "retry-icon");
+    retryIcon.classList.add("nuicon-refresh", "retry-icon");
     retryIcon.addEventListener("click", function (event) {
       event.stopPropagation();
 
@@ -582,7 +582,7 @@ function getTitleBasedOnClassName(className) {
 
 function createEditIcon() {
   let editIcon = document.createElement("i");
-  editIcon.classList.add("fas", "fa-edit");
+  editIcon.classList.add("nuicon-square-pen");
   return editIcon;
 }
 
@@ -791,17 +791,24 @@ function locateNewMessages(conversationId) {
 }
 
 const modelMaxTokens = {
-  "gpt-4-1106-preview": 4096,
-  "gpt-4-vision-preview": 4096,
+  "gpt-4-turbo": 128000,
+  "gpt-4-turbo-2024-04-09": 128000,
+  "gpt-4-turbo-preview": 128000,
+  "gpt-4-0125-preview": 128000,
+  "gpt-4-1106-preview": 128000,
+  "gpt-4-vision-preview": 128000,
+  "gpt-4-1106-vision-preview": 128000,
   "gpt-4": 8192,
-  "gpt-4-32k": 32768,
   "gpt-4-0613": 8192,
+  "gpt-4-32k": 32768,
   "gpt-4-32k-0613": 32768,
-  "gpt-4-0314": 8192,
-  "gpt-4-32k-0314": 32768,
+  "gpt-3.5-turbo-0125": 16385,
+  "gpt-3.5-turbo": 16385,
   "gpt-3.5-turbo-1106": 16385,
-  "gpt-3.5-turbo": 4096,
-  "gpt-3.5-turbo-16k": 4096,
+  "gpt-3.5-turbo-instruct": 4096,
+  "gpt-3.5-turbo-16k": 16385,
+  "gpt-3.5-turbo-0613": 4096,
+  "gpt-3.5-turbo-16k-0613": 16385,
 };
 
 requestAnimationFrame(() => {
@@ -815,7 +822,7 @@ requestAnimationFrame(() => {
 window.isWaitingForResponse = false;
 
 document.addEventListener("click", function (event) {
-  if (event.target.matches(".fa-edit")) {
+  if (event.target.matches(".nuicon-pen-line")) {
     const messageDiv = event.target.closest(".message");
     if (messageDiv && !messageDiv.classList.contains("system-message")) {
       const messageId = messageDiv.dataset.messageId;
@@ -1207,7 +1214,7 @@ function createTitleEditIcon(conversationId) {
   editSpan.classList.add("edit-conversation-title");
   editSpan.setAttribute("data-conversation-id", conversationId);
   const editIcon = document.createElement("i");
-  editIcon.classList.add("fas", "fa-edit");
+  editIcon.classList.add("nuicon-pen-line");
   editSpan.appendChild(editIcon);
   return editSpan;
 }
@@ -1218,7 +1225,7 @@ function createDeleteIcon(conversationId) {
   deleteSpan.classList.add("delete-conversation");
   deleteSpan.setAttribute("data-conversation-id", conversationId);
   const deleteIcon = document.createElement("i");
-  deleteIcon.classList.add("fas", "fa-trash-alt");
+  deleteIcon.classList.add("nuicon-trash-can");
   deleteSpan.appendChild(deleteIcon);
   return deleteSpan;
 }

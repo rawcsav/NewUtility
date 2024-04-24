@@ -5,32 +5,33 @@
 {% endassets %} {% endblock %} {% block body %}
 <div id="full-container">
   <div id="left-column">
-    <div id="title-container">
-      <h1>New Utility</h1>
-    </div>
     <div class="upload-container">
-      <div class="section-title-div">
-        <h2 id="section-title">Embeddings</h2>
-      </div>
       <div class="token-limits">
         <h3>Model Context Size</h3>
         <ul id="token-limits-list">
-          <li><strong>gpt-4-1106-preview:</strong> 128,000 tokens</li>
-          <li><strong>gpt-4-vision-preview:</strong> 128,000 tokens</li>
-          <li><strong>gpt-4:</strong> 8,192 tokens</li>
-          <li><strong>gpt-4-32k:</strong> 32,768 tokens</li>
-          <li><strong>gpt-4-0613:</strong> 8,192 tokens</li>
-          <li><strong>gpt-4-32k-0613:</strong> 32,768 tokens</li>
-          <li><strong>gpt-4-0314:</strong> 8,192 tokens</li>
-          <li><strong>gpt-4-32k-0314:</strong> 32,768 tokens</li>
-          <li><strong>gpt-3.5-turbo-1106:</strong> 16,385 tokens</li>
-          <li><strong>gpt-3.5-turbo:</strong> 4,096 tokens</li>
-          <li><strong>gpt-3.5-turbo-16k:</strong> 16,385 tokens</li>
+          <li><strong>gpt-4-turbo:</strong> 128,000</li>
+          <li><strong>gpt-4-turbo-2024-04-09:</strong> 128,000</li>
+          <li><strong>gpt-4-turbo-preview:</strong> 128,000</li>
+          <li><strong>gpt-4-0125-preview:</strong> 128,000</li>
+          <li><strong>gpt-4-1106-preview:</strong> 128,000</li>
+          <li><strong>gpt-4-vision-preview:</strong> 128,000</li>
+          <li><strong>gpt-4-1106-vision-preview:</strong> 128,000</li>
+          <li><strong>gpt-4:</strong> 8,192</li>
+          <li><strong>gpt-4-0613:</strong> 8,192</li>
+          <li><strong>gpt-4-32k:</strong> 32,768</li>
+          <li><strong>gpt-4-32k-0613:</strong> 32,768</li>
+          <li><strong>gpt-3.5-turbo-0125:</strong> 16,385</li>
+          <li><strong>gpt-3.5-turbo:</strong> 16,385</li>
+          <li><strong>gpt-3.5-turbo-1106:</strong> 16,385</li>
+          <li><strong>gpt-3.5-turbo-instruct:</strong> 4,096</li>
+          <li><strong>gpt-3.5-turbo-16k:</strong> 16,385</li>
+          <li><strong>gpt-3.5-turbo-0613:</strong> 4,096</li>
+          <li><strong>gpt-3.5-turbo-16k-0613:</strong> 16,385</li>
         </ul>
       </div>
-      <div class="doc-upload">
+      <div class="doc-upload" id="dropzone">
         <p id="upload-prompt">
-          Use the upload button below to select the document(s) for embedding.
+          Drag and drop documents here or click the button below to upload.
         </p>
         <form
           id="uploadForm"
@@ -39,12 +40,11 @@
           enctype="multipart/form-data"
         >
           <label for="file" class="file-upload-btn"
-            ><i class="fa-solid fa-cloud-arrow-up"></i>Upload</label
+            ><i class="nuicon-cloud-arrow-up"></i>Upload</label
           >
           <p id="file-types-list">
             Accepted file types: <span class="file-type">.txt</span>,
             <span class="file-type">.pdf</span>,
-            <span class="file-type">.docx</span>.
           </p>
 
           <input
@@ -59,20 +59,21 @@
           <div id="document-forms-container"></div>
           <div id="pagination-controls">
             <button type="button" id="prev-button" aria-label="Previous page">
-              <i class="fas fa-arrow-left"></i>
+              <i class="nuicon-arrow-left"></i>
             </button>
             <span id="current-page">1</span> / <span id="total-pages">1</span>
             <button type="button" id="next-button" aria-label="Next page">
-              <i class="fas fa-arrow-right"></i>
+              <i class="nuicon-arrow-right"></i>
             </button>
           </div>
           <button type="submit" class="doc-submit-btn">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>Submit Docs
+            <i class="nuicon-wand-magic-sparkles"></i>Submit Docs
           </button>
           <div id="uploadStatus"></div>
         </form>
       </div>
       <div class="docs-container">
+        <h3>Documents</h3>
         <ul class="docs_list">
           {% for document in documents %}
           <li id="document-{{ document.id }}">
@@ -118,7 +119,7 @@
                 onclick="enableEditing(this)"
                 title="Edit Document"
               >
-                <i class="fa fa-edit"></i>
+                <i class="nuicon-pen-line"></i>
               </button>
               <button
                 type="button"
@@ -126,7 +127,7 @@
                 title="Save Changes"
                 style="display: none"
               >
-                <i class="fa fa-edit"></i>
+                <i class="nuicon-check"></i>
               </button>
               <button
                 type="button"
@@ -134,7 +135,7 @@
                 data-doc-id="{{ document.id }}"
                 title="Delete Document"
               >
-                <i class="fa fa-trash"></i>
+                <i class="nuicon-trash-can"></i>
               </button>
             </div>
           </li>

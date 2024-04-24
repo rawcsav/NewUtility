@@ -125,7 +125,7 @@ def upload_api_key():
             return jsonify({"status": "error", "message": "Invalid API key format."}), 400
 
         if api_key_exists(current_user.id, hash_api_key(api_key)):
-            return jsonify({"status": "error", "message": f"{api_key} already exists."}), 400
+            return jsonify({"status": "error", "message": "API key processing failed."}), 400
 
         try:
             available_models = check_available_models(api_key)
@@ -195,6 +195,7 @@ def delete_api_key():
         user_api_key = UserAPIKey.query.filter_by(user_id=current_user.id, id=key_id, delete=False).first()
         if user_api_key:
             user_api_key.delete = True  # Mark the API key as deleted
+            current_user.selected_api_key_id = None
             db.session.commit()
             return (
                 jsonify(

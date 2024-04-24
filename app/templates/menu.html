@@ -6,6 +6,7 @@
       top: 10px;
       gap: 10px;
       right: 2%;
+      z-index: 10000;
   }
 
   .hamburger-menu {
@@ -242,8 +243,8 @@
 </style>
 <header>
   <nav class="menu-nav">
-    <i class="fas fa-toolbox toolbox-icon"></i>
-    <i class="fas fa-bars hamburger-menu"></i>
+    <i class="nuicon-question toolbox-icon"></i>
+    <i class="nuicon-bars hamburger-menu"></i>
     <div class="dropdown-menu">
       {% if current_user.is_authenticated %}
       <a

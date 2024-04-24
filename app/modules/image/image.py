@@ -6,6 +6,7 @@ from markdown2 import markdown
 from app import db
 from app.models.image_models import GeneratedImage
 from app.models.task_models import ImageTask, Task
+from app.modules.auth.auth_util import requires_selected_api_key
 from app.modules.user.user_util import get_user_gen_img_directory
 from app.utils.forms_util import GenerateImageForm
 from app.tasks.image_task import process_image_task
@@ -16,6 +17,8 @@ date_format = "%b %d, %Y at %I:%M %p"
 
 
 @image_bp.route("/", methods=["GET", "POST"])
+@requires_selected_api_key
+@requires_selected_api_key
 @login_required
 def generate_image():
     form = GenerateImageForm()
@@ -59,6 +62,7 @@ def generate_image():
 
 
 @image_bp.route("/download_image/<uuid:image_id>")
+@requires_selected_api_key
 @login_required
 def download_image(image_id):
     image_record = GeneratedImage.query.filter_by(user_id=current_user.id, id=str(image_id)).first()
@@ -77,6 +81,7 @@ def download_image(image_id):
 
 
 @image_bp.route("/history")
+@requires_selected_api_key
 @login_required
 def image_history():
     user_images = (
@@ -116,6 +121,7 @@ def serve_generated_url(user_id, filename):
 
 
 @image_bp.route("/mark_delete/<uuid:image_id>", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def mark_delete(image_id):
     image_record = GeneratedImage.query.filter_by(user_id=current_user.id, id=str(image_id), delete=False).first()

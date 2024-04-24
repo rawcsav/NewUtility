@@ -54,3 +54,16 @@ class AudioNamespace(Namespace):
 
     def on_disconnect(self):
         logger.info("Client disconnected from the audio namespace")
+
+
+
+class CWDNamespace(Namespace):
+    def on_connect(self):
+        if not current_user.is_authenticated:
+            disconnect()
+        else:
+            logger.info(f"Authenticated user {current_user.id} connected to the CWD namespace")
+            join_room(str(current_user.id))
+
+    def on_disconnect(self):
+        logger.info("Client disconnected from the CWD namespace")

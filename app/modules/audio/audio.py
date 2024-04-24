@@ -17,13 +17,14 @@ from app.modules.audio.audio_util import (
 from app.modules.user.user_util import get_user_audio_directory
 from app.utils.forms_util import TtsForm, TranscriptionForm, TranslationForm, TtsPreferencesForm, \
     WhisperPreferencesForm, DeleteDocumentForm
-from app.modules.auth.auth_util import initialize_openai_client
+from app.modules.auth.auth_util import initialize_openai_client, requires_selected_api_key
 from app.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 
 audio_bp = Blueprint("audio_bp", __name__, template_folder="templates", static_folder="static", url_prefix="/audio")
 
 
 @audio_bp.route("/", methods=["GET"])
+@requires_selected_api_key
 @login_required
 def audio_center():
     # Fetch user preferences
@@ -63,6 +64,7 @@ def audio_center():
 
 
 @audio_bp.route("/tts_preferences", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def tts_preferences():
     try:
@@ -106,6 +108,7 @@ def tts_preferences():
 
 
 @audio_bp.route("/whisper_preferences", methods=["POST"])
+@requires_selected_api_key
 @login_required
 def whisper_preferences():
     try:
@@ -148,6 +151,7 @@ def whisper_preferences():
 
 
 @audio_bp.route("/generate_tts", methods=["GET", "POST"])
+@requires_selected_api_key
 @login_required
 def generate_tts():
     form = TtsForm()
@@ -183,6 +187,7 @@ def generate_tts():
 
 
 @audio_bp.route("/transcription", methods=["GET", "POST"])
+@requires_selected_api_key
 @login_required
 def transcription():
     form = TranscriptionForm()
@@ -231,6 +236,7 @@ def transcription():
             return jsonify({"status": "error", "message": str(e)})
 
 @audio_bp.route("/translation", methods=["GET", "POST"])
+@requires_selected_api_key
 @login_required
 def translation():
     form = TranslationForm()
@@ -278,6 +284,7 @@ def translation():
 
 
 @audio_bp.route("/download_tts/<filename>")
+@requires_selected_api_key
 @login_required
 def download_tts(filename):
     user_dir = get_user_audio_directory(current_user.id)
@@ -293,6 +300,7 @@ def download_tts(filename):
 
 
 @audio_bp.route("/download_whisper/<job_id>")
+@requires_selected_api_key
 @login_required
 def download_whisper(job_id):
     job = TranscriptionJob.query.get(job_id) or TranslationJob.query.get(job_id)

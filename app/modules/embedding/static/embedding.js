@@ -64,47 +64,80 @@ function updateFileList() {
   document.getElementById("total-pages").textContent = totalPages;
   createDocumentForms(fileList);
   displayCurrentForm();
+  updatePaginationControls();
 }
 
 function createDocumentForms(fileList) {
   documentForms = [];
   for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
     const formHtml = `
-        <div class="form-group">
-          <label>Document Title (optional):</label>
-          <input type="text" name="title" placeholder="Enter document title" />
-        </div>
-        <div class="form-group">
-          <label>Author Name (optional):</label>
-          <input type="text" name="author" placeholder="Enter author's name" />
-        </div>
-        <div class="form-group">
-          <label>Max Tokens per Chunk (default is 512):</label>
-          <input type="number" name="chunk_size" min="1" value="512" />
-        </div>
+      <div class="form-group">
+        <label>Document Title (optional):</label>
+        <input type="text" name="title" placeholder="Enter document title" value="${
+          documentData[i]?.title || file.name
+        }" />
+      </div>
+      <div class="form-group">
+        <label>Author Name (optional):</label>
+        <input type="text" name="author" placeholder="Enter author's name" value="${
+          documentData[i]?.author || ""
+        }" />
+      </div>
+      <div class="form-group">
+        <label>Max Tokens per Chunk (default is 512):</label>
+        <input type="number" name="chunk_size" min="1" value="${
+          documentData[i]?.chunk_size || "512"
+        }" />
+      </div>
       <div class="form-group">
         <label>
-          <input type="checkbox" name="advanced_preprocessing" /> Enable Advanced Preprocessing
+          <input type="checkbox" name="advanced_preprocessing" ${
+            documentData[i]?.advanced_preprocessing ? "checked" : ""
+          } /> Enable Advanced Preprocessing
         </label>
       </div>
-      `;
+    `;
     documentForms.push(formHtml);
+  }
+}
+
+function updatePaginationControls() {
+  if (totalPages > 1) {
+    paginationControls.style.display = "flex";
+    submitButton.disabled = false;
+  } else {
+    paginationControls.style.display = "none";
+    submitButton.disabled = totalPages === 0;
   }
 }
 
 function onSubmit(event) {
   event.preventDefault();
-  saveFormData(currentPage - 1); // Save data for the current document before submitting
-
   const formData = new FormData();
-  Object.keys(documentData).forEach((index) => {
-    const data = documentData[index];
-    formData.append("file", data.file);
-    formData.append("title", data.title);
-    formData.append("author", data.author || ""); // Use empty string if author is not provided
-    formData.append("chunk_size", data.chunk_size);
-    formData.append("advanced_preprocessing", data.advanced_preprocessing);
-  });
+  const fileList = fileInput.files;
+
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    const fileType = file.type;
+
+    if (fileType !== "text/plain" && fileType !== "application/pdf") {
+      updateUploadMessages("Only .txt and .pdf files are allowed.", "error");
+      return;
+    }
+
+    const title = documentData[i]?.title || file.name;
+    const author = documentData[i]?.author || "";
+    const chunkSize = documentData[i]?.chunk_size || "512";
+    const advancedPreprocessing =
+      documentData[i]?.advanced_preprocessing || false;
+
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("author", author);
+    formData.append("chunk_size", chunkSize);
+    formData.append("advanced_preprocessing", advancedPreprocessing);
+  }
 
   // Send the AJAX request to the upload endpoint
   fetch(uploadForm.action, {
@@ -417,21 +450,21 @@ function appendDocumentToList(documentObj) {
   editButton.className = "btn-icon edit-btn";
   editButton.setAttribute("onclick", "enableEditing(this)");
   editButton.title = "Edit Document";
-  editButton.innerHTML = `<i class="fa fa-edit"></i>`;
+  editButton.innerHTML = `<i class="nuicon-file-pen"></i>`;
 
   var saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.className = "btn-icon save-btn";
   saveButton.title = "Save Changes";
   saveButton.style.display = "none";
-  saveButton.innerHTML = `<i class="fa fa-save"></i>`;
+  saveButton.innerHTML = `<i class="nuicon-check"></i>`;
 
   var deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.className = "btn-icon delete-btn";
   deleteButton.setAttribute("data-doc-id", documentObj.document_id);
   deleteButton.title = "Delete Document";
-  deleteButton.innerHTML = `<i class="fa fa-trash"></i>`;
+  deleteButton.innerHTML = `<i class="nuicon-trash-can"></i>`;
 
   buttonContainer.appendChild(editButton);
   buttonContainer.appendChild(saveButton);
@@ -444,3 +477,35 @@ function appendDocumentToList(documentObj) {
   // Append the list item to the documents list
   docsList.appendChild(listItem);
 }
+
+const dropzone = document.querySelector(".doc-upload");
+
+dropzone.addEventListener("dragover", function (e) {
+  e.preventDefault();
+  dropzone.classList.add("dragover");
+});
+
+dropzone.addEventListener("dragleave", function (e) {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+});
+
+dropzone.addEventListener("drop", function (e) {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+  fileInput.files = e.dataTransfer.files;
+  updateFileList();
+
+  // Update the upload menu elements when files are dropped
+  var fileNameDisplay = document.getElementById("file-name-display");
+  var submitButton = document.querySelector(".doc-submit-btn");
+  const uploadPrompt = document.getElementById("upload-prompt");
+  const typesList = document.getElementById("file-types-list");
+
+  if (fileInput.files.length > 0) {
+    fileNameDisplay.textContent = "Selected file: " + fileInput.files[0].name;
+    submitButton.style.display = "flex";
+    uploadPrompt.style.display = "none";
+    typesList.style.display = "none";
+  }
+});

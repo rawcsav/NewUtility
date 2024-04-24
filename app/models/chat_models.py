@@ -67,4 +67,14 @@ class ChatPreferences(db.Model):
     voice_mode = db.Column(db.Boolean, default=False)
     voice_model = db.Column(db.String(50), default="alloy")
     knowledge_query_mode = db.Column(db.Boolean, default=False)
-    knowledge_context_tokens = db.Column(db.Integer, default=5)
+    top_k = db.Column(db.Integer, default=5)
+    threshold = db.Column(db.Float, default=0.5)
+    cwd_system_prompt = db.Column(db.String(2048),
+                                  nullable=True,
+                                  default="You are a helpful academic literary assistant. "
+                                          "Provide in -depth guidance, suggestions, code snippets, "
+                                          "and explanations as needed to help the user. "
+                                          "Leverage your expertise and intuition to offer innovative and effective solutions. "
+                                          "Be informative, clear, and concise in your responses, and focus on providing accurate and reliable information. "
+                                          "Use the provided text excerpts directly to aid in your responses."
+                                  )  # New field for system prompts
