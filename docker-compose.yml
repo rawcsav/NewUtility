@@ -57,6 +57,7 @@ services:
       - ./config.py:/newutil/config.py
       - ./uwsgi.py:/newutil/uwsgi.py
       - user_files_volume:/newutil/app/user_files/
+      - ./migrations:/app/migrations
     depends_on:
       - mysql
       - rabbitmq
