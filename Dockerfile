@@ -11,7 +11,6 @@ RUN apt-get update && \
     pip install --no-cache-dir -r requirements.txt
 
 ENV FLASK_APP=uwsgi.py
-RUN flask db upgrade
 
 # Start uWSGI
 CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "uwsgi:app", "--bind", "0.0.0.0:8080"]
