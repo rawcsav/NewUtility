@@ -334,13 +334,12 @@ class TextSplitter:
         if page_number is not None:
             self.current_chunk_pages.add(page_number)
 
-
     def _finalize_current_chunk(self, page_number: int = None, force_process: bool = False):
         if self.current_chunk:
             final_chunk = " ".join(self.current_chunk)
             if self.use_gpt_preprocessing and self.client is not None:
                 self.temp_chunks.append(final_chunk)
-                if len(self.temp_chunks) >= self.batch_size:
+                if len(self.temp_chunks) >= self.batch_size or force_process:
                     self._process_all_chunks()
             else:
                 self.chunks.append(final_chunk)
@@ -348,15 +347,22 @@ class TextSplitter:
             self.current_chunk = []
             self.current_chunk_token_count = 0
             self.current_chunk_pages = set()
-
     def _process_all_chunks(self):
-        # Process the accumulated chunks in temp storage
-        processed_chunks = self._process_batch(self.temp_chunks, self.client)
-        # Add processed chunks to the final list
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            processed_chunks = list(executor.map(self._process_chunk, self.temp_chunks))
         self.chunks.extend(processed_chunks)
-        # Clear temp storage since these chunks have been processed
         self.temp_chunks = []
 
+    def _process_chunk(self, chunk):
+        if self.use_gpt_preprocessing and self.client is not None:
+            try:
+                response = gpt_preprocess(chunk, self.client)
+                return response.content
+            except Exception as e:
+                logger.error(f"An error occurred during preprocessing: {e}")
+                return None
+        else:
+            return chunk
     def _process_batch(self, batch: List[str], client: openai.OpenAI) -> Generator[str, None, None]:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(gpt_preprocess, text, client) for text in batch]
@@ -368,9 +374,7 @@ class TextSplitter:
                     yield None
 
     def finalize(self) -> Tuple[List[str], List[Set[int]], int, List[int]]:
-        self._finalize_current_chunk()
-        if self.temp_chunks:
-            self._process_all_chunks()
+        self._finalize_current_chunk(force_process=True)
         chunk_token_counts = [count_tokens(chunk) for chunk in self.chunks]
         total_tokens = sum(chunk_token_counts)
         return self.chunks, self.chunk_pages, total_tokens, chunk_token_counts
