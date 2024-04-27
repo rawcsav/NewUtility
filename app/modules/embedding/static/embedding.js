@@ -72,32 +72,32 @@ function createDocumentForms(fileList) {
   for (let i = 0; i < fileList.length; i++) {
     const file = fileList[i];
     const formHtml = `
-      <div class="form-group">
-        <label>Document Title (optional):</label>
-        <input type="text" name="title" placeholder="Enter document title" value="${
-          documentData[i]?.title || file.name
-        }" />
-      </div>
-      <div class="form-group">
-        <label>Author Name (optional):</label>
-        <input type="text" name="author" placeholder="Enter author's name" value="${
-          documentData[i]?.author || ""
-        }" />
-      </div>
-      <div class="form-group">
-        <label>Max Tokens per Chunk (default is 512):</label>
-        <input type="number" name="chunk_size" min="1" value="${
-          documentData[i]?.chunk_size || "512"
-        }" />
-      </div>
-      <div class="form-group">
-        <label>
-          <input type="checkbox" name="advanced_preprocessing" ${
-            documentData[i]?.advanced_preprocessing ? "checked" : ""
-          } /> Enable Advanced Preprocessing
-        </label>
-      </div>
-    `;
+  <div class="form-group">
+    <label>Document Title (optional):</label>
+    <input type="text" name="title" placeholder="Enter document title" value="${
+      documentData[i]?.title || ""
+    }" />
+  </div>
+  <div class="form-group">
+    <label>Author Name (optional):</label>
+    <input type="text" name="author" placeholder="Enter author's name" value="${
+      documentData[i]?.author || ""
+    }" />
+  </div>
+  <div class="form-group">
+    <label>Max Tokens per Chunk (default is 512):</label>
+    <input type="number" name="chunk_size" min="1" value="${
+      documentData[i]?.chunk_size || "512"
+    }" />
+  </div>
+  <div class="form-group">
+    <label>
+      <input type="checkbox" name="advanced_preprocessing" ${
+        documentData[i]?.advanced_preprocessing ? "checked" : ""
+      } /> Enable Advanced Preprocessing
+    </label>
+  </div>
+`;
     documentForms.push(formHtml);
   }
 }
@@ -126,11 +126,14 @@ function onSubmit(event) {
       return;
     }
 
-    const title = documentData[i]?.title || file.name;
-    const author = documentData[i]?.author || "";
-    const chunkSize = documentData[i]?.chunk_size || "512";
-    const advancedPreprocessing =
-      documentData[i]?.advanced_preprocessing || false;
+    const title =
+      document.querySelector('input[name="title"]').value || file.name;
+    const author = document.querySelector('input[name="author"]').value || "";
+    const chunkSize =
+      document.querySelector('input[name="chunk_size"]').value || "512";
+    const advancedPreprocessing = document.querySelector(
+      'input[name="advanced_preprocessing"]',
+    ).checked;
 
     formData.append("file", file);
     formData.append("title", title);
@@ -138,6 +141,8 @@ function onSubmit(event) {
     formData.append("chunk_size", chunkSize);
     formData.append("advanced_preprocessing", advancedPreprocessing);
   }
+
+  // Send the AJAX reques
 
   // Send the AJAX request to the upload endpoint
   fetch(uploadForm.action, {
