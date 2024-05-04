@@ -178,6 +178,15 @@ def task_client(session, user_id):
     client = OpenAI(api_key=api_key, max_retries=5, timeout=30.0)
     return client, key_id, None
 
+def task_async_client(session, user_id):
+    user = session.query(User).filter_by(id=user_id).first()
+    key_id = user.selected_api_key_id
+    user_api_key = session.query(UserAPIKey).filter_by(user_id=user_id, id=key_id, delete=False).first()
+    if not user_api_key:
+        return None, "API Key not found."
+    api_key = decrypt_api_key(user_api_key.encrypted_api_key)
+    client = AsyncOpenAI(api_key=api_key, max_retries=5, timeout=30.0)
+    return client, key_id, None
 
 from functools import wraps
 from flask import redirect, url_for, jsonify, flash
