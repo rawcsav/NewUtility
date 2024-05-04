@@ -1,7 +1,7 @@
 import os
 from app.models.embedding_models import Document, DocumentChunk
 from app.models.task_models import Task, EmbeddingTask
-from app.modules.auth.auth_util import task_client, task_async_client
+from app.modules.auth.auth_util import task_client
 from app.modules.embedding.embedding_util import (
     get_embedding_batch,
     store_embeddings, TextSplitter, TextExtractor, extract_uuid_from_path,
@@ -29,10 +29,9 @@ def process_document(session, embedding_task, user_id):
         text_pages = extractor.extract_text_from_file()
 
         client, key_id, error = task_client(session, user_id)
-        async_client, async_key_id, async_error = task_async_client(session, user_id)
         if error:
             raise Exception(error)
-        text_splitter = TextSplitter(max_tokens=embedding_task.chunk_size, client=client, async_client=async_client, use_gpt_preprocessing=embedding_task.advanced_preprocessing)
+        text_splitter = TextSplitter(max_tokens=embedding_task.chunk_size, client=client, use_gpt_preprocessing=embedding_task.advanced_preprocessing)
         logger.info(f"Splitting text into chunks of {embedding_task.chunk_size} tokens")
         for text, page_number in text_pages:
             text_splitter.add_text(text, page_number)
