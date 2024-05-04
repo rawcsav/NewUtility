@@ -19,7 +19,7 @@ cryptography==42.0.5
 cssmin==0.2.0
 distro==1.9.0
 dnspython==2.6.1
-eventlet==0.36.1
+eventlet==0.35.2
 exceptiongroup==1.2.0
 Flask==3.0.2
 Flask-Assets==2.1.0
