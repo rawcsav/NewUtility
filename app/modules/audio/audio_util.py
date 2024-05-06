@@ -1,7 +1,5 @@
 import concurrent
 import os
-import re
-import subprocess
 import time
 from pathlib import Path
 
@@ -24,114 +22,73 @@ from app.utils.logging_util import configure_logging
 
 logger = configure_logging()
 
-
-def ms_until_sound(audio_file_path: str, silence_threshold_in_decibels: float = -20.0, chunk_size: int = 10) -> int:
+def remove_file(filepath):
     try:
-        command = [
-            "ffmpeg",
-            "-i", str(audio_file_path),
-            "-af", "silencedetect=noise={}dB:duration=1".format(silence_threshold_in_decibels),
-            "-f", "null", "-"
-        ]
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, universal_newlines=True)
-        lines = output.split("\n")
-        for line in lines:
-            if "silencedetect" in line:
-                parts = line.split(" ")
-                for part in parts:
-                    if part.startswith("silence_start"):
-                        return int(float(part.split("=")[1]) * 1000)
-        return 0
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error detecting silence: {e.output}")
-        return 0
+        os.remove(filepath)
+    except Exception as e:
+        logger.error(f"Error removing file {filepath}: {e}")
 
 
 
+def ms_until_sound(sound, silence_threshold_in_decibels=-20.0, chunk_size=10):
+    trim_ms = 0  # ms
 
-def trim_start(audio_file_path: str, original_format: str, target_format: str = 'mp3', target_bitrate: str = '64k', sample_rate: int = 22050) -> tuple[bytes, Path] | None:
-    try:
-        silence_threshold_in_decibels = -20.0
-        path = Path(audio_file_path)
-        directory = path.parent
-        filename = path.stem
+    assert chunk_size > 0  # to avoid infinite loop
+    while sound[trim_ms:trim_ms+chunk_size].dBFS < silence_threshold_in_decibels and trim_ms < len(sound):
+        trim_ms += chunk_size
 
-        # Detect the start of the audio using ffmpeg
-        command = [
-            "ffmpeg",
-            "-i", str(audio_file_path),
-            "-af", "silencedetect=noise={}dB:duration=1".format(silence_threshold_in_decibels),
-            "-f", "null", "-"
-        ]
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, universal_newlines=True)
-
-        # Use a regular expression to extract the silence_end timestamp
-        silence_end_match = re.search(r'silence_end: (\d+\.\d+)', output)
-        if silence_end_match:
-            start_trim = int(float(silence_end_match.group(1)) * 1000)
-        else:
-            logger.warning("No silence_end timestamp found in FFmpeg output. Assuming no trimming needed.")
-            start_trim = 0
-
-        # Trim the audio using ffmpeg
-        new_filename = directory / f"trim_{filename}.{target_format}"
-        command = [
-            "ffmpeg",
-            "-i", str(audio_file_path),
-            "-ss", str(start_trim / 1000),
-            "-b:a", target_bitrate,
-            "-ar", str(sample_rate),
-            "-f", target_format,
-            str(new_filename)
-        ]
-        subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-        # Read the trimmed audio file
-        with open(new_filename, "rb") as file:
-            trimmed_audio = file.read()
-
-        return trimmed_audio, new_filename
-
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error trimming audio: {e}")
-        return None
+    return trim_ms
 
 
-def find_nearest_silence(audio_file_path: str, target_ms: int, search_radius_ms: int = 20000, silence_thresh: int = -40, min_silence_len_ms: int = 1000, seek_step_ms: int = 100) -> int:
+def trim_start(filepath, original_format, target_format='mp3', target_bitrate='64k', sample_rate=22050):
+    silence_threshold_in_decibels = -20.0
+    path = Path(filepath)
+    directory = path.parent
+    filename = path.stem  # Changed to use stem to exclude file extension
+
+    # Use a smaller chunk of the audio for initial silence detection to save memory
+    start_trim = 0
+    chunk_size = 10 * 1000  # 10 seconds in milliseconds
+    with open(filepath, 'rb') as f:
+        audio_chunk = AudioSegment.from_file(f, format=original_format, start_second=0, duration=chunk_size / 1000)
+        while audio_chunk.dBFS < silence_threshold_in_decibels and start_trim < len(audio_chunk):
+            start_trim += chunk_size
+            f.seek(0)  # Reset file pointer to the beginning for each new chunk
+            audio_chunk = AudioSegment.from_file(f, format=original_format, start_second=start_trim / 1000,
+                                                 duration=chunk_size / 1000)
+
+    # Once silence is detected, load only the necessary part of the audio
+    audio = AudioSegment.from_file(filepath, format=original_format)[start_trim:]
+
+    # Adjust sample rate for further compression
+    audio = audio.set_frame_rate(sample_rate)
+
+    # Determine new filename and export with compression
+    new_filename = directory / f"trim_{filename}.{target_format}"
+    audio.export(new_filename, bitrate=target_bitrate, format=target_format)
+    remove_file(filepath)
+    return audio, new_filename
+
+def find_nearest_silence(
+    audio_segment, target_ms, search_radius_ms=20000, silence_thresh=-40, min_silence_len_ms=1000, seek_step_ms=100
+):
     start_search_ms = max(0, target_ms - search_radius_ms)
-    end_search_ms = target_ms + search_radius_ms
+    end_search_ms = min(len(audio_segment), target_ms + search_radius_ms)
     best_silence_start = target_ms  # Default to the target if no silence is found
     smallest_delta = search_radius_ms  # Initialize with the maximum possible delta
 
-    # Run FFmpeg to detect silences
-    try:
-        ffmpeg_cmd = [
-            'ffmpeg',
-            '-i', str(audio_file_path),
-            '-af', f'silencedetect=n={silence_thresh}dB:d={min_silence_len_ms/1000}',
-            '-f', 'null', '-'
-        ]
-        with subprocess.run(ffmpeg_cmd, capture_output=True, check=True) as proc:
-            if proc.returncode != 0:
-                logger.error(f'FFmpeg error: {proc.stderr.decode()}')
-                return best_silence_start
-            output = proc.stdout.decode()
-    except subprocess.CalledProcessError as e:
-        logger.error(f'FFmpeg error: {e.output.decode()}')
-        return best_silence_start
-
-    # Parse the output to find the nearest silence
-    silence_intervals = re.findall(r'silence_end: (\d+\.?\d*)', output)
-    for silence_end in silence_intervals:
-        silence_start = float(silence_end) - min_silence_len_ms / 1000
-        if start_search_ms <= silence_start * 1000 <= end_search_ms:
-            delta = abs(silence_start * 1000 - target_ms)
+    for timestamp in range(start_search_ms, end_search_ms, seek_step_ms):
+        if timestamp + min_silence_len_ms > len(audio_segment):
+            break  # Avoid checking beyond the end of the audio_segment
+        segment = audio_segment[timestamp: timestamp + min_silence_len_ms]
+        if segment.dBFS < silence_thresh:
+            delta = abs(timestamp - target_ms)
             if delta < smallest_delta:
-                best_silence_start = int(silence_start * 1000)
+                best_silence_start = timestamp
                 smallest_delta = delta
-
-    logger.info(f"Nearest silence found at {best_silence_start} ms.")
+    logger.info(f"Nearest silence found at {best_silence_start} ms.")  # Added logging for nearest silence found
     return best_silence_start
+
 
 def process_and_export_segment(chunk, chunk_filepath, segment_index):
     logger.info(f"Exporting segment {segment_index}: {chunk_filepath}")
@@ -164,93 +121,79 @@ def split_and_export_chunks(audio, filepath, user_directory, user_id, task_id):
         process_and_export_segment(chunk, chunk_filepath, segment_index)
         segment_filepaths.append(chunk_filepath)
 
-        # Free up memory by removing the processed chunk
-        chunk.clear()
-
-    if not segment_filepaths:
-        logger.error("No segments were exported.")
-        return []
 
     logger.info("All segments exported.")
     return segment_filepaths
 
 
 def preprocess_audio(filepath, user_directory, user_id, task_id):
-    try:
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Starting audio file processing..."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+    file_size = os.path.getsize(filepath)
+    if file_size > MAX_FILE_SIZE:
         socketio.emit(
             "task_progress",
-            {"task_id": task_id, "message": "Starting audio file processing..."},
+            {"task_id": task_id, "message": f"File {os.path.basename(filepath)} is too large ({file_size} bytes) to process."},
             room=str(user_id),
             namespace="/audio",
         )
-        MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
-        file_size = os.path.getsize(filepath)
-        if file_size > MAX_FILE_SIZE:
-            socketio.emit(
-                "task_progress",
-                {"task_id": task_id, "message": f"File {os.path.basename(filepath)} is too large ({file_size} bytes) to process."},
-                room=str(user_id),
-                namespace="/audio",
-            )
-            raise ValueError(f"File {filepath} is too large ({file_size} bytes) to process.")
+        raise ValueError(f"File {filepath} is too large ({file_size} bytes) to process.")
 
 
-        supported_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
-        original_format = os.path.splitext(filepath)[-1].lower().strip(".")
+    supported_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
+    original_format = os.path.splitext(filepath)[-1].lower().strip(".")
 
-        if original_format not in supported_formats:
-            socketio.emit(
-                "task_progress",
-                {"task_id": task_id, "message": f"Unsupported format: {original_format}. Processing halted."},
-                room=str(user_id),
-                namespace="/audio",
-            )
-            raise ValueError(f"Unsupported format: {original_format}")
-
-        trimmed_audio, trimmed_filepath = trim_start(filepath, original_format)
-
+    if original_format not in supported_formats:
         socketio.emit(
             "task_progress",
-            {"task_id": task_id, "message": "Initial audio trimming and export completed."},
+            {"task_id": task_id, "message": f"Unsupported format: {original_format}. Processing halted."},
             room=str(user_id),
             namespace="/audio",
         )
+        raise ValueError(f"Unsupported format: {original_format}")
 
-        # Check the size of the trimmed file
-        trimmed_file_size = os.path.getsize(trimmed_filepath)
-        MAX_CHUNK_SIZE = 24 * 1024 * 1024  # 24 MB
-        if trimmed_file_size <= MAX_CHUNK_SIZE:
-            socketio.emit(
-                "task_progress",
-                {"task_id": task_id, "message": "Trimmed audio file is small enough to be processed directly."},
-                room=str(user_id),
-                namespace="/audio",
-            )
-            return [trimmed_filepath]  # Return the trimmed file path in a list to maintain consistency
-        else:
-            # Proceed with splitting and exporting chunks if the file is larger than 24MB
-            segment_filepaths = split_and_export_chunks(trimmed_audio, trimmed_filepath, user_directory, user_id, task_id)
+    trimmed_audio, trimmed_filepath = trim_start(filepath, original_format)
 
-        os.remove(filepath)
-        os.remove(trimmed_filepath)
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Initial audio trimming and export completed."},
+        room=str(user_id),
+        namespace="/audio",
+    )
 
+    # Check the size of the trimmed file
+    trimmed_file_size = os.path.getsize(trimmed_filepath)
+    MAX_CHUNK_SIZE = 24 * 1024 * 1024  # 24 MB
+    if trimmed_file_size <= MAX_CHUNK_SIZE:
         socketio.emit(
             "task_progress",
-            {"task_id": task_id, "message": "Audio file processing completed."},
+            {"task_id": task_id, "message": "Trimmed audio file is small enough to be processed directly."},
             room=str(user_id),
             namespace="/audio",
         )
+        return [trimmed_filepath]  # Return the trimmed file path in a list to maintain consistency
+    else:
+        # Proceed with splitting and exporting chunks if the file is larger than 24MB
+        segment_filepaths = split_and_export_chunks(trimmed_audio, trimmed_filepath, user_directory, user_id, task_id)
 
-        return segment_filepaths
-    except Exception as e:
-        socketio.emit(
-            "task_update",
-            {"task_id": task_id, "message": f"Error during audio preprocessing: {str(e)}"},
-            room=str(user_id),
-            namespace="/audio",
-        )
-        logger.error(f"Error during audio preprocessing for task_id={task_id}: {e}")
-        raise e
+    # Usage
+    remove_file(filepath)
+    remove_file(trimmed_filepath)
+
+    socketio.emit(
+        "task_progress",
+        {"task_id": task_id, "message": "Audio file processing completed."},
+        room=str(user_id),
+        namespace="/audio",
+    )
+
+    return segment_filepaths
+
 
 def parse_timestamp(timestamp):
     hours, minutes, seconds = timestamp.split(":")
@@ -397,6 +340,7 @@ def process_audio_job(session, task_id, user_id, api_key_id, client, file_paths,
         return total_duration_ms
 
     except Exception as e:
+        # Emit task update in case of an error
         socketio.emit(
             "task_update",
             {"task_id": job.task_id, "message": f"Error during {job_type}: {str(e)}"},
@@ -405,52 +349,62 @@ def process_audio_job(session, task_id, user_id, api_key_id, client, file_paths,
         )
         raise e
 def process_audio_segment(session, user_id, api_key_id, client, file_path, job, model, language, prompt, response_format, temperature, index, total_duration_ms, job_type):
+    time.sleep(5)
     try:
-        with open(file_path, "rb") as audio_file:
-            if job_type == 'transcription':
-                try:
-                    result = client.audio.transcriptions.create(
-                        model=model,
-                        file=audio_file,
-                        language=language,
-                        prompt=prompt,
-                        response_format=response_format,
-                        temperature=temperature,
-                    )
-                except openai.OpenAIError as e:
-                    logger.info(f"Error: {e}")
-            elif job_type == 'translation':
-                result = client.audio.translations.create(
-                    model=model,
-                    file=audio_file,
-                    prompt=prompt,
-                    response_format=response_format,
-                    temperature=temperature,
-                )
-            else:
-                raise ValueError("Invalid job type")
+        duration = 0
+        retry_count = 0
+        max_retries = 3
 
-            if response_format in ["json", "verbose_json"]:
-                result = result.model_dump_json()
-            elif response_format in ["srt", "vtt"]:
-                result = adjust_subtitle_timing(result, total_duration_ms, response_format)
+        while retry_count < max_retries:
+            try:
+                with open(file_path, "rb") as audio_file:
+                    if job_type == 'transcription':
+                        result = client.audio.transcriptions.create(
+                            model=model,
+                            file=audio_file,
+                            language=language,
+                            prompt=prompt,
+                            response_format=response_format,
+                            temperature=temperature,
+                        )
+                    elif job_type == 'translation':
+                        result = client.audio.translations.create(
+                            model=model,
+                            file=audio_file,
+                            prompt=prompt,
+                            response_format=response_format,
+                            temperature=temperature,
+                        )
+                    else:
+                        raise ValueError("Invalid job type")
 
-            duration = get_audio_duration(file_path)
-            seconds = int(duration / 1000)
-            whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
-            create_job_segment(session, job.id, result, index, duration, job_type)
-            os.remove(file_path)
+                    if response_format in ["json", "verbose_json"]:
+                        result = result.model_dump_json()
+                    elif response_format in ["srt", "vtt"]:
+                        result = adjust_subtitle_timing(result, total_duration_ms, response_format)
 
-            return duration
-    except openai.OpenAIError as e:
-        try:
-            os.remove(file_path)
-        except Exception:
-            pass
-        return {"error": str(e)}
+                    duration = get_audio_duration(file_path)
+                    seconds = int(duration / 1000)
+                    whisper_cost(session=session, user_id=user_id, api_key_id=api_key_id, duration_seconds=seconds)
+                    create_job_segment(session, job.id, result, index, duration, job_type)
+                    remove_file(file_path)
+
+                    return duration
+
+            except openai.OpenAIError as e:
+                logger.warning(f"OpenAI error occurred: {e}. Retrying... (Attempt {retry_count + 1}/{max_retries})")
+                retry_count += 1
+            except Exception as e:
+                logger.error(f"Error processing audio segment: {e}")
+                remove_file(file_path)
+
+        # If all retries fail, return an error
+        return {"error": "Maximum retries exceeded"}
+
     except Exception as e:
         logger.error(f"Error processing audio segment: {e}")
         return {"error": str(e)}
+
 
 
 def process_audio_transcription(*args, **kwargs):

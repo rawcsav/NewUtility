@@ -102,7 +102,7 @@ def process_translation(session, translation_task, user_id):
     try:
         logger.info(f"Starting translation processing for task_id={translation_task.task_id}")
 
-        client, key_id, error = task_client(session, user_id)
+        client, key_id, error = task_client(session, user_id, max_retries=0, timeout=60)
         if error:
             raise Exception(error)
 
@@ -197,7 +197,7 @@ def process_translation_task(task_id):
 def process_transcription(session, transcription_task, user_id):
     try:
         logger.info(f"Starting transcription processing for task_id={transcription_task.task_id}")
-        client, key_id, error = task_client(session, user_id)
+        client, key_id, error = task_client(session, user_id, max_retries=0, timeout=60)
         if error:
             raise Exception(error)
 

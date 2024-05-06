@@ -168,14 +168,14 @@ def initialize_openai_client(user_id):
     return client, None
 
 
-def task_client(session, user_id):
+def task_client(session, user_id, max_retries=3, timeout=15):
     user = session.query(User).filter_by(id=user_id).first()
     key_id = user.selected_api_key_id
     user_api_key = session.query(UserAPIKey).filter_by(user_id=user_id, id=key_id, delete=False).first()
     if not user_api_key:
         return None, "API Key not found."
     api_key = decrypt_api_key(user_api_key.encrypted_api_key)
-    client = OpenAI(api_key=api_key, max_retries=5, timeout=30.0)
+    client = OpenAI(api_key=api_key, max_retries=max_retries, timeout=timeout)
     return client, key_id, None
 
 def task_async_client(session, user_id):

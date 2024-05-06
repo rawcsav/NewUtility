@@ -2,7 +2,7 @@ import logging
 
 
 def configure_logging(log_level=None):
-    effective_log_level = log_level if log_level is not None else logging.WARNING
+    effective_log_level = log_level if log_level is not None else logging.DEBUG
 
     logging.basicConfig(level=effective_log_level,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
