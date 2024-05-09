@@ -17,7 +17,7 @@ from app.utils.socket_util import GlobalNamespace, EmbeddingNamespace, ImageName
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 mail = Mail()
-socketio = SocketIO(message_queue="amqp://", async_mode="eventlet", engineio_logger=True, logger=True, cors_allowed_origins="newutil.rawcsav.com")
+socketio = SocketIO(message_queue="amqp://", async_mode="eventlet", engineio_logger=True, logger=True, cors_allowed_origins="newutil.rawcsav.com, https://newutil.rawcsav.com")
 login_manager = LoginManager()
 
 
@@ -43,7 +43,7 @@ def create_app():
     CORS(app)
     db.init_app(app)
 
-    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], async_mode="eventlet", engineio_logger=True, logger=True, cors_allowed_origins="newutil.rawcsav.com")
+    socketio.init_app(app, message_queue=app.config["CELERY_BROKER_URL"], async_mode="eventlet", engineio_logger=True, logger=True, cors_allowed_origins="newutil.rawcsav.com, https://newutil.rawcsav.com")
     socketio.on_namespace(ImageNamespace("/image"))
     socketio.on_namespace(EmbeddingNamespace("/embedding"))
     socketio.on_namespace(AudioNamespace("/audio"))
