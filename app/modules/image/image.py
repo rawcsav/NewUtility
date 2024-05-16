@@ -99,7 +99,7 @@ def image_history():
     image_data = [
         {
             "url": url_for(
-                "image_bp.serve_generated_image", filename=f"{img.id}.webp", user_id=current_user.id, _external=True
+                "image_bp.serve_generated_image", filename=f"{img.id}.webp", user_id=current_user.id
             ),
             "id": img.id,
             "prompt": img.prompt,
