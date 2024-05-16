@@ -120,13 +120,35 @@ def delete_document(document_id):
         db.session.commit()
         return (
             jsonify(
-                {"status": "success", "message": "Document deleted successfully." "\nPlease refresh to see changes"}
+                {"status": "success", "message": "Document deleted successfully."}
             ),
             200,
         )
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@embedding_bp.route("/delete_all", methods=["POST"])
+@requires_selected_api_key
+@login_required
+def delete_all_documents():
+    try:
+        documents = Document.query.filter_by(user_id=current_user.id, delete=False).all()
+
+        if not documents:
+            return jsonify({"status": "success", "message": "No documents to delete."}), 200
+
+        for document in documents:
+            document.delete = True
+        db.session.commit()
+
+        return jsonify(
+            {"status": "success", "message": "All documents deleted successfully.\nPlease refresh to see changes"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 
 @embedding_bp.route("/update", methods=["POST"])

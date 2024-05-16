@@ -293,6 +293,12 @@ ul li {
   flex-direction: column;
 }
 
+.docs-header {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
 .docs-container li {
   padding: 10px;
   border-bottom: 1px solid #ccc;
@@ -324,6 +330,8 @@ ul li {
 .doc-upload {
   padding: 20px;
   width: 40%; /* Adjust width as necessary, or use max-width for responsiveness */
+  max-width: 40%;
+  overflow-x: hidden;
   margin: 20px 0;
   border: 2px dashed #d0d0d0;
   transition:

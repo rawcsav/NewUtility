@@ -73,7 +73,16 @@
         </form>
       </div>
       <div class="docs-container">
-        <h3>Documents</h3>
+        <div class="docs-header">
+          <h3>Documents</h3>
+          <button
+            type="button"
+            class="btn-icon delete-all-btn"
+            title="Delete All Documents"
+          >
+            <i class="nuicon-trash-can"></i> Delete All
+          </button>
+        </div>
         <ul class="docs_list">
           {% for document in documents %}
           <li id="document-{{ document.id }}">

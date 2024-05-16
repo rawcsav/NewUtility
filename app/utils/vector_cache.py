@@ -1,24 +1,13 @@
-import pickle
+import threading
 import numpy as np
+from sqlalchemy.orm import load_only
 from app.models.embedding_models import Document, DocumentChunk, DocumentEmbedding
-
-
-def deserialize_embedding(embedding_bytes):
-    try:
-        embedding_array = pickle.loads(embedding_bytes)
-    except Exception as e:
-        raise ValueError("Failed to deserialize embedding: {}".format(e))
-    if embedding_array.dtype != np.float32:
-        raise ValueError("Unexpected embedding array dtype: {}".format(embedding_array.dtype))
-    if embedding_array.shape != (3072,):
-        raise ValueError("Unexpected embedding array shape: {}".format(embedding_array.shape))
-
-    return embedding_array
-
 
 class VectorCache:
     _instance = None
-    _vectors = {}
+    _vectors = np.array([])  # Store vectors as a single numpy array
+    _ids = []  # Store corresponding chunk IDs
+    _lock = threading.RLock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -26,45 +15,41 @@ class VectorCache:
         return cls._instance
 
     @classmethod
-    def clear_cache(cls):
-        cls._vectors.clear()
+    def clear_cache(cls) -> None:
+        with cls._lock:
+            cls._vectors = np.array([])
+            cls._ids = []
 
     @classmethod
-    def load_user_vectors(cls, user_id):
+    def load_user_vectors(cls, user_id: int) -> None:
         cls.clear_cache()
         embeddings = (
-            DocumentEmbedding.query.join(DocumentChunk, DocumentChunk.id == DocumentEmbedding.chunk_id)
+            DocumentEmbedding.query
+            .join(DocumentChunk, DocumentChunk.id == DocumentEmbedding.chunk_id)
             .join(Document, Document.id == DocumentChunk.document_id)
             .filter(DocumentEmbedding.user_id == user_id, Document.delete == False)
+            .options(load_only(DocumentEmbedding.chunk_id, DocumentEmbedding.embedding))
             .all()
         )
-
-        vector_data = {}
-
-        for embedding in embeddings:
-            vector = np.frombuffer(embedding.embedding, dtype=np.float32)
-            vector_data[str(embedding.chunk_id)] = vector
-
-        cls._vectors.update(vector_data)
+        with cls._lock:
+            cls._vectors = np.stack([np.frombuffer(embedding.embedding, dtype=np.float32) for embedding in embeddings])
+            cls._ids = [str(embedding.chunk_id) for embedding in embeddings]
 
     @classmethod
-    def mips_naive(cls, query_vector, subset_ids):
+    def mips_naive(cls, query_vector: np.ndarray, subset_ids: list) -> list:
         if not isinstance(query_vector, np.ndarray):
             raise ValueError("Query vector must be a numpy array.")
-
         if query_vector.ndim != 1:
             raise ValueError("Query vector must be a 1D array.")
 
-        similarities = []
-        for id in subset_ids:
-            if id in cls._vectors:
-                similarity = np.dot(query_vector, cls._vectors[id])
-                similarities.append((id, similarity))
+        with cls._lock:
+            subset_indices = [cls._ids.index(str(chunk_id)) for chunk_id in subset_ids if str(chunk_id) in cls._ids]
+            subset_vectors = cls._vectors[subset_indices]
 
-        # Sort by similarity score in descending order
-        similarities.sort(key=lambda x: x[1], reverse=True)
+        # Calculate dot products using NumPy's vectorized operations
+        similarities = np.dot(subset_vectors, query_vector)
 
-        # Convert similarity scores to ranks
-        ranked_similarities = [(id, rank + 1) for rank, (id, _) in enumerate(similarities)]
+        # Combine IDs and similarities, then sort by similarity score in descending order
+        ranked_similarities = sorted(zip([cls._ids[i] for i in subset_indices], similarities), key=lambda x: x[1], reverse=True)
 
-        return ranked_similarities
+        return [(chunk_id, rank + 1) for rank, (chunk_id, _) in enumerate(ranked_similarities)]

@@ -81,7 +81,7 @@ def append_knowledge_context(user_query, user_id, client):
     chunk_associations = []
     doc_pages = {}  # Dictionary to hold document ID and a list of pages
 
-    preface = "Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, say as such but still do your best to provide the most factual, nuanced assessment possible."
+    preface = f"Use the below textual excerpts to answer the subsequent question. If the answer cannot be found in the provided text, say as such but still do your best to provide the most factual, nuanced assessment possible.\n\nQuestion: {user_query}\n\nText excerpts:\n\n"
 
     context = preface
     chunk_associations = []
@@ -115,14 +115,13 @@ def append_knowledge_context(user_query, user_id, client):
         sorted_pages = sorted(doc_pages[title].items(), key=lambda x: int(x[0]))
         doc_pages[title] = [page for page, _ in sorted_pages]
 
-    modified_query = context + user_query
-    return modified_query, chunk_associations, doc_pages
+    return context, chunk_associations, doc_pages
 
 def chat_completion_with_retry(messages, model, client, temperature, top_p):
     return client.chat.completions.create(model=model, messages=messages, temperature=temperature, top_p=top_p, stream=True)
 
 
-def ask(query, images, client, model: str = "gpt-4-turbo"):
+def ask(query, images, client, model: str = "gpt-4o"):
     modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
     temperature = preferences.temperature

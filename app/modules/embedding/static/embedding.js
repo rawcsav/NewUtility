@@ -1,3 +1,5 @@
+let documentData = {}; // Object to store form data for each document
+
 function updateUploadMessages(message, status) {
   var messageDiv = document.getElementById("uploadStatus");
   messageDiv.innerHTML = message.replace(/\n/g, "<br>");
@@ -182,8 +184,6 @@ function displayCurrentForm() {
   }
 }
 
-let documentData = {}; // Object to store form data for each document
-
 function saveFormData(index) {
   const formData = new FormData(document.querySelector("form"));
   const file = fileInput.files[index];
@@ -264,7 +264,7 @@ saveButtons.forEach(function (saveButton) {
         })
         .then((data) => {
           if (data.error) {
-            alert("Error updating document: " + data.error);
+            showToast("Error updating document: " + data.error, "error");
           } else {
             showToast("Updated successfully!", "success");
             saveButton.style.display = "none";
@@ -277,7 +277,6 @@ saveButtons.forEach(function (saveButton) {
           }
         })
         .catch((error) => {
-          alert("An error occurred: " + error);
           showToast("Error updating document: " + error.message, "error");
         });
     }
@@ -311,9 +310,9 @@ document.addEventListener("click", function (event) {
         })
         .then((data) => {
           if (data.error) {
-            alert("Error deleting document: " + data.error);
+            showToast("Error deleting document: " + data.error, "error");
           } else {
-            updateUploadMessages("Document deleted successfully!", "success");
+            showToast("Document deleted successfully!", "success");
             var listItem = deleteButton.closest("li");
             if (listItem) {
               listItem.remove();
@@ -321,7 +320,7 @@ document.addEventListener("click", function (event) {
           }
         })
         .catch((error) => {
-          alert("An error occurred: " + error);
+          showToast("An error occurred: " + error, "error");
           updateUploadMessages(
             "Error deleting document: " + error.message,
             "error",
@@ -514,3 +513,38 @@ dropzone.addEventListener("drop", function (e) {
     typesList.style.display = "none";
   }
 });
+
+document
+  .querySelector(".delete-all-btn")
+  .addEventListener("click", function () {
+    if (
+      confirm(
+        "Are you sure you want to delete all documents? This action cannot be undone.",
+      )
+    ) {
+      fetch(`/embedding/delete_all`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCsrfToken(),
+        },
+        body: JSON.stringify({}),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            showToast(data.message, "success");
+            // Find and remove all document list items
+            const documentListItems =
+              document.querySelectorAll(".docs_list li");
+            documentListItems.forEach((item) => item.remove());
+          } else {
+            showToast("Error: " + data.message, "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          showToast("An error occurred while deleting documents.", "error");
+        });
+    }
+  });

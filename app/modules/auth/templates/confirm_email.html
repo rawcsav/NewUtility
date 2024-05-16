@@ -40,8 +40,8 @@
       <div id="message-container"></div>
     </form>
   </div>
-  {% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock
-  %}{% block scripts %} {% assets "confirm_js_bundle" %}
-  <script src="{{ ASSET_URL }}"></script>
-  {% endassets %} {% endblock %}
 </div>
+{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
+block scripts %} {% assets "confirm_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %} {% endblock %}
