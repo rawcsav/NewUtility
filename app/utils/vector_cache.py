@@ -1,8 +1,10 @@
+import pickle
 import threading
+
 import numpy as np
 from sqlalchemy.orm import load_only
-from app.models.embedding_models import Document, DocumentChunk, DocumentEmbedding
 
+from app.models.embedding_models import Document, DocumentChunk, DocumentEmbedding
 class VectorCache:
     _instance = None
     _vectors = np.array([])  # Store vectors as a single numpy array
@@ -31,10 +33,13 @@ class VectorCache:
             .options(load_only(DocumentEmbedding.chunk_id, DocumentEmbedding.embedding))
             .all()
         )
+
+        if not embeddings:
+            return
+
         with cls._lock:
             cls._vectors = np.stack([np.frombuffer(embedding.embedding, dtype=np.float32) for embedding in embeddings])
             cls._ids = [str(embedding.chunk_id) for embedding in embeddings]
-
     @classmethod
     def mips_naive(cls, query_vector: np.ndarray, subset_ids: list) -> list:
         if not isinstance(query_vector, np.ndarray):
