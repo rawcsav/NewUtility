@@ -123,7 +123,7 @@ def serve_generated_image(user_id, filename):
 
 @image_bp.route("/user_urls/<user_id>/<path:filename>")
 def serve_generated_url(user_id, filename):
-    return url_for("image_bp.serve_generated_image", filename=filename, user_id=user_id, _external=True)
+    return url_for("image_bp.serve_generated_image", filename=filename, user_id=user_id)
 
 
 @image_bp.route("/mark_delete/<uuid:image_id>", methods=["POST"])
