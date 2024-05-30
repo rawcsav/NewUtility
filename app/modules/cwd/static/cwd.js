@@ -246,8 +246,10 @@ function addToQueryHistory(query, response, base64Images, documentsUsed) {
   const historyEntry = document.createElement("div");
   historyEntry.className = "history-entry";
   historyEntry.innerHTML = `
-    <div><i class="nuicon-user-tie"></i><pre>${query}</pre></div>
-    <div><i class="nuicon-user-robot"></i><pre>${response}</pre></div>
+    <div><i class="nuicon-user-tie"></i><pre>${escapeHTML(query)}</pre></div>
+    <div><i class="nuicon-user-robot"></i><pre>${escapeHTML(
+      response,
+    )}</pre></div>
   `;
 
   // Add the used images to the history entry
@@ -265,7 +267,9 @@ function addToQueryHistory(query, response, base64Images, documentsUsed) {
 
   if (documentsUsed) {
     const documentsUsedContainer = document.createElement("div");
-    documentsUsedContainer.innerHTML = `<strong>Documents Used:</strong> ${documentsUsed}`;
+    documentsUsedContainer.innerHTML = `<strong>Documents Used:</strong> ${escapeHTML(
+      documentsUsed,
+    )}`;
     historyEntry.appendChild(documentsUsedContainer);
   }
 
@@ -284,6 +288,19 @@ function addToQueryHistory(query, response, base64Images, documentsUsed) {
   // Set the display of the query and response elements to none
   document.getElementById("user_query").parentNode.style.display = "none";
   document.getElementById("response_container").style.display = "none";
+}
+
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, (tag) => {
+    const charsToReplace = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      '"': "&quot;",
+    };
+    return charsToReplace[tag] || tag;
+  });
 }
 
 function toggleQuery() {
@@ -539,7 +556,7 @@ function generateImagePreviews(files) {
 
       const img = document.createElement("img");
       img.src = e.target.result;
-      img.dataset.file = file.name; // Store the file name as a data attribute
+      img.dataset.file = escapeHTML(file.name); // Store the file name as a data attribute
       imgContainer.appendChild(img);
 
       const removeBtn = document.createElement("button");
@@ -594,7 +611,9 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
   function appendDocumentsUsed(data) {
     const resultsSpan = document.getElementById("documents-used");
-    resultsSpan.innerHTML = `<strong>Documents Used:</strong> ${data.message}`;
+    resultsSpan.innerHTML = `<strong>Documents Used:</strong> ${escapeHTML(
+      data.message,
+    )}`;
   }
 
   socket.on("documents_used", function (documentsUsedSummary) {
