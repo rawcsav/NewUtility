@@ -122,14 +122,33 @@ function onSubmit(event) {
   for (let i = 0; i < fileList.length; i++) {
     const file = fileList[i];
     const fileType = file.type;
+    const fileExtension = file.name.split(".").pop().toLowerCase();
 
-    if (fileType !== "text/plain" && fileType !== "application/pdf") {
-      updateUploadMessages("Only .txt and .pdf files are allowed.", "error");
+    if (
+      fileType !== "text/plain" &&
+      fileType !== "application/pdf" &&
+      !["py", "html", "css", "js", "md", "yml", "json"].includes(fileExtension)
+    ) {
+      updateUploadMessages(
+        "Only .txt, .pdf, .py, .html, .css, .js, .md, .yml, and .json files are allowed.",
+        "error",
+      );
       return;
     }
 
-    const title =
-      document.querySelector('input[name="title"]').value || file.name;
+    let title = document.querySelector('input[name="title"]').value;
+    if (
+      ["py", "html", "css", "js", "md", "yml", "json"].includes(fileExtension)
+    ) {
+      if (title) {
+        title = `${title} (${file.name})`;
+      } else {
+        title = file.name;
+      }
+    } else {
+      title = title || file.name;
+    }
+
     const author = document.querySelector('input[name="author"]').value || "";
     const chunkSize =
       document.querySelector('input[name="chunk_size"]').value || "512";
@@ -143,8 +162,6 @@ function onSubmit(event) {
     formData.append("chunk_size", chunkSize);
     formData.append("advanced_preprocessing", advancedPreprocessing);
   }
-
-  // Send the AJAX reques
 
   // Send the AJAX request to the upload endpoint
   fetch(uploadForm.action, {

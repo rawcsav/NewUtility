@@ -116,7 +116,7 @@ class GenerateImageForm(FlaskForm):
 class DocumentUploadForm(FlaskForm):
     file = FileField(
         "Document",
-        validators=[FileRequired(), FileAllowed(["pdf", "txt"], "Text or PDF files only!")],
+        validators=[FileRequired(), FileAllowed(["pdf", "txt", "py", "css", "html", "md", "yml", "json"], "Text or PDF files only!")],
     )
     title = StringField("Document Title", validators=[Optional()])
     author = StringField("Author Name", validators=[Optional()])

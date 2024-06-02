@@ -265,6 +265,11 @@ class TextExtractor:
                     yield (page_text, page_number)
             self.last_page_number = page_number
 
+    def extract_text_from_code_file(self):
+        with open(self.filepath, "r", encoding="utf-8") as file:
+            code_text = file.read()
+            yield (code_text, None)
+
     def extract_text_from_file(self):
         ext = os.path.splitext(self.filepath)[1].lower()
         if ext == ".pdf":
@@ -274,6 +279,8 @@ class TextExtractor:
                 for line_number, line in enumerate(file, start=1):
                     yield (line.strip(), None)
             self.last_page_number = line_number
+        elif ext in [".py", ".html", ".css", ".js", "md", "yml", "json"]:
+            yield from self.extract_text_from_code_file()
         else:
             raise ValueError(f"Unsupported file type: {ext}")
 
@@ -281,9 +288,10 @@ class TextExtractor:
         return self.last_page_number
 
 class TextSplitter:
-    def __init__(self, max_tokens: int = 512, client=None, use_gpt_preprocessing=False):
+    def __init__(self, max_tokens: int = 512, client=None, use_gpt_preprocessing=False, filepath=None):
         self.max_tokens = max_tokens
         self.batch_size = 4000 // max_tokens
+        self.filepath = filepath
         self.temp_chunks = []
         self.use_gpt_preprocessing = use_gpt_preprocessing
         self.client = client
@@ -293,8 +301,11 @@ class TextSplitter:
         self.current_chunk_token_count = 0
         self.current_chunk_pages = set()
         download_nltk_data()
+
     def add_text(self, text: str, page_number: int = None):
-        text = preprocess_text(text)
+        ext = os.path.splitext(self.filepath)[1].lower()
+        if ext not in [".py", ".html", ".css", ".js", "md", "yml", "json"]:
+            text = preprocess_text(text)
         sentences = sent_tokenize(text)
 
         for sentence in sentences:

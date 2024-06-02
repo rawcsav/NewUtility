@@ -31,7 +31,7 @@ def process_document(session, embedding_task, user_id):
         client, key_id, error = task_client(session, user_id)
         if error:
             raise Exception(error)
-        text_splitter = TextSplitter(max_tokens=embedding_task.chunk_size, client=client, use_gpt_preprocessing=embedding_task.advanced_preprocessing)
+        text_splitter = TextSplitter(max_tokens=embedding_task.chunk_size, client=client, use_gpt_preprocessing=embedding_task.advanced_preprocessing, filepath=embedding_task.temp_path)
         logger.info(f"Splitting text into chunks of {embedding_task.chunk_size} tokens")
         for text, page_number in text_pages:
             text_splitter.add_text(text, page_number)
