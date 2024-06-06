@@ -245,12 +245,24 @@ function addToQueryHistory(query, response, base64Images, documentsUsed) {
   // Create a new history entry
   const historyEntry = document.createElement("div");
   historyEntry.className = "history-entry";
-  historyEntry.innerHTML = `
-    <div><i class="nuicon-user-tie"></i><pre>${escapeHTML(query)}</pre></div>
-    <div><i class="nuicon-user-robot"></i><pre>${escapeHTML(
-      response,
-    )}</pre></div>
-  `;
+
+  // Create the query and response elements
+  const queryElement = document.createElement("div");
+  queryElement.innerHTML = `<i class="nuicon-user-tie"></i><pre>${escapeHTML(
+    query,
+  )}</pre>`;
+
+  const responseElement = document.createElement("div");
+  responseElement.innerHTML = `<i class="nuicon-user-robot"></i><pre>${escapeHTML(
+    response,
+  )}</pre>`;
+
+  // Add clipboard icon to the response element
+  const clipboardIcon = createClipboardIcon("message");
+  responseElement.appendChild(clipboardIcon);
+
+  historyEntry.appendChild(queryElement);
+  historyEntry.appendChild(responseElement);
 
   // Add the used images to the history entry
   if (base64Images && base64Images.length > 0) {
@@ -288,6 +300,31 @@ function addToQueryHistory(query, response, base64Images, documentsUsed) {
   // Set the display of the query and response elements to none
   document.getElementById("user_query").parentNode.style.display = "none";
   document.getElementById("response_container").style.display = "none";
+}
+function createClipboardIcon(copyTarget) {
+  let clipboardIcon = document.createElement("i");
+  clipboardIcon.classList.add("nuicon-clipboard", "clipboard-icon");
+  clipboardIcon.addEventListener("click", function (event) {
+    event.stopPropagation();
+
+    let textToCopy;
+    if (copyTarget === "code") {
+      textToCopy = this.parentNode.textContent;
+    } else if (copyTarget === "message") {
+      textToCopy = this.parentNode.querySelector("pre").textContent;
+    }
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        showToast("Copied to clipboard!", "success");
+      })
+      .catch((err) => {
+        showToast("Failed to copy!", "error");
+        console.error("Failed to copy text:", err);
+      });
+  });
+
+  return clipboardIcon;
 }
 
 function escapeHTML(str) {
