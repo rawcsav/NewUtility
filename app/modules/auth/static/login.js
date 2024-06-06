@@ -31,8 +31,17 @@ document
         } else if (data.status === "unconfirmed") {
           document.getElementById("message-container").innerHTML =
             `<p>Please confirm your email. <a href="${data.redirect}">Click here to confirm</a></p>`;
+        } else if (data.status === "error") {
+          var messageContainer = document.getElementById("message-container");
+          if (data.errors) {
+            var errorMessages = Object.values(data.errors).flat().join("<br>");
+            messageContainer.innerHTML = errorMessages;
+          } else {
+            messageContainer.textContent = data.message;
+          }
         } else {
-          document.getElementById("message-container").innerText = data.message;
+          document.getElementById("message-container").textContent =
+            data.message;
         }
       })
       .catch((error) => {

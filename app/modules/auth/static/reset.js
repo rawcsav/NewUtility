@@ -53,16 +53,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleResponse(data, messageContainerId, shouldRedirect) {
     var messageContainer = document.getElementById(messageContainerId);
-    messageContainer.textContent = data.message;
-    messageContainer.classList.remove("success", "error");
-    messageContainer.classList.add(
-      data.status === "success" ? "success" : "error",
-    );
 
-    if (data.status === "success" && shouldRedirect) {
-      setTimeout(function () {
-        window.location.href = data.redirect;
-      }, 3000);
+    if (data.status === "success") {
+      messageContainer.textContent = data.message;
+      messageContainer.classList.remove("error");
+      messageContainer.classList.add("success");
+
+      if (shouldRedirect) {
+        setTimeout(function () {
+          window.location.href = data.redirect;
+        }, 3000);
+      }
+    } else if (data.status === "error") {
+      if (data.errors) {
+        var errorMessages = Object.values(data.errors).flat().join("<br>");
+        messageContainer.innerHTML = errorMessages;
+      } else {
+        messageContainer.textContent = data.message;
+      }
+      messageContainer.classList.remove("success");
+      messageContainer.classList.add("error");
     }
   }
   function handleError(error, messageContainerId) {

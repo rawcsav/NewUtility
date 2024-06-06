@@ -29,14 +29,20 @@ document
           window.location.href = data.redirect;
         } else if (data.status === "error") {
           var messageContainer = document.getElementById("message-container");
-          messageContainer.innerHTML = data.message;
+          if (data.errors) {
+            var errorMessages = Object.values(data.errors).flat().join("<br>");
+            messageContainer.innerHTML = errorMessages;
+          } else {
+            messageContainer.textContent = data.message;
+          }
         } else {
-          document.getElementById("message-container").innerText = data.message;
+          document.getElementById("message-container").textContent =
+            data.message;
         }
       })
       .catch((error) => {
         console.error("Error:", error);
-        document.getElementById("message-container").innerText =
-          "An error occurred while trying to log in.";
+        document.getElementById("message-container").textContent =
+          "An error occurred while trying to sign up.";
       });
   });

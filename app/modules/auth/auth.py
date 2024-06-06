@@ -156,6 +156,12 @@ def signup():
             ),
             200,
         )
+    if form.errors:
+        # Form validation failed
+        errors = {}
+        for field, field_errors in form.errors.items():
+            errors[field] = [error for error in field_errors]
+        return jsonify({"status": "error", "errors": errors}), 400
     markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()

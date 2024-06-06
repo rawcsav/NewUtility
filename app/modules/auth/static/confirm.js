@@ -26,14 +26,25 @@ document
       .then((data) => {
         var messageContainer = document.getElementById("message-container");
         if (data.status === "success") {
-          messageContainer.innerText = data.message;
+          messageContainer.textContent = data.message;
+          messageContainer.classList.remove("error");
           messageContainer.classList.add("success");
 
           setTimeout(function () {
             window.location.href = data.redirect;
           }, 5000);
+        } else if (data.status === "error") {
+          if (data.errors) {
+            var errorMessages = Object.values(data.errors).flat().join("<br>");
+            messageContainer.innerHTML = errorMessages;
+          } else {
+            messageContainer.textContent = data.message;
+          }
+          messageContainer.classList.remove("success");
+          messageContainer.classList.add("error");
         } else {
-          messageContainer.innerText = data.message;
+          messageContainer.textContent = data.message;
+          messageContainer.classList.remove("success");
           messageContainer.classList.add("error");
         }
       })
