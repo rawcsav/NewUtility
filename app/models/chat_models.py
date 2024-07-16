@@ -69,7 +69,7 @@ class ChatPreferences(db.Model):
     knowledge_query_mode = db.Column(db.Boolean, default=False)
     top_k = db.Column(db.Integer, default=5)
     threshold = db.Column(db.Float, default=0.5)
-    cwd_system_prompt = db.Column(db.String(2048),
+    cwd_system_prompt = db.Column(db.String(4096),
                                   nullable=True,
                                   default="You are a helpful academic literary assistant. "
                                           "Provide in -depth guidance, suggestions, code snippets, "
