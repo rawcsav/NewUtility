@@ -4,13 +4,13 @@ toast.textContent=message;toast.className=type;toast.style.display="block";toast
 function getCsrfToken(){return document.querySelector('meta[name="csrf-token"]').getAttribute("content");}
 function enableEditing(editButton){var listItem=editButton.closest("li");var form=listItem.querySelector("form.edit-document-form");var inputs=form.querySelectorAll(".editable");inputs.forEach(function(input){input.removeAttribute("readonly");if(input.name==="author"&&input.value.startsWith("Author: ")){input.value=input.value.substring("Author: ".length);}});inputs[0].focus();editButton.style.display="none";var saveButton=listItem.querySelector(".save-btn");saveButton.style.display="inline-block";inputs.forEach(function(input){input.addEventListener("keypress",function(event){if(event.key==="Enter"){event.preventDefault();saveButton.click();}});});}
 function updateFileList(){const fileList=fileInput.files;totalPages=fileList.length;document.getElementById("total-pages").textContent=totalPages;createDocumentForms(fileList);displayCurrentForm();updatePaginationControls();}
-function createDocumentForms(fileList){documentForms=[];for(let i=0;i<fileList.length;i++){const file=fileList[i];const formHtml=`<div class="form-group"><label>Document Title(optional):</label><input type="text"name="title"placeholder="Enter document title"value="${
+function createDocumentForms(fileList){documentForms=[];for(let i=0;i<fileList.length;i++){const file=fileList[i];const formHtml=`<div class="form-group"><label>Title&nbsp;(optional):</label><input type="text"name="title"placeholder="Enter document title"value="${
       documentData[i]?.title || ""
-    }"/></div><div class="form-group"><label>Author Name(optional):</label><input type="text"name="author"placeholder="Enter author's name"value="${
+    }"/></div><div class="form-group"><label>Author&nbsp;(optional):</label><input type="text"name="author"placeholder="Enter author's name"value="${
       documentData[i]?.author || ""
-    }"/></div><div class="form-group"><label>Max Tokens per Chunk(default is 512):</label><input type="number"name="chunk_size"min="1"value="${
-      documentData[i]?.chunk_size || "512"
-    }"/></div><div class="form-group"><label><input type="checkbox"name="advanced_preprocessing"${documentData[i]?.advanced_preprocessing?"checked":""}/>Enable Advanced Preprocessing</label></div>`;documentForms.push(formHtml);}}
+    }"/></div><div class="form-group"><label>Tokens per Chunk&nbsp;(default is 1024):</label><input type="number"name="chunk_size"min="1"value="${
+      documentData[i]?.chunk_size || "1024"
+    }"/></div><div class="form-group"><label><input type="checkbox"name="advanced_preprocessing"${documentData[i]?.advanced_preprocessing?"checked":""}/>&nbsp;Advanced PDF Preprocessing?</label></div>`;documentForms.push(formHtml);}}
 function updatePaginationControls(){if(totalPages>1){paginationControls.style.display="flex";submitButton.disabled=false;}else{paginationControls.style.display="none";submitButton.disabled=totalPages===0;}}
 function onSubmit(event){event.preventDefault();const formData=new FormData();const fileList=fileInput.files;for(let i=0;i<fileList.length;i++){const file=fileList[i];const fileType=file.type;const fileExtension=file.name.split(".").pop().toLowerCase();if(fileType!=="text/plain"&&fileType!=="application/pdf"&&!["py","html","css","js","md","yml","json"].includes(fileExtension)){updateUploadMessages("Only .txt, .pdf, .py, .html, .css, .js, .md, .yml, and .json files are allowed.","error",);return;}
 let title=document.querySelector('input[name="title"]').value;if(["py","html","css","js","md","yml","json"].includes(fileExtension)){if(title){title=`${title}(${file.name})`;}else{title=file.name;}}else{title=title||file.name;}

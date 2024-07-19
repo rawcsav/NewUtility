@@ -121,7 +121,7 @@ def chat_completion_with_retry(messages, model, client, temperature, top_p):
     return client.chat.completions.create(model=model, messages=messages, temperature=temperature, top_p=top_p, stream=True)
 
 
-def ask(query, images, client, model: str = "gpt-4o"):
+def ask(query, images, client, model: str = "gpt-4-0125-preview"):
     modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
     temperature = preferences.temperature
