@@ -20,7 +20,7 @@ class Document(db.Model, SoftDeleteMixin, TimestampMixin):
     title = db.Column(db.String(255), nullable=False)
     author = db.Column(db.String(255), nullable=True)
     total_tokens = db.Column(db.Integer, nullable=False)
-    pages = db.Column(db.String(25), nullable=True)
+    pages = db.Column(db.String(255), nullable=True)
     selected = db.Column(db.Boolean, default=False)
     chunks = db.relationship(
         "DocumentChunk",
@@ -40,7 +40,7 @@ class DocumentChunk(db.Model):
     chunk_index = db.Column(db.Integer, nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     tokens = db.Column(db.Integer, nullable=False)
-    pages = db.Column(db.String(25), nullable=True)
+    pages = db.Column(db.String(255), nullable=True)
     document = db.relationship("Document", back_populates="chunks")
     embedding = db.relationship(
         "DocumentEmbedding",
