@@ -75,28 +75,28 @@ function createDocumentForms(fileList) {
     const file = fileList[i];
     const formHtml = `
   <div class="form-group">
-    <label>Document Title (optional):</label>
+    <label>Title&nbsp;(optional):</label>
     <input type="text" name="title" placeholder="Enter document title" value="${
       documentData[i]?.title || ""
     }" />
   </div>
   <div class="form-group">
-    <label>Author Name (optional):</label>
+    <label>Author&nbsp;(optional):</label>
     <input type="text" name="author" placeholder="Enter author's name" value="${
       documentData[i]?.author || ""
     }" />
   </div>
   <div class="form-group">
-    <label>Max Tokens per Chunk (default is 512):</label>
+    <label>Tokens per Chunk&nbsp;(default is 1024):</label>
     <input type="number" name="chunk_size" min="1" value="${
-      documentData[i]?.chunk_size || "512"
+      documentData[i]?.chunk_size || "1024"
     }" />
   </div>
   <div class="form-group">
     <label>
       <input type="checkbox" name="advanced_preprocessing" ${
         documentData[i]?.advanced_preprocessing ? "checked" : ""
-      } /> Enable Advanced Preprocessing
+      } />&nbsp;Advanced PDF Preprocessing?
     </label>
   </div>
 `;
