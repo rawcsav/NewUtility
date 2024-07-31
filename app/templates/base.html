@@ -207,19 +207,6 @@
       });
     </script>
 
-    {% block scripts %} {% endblock %} {% if not config['DEBUG'] %}
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-QNN1GLM3F8"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-      gtag("config", "G-QNN1GLM3F8", { cookie_domain: "auto" });
-    </script>
-    {% endif %}
+    {% block scripts %} {% endblock %} {% if not config['DEBUG'] %} {% endif %}
   </body>
 </html>
