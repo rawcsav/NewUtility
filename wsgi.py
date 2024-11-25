@@ -18,6 +18,5 @@ app = create_app()
 celery = make_celery(app=app, socketio=socketio)
 
 if __name__ == "__main__":
-    FLASK_DEBUG = True
-    DEBUG_LEVEL = "DEBUG" if FLASK_DEBUG else "INFO"
+    FLASK_DEBUG = False
     socketio.run(app, host="localhost", port=8080)

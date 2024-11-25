@@ -91,7 +91,7 @@ class Config(object):
 
 
 class DevelopmentConfig(Config):
-    FLASK_DEBUG = True
+    FLASK_DEBUG = False
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False
 

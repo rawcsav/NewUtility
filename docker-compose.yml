@@ -33,6 +33,7 @@ services:
 
   web:
     build:
+      network: host
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
@@ -67,7 +68,9 @@ services:
       - internal
 
   celery:
-    build: .
+    build:
+      context: .
+      network: host
     command: celery -A uwsgi.celery worker --loglevel=info --concurrency=2 --pool=eventlet
     restart: unless-stopped
     environment:
@@ -101,7 +104,9 @@ services:
       - internal
 
   celerybeat:
-    build: .
+    build:
+      network: host
+      context: .
     command: celery -A uwsgi.celery beat --loglevel=info -s /newutil/celerybeat-schedule/celerybeat-schedule
     restart: unless-stopped
     environment:

@@ -9,9 +9,31 @@ from app import db, socketio
 from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import DocumentChunk, Document, ModelContextWindow
 from app.utils.vector_cache import VectorCache
-from app.utils.logging_util import configure_logging
 
-logger = configure_logging()
+
+import logging
+from datetime import datetime
+
+LOG_FILE = '/Users/gavin/query_log.txt'
+logging = logging.getLogger(__name__)
+
+def force_log(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_FILE, 'a') as f:
+        f.write(f"{timestamp} - {message}\n")
+
+def log_query_and_content(query, relevant_sections):
+    force_log(f"\n\nQuery: {query}\n")
+    force_log("Relevant Content and Pages:")
+
+    for section in relevant_sections:
+        force_log(f"\nDocument: {section['title']}")
+        force_log(f"Pages: {section['pages']}")
+        force_log(f"Similarity: {section['similarity']:.4f}")
+        force_log("Content:")
+        force_log(section['content'])
+        force_log("-" * 50)
+
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
     context_window_size = 120000
@@ -69,7 +91,16 @@ def get_embedding(text: str, client: openai.OpenAI, model="text-embedding-3-larg
     if len(embedding) != 3072:
         raise ValueError(f"Expected embedding dimension to be 3072, but got {len(embedding)}")
     return embedding
-
+def print_query_and_documents(query, doc_pages):
+    print("\n" + "="*50)
+    print(f"Query: {query}\n")
+    print("Relevant Documents:")
+    for title, pages in doc_pages.items():
+        if pages:
+            print(f"  - {title}: Pages {', '.join(map(str, sorted(pages)))}")
+        else:
+            print(f"  - {title}")
+    print("="*50 + "\n")
 
 def append_knowledge_context(user_query, user_id, client):
     query_embedding = get_embedding(user_query, client)
@@ -77,6 +108,8 @@ def append_knowledge_context(user_query, user_id, client):
     user_preferences = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
 
     relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences=user_preferences)
+    log_query_and_content(user_query, relevant_sections)
+
     context = ""
     chunk_associations = []
     doc_pages = {}  # Dictionary to hold document ID and a list of pages
@@ -122,7 +155,9 @@ def chat_completion_with_retry(messages, model, client, temperature, top_p):
 
 
 def ask(query, images, client, model: str = "gpt-4-0125-preview"):
+
     modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
+    print(modified_query)
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
     temperature = preferences.temperature
     top_p = preferences.top_p
@@ -146,6 +181,7 @@ def ask(query, images, client, model: str = "gpt-4-0125-preview"):
         for title, pages in doc_pages.items():
             if pages:
                 documents_used_summary += f"{title}: Pages {', '.join(map(str, sorted(pages)))}, "
+                print(f"{title}: Pages {', '.join(map(str, sorted(pages)))}")
             else:  # Handle documents without pages
                 documents_used_summary += f"{title}, "
         socketio.emit('documents_used', {"message": documents_used_summary}, room=str(current_user.id), namespace="/cwd" )
@@ -156,8 +192,4 @@ def ask(query, images, client, model: str = "gpt-4-0125-preview"):
             if content:
                 yield content
     except RateLimitError as e:
-        logger.error(f"Rate limit exceeded. All retry attempts failed.")
-    except openai.OpenAIError as e:
-        logger.error(f"An OpenAI error occurred: {e}")
-
-
+        pass
