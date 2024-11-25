@@ -1,16 +1,32 @@
-FROM python:3.10
+FROM python:3.10-slim-bullseye
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=0 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    FLASK_APP=uwsgi.py
 
 WORKDIR /newutil
 
-RUN chown -R www-data:www-data /newutil
-COPY . /newutil
+# Combine apt operations and use parallel downloads
+RUN echo 'Acquire::http::Pipeline-Depth "5";' >> /etc/apt/apt.conf.d/00pipeline && \
+    echo 'Acquire::http::Parallel-Queue-Size "5";' >> /etc/apt/apt.conf.d/00parallel
 
-RUN apt-get update && \
-    apt-get install -y ffmpeg && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir -r requirements.txt
+# Cache apt and pip in single layer
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    --mount=type=cache,target=/root/.cache/pip \
+    apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    pip install gunicorn eventlet flask
 
-ENV FLASK_APP=uwsgi.py
+# Only copy what's needed
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-dependencies -r requirements.txt
 
-# Start uWSGI
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "uwsgi:app", "--bind", "0.0.0.0:8080"]
+COPY . .
+
+EXPOSE 8080
+
+CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--preload", "uwsgi:app", "--bind", "0.0.0.0:8080"]
