@@ -1,0 +1,351 @@
+:root {
+  --ff-txt: "Diatype", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  --ff-accent: "Monument", sans-serif;
+  --ff-serif: "TZ", serif;
+
+  /* Neutral Colors */
+  --neutral-100: #fafafa;
+  --neutral-200: #f4f6f6;
+  --neutral-300: #e0e4e5;
+  --neutral-400: #b3bdc1;
+  --neutral-500: #8a979c;
+  --neutral-600: #637177;
+  --neutral-700: #3c4447;
+
+  /* Main Colors (Green) */
+  --main-100: #e6f8ef;
+  --main-200: #b3e9d1;
+  --main-300: #0ab56e; /* Your base green */
+  --main-400: #089e60;
+  --main-500: #068751;
+  --main-600: #047043;
+  --main-700: #025934;
+
+  /* Accent Colors - Yellow */
+  --accent-yellow-100: #fff8e6;
+  --accent-yellow-200: #ffeab3;
+  --accent-yellow-300: #dac143; /* Your base yellow */
+  --accent-yellow-400: #c4ad3c;
+  --accent-yellow-500: #ad9935;
+  --accent-yellow-600: #97852e;
+  --accent-yellow-700: #806027;
+
+  /* Accent Colors - Red */
+  --accent-red-100: #fff0ef;
+  --accent-red-200: #ffd4d1;
+  --accent-red-300: #ff6f63; /* Your base red */
+  --accent-red-400: #e66359;
+  --accent-red-500: #cc584f;
+  --accent-red-600: #b34c44;
+  --accent-red-700: #994139;
+
+  /* Semantic Colors */
+  --text-primary: var(--neutral-700);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-inverse: var(--neutral-100);
+
+  --surface-1: var(--neutral-100);
+  --surface-2: var(--neutral-200);
+  --surface-3: var(--neutral-300);
+
+  /* Font sizes */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
+  --text-5xl: 48px;
+  --text-6xl: 60px;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-bold: 700;
+
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --space-12: 80px;
+  --space-16: 128px;
+
+  /* Border Radius */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Border Widths */
+  --border-thin: 1px solid;
+  --border-normal: 2px solid;
+  --border-thick: 4px solid;
+
+  /* Box Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Opacity */
+  --opacity-0: 0;
+  --opacity-25: 0.25;
+  --opacity-50: 0.5;
+  --opacity-75: 0.75;
+  --opacity-100: 1;
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+}
+
+@font-face {
+  font-family: "Diatype";
+  src:
+    url("../static/fonts/Diatype.woff2") format("woff2-variations"),
+    url("../static/fonts/Diatype.ttf") format("truetype-variations");
+  font-weight: 100 700;
+  font-feature-settings:
+    "ss04" 1,
+    "ss05" 1;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TZ";
+  src: url("../static/fonts/TZ-RegIta.ttf") format("truetype");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Monument";
+  src:
+    url("../static/fonts/Monument.woff2") format("woff2-variations"),
+    url("../static/fonts/Monument.ttf") format("truetype-variations");
+  font-weight: 200 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "nufont";
+  src: url("../../fonts/nufont.eot?mrmryi");
+  src:
+    url("../../fonts/nufont.eot?mrmryi#iefix") format("embedded-opentype"),
+    url("../../fonts/nufont.ttf?mrmryi") format("truetype"),
+    url("../../fonts/nufont.woff?mrmryi") format("woff"),
+    url("../../fonts/nufont.svg?mrmryi#nufont") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="nuicon-"],
+[class*=" nuicon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "nufont" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.nuicon-user-robot-xmarks:before {
+  content: "\e900";
+}
+.nuicon-user-robot:before {
+  content: "\e935";
+}
+.nuicon-user-tie:before {
+  content: "\e936";
+}
+.nuicon-external-link:before {
+  content: "\e937";
+}
+.nuicon-clock:before {
+  content: "\e938";
+}
+.nuicon-microphone:before {
+  content: "\e934";
+}
+.nuicon-pause:before {
+  content: "\e933";
+}
+.nuicon-user-gear:before {
+  content: "\e901";
+}
+.nuicon-user:before {
+  content: "\e902";
+}
+.nuicon-user-pen:before {
+  content: "\e903";
+}
+.nuicon-high-definition:before {
+  content: "\e904";
+}
+.nuicon-question:before {
+  content: "\e905";
+}
+.nuicon-bars:before {
+  content: "\e906";
+}
+.nuicon-microchip:before {
+  content: "\e907";
+}
+.nuicon-history:before {
+  content: "\e908";
+}
+.nuicon-usage:before {
+  content: "\e909";
+}
+.nuicon-expand:before {
+  content: "\e90a";
+}
+.nuicon-style:before {
+  content: "\e90b";
+}
+.nuicon-file-signature:before {
+  content: "\e90c";
+}
+.nuicon-file-pen:before {
+  content: "\e90d";
+}
+.nuicon-file-lines:before {
+  content: "\e90e";
+}
+.nuicon-file-image:before {
+  content: "\e90f";
+}
+.nuicon-expand-arrows:before {
+  content: "\e910";
+}
+.nuicon-refresh:before {
+  content: "\e911";
+}
+.nuicon-square-check:before {
+  content: "\e912";
+}
+.nuicon-square-pen:before {
+  content: "\e913";
+}
+.nuicon-key:before {
+  content: "\e914";
+}
+.nuicon-sparkles:before {
+  content: "\e915";
+}
+.nuicon-sliders:before {
+  content: "\e916";
+}
+.nuicon-paintbrush:before {
+  content: "\e917";
+}
+.nuicon-paper-plane:before {
+  content: "\e918";
+}
+.nuicon-language:before {
+  content: "\e919";
+}
+.nuicon-cloud-arrow-up:before {
+  content: "\e91a";
+}
+.nuicon-comments:before {
+  content: "\e91b";
+}
+.nuicon-comment-lines:before {
+  content: "\e91c";
+}
+.nuicon-wand-magic-sparkles:before {
+  content: "\e91d";
+}
+.nuicon-floppy-disk:before {
+  content: "\e91e";
+}
+.nuicon-clipboard:before {
+  content: "\e91f";
+}
+.nuicon-link:before {
+  content: "\e920";
+}
+.nuicon-gears:before {
+  content: "\e921";
+}
+.nuicon-arrow-up:before {
+  content: "\e922";
+}
+.nuicon-arrow-right:before {
+  content: "\e923";
+}
+.nuicon-arrow-left:before {
+  content: "\e924";
+}
+.nuicon-arrow-down:before {
+  content: "\e925";
+}
+.nuicon-check:before {
+  content: "\e926";
+}
+.nuicon-pen:before {
+  content: "\e927";
+}
+.nuicon-pen-line:before {
+  content: "\e928";
+}
+.nuicon-images:before {
+  content: "\e929";
+}
+.nuicon-image:before {
+  content: "\e92a";
+}
+.nuicon-image-landscape:before {
+  content: "\e92b";
+}
+.nuicon-volume-high:before {
+  content: "\e92c";
+}
+.nuicon-download:before {
+  content: "\e92d";
+}
+.nuicon-trash-can:before {
+  content: "\e92e";
+}
+.nuicon-xmark:before {
+  content: "\e92f";
+}
+.nuicon-envelope:before {
+  content: "\e930";
+}
+.nuicon-file-audio:before {
+  content: "\e931";
+}
+.nuicon-gear-complex:before {
+  content: "\e932";
+}

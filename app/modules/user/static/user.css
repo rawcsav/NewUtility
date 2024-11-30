@@ -59,7 +59,7 @@ body {
 }
 
 h1 {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 3em;
   font-weight: 700;
   margin: 0;
@@ -94,7 +94,7 @@ h1 {
 }
 h2 {
   writing-mode: vertical-lr; /* Make the text vertical */
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 3em;
   font-weight: 700;
   margin: 0;
@@ -108,7 +108,7 @@ h2 {
 }
 
 h3 {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 1.5em;
   font-weight: 700;
   margin: 0;
@@ -125,7 +125,7 @@ h3 {
   display: none;
 }
 h4 {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 1em;
   font-weight: 700;
   margin: 0;
@@ -261,7 +261,7 @@ h4 {
   color: #fafafa;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 0.8em;
   font-weight: 700;
   margin: 0;
@@ -321,7 +321,7 @@ h4 {
   border: 1px solid #4caf50;
   border-bottom-left-radius: 5px;
   border-top-left-radius: 5px;
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 0.8em;
   font-weight: 700;
   padding: 6px;
@@ -333,7 +333,7 @@ h4 {
   margin: 5px;
   font-size: 0.9em;
   color: #2a2a2a;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 a {
@@ -353,7 +353,7 @@ a {
   border-bottom-right-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 0.8em;
   font-weight: 700;
   margin: 0;
@@ -399,7 +399,7 @@ ul {
   white-space: nowrap;
   color: #4f9d69;
   font-size: 1em;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   font-weight: 500;
   transition: color 0.3s ease;
   text-decoration: #33312e underline;
@@ -477,7 +477,7 @@ ul {
   margin: 0;
   font-size: 1em;
   color: #2a2a2a;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 .key-usage p {
@@ -487,7 +487,7 @@ ul {
 }
 .selected-key .key-info p {
   color: #ff4500;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 .utility-container {
@@ -507,7 +507,7 @@ ul {
 }
 #key .selected-key p {
   color: #2a2a2a;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 .selected-key-icon,
@@ -516,7 +516,7 @@ ul {
 }
 
 #title-edit {
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   font-weight: 700;
   font-style: italic;
   font-size: 18px;
@@ -581,7 +581,7 @@ ul {
 #title-edit {
   border: none;
   font-weight: 700;
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
 }
 
 .form-group {
@@ -591,7 +591,7 @@ ul {
 label {
   display: block;
   font-size: 12px;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 #chat-checkbox {
@@ -681,7 +681,7 @@ output {
   border-radius: 10px;
   font-size: 14px;
   display: inline-block;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   width: 50px; /* Fixed width for the percentage display */
   text-align: center; /* Center the text inside the input */
 }
@@ -728,7 +728,7 @@ i:hover {
   box-shadow: -4px 4px var(--main-color);
   --bg-color: #ffffff;
   --main-color: #2a2a2a;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 #preference-submit:hover {

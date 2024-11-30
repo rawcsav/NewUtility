@@ -16,7 +16,7 @@ body {
 }
 
 h3 {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 1.5em;
   font-weight: 900;
   margin: 0 0 10px;
@@ -26,7 +26,7 @@ h3 {
 
 h4 {
   width: fit-content;
-  font-family: "NeueMontreal", serif;
+  font-family: var(--ff-accent);
   font-size: 2em;
   font-weight: bold;
   margin: 0;
@@ -54,7 +54,7 @@ output {
 label {
   display: block;
   font-size: 12px;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 .hidden {
@@ -284,7 +284,7 @@ pre {
   width: 60%;
   border: 1px solid #141414;
   background-color: #f8f8f8;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   border-radius: 16px;
   padding-top: 15px;
   padding-bottom: 15px;
@@ -305,7 +305,7 @@ pre {
 }
 
 .message-input {
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   height: auto;
   resize: none;
   overflow-y: auto;
@@ -389,7 +389,7 @@ i:hover {
 }
 
 .message {
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   color: #383737;
   background-color: #fafafa;
   font-size: 1.1rem;
@@ -418,7 +418,7 @@ i:hover {
 .message h3,
 .message h4,
 .message h6 {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   outline: none;
   margin-top: 10px;
   margin-bottom: 10px;
@@ -608,7 +608,7 @@ i:hover {
 }
 
 .message h5 {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-size: 1.2rem;
   margin-right: auto;
 }
@@ -641,7 +641,7 @@ i:hover {
 }
 
 #title-edit {
-  font-family: "NeueMontreal", sans-serif;
+  font-family: var(--ff-accent);
   font-weight: 700;
   font-style: italic;
   font-size: 18px;
@@ -683,7 +683,7 @@ i:hover {
   box-shadow: 4px 4px var(--main-color);
   --bg-color: #ffffff;
   --main-color: #2a2a2a;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 #preference-submit:hover,
@@ -759,7 +759,7 @@ i:hover {
   font-size: 12px;
   width: 20%;
   display: inline-block;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
 }
 
 .edit-conversation-title {

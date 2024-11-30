@@ -206,7 +206,7 @@ input[type="range"]::-moz-range-thumb {
   width: 30px;
   padding: 3px;
   display: inline-block;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   font-size: 0.8em;
 }
 
@@ -214,7 +214,7 @@ input[type="range"]::-moz-range-thumb {
 #results pre {
   margin: 0;
   font-size: 1em;
-  font-family: "Helvetica Neue", serif;
+  font-family: var(--ff-txt);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -227,7 +227,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 #user_query {
-  font-family: "Helvetica Neue", serif;
+  font-family: var(--ff-txt);
   margin-bottom: 10px;
 }
 
@@ -240,7 +240,7 @@ input[type="range"]::-moz-range-thumb {
 .history-entry pre {
   margin-left: 10px;
   display: inline;
-  font-family: "Helvetica Neue", serif;
+  font-family: var(--ff-txt);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -548,7 +548,7 @@ label {
 .input-wrapper {
   width: 60%;
   border: 1px solid #ff6b33;
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   border-radius: 16px;
   padding-top: 15px;
   padding-bottom: 15px;
@@ -559,7 +559,7 @@ label {
 }
 
 #query {
-  font-family: "Helvetica Neue", sans-serif;
+  font-family: var(--ff-txt);
   height: auto;
   resize: none;
   overflow-y: auto;
@@ -631,7 +631,7 @@ label {
 }
 
 #user_query {
-  font-family: "Helvetica Neue", serif;
+  font-family: var(--ff-txt);
 }
 
 .nuicon-user-robot,
