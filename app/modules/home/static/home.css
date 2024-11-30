@@ -10,16 +10,16 @@ html {
 
 #toast {
   position: fixed;
-  bottom: 40px;
+  bottom: var(--space-10);
   left: 15%;
   transform: translateX(-50%);
-  background-color: #333;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 5px;
+  background-color: var(--neutral-700);
+  color: var(--neutral-100);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
   display: none;
-  opacity: 0;
-  transition: opacity 0.6s;
+  opacity: var(--opacity-0);
+  transition: opacity var(--transition-normal);
   z-index: 1000;
 }
 
@@ -28,35 +28,35 @@ body {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  background-color: #ff7900;
+  background-color: var(--accent-red-300);
   font-family: var(--ff-txt);
 }
 
 .button {
-  --bg-color: #ffffff;
-  --main-color: #000000;
-  width: 280px;
-  height: 100px;
-  border-radius: 5px;
-  border: 2px solid var(--main-color);
+  --bg-color: var(--neutral-100);
+  --main-color: var(--neutral-700);
+  width: var(--space-16);
+  height: var(--space-12);
+  border-radius: var(--radius-md);
+  border: var(--border-normal) var(--main-color);
   background-color: var(--bg-color);
-  box-shadow: -4px 4px var(--main-color);
-  font-size: 3em;
-  font-weight: 600;
-  margin: 0 0 20px;
+  box-shadow: calc(var(--space-1) * -1) var(--space-1) var(--main-color);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--space-4);
   cursor: pointer;
   font-family: var(--ff-txt);
 }
 
 .button:hover {
   cursor: pointer;
-  box-shadow: 0 0 #ffff;
-  transform: translate(3px, 3px);
+  box-shadow: 0 0 var(--neutral-100);
+  transform: translate(var(--space-1), var(--space-1));
 }
 
 .button-link:hover {
   cursor: pointer;
-  color: #ed872d;
+  color: var(--accent-yellow-300);
 }
 
 ul li {
@@ -73,7 +73,7 @@ ul li {
   align-items: center;
   justify-content: flex-start;
   flex-direction: row;
-  gap: 50px;
+  gap: var(--space-8);
   font-family: var(--ff-txt);
 }
 
@@ -81,8 +81,8 @@ ul li {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: calc(100% - 10px);
-  border-bottom: 10px solid #e50000;
+  height: calc(100% - var(--space-2));
+  border-bottom: var(--space-2) solid var(--accent-red-300);
 }
 
 .homepage-link {
@@ -91,7 +91,7 @@ ul li {
 
 .hamburger-menu,
 .toolbox-icon {
-  color: #fafafa !important;
+  color: var(--neutral-100) !important;
 }
 
 .messages-icon {
@@ -103,14 +103,15 @@ ul li {
   align-items: flex-start;
   flex-direction: column;
 }
+
 h1 {
   font-family: var(--ff-accent);
-  font-size: 5em;
-  font-weight: 700;
+  font-size: var(--text-6xl);
+  font-weight: var(--font-bold);
   margin: 0;
   top: 0;
   text-align: center;
-  color: #ffffff;
+  color: var(--neutral-100);
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -125,29 +126,30 @@ ul {
 #left-column {
   display: flex;
   flex-direction: column;
-  margin-left: 30px;
+  margin-left: var(--space-6);
 }
 
 #icons-container {
   margin-right: auto;
   margin-left: auto;
   display: flex;
-  flex-direction: row; /* Keep row direction for a multi-column layout */
-  flex-wrap: wrap; /* Allow items to wrap into multiple columns */
-  align-items: center; /* Center items vertically */
-  justify-content: center; /* Center the items horizontally */
-  gap: 20px; /* Maintain the gap between items */
-  max-height: 565px; /* Replace [icon-height] with the actual height of the icons */
-  margin-top: 20px;
-  width: 370px; /* Replace [icon-width] with the actual width of the icons */
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  max-height: calc(var(--space-16) * 4.4);
+  margin-top: var(--space-4);
+  width: calc(var(--space-16) * 2.9);
 }
 
 #icons-container img {
-  height: 175px;
+  height: calc(var(--space-16) * 1.37);
   width: auto;
 }
+
 a {
-  color: #000000;
+  color: var(--neutral-700);
   text-decoration: none;
 }
 
