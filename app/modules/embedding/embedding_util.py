@@ -1,11 +1,9 @@
 import concurrent
 import os
 import re
-import unicodedata
 import uuid
 from typing import List, Tuple, Set, Generator
 
-from nltk.data import find
 from flask_login import current_user
 
 from app.modules.user.user_util import get_user_upload_directory
@@ -34,15 +32,13 @@ def download_nltk_data():
     try:
         from nltk.data import find
         find("tokenizers/punkt")
-        find("corpora/wordnet")  # Add check for wordnet
+        find("corpora/wordnet")
     except LookupError as e:
         import nltk
-
         if "punkt" in str(e):
             logger.info("Downloading NLTK 'punkt' tokenizer data...")
             nltk.download("punkt")
             logger.info("'punkt' tokenizer data downloaded.")
-
         if "wordnet" in str(e):
             logger.info("Downloading NLTK 'wordnet' data...")
             nltk.download("wordnet")
@@ -115,13 +111,9 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
     current_batch = []
     current_tokens = 0
 
-    # Function to process a single batch of texts concurrently
     def process_batch(batch):
-        # This uses a list comprehension to process all texts in the batch concurrently
-        # through the `get_embedding` function.
         return [get_embedding(text, client, model, **kwargs) for text in batch]
 
-    # Collect texts into batches based on token limits
     for text in texts:
         text = text.replace("\n", " ")
         token_estimate = count_tokens(text)
