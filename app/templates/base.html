@@ -66,97 +66,11 @@
     <meta name="background-color" content="#faf5e6" />
     {% block head %} {% endblock %} {% assets "common_style_bundle" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}" />
-    {% endassets %}
-    <style>
-      * {
-        transition: all 0.3s ease;
-      }
-      html {
-        height: 100%;
-        width: 100%;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        font-family: "Helvetica Neue", sans-serif;
-      }
-
-      body {
-        font-family: "Helvetica Neue", sans-serif;
-        margin: 0;
-        transition: opacity 0.5s ease;
-        min-height: 100vh;
-      }
-
-      body.loaded {
-        opacity: 1;
-      }
-
-      @media (max-width: 369px) {
-        h1 {
-          font-size: 25px;
-        }
-        .homepage-link img {
-          height: 25px;
-          width: auto;
-        }
-        p {
-          font-size: 0.8em;
-        }
-        h2 {
-          font-size: 1.4em;
-        }
-      }
-      @media (min-width: 370px) and (max-width: 449px) {
-        h1 {
-          font-size: 30px;
-        }
-        .homepage-link img {
-          height: 30px;
-          width: auto;
-        }
-        p {
-          font-size: 1em;
-        }
-        h2 {
-          font-size: 1.8em;
-        }
-      }
-      @media (min-width: 450px) and (max-width: 699px) {
-        h1 {
-          font-size: 40px;
-        }
-        .homepage-link img {
-          height: 40px;
-          width: auto;
-        }
-        p {
-          font-size: 1.2em;
-        }
-        h2 {
-          font-size: 2em;
-        }
-      }
-      @media (min-width: 700px) and (max-width: 999px) {
-        h1 {
-          font-size: 50px;
-        }
-      }
-      @media (min-width: 1000px) and (max-width: 1249px) {
-        h1 {
-          font-size: 60px;
-        }
-      }
-    </style>
-    <title></title>
-    {% block styles %} {% endblock %}
+    {% endassets %} {% block styles %} {% endblock %}
   </head>
   <body>
-    {% include 'menu.html' %} {% block body %} {% endblock %}
-    <div class="overlay" id="overlay">
-      <div class="tooltip" id="tooltip">
-        {% block page_instructions %}{% endblock %}
-      </div>
-    </div>
-    {% include 'footer.html' %}
+    {% include 'menu.html' %} {% block body %} {% endblock %} {% include
+    'footer.html' %}
     <script
       src="https://cdn.socket.io/4.7.4/socket.io.min.js"
       integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
@@ -166,47 +80,29 @@
       const dropdown = document.querySelector(".dropdown-menu");
       const hamburgerMenu = document.querySelector(".hamburger-menu");
 
-      hamburgerMenu.addEventListener("click", function () {
-        let dropdown = document.querySelector(".dropdown-menu");
-        if (
-          dropdown.style.display === "none" ||
-          dropdown.style.display === ""
-        ) {
-          dropdown.style.display = "block";
-        } else {
-          dropdown.style.display = "none";
-        }
+      const toggleDropdown = (show) => {
+        dropdown.style.display = show ? "block" : "none";
+      };
+
+      hamburgerMenu.addEventListener("click", () => {
+        toggleDropdown(
+          dropdown.style.display === "none" || dropdown.style.display === "",
+        );
       });
 
-      document.addEventListener("click", function (event) {
+      document.addEventListener("click", (event) => {
         if (
           !dropdown.contains(event.target) &&
           event.target !== hamburgerMenu
         ) {
-          dropdown.style.display = "none";
+          toggleDropdown(false);
         }
       });
-      window.addEventListener("load", function () {
+
+      window.addEventListener("load", () => {
         document.body.classList.add("loaded");
       });
-
-      const toolboxIcon = document.querySelector(".toolbox-icon");
-      const overlay = document.getElementById("overlay");
-      const tooltip = document.getElementById("tooltip");
-
-      toolboxIcon.addEventListener("click", function () {
-        overlay.classList.add("active");
-        tooltip.classList.add("active");
-      });
-
-      overlay.addEventListener("click", function (event) {
-        if (event.target === overlay) {
-          overlay.classList.remove("active");
-          tooltip.classList.remove("active");
-        }
-      });
     </script>
-
     {% block scripts %} {% endblock %} {% if not config['DEBUG'] %} {% endif %}
   </body>
 </html>

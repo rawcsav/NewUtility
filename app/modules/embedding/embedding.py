@@ -42,7 +42,7 @@ def embeddings_center():
         for doc in user_documents
     ]
 
-    return render_template("embedding.html", documents=documents_data, tooltip=docs_content)
+    return render_template("embedding.html", documents=documents_data)
 
 
 @embedding_bp.route("/upload", methods=["POST"])
@@ -63,14 +63,15 @@ def upload_document():
     chunk_sizes = request.form.getlist("chunk_size")
     advanced_preprocessings = request.form.getlist("advanced_preprocessing")  # Capture advanced preprocessing options
 
-
     tasks_info = []  # To keep track of created tasks and associated file info
 
     for i, file in enumerate(files):
         title = titles[i] if i < len(titles) else secure_filename(file.filename)
         author = authors[i] if i < len(authors) else ""
         chunk_size = int(chunk_sizes[i]) if i < len(chunk_sizes) else 512
-        advanced_preprocessing = advanced_preprocessings[i] == 'true' if i < len(advanced_preprocessings) else False  # Convert to boolean
+        advanced_preprocessing = (
+            advanced_preprocessings[i] == "true" if i < len(advanced_preprocessings) else False
+        )  # Convert to boolean
 
         temp_path = save_temp(file)
 
@@ -79,7 +80,12 @@ def upload_document():
         db.session.flush()
 
         new_embedding_task = EmbeddingTask(
-            task_id=new_task.id, title=title, author=author, chunk_size=chunk_size, temp_path=temp_path, advanced_preprocessing=advanced_preprocessing
+            task_id=new_task.id,
+            title=title,
+            author=author,
+            chunk_size=chunk_size,
+            temp_path=temp_path,
+            advanced_preprocessing=advanced_preprocessing,
         )
         db.session.add(new_embedding_task)
 
@@ -118,12 +124,7 @@ def delete_document(document_id):
     try:
         document.delete = True
         db.session.commit()
-        return (
-            jsonify(
-                {"status": "success", "message": "Document deleted successfully."}
-            ),
-            200,
-        )
+        return (jsonify({"status": "success", "message": "Document deleted successfully."}), 200)
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -143,12 +144,15 @@ def delete_all_documents():
             document.delete = True
         db.session.commit()
 
-        return jsonify(
-            {"status": "success", "message": "All documents deleted successfully.\nPlease refresh to see changes"}), 200
+        return (
+            jsonify(
+                {"status": "success", "message": "All documents deleted successfully.\nPlease refresh to see changes"}
+            ),
+            200,
+        )
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 
 @embedding_bp.route("/update", methods=["POST"])
@@ -245,7 +249,6 @@ def update_docs_preferences():
         if chat_preferences.knowledge_query_mode:
             VectorCache.load_user_vectors(current_user.id)
 
-
         chat_preferences.top_k = int(form_data.get("top_k", 0))
 
         if "threshold" in form_data:
@@ -280,7 +283,6 @@ def update_docs_preferences():
                     return jsonify({"status": "error", "message": "Top P must be between 0.0 and 1.0."})
             except ValueError:
                 return jsonify({"status": "error", "message": "Invalid top P value."})
-
 
         Document.query.filter_by(user_id=current_user.id).update({"selected": False})
         for key in form_data.keys():

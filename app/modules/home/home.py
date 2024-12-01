@@ -12,4 +12,4 @@ def landing_page():
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
-    return render_template("landing.html", tooltip=docs_content)
+    return render_template("landing.html")

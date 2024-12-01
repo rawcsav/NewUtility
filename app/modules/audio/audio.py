@@ -15,8 +15,14 @@ from app.modules.audio.audio_util import (
     save_file_to_disk,
 )
 from app.modules.user.user_util import get_user_audio_directory
-from app.utils.forms_util import TtsForm, TranscriptionForm, TranslationForm, TtsPreferencesForm, \
-    WhisperPreferencesForm, DeleteDocumentForm
+from app.utils.forms_util import (
+    TtsForm,
+    TranscriptionForm,
+    TranslationForm,
+    TtsPreferencesForm,
+    WhisperPreferencesForm,
+    DeleteDocumentForm,
+)
 from app.modules.auth.auth_util import initialize_openai_client, requires_selected_api_key
 from app.tasks.audio_task import process_tts_task, process_transcription_task, process_translation_task
 
@@ -59,7 +65,6 @@ def audio_center():
         TTSJobs=tts_jobs,
         TranslationJobs=translation_jobs,
         TranscriptionJobs=transcription_jobs,
-        tooltip=docs_content,
     )
 
 
@@ -235,6 +240,7 @@ def transcription():
             db.session.rollback()
             return jsonify({"status": "error", "message": str(e)})
 
+
 @audio_bp.route("/translation", methods=["GET", "POST"])
 @requires_selected_api_key
 @login_required
@@ -320,5 +326,3 @@ def download_whisper(job_id):
             os.remove(file_path)
         except Exception as error:
             raise InternalServerError(f"Unable to delete file: {error}")
-
-

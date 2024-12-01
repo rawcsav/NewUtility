@@ -85,7 +85,6 @@ def dashboard():
         preferences_dict=preferences_dict,
         user_preferences_form=UserPreferencesForm(data=preferences_dict),
         doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
-        tooltip=docs_content,
         user_role=user_role,
         user_id=current_user.id,
     )

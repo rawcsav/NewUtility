@@ -22,6 +22,7 @@ auth_bp = Blueprint("auth_bp", __name__, template_folder="templates", static_fol
 def load_user(user_id):
     return User.query.filter_by(id=user_id).first()
 
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
@@ -85,11 +86,7 @@ def login():
                     )
 
         return jsonify({"status": "error", "message": "Invalid login credential or password."})
-    markdown_file_path = os.path.join(current_app.root_path, auth_bp.static_folder, "auth.md")
-    with open(markdown_file_path, "r") as file:
-        markdown_content = file.read()
-    docs_content = markdown(markdown_content)
-    return render_template("login.html", form=form, tooltip=docs_content)
+    return render_template("login.html", form=form)
 
 
 @auth_bp.route("/signup", methods=["GET", "POST"])
@@ -166,7 +163,7 @@ def signup():
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
-    return render_template("signup.html", form=form, tooltip=docs_content)
+    return render_template("signup.html", form=form)
 
 
 @auth_bp.route("/confirm_email", methods=["GET", "POST"])
@@ -193,7 +190,7 @@ def confirm_email():
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
-    return render_template("confirm_email.html", form=form, tooltip=docs_content)
+    return render_template("confirm_email.html", form=form)
 
 
 @auth_bp.route("/logout")
@@ -243,7 +240,7 @@ def reset_password_request():
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
-    return render_template("reset_password.html", form=form, tooltip=docs_content)
+    return render_template("reset_password.html", form=form)
 
 
 @auth_bp.route("/reset_password/<token>", methods=["GET", "POST"])
@@ -310,4 +307,4 @@ def reset_password(token):
     with open(markdown_file_path, "r") as file:
         markdown_content = file.read()
     docs_content = markdown(markdown_content)
-    return render_template("reset_password.html", form=form, token=token, tooltip=docs_content)
+    return render_template("reset_password.html", form=form, token=token)

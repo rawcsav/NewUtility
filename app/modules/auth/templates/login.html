@@ -60,7 +60,7 @@
     </form>
   </div>
 </div>
-{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %} {% assets "login_js_bundle" %}
+{% endblock %}{% block page_instructions %}{% endblock %}{% block scripts %} {%
+assets "login_js_bundle" %}
 <script src="{{ ASSET_URL }}"></script>
 {% endassets %}{% endblock %}

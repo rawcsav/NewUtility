@@ -28,103 +28,11 @@ body {
   color: var(--text-primary);
 }
 
-#full-container {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: calc(100% - var(--space-1));
-  border-bottom: var(--border-thick) var(--accent-red-300);
-}
-
-#toast {
-  position: fixed;
-  bottom: var(--space-10);
-  left: 15%;
-  transform: translateX(-50%);
-  background-color: var(--text-primary);
-  color: var(--text-inverse);
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-md);
-  display: none;
-  opacity: var(--opacity-0);
-  transition: opacity var(--transition-normal);
-  z-index: 1000;
-}
-
-#toast.success {
-  background-color: var(--main-300);
-}
-
-#toast.error {
-  background-color: var(--accent-red-300);
-}
-
-.hamburger-menu {
-  color: var(--accent-yellow-300);
-}
-
-h1 {
-  font-family: var(--ff-accent);
-  font-size: var(--text-5xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--accent-yellow-300);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
 #left-column {
   display: flex;
   height: 100%;
   flex-direction: column;
   width: 100%;
-}
-
-#title-container {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  border-bottom: var(--border-normal) var(--text-primary);
-  margin-left: var(--space-2);
-  width: fit-content;
-}
-
-h2 {
-  writing-mode: vertical-lr;
-  font-family: var(--ff-accent);
-  font-size: var(--text-5xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--accent-red-300);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-h3,
-h4 {
-  font-family: var(--ff-accent);
-  font-size: var(--text-base);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--text-primary);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.homepage-link {
-  display: none;
 }
 
 #section-title {
@@ -189,24 +97,12 @@ label {
   gap: var(--space-12);
 }
 
-p {
-  margin: 0;
-  padding: 0;
-  font-size: var(--text-xs);
-  color: var(--text-primary);
-}
-
 ul {
   list-style: none;
   margin: 0;
   padding: 0;
   max-height: 90%;
   overflow-y: auto;
-}
-
-a {
-  color: var(--text-primary);
-  text-decoration: none;
 }
 
 .doc {

@@ -1,7 +1,6 @@
 {% extends 'base.html' %} {% block head %}
 <title>New Utility | RAWCSAV</title>
 <link href="https://newutility.rawcsav.com/" rel="canonical" />
-
 {% endblock %} {% block styles %} {% assets "home_style_bundle" %}
 <link rel="stylesheet" href="{{ ASSET_URL }}" />
 {% endassets %} {% endblock %} {% block body %}
@@ -30,46 +29,7 @@
       </li>
     </ul>
   </div>
-  <div id="icons-container">
-    <div class="art">
-      <img
-        alt="Art"
-        src="{{ url_for('static', filename='dist/img/art.svg') }}"
-      />
-    </div>
-    <div class="binoculars">
-      <img
-        alt="Binoculars"
-        src="{{ url_for('static', filename='dist/img/binoculars.svg') }}"
-      />
-    </div>
-    <div class="data">
-      <img
-        alt="Data"
-        src="{{ url_for('static', filename='dist/img/data.svg') }}"
-      />
-    </div>
-    <div class="document">
-      <img
-        alt="Document"
-        src="{{ url_for('static', filename='dist/img/document.svg') }}"
-      />
-    </div>
-    <div class="jackmic">
-      <img
-        alt="Jackmic"
-        src="{{ url_for('static', filename='dist/img/jackmic.svg') }}"
-      />
-    </div>
-    <div class="key-chain">
-      <img
-        alt="Key-chain"
-        src="{{ url_for('static', filename='dist/img/key-chain.svg') }}"
-      />
-    </div>
-  </div>
 </div>
-{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %} {% assets "home_js_bundle" %}
+{% endblock %}{% block scripts %} {% assets "home_js_bundle" %}
 <script src="{{ ASSET_URL }}"></script>
 {% endassets %}{% endblock %}

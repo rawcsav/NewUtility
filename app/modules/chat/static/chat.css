@@ -1,44 +1,3 @@
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  min-height: 100vh;
-  overflow: hidden;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  position: relative;
-  min-height: 100vh;
-}
-
-h3 {
-  font-family: var(--ff-accent);
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  margin: 0 0 var(--space-2);
-  top: 0;
-  text-align: center;
-}
-
-h4 {
-  width: fit-content;
-  font-family: var(--ff-accent);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--neutral-700);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
 output {
   display: inline-block;
   padding: 0 var(--space-1);
@@ -59,29 +18,6 @@ label {
 
 .hidden {
   display: none;
-}
-
-#toast {
-  position: fixed;
-  bottom: var(--space-8);
-  left: 15%;
-  transform: translateX(-50%);
-  background-color: var(--neutral-700);
-  color: var(--neutral-100);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  display: none;
-  opacity: var(--opacity-0);
-  transition: opacity var(--transition-normal);
-  z-index: 1000;
-}
-
-#toast.success {
-  background-color: var(--main-300);
-}
-
-#toast.error {
-  background-color: var(--accent-red-300);
 }
 
 .thumbnail {
@@ -291,18 +227,6 @@ pre {
   padding-bottom: var(--space-3);
   margin-left: auto;
   margin-right: auto;
-}
-
-.hamburger-menu {
-  color: var(--accent-yellow-300);
-}
-
-#full-container {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: calc(100% - var(--space-1));
-  border-bottom: var(--border-thick) var(--accent-red-300);
 }
 
 .message-input {

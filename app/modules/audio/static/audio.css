@@ -1,60 +1,5 @@
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-#toast {
-  position: fixed;
-  bottom: var(--space-10);
-  left: 15%;
-  transform: translateX(-50%);
-  background-color: var(--neutral-700);
-  color: var(--neutral-100);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  display: none;
-  opacity: var(--opacity-0);
-  transition: var(--transition-normal);
-  z-index: 1000;
-}
-
 .form-group {
   margin-bottom: var(--space-5);
-}
-
-#toast.success {
-  background-color: var(--main-300);
-}
-
-#toast.error {
-  background-color: var(--accent-red-300);
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  position: relative;
-  min-height: 100vh;
-  background-color: var(--neutral-100);
-}
-
-h1 {
-  font-family: var(--ff-accent);
-  font-size: var(--text-4xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--accent-yellow-300);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 .success {
@@ -80,30 +25,6 @@ h1 {
   width: 100%;
   justify-content: center;
   flex-direction: column;
-}
-
-#title-container {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  border-bottom: var(--border-normal) var(--neutral-700);
-  margin-left: var(--space-2);
-  width: fit-content;
-}
-
-h2 {
-  writing-mode: vertical-lr;
-  font-family: var(--ff-accent);
-  font-size: var(--text-4xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--accent-red-300);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 #section-title {
@@ -197,14 +118,6 @@ h2 {
 
 .history-entry a:hover {
   background-color: var(--main-400);
-}
-
-#full-container {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: calc(100% - var(--space-1));
-  border-bottom: var(--border-thick) var(--accent-red-300);
 }
 
 .history-title {

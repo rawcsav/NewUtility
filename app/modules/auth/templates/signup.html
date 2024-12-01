@@ -1,7 +1,6 @@
 {% extends 'base.html' %} {% block head %}
 <title>Sign Up | New Utility</title>
 <link href="https://newutility.rawcsav.com/auth/signup" rel="canonical" />
-
 {% endblock %} {% block styles %} {% assets "signup_style_bundle" %}
 <link rel="stylesheet" href="{{ ASSET_URL }}" />
 {% endassets %} {% endblock %} {% block body %}
@@ -77,7 +76,6 @@
     </form>
   </div>
 </div>
-{% endblock %}{% block page_instructions %} {{ tooltip|safe }} {% endblock %}{%
-block scripts %} {% assets "signup_js_bundle" %}
+{% endblock %}{% block scripts %} {% assets "signup_js_bundle" %}
 <script src="{{ ASSET_URL }}"></script>
 {% endassets %}{% endblock %}

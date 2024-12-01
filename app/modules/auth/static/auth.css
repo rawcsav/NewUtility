@@ -1,74 +1,3 @@
-/* Base Reset */
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-body {
-  position: relative;
-  background-color: var(--accent-yellow-300);
-  font-family: var(--ff-txt);
-}
-
-/* Toast Notifications */
-#toast {
-  position: fixed;
-  bottom: var(--space-10);
-  left: 15%;
-  transform: translateX(-50%);
-  background-color: var(--neutral-700);
-  color: var(--neutral-100);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  display: none;
-  opacity: var(--opacity-0);
-  transition: var(--transition-slow);
-  z-index: 1000;
-}
-
-#toast.success {
-  background-color: var(--main-300);
-}
-
-#toast.error {
-  background-color: var(--accent-red-300);
-}
-
-/* Typography */
-h1 {
-  font-family: var(--ff-accent);
-  font-size: var(--text-6xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--neutral-100);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-h2 {
-  font-family: var(--ff-accent);
-  font-size: var(--text-6xl);
-  font-weight: var(--font-bold);
-  margin: 0;
-  top: 0;
-  text-align: center;
-  color: var(--text-primary);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Form Containers and Layout */
 .form-container {
   margin: auto;
   background-color: var(--neutral-100);
@@ -207,13 +136,6 @@ h2 {
 }
 
 /* Layout Components */
-#full-container {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: calc(100% - var(--space-2));
-  border-bottom: var(--border-thick) var(--accent-red-300);
-}
 
 #left-column {
   display: flex;
@@ -221,21 +143,7 @@ h2 {
   margin-left: var(--space-6);
 }
 
-#title-container {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-}
-
 /* Navigation and Icons */
-.homepage-link {
-  display: none;
-}
-
-.hamburger-menu,
-.toolbox-icon {
-  color: var(--neutral-100) !important;
-}
 
 .messages-icon {
   display: none !important;
@@ -250,12 +158,5 @@ ul {
 ul li {
   margin: 0;
   padding: 0;
-  font-family: var(--ff-txt);
-}
-
-/* Links */
-a {
-  color: var(--text-primary);
-  text-decoration: none;
   font-family: var(--ff-txt);
 }

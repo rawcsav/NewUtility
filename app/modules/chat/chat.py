@@ -94,7 +94,6 @@ def chat_index():
         documents=documents_data,
         preferences_dict=preferences_dict,
         doc_preferences_form=UpdateDocPreferencesForm(data=preferences_dict),
-        tooltip=docs_content,
     )
 
 

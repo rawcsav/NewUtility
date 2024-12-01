@@ -44,9 +44,7 @@ def generate_image():
             db.session.flush()
 
             # Create a new ImageTask
-            new_image_task = ImageTask(
-                task_id=new_task.id, prompt=prompt, model=model, size=size, n=n
-            )
+            new_image_task = ImageTask(task_id=new_task.id, prompt=prompt, model=model, size=size, n=n)
 
             # Add quality and style only if the model is DALL-E-3
             if model.startswith("dall-e-3"):
@@ -64,7 +62,7 @@ def generate_image():
             return jsonify({"error_message": error_message, "status": "error"})
         return jsonify({"message": "Image Processing...", "status": "success"})
 
-    return render_template("image.html", form=form, error_message=error_message, tooltip=docs_content)
+    return render_template("image.html", form=form, error_message=error_message)
 
 
 @image_bp.route("/download_image/<uuid:image_id>")
@@ -98,9 +96,7 @@ def image_history():
     )
     image_data = [
         {
-            "url": url_for(
-                "image_bp.serve_generated_image", filename=f"{img.id}.webp", user_id=current_user.id
-            ),
+            "url": url_for("image_bp.serve_generated_image", filename=f"{img.id}.webp", user_id=current_user.id),
             "id": img.id,
             "prompt": img.prompt,
             "model": img.model,

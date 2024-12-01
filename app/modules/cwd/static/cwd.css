@@ -35,40 +35,8 @@ body {
   box-shadow: var(--shadow-md);
 }
 
-.homepage-link {
-  position: absolute;
-  top: var(--space-4);
-  left: var(--space-4);
-}
-
-.homepage-link img {
-  height: var(--space-8);
-  width: auto;
-  transition: transform var(--transition-fast);
-}
-
 .homepage-link:hover img {
   transform: scale(1.1);
-}
-
-h1,
-h2,
-h3,
-h4 {
-  margin-top: 0;
-  color: var(--text-primary);
-}
-
-h2 {
-  font-size: var(--text-xl);
-  border-bottom: var(--border-normal) var(--accent-red-300);
-  padding-bottom: var(--space-1);
-}
-
-h3,
-h4 {
-  font-size: var(--text-lg);
-  margin-bottom: var(--space-2);
 }
 
 .bottom-row,
@@ -124,29 +92,6 @@ button {
 
 input[type="submit"]:hover {
   background-color: var(--accent-red-200);
-}
-
-#toast {
-  position: fixed;
-  bottom: var(--space-6);
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--neutral-700);
-  color: var(--neutral-100);
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-md);
-  display: none;
-  opacity: var(--opacity-0);
-  transition: opacity var(--transition-normal);
-  z-index: 1000;
-}
-
-#toast.success {
-  background-color: var(--main-300);
-}
-
-#toast.error {
-  background-color: var(--accent-red-300);
 }
 
 input[type="range"] {
