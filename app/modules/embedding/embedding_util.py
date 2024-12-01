@@ -31,10 +31,12 @@ WORDS_PER_PAGE = 500  # Define the number of words per page
 def download_nltk_data():
     try:
         from nltk.data import find
+
         find("tokenizers/punkt")
         find("corpora/wordnet")
     except LookupError as e:
         import nltk
+
         if "punkt" in str(e):
             logger.info("Downloading NLTK 'punkt' tokenizer data...")
             nltk.download("punkt")
