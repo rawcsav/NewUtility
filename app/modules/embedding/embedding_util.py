@@ -32,14 +32,21 @@ WORDS_PER_PAGE = 500  # Define the number of words per page
 
 def download_nltk_data():
     try:
-        # Check if punkt tokenizer data is available
+        from nltk.data import find
         find("tokenizers/punkt")
-    except LookupError:
+        find("corpora/wordnet")  # Add check for wordnet
+    except LookupError as e:
         import nltk
 
-        logger.info("Downloading NLTK 'punkt' tokenizer data...")
-        nltk.download("punkt")
-        logger.info("'punkt' tokenizer data downloaded.")
+        if "punkt" in str(e):
+            logger.info("Downloading NLTK 'punkt' tokenizer data...")
+            nltk.download("punkt")
+            logger.info("'punkt' tokenizer data downloaded.")
+
+        if "wordnet" in str(e):
+            logger.info("Downloading NLTK 'wordnet' data...")
+            nltk.download("wordnet")
+            logger.info("'wordnet' data downloaded.")
 
 
 def extract_uuid_from_path(temp_path):
@@ -49,6 +56,7 @@ def extract_uuid_from_path(temp_path):
         return match.group(1)
     else:
         raise ValueError("UUID not found in temp_path")
+
 
 def save_temp(uploaded_file):
     temp_dir = get_user_upload_directory(current_user.id)
@@ -63,6 +71,7 @@ def count_tokens(string: str) -> int:
     num_tokens = len(ENCODING.encode(string))
     return num_tokens
 
+
 def preprocess_text(text):
     text = re.sub(r"\n(?=[a-z])", " ", text)
     text = re.sub(r"\n", " ", text)
@@ -72,12 +81,19 @@ def preprocess_text(text):
     text = re.sub(r"<[^>]+>", "", text)
     return text.strip().lower()
 
+
 def gpt_preprocess(text, client):
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo-0125",
         messages=[
-            {"role": "system", "content": "Your task is to identify and correct formatting issues, including incorrect capitalization, missing or misplaced punctuation, irregular spacing, improper line breaks, and OCR-specific errors such as misinterpreted characters and broken words. You should not add to or infer content beyond the original text. Your output must be the corrected text only, with no additional commentary or metadata. Focus on enhancing readability, ensuring the text adheres to standard writing conventions, and addressing the unique challenges presented by OCR text."},
-            {"role": "user", "content": f"Please help clean the following input text. It was originally extracted from a PDF and has numerous formatting errors and extraction artifacts. Please remove things like extraneous whitespace, unusual line breaks, extraneous word hyphenations, odd table formatting, and special characters that do not belong. The text should be cleaned up and ready for further processing. Output absolutely nothing besides the formatted text. The text is as follows:{text}"},
+            {
+                "role": "system",
+                "content": "Your task is to identify and correct formatting issues, including incorrect capitalization, missing or misplaced punctuation, irregular spacing, improper line breaks, and OCR-specific errors such as misinterpreted characters and broken words. You should not add to or infer content beyond the original text. Your output must be the corrected text only, with no additional commentary or metadata. Focus on enhancing readability, ensuring the text adheres to standard writing conventions, and addressing the unique challenges presented by OCR text.",
+            },
+            {
+                "role": "user",
+                "content": f"Please help clean the following input text. It was originally extracted from a PDF and has numerous formatting errors and extraction artifacts. Please remove things like extraneous whitespace, unusual line breaks, extraneous word hyphenations, odd table formatting, and special characters that do not belong. The text should be cleaned up and ready for further processing. Output absolutely nothing besides the formatted text. The text is as follows:{text}",
+            },
         ],
         temperature=0,
         max_tokens=4090,
@@ -131,7 +147,6 @@ def get_embedding_batch(texts: List[str], client: openai.OpenAI, model=EMBEDDING
     return final_embeddings
 
 
-
 def store_embeddings(session, document_id, embeddings, user_id):
     chunks = session.query(DocumentChunk).filter_by(document_id=document_id).all()
     if len(chunks) != len(embeddings):
@@ -147,7 +162,6 @@ def store_embeddings(session, document_id, embeddings, user_id):
 
     session.bulk_save_objects(embedding_models)
     session.commit()
-
 
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
@@ -251,6 +265,7 @@ def delete_all_documents():
     except Exception as e:
         db.session.rollback()
 
+
 class TextExtractor:
     def __init__(self, filepath):
         self.filepath = filepath
@@ -286,6 +301,7 @@ class TextExtractor:
 
     def get_final_page_amount(self):
         return self.last_page_number
+
 
 class TextSplitter:
     def __init__(self, max_tokens: int = 512, client=None, use_gpt_preprocessing=False, filepath=None):
@@ -358,6 +374,7 @@ class TextSplitter:
             self.current_chunk = []
             self.current_chunk_token_count = 0
             self.current_chunk_pages = set()
+
     def _process_all_chunks(self):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             processed_chunks = list(executor.map(self._process_chunk, self.temp_chunks))
@@ -374,6 +391,7 @@ class TextSplitter:
                 return None
         else:
             return chunk
+
     def _process_batch(self, batch: List[str], client: openai.OpenAI) -> Generator[str, None, None]:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(gpt_preprocess, text, client) for text in batch]
