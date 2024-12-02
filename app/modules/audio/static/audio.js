@@ -86,7 +86,6 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       const formData = new FormData(form);
-      console.log(formData);
       fetch(endpoint, {
         method: "POST",
         body: formData,
@@ -115,11 +114,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handlePreferencesFormSubmission(formId, endpoint) {
     const form = document.getElementById(formId);
-    console.log("Form elements:", form.elements); // Add this line to log the form elements
-
     const debouncedSubmit = debounce(function () {
       const formData = new FormData(form);
-      console.log(formData);
       fetch(endpoint, {
         method: "POST",
         body: formData,
@@ -247,7 +243,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // eslint-disable-next-line no-unused-vars
   function toggleDetails(jobId, jobType) {
-    console.log("Toggling details for job:", jobId, jobType); // eslint-disable-line no-console
     var detailsElement = document.getElementById(jobType + "-details-" + jobId);
     var isVisible = detailsElement.style.display === "block";
     detailsElement.style.display = isVisible ? "none" : "block";

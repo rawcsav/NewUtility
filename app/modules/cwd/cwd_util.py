@@ -14,24 +14,25 @@ from app.utils.vector_cache import VectorCache
 import logging
 from datetime import datetime
 
-LOG_FILE = '/Users/gavin/query_log.txt'
+LOG_FILE = "/Users/gavin/query_log.txt"
 logging = logging.getLogger(__name__)
+
 
 def force_log(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(LOG_FILE, 'a') as f:
+    with open(LOG_FILE, "a") as f:
         f.write(f"{timestamp} - {message}\n")
+
 
 def log_query_and_content(query, relevant_sections):
     force_log(f"\n\nQuery: {query}\n")
     force_log("Relevant Content and Pages:")
-
     for section in relevant_sections:
         force_log(f"\nDocument: {section['title']}")
         force_log(f"Pages: {section['pages']}")
         force_log(f"Similarity: {section['similarity']:.4f}")
         force_log("Content:")
-        force_log(section['content'])
+        force_log(section["content"])
         force_log("-" * 50)
 
 
@@ -91,16 +92,7 @@ def get_embedding(text: str, client: openai.OpenAI, model="text-embedding-3-larg
     if len(embedding) != 3072:
         raise ValueError(f"Expected embedding dimension to be 3072, but got {len(embedding)}")
     return embedding
-def print_query_and_documents(query, doc_pages):
-    print("\n" + "="*50)
-    print(f"Query: {query}\n")
-    print("Relevant Documents:")
-    for title, pages in doc_pages.items():
-        if pages:
-            print(f"  - {title}: Pages {', '.join(map(str, sorted(pages)))}")
-        else:
-            print(f"  - {title}")
-    print("="*50 + "\n")
+
 
 def append_knowledge_context(user_query, user_id, client):
     query_embedding = get_embedding(user_query, client)
@@ -128,7 +120,7 @@ def append_knowledge_context(user_query, user_id, client):
             doc_pages[title] = {}  # Dictionary to hold page numbers and their similarity scores
         if pages:
             # Split the pages string by the comma
-            page_numbers = pages.split(',')
+            page_numbers = pages.split(",")
             for page in page_numbers:
                 # Add each page number only if it exists and has not been included yet
                 if page and page not in doc_pages[title]:
@@ -150,28 +142,26 @@ def append_knowledge_context(user_query, user_id, client):
 
     return context, chunk_associations, doc_pages
 
+
 def chat_completion_with_retry(messages, model, client, temperature, top_p):
-    return client.chat.completions.create(model=model, messages=messages, temperature=temperature, top_p=top_p, stream=True)
+    return client.chat.completions.create(
+        model=model, messages=messages, temperature=temperature, top_p=top_p, stream=True
+    )
 
 
 def ask(query, images, client, model: str = "gpt-4-0125-preview"):
-
     modified_query, chunk_associations, doc_pages = append_knowledge_context(query, current_user.id, client)
-    print(modified_query)
     preferences = ChatPreferences.query.filter_by(user_id=current_user.id).first()
     temperature = preferences.temperature
     top_p = preferences.top_p
     system_prompt = preferences.cwd_system_prompt
     messages = [
-        {
-            "role": "system",
-            "content": system_prompt,
-        },
+        {"role": "system", "content": system_prompt},
         {
             "role": "user",
             "content": [
                 {"type": "text", "text": modified_query},
-                *[{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}} for image in images]
+                *[{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}} for image in images],
             ],
         },
     ]
@@ -182,11 +172,12 @@ def ask(query, images, client, model: str = "gpt-4-0125-preview"):
             if pages:
                 documents_used_summary += f"{title}: Pages {', '.join(map(str, sorted(pages)))}, "
                 print(f"{title}: Pages {', '.join(map(str, sorted(pages)))}")
-            else:  # Handle documents without pages
+            else:
                 documents_used_summary += f"{title}, "
-        socketio.emit('documents_used', {"message": documents_used_summary}, room=str(current_user.id), namespace="/cwd" )
+        socketio.emit(
+            "documents_used", {"message": documents_used_summary}, room=str(current_user.id), namespace="/cwd"
+        )
 
-        # Yield the AI response parts
         for part in chat_completion_with_retry(messages, model, client, temperature, top_p):
             content = part.choices[0].delta.content
             if content:
