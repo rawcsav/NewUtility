@@ -1,8 +1,6 @@
 from typing import List
-
 import numpy as np
 import openai
-import tiktoken
 from flask_login import current_user
 from openai import RateLimitError
 from app import db, socketio
@@ -10,30 +8,6 @@ from app.models.chat_models import ChatPreferences
 from app.models.embedding_models import DocumentChunk, Document, ModelContextWindow
 from app.utils.vector_cache import VectorCache
 
-
-import logging
-from datetime import datetime
-
-LOG_FILE = "/Users/gavin/query_log.txt"
-logging = logging.getLogger(__name__)
-
-
-def force_log(message):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(LOG_FILE, "a") as f:
-        f.write(f"{timestamp} - {message}\n")
-
-
-def log_query_and_content(query, relevant_sections):
-    force_log(f"\n\nQuery: {query}\n")
-    force_log("Relevant Content and Pages:")
-    for section in relevant_sections:
-        force_log(f"\nDocument: {section['title']}")
-        force_log(f"Pages: {section['pages']}")
-        force_log(f"Similarity: {section['similarity']:.4f}")
-        force_log("Content:")
-        force_log(section["content"])
-        force_log("-" * 50)
 
 
 def find_relevant_sections(user_id, query_embedding, user_preferences):
@@ -100,7 +74,6 @@ def append_knowledge_context(user_query, user_id, client):
     user_preferences = db.session.query(ChatPreferences).filter_by(user_id=user_id).one()
 
     relevant_sections = find_relevant_sections(user_id, query_vector, user_preferences=user_preferences)
-    log_query_and_content(user_query, relevant_sections)
 
     context = ""
     chunk_associations = []
