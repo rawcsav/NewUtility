@@ -1,0 +1,92 @@
+{% extends 'base.html' %} {% block head %}
+<title>New Utility | RAWCSAV</title>
+<link href="https://newutility.rawcsav.com/maintenance" rel="canonical" />
+{% endblock %} {% block styles %} {% assets "maintenance_style_bundle" %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %} {% endblock %} {% block menu %}{% endblock %} {% block body %}
+<div id="goodbye-overlay">
+  <h2>Farewell for Now</h2>
+  <p>
+    With a heavy heart, I must pause the active maintenance and enhancement of
+    this beloved web app. This project has been a labor of love, filled with
+    dedication and passion. While this chapter closes, the journey remains
+    cherished.
+  </p>
+  <p>
+    Heartfelt thanks to everyone who supported, engaged with, or even briefly
+    visited this project. Your involvement has been invaluable and deeply
+    appreciated.
+  </p>
+  <button>
+    <a href="https://rawcsav.com" class="button-link">Return to Home</a>
+  </button>
+</div>
+
+<div id="full-container">
+  <div id="left-column">
+    <div id="title-container">
+      <h1>New Utility</h1>
+      <h1>Nouvelle Utilité</h1>
+      <h1>Neue Nützlichkeit</h1>
+      <h1>Nuova Utilità</h1>
+    </div>
+    <ul class="button-list">
+      <li>
+        <button class="button" disabled>Sign Up</button>
+      </li>
+      <li>
+        <button class="button" disabled>Login →</button>
+      </li>
+    </ul>
+  </div>
+  <div id="icons-container">
+    <div class="art">
+      <img
+        alt="Art"
+        src="{{ url_for('static', filename='dist/img/art.svg') }}"
+      />
+    </div>
+    <div class="binoculars">
+      <img
+        alt="Binoculars"
+        src="{{ url_for('static', filename='dist/img/binoculars.svg') }}"
+      />
+    </div>
+    <div class="data">
+      <img
+        alt="Data"
+        src="{{ url_for('static', filename='dist/img/data.svg') }}"
+      />
+    </div>
+    <div class="document">
+      <img
+        alt="Document"
+        src="{{ url_for('static', filename='dist/img/document.svg') }}"
+      />
+    </div>
+    <div class="jackmic">
+      <img
+        alt="Jackmic"
+        src="{{ url_for('static', filename='dist/img/jackmic.svg') }}"
+      />
+    </div>
+    <div class="key-chain">
+      <img
+        alt="Key-chain"
+        src="{{ url_for('static', filename='dist/img/key-chain.svg') }}"
+      />
+    </div>
+  </div>
+</div>
+{% endblock %}{% block scripts %} {% assets "maintenance_js_bundle" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}
+<script>
+  // Optional: Add a delay before showing the overlay if you want
+  document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(function () {
+      document.getElementById("goodbye-overlay").style.display = "flex";
+    }, 1000);
+  });
+</script>
+{% endblock %}

@@ -9,7 +9,6 @@ from app.models.embedding_models import DocumentChunk, Document, ModelContextWin
 from app.utils.vector_cache import VectorCache
 
 
-
 def find_relevant_sections(user_id, query_embedding, user_preferences):
     context_window_size = 120000
     max_sections = user_preferences.top_k

@@ -54,6 +54,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+      MAINTENANCE_MODE: ${MAINTENANCE_MODE}  # Added for maintenance mode
     volumes:
       - ./app:/newutil/app
       - ./app/static:/newutil/app/static
@@ -148,7 +149,7 @@ volumes:
   celerybeat-schedule:
 
 networks:
-    internal:
-      driver: "bridge"
-    appnet:
-      external: true
+  internal:
+    driver: "bridge"
+  appnet:
+    external: true

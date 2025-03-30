@@ -88,3 +88,23 @@ def compile_static_assets(assets):
         pass
 
     return assets
+
+
+def compile_maintenance_assets(assets):
+    common_style_bundle = Bundle("src/css/*.css", filters="cssmin", output="dist/css/common.css")
+
+    maintenance_style_bundle = Bundle(
+        "maintenance_bp/maintenance.css", filters="cssmin", output="dist/css/maintenance.css"
+    )
+    maintenance_js_bundle = Bundle("maintenance_bp/maintenance.js", filters="jsmin", output="dist/js/maintenance.js")
+    assets.register("maintenance_style_bundle", maintenance_style_bundle)
+    assets.register("common_style_bundle", common_style_bundle)
+    assets.register("maintenance_js_bundle", maintenance_js_bundle)
+
+    if assets.config["FLASK_ENV"] == "development":
+        maintenance_style_bundle.build()
+        common_style_bundle.build()
+        maintenance_js_bundle.build()
+    else:
+        pass
+    return assets

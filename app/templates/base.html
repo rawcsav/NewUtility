@@ -150,7 +150,8 @@
     {% block styles %} {% endblock %}
   </head>
   <body>
-    {% include 'menu.html' %} {% block body %} {% endblock %}
+    {% block menu %}{% include 'menu.html' %} {% endblock %}{% block body %} {%
+    endblock %}
     <div class="overlay" id="overlay">
       <div class="tooltip" id="tooltip">
         {% block page_instructions %}{% endblock %}
